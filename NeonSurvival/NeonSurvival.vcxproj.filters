@@ -1,0 +1,194 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="소스 파일">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="헤더 파일">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="리소스 파일">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="소스 파일\Process">
+      <UniqueIdentifier>{d81a5e7d-f58c-4944-8abf-9bcc07183d20}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\Process">
+      <UniqueIdentifier>{767dae1f-4b9a-456f-b6c8-d9f8fb5350af}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Objects">
+      <UniqueIdentifier>{996b01ca-da53-4066-b16d-80d765e55ddc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Shaders">
+      <UniqueIdentifier>{6cdaa777-e131-4826-85e7-0b6e4adbe3f9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Framework_File1">
+      <UniqueIdentifier>{86f33cf7-8188-458d-954c-3afd09e59fad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\BaseFile">
+      <UniqueIdentifier>{f6144ead-06e9-4b90-bca8-86371e01aab9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\LibraryFile">
+      <UniqueIdentifier>{2c0868ec-aa16-4b3b-bc9d-0cd486a1c826}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\BaseFile">
+      <UniqueIdentifier>{ee49e0e4-c8aa-49c8-bf86-4498e68d5d69}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\LibraryFile">
+      <UniqueIdentifier>{373ee45f-0b1a-48d0-b0d9-a96c7f4598b3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\Shaders">
+      <UniqueIdentifier>{c6449693-9c3f-407b-8432-8464fe68503d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\Objects">
+      <UniqueIdentifier>{75f93fc1-89d6-44ae-9467-aec623fff3cd}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ProcessCompute.h">
+      <Filter>헤더 파일\Process</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcessInput.h">
+      <Filter>헤더 파일\Process</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcessOutput.h">
+      <Filter>헤더 파일\Process</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderObjects.h">
+      <Filter>헤더 파일\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="Shader.h">
+      <Filter>헤더 파일\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="Timer.h">
+      <Filter>헤더 파일\LibraryFile</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>헤더 파일\LibraryFile</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>헤더 파일\LibraryFile</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>헤더 파일\LibraryFile</Filter>
+    </ClInclude>
+    <ClInclude Include="Frameworks.h">
+      <Filter>헤더 파일\BaseFile</Filter>
+    </ClInclude>
+    <ClInclude Include="GameScene.h">
+      <Filter>헤더 파일\BaseFile</Filter>
+    </ClInclude>
+    <ClInclude Include="GameSource.h">
+      <Filter>헤더 파일\BaseFile</Filter>
+    </ClInclude>
+    <ClInclude Include="NeonSurvival.h">
+      <Filter>헤더 파일\BaseFile</Filter>
+    </ClInclude>
+    <ClInclude Include="GameObject.h">
+      <Filter>헤더 파일\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh.h">
+      <Filter>헤더 파일\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Player.h">
+      <Filter>헤더 파일\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene.h">
+      <Filter>헤더 파일\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>헤더 파일\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="d3dx12.h">
+      <Filter>헤더 파일\LibraryFile</Filter>
+    </ClInclude>
+    <ClInclude Include="DDSTextureLoader12.h">
+      <Filter>헤더 파일\LibraryFile</Filter>
+    </ClInclude>
+    <ClInclude Include="UILayer.h">
+      <Filter>헤더 파일\Process</Filter>
+    </ClInclude>
+    <ClInclude Include="Launcher.h">
+      <Filter>Framework_File1</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="ProcessInput.cpp">
+      <Filter>소스 파일\Process</Filter>
+    </ClCompile>
+    <ClCompile Include="ProcessOutput.cpp">
+      <Filter>소스 파일\Process</Filter>
+    </ClCompile>
+    <ClCompile Include="ProcessCompute.cpp">
+      <Filter>소스 파일\Process</Filter>
+    </ClCompile>
+    <ClCompile Include="Launcher.cpp">
+      <Filter>Framework_File1</Filter>
+    </ClCompile>
+    <ClCompile Include="GameObject.cpp">
+      <Filter>소스 파일\Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="Mesh.cpp">
+      <Filter>소스 파일\Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="Player.cpp">
+      <Filter>소스 파일\Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene.cpp">
+      <Filter>소스 파일\Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>소스 파일\Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="Shader.cpp">
+      <Filter>소스 파일\Shaders</Filter>
+    </ClCompile>
+    <ClCompile Include="ShaderObjects.cpp">
+      <Filter>소스 파일\Shaders</Filter>
+    </ClCompile>
+    <ClCompile Include="Frameworks.cpp">
+      <Filter>소스 파일\BaseFile</Filter>
+    </ClCompile>
+    <ClCompile Include="GameScene.cpp">
+      <Filter>소스 파일\BaseFile</Filter>
+    </ClCompile>
+    <ClCompile Include="GameSource.cpp">
+      <Filter>소스 파일\BaseFile</Filter>
+    </ClCompile>
+    <ClCompile Include="NeonSurvival.cpp">
+      <Filter>소스 파일\BaseFile</Filter>
+    </ClCompile>
+    <ClCompile Include="DDSTextureLoader12.cpp">
+      <Filter>소스 파일\LibraryFile</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>소스 파일\LibraryFile</Filter>
+    </ClCompile>
+    <ClCompile Include="Timer.cpp">
+      <Filter>소스 파일\LibraryFile</Filter>
+    </ClCompile>
+    <ClCompile Include="UILayer.cpp">
+      <Filter>소스 파일\Process</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="NeonSurvival.rc">
+      <Filter>리소스 파일</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="small.ico">
+      <Filter>리소스 파일</Filter>
+    </Image>
+    <Image Include="NeonSurvival.ico">
+      <Filter>리소스 파일</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Light.hlsl" />
+    <FxCompile Include="Shaders.hlsl" />
+  </ItemGroup>
+</Project>
