@@ -17,7 +17,7 @@ public:
 
     void UpdateTextOutputs(UINT nIndex, WCHAR* pstrUIText, D2D1_RECT_F* pd2dLayoutRect, IDWriteTextFormat* pdwFormat, ID2D1SolidColorBrush* pd2dTextBrush);
     virtual void Render(UINT nFrame);
-    virtual void Build();
+    virtual void BuildUI();
     void ReleaseResources();
 
     ID2D1SolidColorBrush* CreateBrush(D2D1::ColorF d2dColor);
@@ -43,28 +43,4 @@ public:
 
     UINT                            m_nTextBlocks = 0;
     TextBlock*                      m_pTextBlocks = NULL;
-};
-
-//-------------------------------------------------------------------------------
-/*	UILayerLobby_1 : UILayer	        									   */
-//-------------------------------------------------------------------------------
-class UILayerLobby_1 : public UILayer {
-public:
-    UILayerLobby_1(InterfaceFramework& Iframe, UINT nTextBlocks);
-    virtual ~UILayerLobby_1();
-
-    void Render(UINT nFrame) override;
-    void Build() override;
-};
-
-//-------------------------------------------------------------------------------
-/*	UILayerGame_1 : UILayer	        										   */
-//-------------------------------------------------------------------------------
-class UILayerGame_1 : public UILayer {
-public:
-    UILayerGame_1(InterfaceFramework& Iframe, UINT nTextBlocks);
-    virtual ~UILayerGame_1();
-
-    void Render(UINT nFrame) override;
-    void Build() override;
 };

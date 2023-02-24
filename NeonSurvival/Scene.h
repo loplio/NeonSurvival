@@ -36,9 +36,9 @@ struct LIGHTS
 class CScene {
 public:
 	CScene(ID3D12Device* pd3dDevice);
-	~CScene();
+	virtual ~CScene();
 
-	// hold off..
+	// hold..
 	ID3D12RootSignature* CreateGraphicsRootSignature(ID3D12Device* pd3dDevice);
 	ID3D12RootSignature* GetGraphicsRootSignature();
 
@@ -47,23 +47,23 @@ public:
 	virtual void ReleaseShaderVariables();
 
 	// Build..
-	void CreateBoundingBox(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CBoundingBoxObjects* BBShader);
-	void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
-	void BuildLightsAndMaterials();
-	void ReleaseUploadBuffers();
-	void ReleaseObjects();
+	virtual void CreateBoundingBox(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CBoundingBoxObjects* BBShader);
+	virtual void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
+	virtual void BuildLightsAndMaterials();
+	virtual void ReleaseUploadBuffers();
+	virtual void ReleaseObjects();
 
 	// ProcessInput..
-	bool OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
-	bool OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
+	virtual bool OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
+	virtual bool OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
 	CGameObject* PickObjectPointedByCursor(int xClient, int yClient, CCamera* pCamera);
 
 	// ProcessAnimaiton..
-	void AnimateObjects(float fTimeElapsed);
+	virtual void AnimateObjects(float fTimeElapsed);
 
 	// ProcessOutput..
-	void OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
-	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera *pCamera);
+	virtual void OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
+	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera *pCamera);
 
 protected:
 	ID3D12RootSignature* m_pd3dGraphicsRootSignature = NULL;
@@ -79,9 +79,7 @@ protected:
 
 public:
 	CSkyBox* m_pSkyBox = NULL;
-
 	std::shared_ptr<CPlayer> m_pPlayer = NULL;
-
 	std::shared_ptr<CBoundingBoxObjects> m_pBBObjects = NULL;
 
 	CHeightMapTerrain* GetTerrain() { return m_pTerrain; }

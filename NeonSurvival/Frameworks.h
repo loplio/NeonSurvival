@@ -60,7 +60,7 @@ public:
 	virtual void OnDestroy();
 
 	void ChangeSwapChainState();
-	void ClearDisplay();
+	void ClearDisplay(XMFLOAT4 xmfloat4 = XMFLOAT4(0.f, 0.f, 0.f, 0.f));
 	void ResetCommand();
 	void ExecuteCommand();
 	void SynchronizeResourceTransition(D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after);
@@ -172,55 +172,6 @@ private:
 
 	void OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam) override {};
 	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam) override {};
-};
-
-//-------------------------------------------------------------------------------
-/*	Concrete LobbyFramework													   */
-//-------------------------------------------------------------------------------
-class CLobbyFramework_1 : public CLobbyFramework {
-public:
-	CLobbyFramework_1(InterfaceFramework& Iframe);
-	virtual ~CLobbyFramework_1();
-
-private:
-	void OnCreate(HINSTANCE hInstance, HWND hMainWnd) override;
-	void FrameAdvance() override;
-	void OnDestroy() override;
-
-	void BuildObjects() override;
-	void BuildToolCreator() override;
-	void ReleaseObjects() override;
-
-	void OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam) override;
-	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam) override;
-};
-
-//-------------------------------------------------------------------------------
-/*	Concrete GameFramework_1(Airplane/missile/terrain/skybox etc.)			   */
-//-------------------------------------------------------------------------------
-class CGameFramework_1 : public CGameFramework {
-public:
-	CGameFramework_1(InterfaceFramework& Iframe);
-	virtual ~CGameFramework_1();
-
-	void UpdateUI() const;
-
-private:
-	void OnCreate(HINSTANCE hInstance, HWND hMainWnd) override;
-	void FrameAdvance() override;
-	void OnDestroy() override;
-
-	void BuildObjects() override;
-	void BuildToolCreator() override;
-	void ReleaseObjects() override;
-
-	void ProcessSelectedObject(DWORD dwDirection, float cxDelta, float cyDelta);
-
-	void OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam) override;
-	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam) override;
-
-public:
-	CGameObject*		m_pSelectedObject = NULL;
 };
 
 //-------------------------------------------------------------------------------

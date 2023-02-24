@@ -25,9 +25,6 @@
     <Filter Include="소스 파일\Shaders">
       <UniqueIdentifier>{6cdaa777-e131-4826-85e7-0b6e4adbe3f9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Framework_File1">
-      <UniqueIdentifier>{86f33cf7-8188-458d-954c-3afd09e59fad}</UniqueIdentifier>
-    </Filter>
     <Filter Include="소스 파일\BaseFile">
       <UniqueIdentifier>{f6144ead-06e9-4b90-bca8-86371e01aab9}</UniqueIdentifier>
     </Filter>
@@ -45,6 +42,12 @@
     </Filter>
     <Filter Include="헤더 파일\Objects">
       <UniqueIdentifier>{75f93fc1-89d6-44ae-9467-aec623fff3cd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="NeonSurvival_Module">
+      <UniqueIdentifier>{4ebb1de3-0070-4de9-9b6d-be30797cbb11}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TestGame_Module">
+      <UniqueIdentifier>{86f33cf7-8188-458d-954c-3afd09e59fad}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -112,7 +115,22 @@
       <Filter>헤더 파일\Process</Filter>
     </ClInclude>
     <ClInclude Include="Launcher.h">
-      <Filter>Framework_File1</Filter>
+      <Filter>TestGame_Module</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework_Test.h">
+      <Filter>TestGame_Module</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework_Neon.h">
+      <Filter>NeonSurvival_Module</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcessTool_Test.h">
+      <Filter>TestGame_Module</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcessTool_Neon.h">
+      <Filter>NeonSurvival_Module</Filter>
+    </ClInclude>
+    <ClInclude Include="Components_Neon.h">
+      <Filter>NeonSurvival_Module</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -126,7 +144,7 @@
       <Filter>소스 파일\Process</Filter>
     </ClCompile>
     <ClCompile Include="Launcher.cpp">
-      <Filter>Framework_File1</Filter>
+      <Filter>TestGame_Module</Filter>
     </ClCompile>
     <ClCompile Include="GameObject.cpp">
       <Filter>소스 파일\Objects</Filter>
@@ -172,6 +190,21 @@
     </ClCompile>
     <ClCompile Include="UILayer.cpp">
       <Filter>소스 파일\Process</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework_Test.cpp">
+      <Filter>TestGame_Module</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework_Neon.cpp">
+      <Filter>NeonSurvival_Module</Filter>
+    </ClCompile>
+    <ClCompile Include="ProcessTool_Test.cpp">
+      <Filter>TestGame_Module</Filter>
+    </ClCompile>
+    <ClCompile Include="ProcessTool_Neon.cpp">
+      <Filter>NeonSurvival_Module</Filter>
+    </ClCompile>
+    <ClCompile Include="Components_Neon.cpp">
+      <Filter>NeonSurvival_Module</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -234,7 +234,6 @@ void CScene::ReleaseShaderVariables()
 }
 
 
-
 //--Build : CScene---------------------------------------------------------------
 void CScene::CreateBoundingBox(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CBoundingBoxObjects* BBShader)
 {

@@ -1,5 +1,7 @@
 #include "stdafx.h"
 #include "Frameworks.h"
+#include "Framework_Neon.h"
+#include "Framework_Test.h"
 #include "ProcessInput.h"
 #include "ProcessCompute.h"
 #include "ProcessOutput.h"
@@ -23,8 +25,8 @@ FrameworkController::~FrameworkController()
 void FrameworkController::OnCreate(HINSTANCE hInstance, HWND hMainWnd) {
 	m_InterfaceFramework->OnCreate(hInstance, hMainWnd);
 
-	m_GameFramework = new CGameFramework_1(*m_InterfaceFramework);
-	m_LobbyFramework = new CLobbyFramework_1(*m_InterfaceFramework);
+	m_GameFramework = new CGameFramework_Neon(*m_InterfaceFramework);
+	m_LobbyFramework = new CLobbyFramework_Neon(*m_InterfaceFramework);
 	((BaseFramework*)m_GameFramework)->OnCreate(hInstance, hMainWnd);
 	((BaseFramework*)m_LobbyFramework)->OnCreate(hInstance, hMainWnd);
 }
@@ -323,7 +325,7 @@ void InterfaceFramework::CreateDepthstencilView()
 	m_pd3dDevice->CreateDepthStencilView(m_pd3dDepthStencilBuffer, NULL, d3dDsvCPUDescriptorHandle);
 }
 
-void InterfaceFramework::ClearDisplay()
+void InterfaceFramework::ClearDisplay(XMFLOAT4 xmfloat4)
 {
 	ResetCommand();
 
@@ -333,7 +335,8 @@ void InterfaceFramework::ClearDisplay()
 	d3dRtvCPUDescriptorHandle.ptr += (m_nSwapChainBufferIndex * m_nRtvDescriptorIncrementSize);
 	D3D12_CPU_DESCRIPTOR_HANDLE d3dDsvCPUDescriptorHandle = m_pd3dDsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 
-	float pfClearColor[4] = { 0.0f,0.125f,0.3f,1.0f };
+	float pfClearColor[4] = { xmfloat4.x, xmfloat4.y, xmfloat4.z, xmfloat4.w };
+	//float pfClearColor[4] = { 0.0f,0.125f,0.3f,1.0f };
 	m_pd3dCommandList->ClearRenderTargetView(d3dRtvCPUDescriptorHandle, pfClearColor/*Colors::Azure*/, 0, NULL);
 	m_pd3dCommandList->ClearDepthStencilView(d3dDsvCPUDescriptorHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, NULL);
 	m_pd3dCommandList->OMSetRenderTargets(1, &d3dRtvCPUDescriptorHandle, TRUE, &d3dDsvCPUDescriptorHandle);
@@ -420,276 +423,4 @@ CGameFramework::~CGameFramework()
 	// 수정필요. m_pCamera는 Player에서 delete됨.
 }
 
-//-------------------------------------------------------------------------------
-/*	Concrete LobbyFramework													   */
-//-------------------------------------------------------------------------------
-CLobbyFramework_1::CLobbyFramework_1(InterfaceFramework& Iframe) : CLobbyFramework(Iframe)
-{
-}
-CLobbyFramework_1::~CLobbyFramework_1()
-{
-}
-
-void CLobbyFramework_1::OnCreate(HINSTANCE hInstance, HWND hMainWnd)
-{
-	BuildObjects();
-	BuildToolCreator();
-}
-void CLobbyFramework_1::FrameAdvance()
-{
-	m_GameTimer.Tick(0.0f);
-
-	m_KeyboardInput->DataProcessing();
-	m_MouseInput->DataProcessing();
-
-	m_DisplayOutput->Render();
-	m_pUILayer->Render(m_nSwapChainBufferIndex);
-
-	m_pdxgiSwapChain.Present(0, 0);
-
-	m_Iframe.MoveToNextFrame();
-
-	m_GameTimer.GetFrameRate(m_Iframe.m_pszFrameRate + 8, 37);
-	::SetWindowText(m_hWnd, m_Iframe.m_pszFrameRate);
-}
-void CLobbyFramework_1::OnDestroy()
-{
-	m_Iframe.WaitForGpuComplete();
-	//GPU가 모든 명령 리스트를 실행할 때 까지 기다린다.
-	ReleaseObjects();
-	//게임 객체(게임 월드 객체)를 소멸한다.
-}
-
-void CLobbyFramework_1::BuildObjects()
-{
-	m_pd3dCommandList.Reset(&m_pd3dCommandAllocator, NULL);
-
-	m_pd3dCommandList.Close();
-	ID3D12CommandList* ppd3dCommandLists[] = { &m_pd3dCommandList };
-	m_pd3dCommandQueue.ExecuteCommandLists(1, ppd3dCommandLists);
-
-	m_Iframe.WaitForGpuComplete();
-
-	m_GameTimer.Reset();
-}
-void CLobbyFramework_1::BuildToolCreator()
-{
-	m_pUILayer = new UILayerLobby_1(m_Iframe, 1);
-
-	m_KeyboardInput = new PlayerKeyInput_Lobby1(*this);
-	m_MouseInput = new PlayerMouseInput_Lobby1(m_KeyboardInput->GetKeyBuffer(), *this);
-	m_DisplayOutput = new RenderDisplay_Lobby1(*this);
-}
-void CLobbyFramework_1::ReleaseObjects()
-{
-}
-
-void CLobbyFramework_1::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
-{
-	switch (nMessageID) {
-	case WM_LBUTTONDOWN:
-	case WM_RBUTTONDOWN:
-		SetCapture(hWnd);
-		GetCursorPos(&m_MouseInput->GetOldCursorPos());
-		break;
-	case WM_LBUTTONUP:
-	case WM_RBUTTONUP:
-		ReleaseCapture();
-		break;
-	case WM_MOUSEMOVE:
-		break;
-	default:
-		break;
-	}
-}
-void CLobbyFramework_1::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
-{
-	switch (nMessageID) {
-	case WM_KEYUP:
-		switch (wParam) {
-		case VK_F1:
-		case VK_F2:
-		case VK_F3:
-			break;
-		case VK_ESCAPE:
-			::PostQuitMessage(0);
-			break;
-		case VK_RETURN:
-			break;
-		case VK_F8:
-			break;
-		case VK_F9:
-			m_Iframe.ChangeSwapChainState();
-			break;
-		default:
-			break;
-		}
-		break;
-	default:
-		break;
-	}
-}
-
-
-//-------------------------------------------------------------------------------
-/*	Concrete GameFramework_1(Airplane/missile/terrain/skybox etc.)			   */
-//-------------------------------------------------------------------------------
-CGameFramework_1::CGameFramework_1(InterfaceFramework& Iframe) : CGameFramework(Iframe)
-{
-}
-CGameFramework_1::~CGameFramework_1()
-{
-}
-
-void CGameFramework_1::OnCreate(HINSTANCE hInstance, HWND hMainWnd)
-{
-	BuildObjects();
-	BuildToolCreator();
-}
-void CGameFramework_1::FrameAdvance()
-{
-	m_GameTimer.Tick(0.0f);
-
-	m_KeyboardInput->DataProcessing();
-	m_MouseInput->DataProcessing();
-
-	m_ProcessCompute->Animate();
-	m_ProcessCompute->Collide();
-
-	m_DisplayOutput->Render();
-	m_pUILayer->Render(m_nSwapChainBufferIndex);
-
-	m_pdxgiSwapChain.Present(0, 0);
-
-	m_Iframe.MoveToNextFrame();
-
-	m_GameTimer.GetFrameRate(m_Iframe.m_pszFrameRate + 8, 37);
-	::SetWindowText(m_hWnd, m_Iframe.m_pszFrameRate);
-}
-void CGameFramework_1::OnDestroy()
-{
-	m_Iframe.WaitForGpuComplete();
-	//GPU가 모든 명령 리스트를 실행할 때 까지 기다린다.
-	ReleaseObjects();
-	//게임 객체(게임 월드 객체)를 소멸한다.
-}
-
-void CGameFramework_1::BuildObjects()
-{
-	m_pd3dCommandList.Reset(&m_pd3dCommandAllocator, NULL);
-
-	m_GameSource = new CGameSource(&m_pd3dDevice, &m_pd3dCommandList);
-	m_pScene = m_GameSource->GetSharedPtrScene();
-	m_pPlayer = m_GameSource->GetSharedPtrPlayer();
-	m_pCamera = m_pPlayer->GetCamera();
-
-	if (m_pScene) m_pScene->BuildObjects(&m_pd3dDevice, &m_pd3dCommandList);
-
-	m_pd3dCommandList.Close();
-	ID3D12CommandList* ppd3dCommandLists[] = { &m_pd3dCommandList };
-	m_pd3dCommandQueue.ExecuteCommandLists(1, ppd3dCommandLists);
-
-	m_Iframe.WaitForGpuComplete();
-
-	if (m_pScene) m_pScene->ReleaseUploadBuffers();
-	if(m_pPlayer) m_pPlayer->ReleaseUploadBuffers();
-
-	m_GameTimer.Reset();
-}
-void CGameFramework_1::BuildToolCreator()
-{
-	m_pUILayer = new UILayerGame_1(m_Iframe, 2);
-
-	m_KeyboardInput = new PlayerKeyInput_Game1(*this);
-	m_MouseInput = new PlayerMouseInput_Game1(m_KeyboardInput->GetKeyBuffer(), *this);
-	m_DisplayOutput = new RenderDisplay_Game1(*this);
-	m_ProcessCompute = new DefaultCompute_1(m_GameTimer, *m_GameSource);
-}
-void CGameFramework_1::ReleaseObjects()
-{
-}
-
-void CGameFramework_1::UpdateUI() const
-{
-	if (typeid(CAirplanePlayer) == typeid(*m_pPlayer))
-	{
-		char text[128];
-		_itoa_s(missile_num - ((CAirplanePlayer*)m_pPlayer.get())->m_launcher->m_missiles.size(),text, 10);
-		memset(text + 1, 0, sizeof(char) * 127);
-		m_pUILayer->UpdateTextOutputs(1, (_TCHAR*)text, NULL, NULL, NULL);
-	}
-}
-
-void CGameFramework_1::ProcessSelectedObject(DWORD dwDirection, float cxDelta, float cyDelta)
-{
-	if (dwDirection != 0)
-	{
-		if (dwDirection & DIR_FORWARD) m_pSelectedObject->MoveForward(+1.0f);
-		if (dwDirection & DIR_BACKWARD) m_pSelectedObject->MoveForward(-1.0f);
-		if (dwDirection & DIR_LEFT) m_pSelectedObject->MoveStrafe(+1.0f);
-		if (dwDirection & DIR_RIGHT) m_pSelectedObject->MoveStrafe(-1.0f);
-		if (dwDirection & DIR_UP) m_pSelectedObject->MoveUp(+1.0f);
-		if (dwDirection & DIR_DOWN) m_pSelectedObject->MoveUp(-1.0f);
-	}
-	else if ((cxDelta != 0.0f) || (cyDelta != 0.0f))
-	{
-		m_pSelectedObject->Rotate(cyDelta, cxDelta, 0.0f);
-	}
-}
-
-void CGameFramework_1::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
-{
-	if (m_pScene) m_pScene->OnProcessingMouseMessage(hWnd, nMessageID, wParam, lParam);
-	switch (nMessageID) {
-	case WM_LBUTTONDOWN:
-	case WM_RBUTTONDOWN:
-		m_pSelectedObject = m_pScene->PickObjectPointedByCursor(LOWORD(lParam), HIWORD(lParam), m_pCamera);
-		SetCapture(hWnd);
-		GetCursorPos(&m_MouseInput->GetOldCursorPos());
-		break;
-	case WM_LBUTTONUP:
-	case WM_RBUTTONUP:
-		m_pSelectedObject = NULL;
-		ReleaseCapture();
-		break;
-	case WM_MOUSEMOVE:
-		break;
-	default:
-		break;
-	}
-}
-void CGameFramework_1::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
-{
-	if (m_pScene) m_pScene->OnProcessingKeyboardMessage(hWnd, nMessageID, wParam, lParam);
-	switch (nMessageID) {
-	case WM_KEYUP:
-		switch (wParam) {
-		case VK_F1:
-		case VK_F2:
-		case VK_F3:
-			if (m_pPlayer) m_pCamera = m_pPlayer->ChangeCamera((wParam - VK_F1 + 1), m_GameTimer.GetTimeElapsed());
-			break;
-		case VK_ESCAPE:
-			::PostQuitMessage(0);
-			break;
-		case VK_RETURN:
-			break;
-		case VK_F8:
-			break;
-		case VK_F9:
-			m_Iframe.ChangeSwapChainState();
-			break;
-		case 0x46:
-			if (typeid(CAirplanePlayer) == typeid(*m_pPlayer)) {
-				((CAirplanePlayer*)m_pPlayer.get())->m_launcher->state += add_missile;
-			}
-			break;
-		default:
-			break;
-		}
-		break;
-	default:
-		break;
-	}
-}
 
