@@ -132,6 +132,9 @@
     <ClInclude Include="Components_Neon.h">
       <Filter>NeonSurvival_Module</Filter>
     </ClInclude>
+    <ClInclude Include="Components_Test.h">
+      <Filter>TestGame_Module</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ProcessInput.cpp">
@@ -205,6 +208,9 @@
     </ClCompile>
     <ClCompile Include="Components_Neon.cpp">
       <Filter>NeonSurvival_Module</Filter>
+    </ClCompile>
+    <ClCompile Include="Components_Test.cpp">
+      <Filter>TestGame_Module</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -86,7 +86,6 @@ public:
 };
 
 class Launcher;
-
 class CAirplanePlayer : public CPlayer {
 public:
 	CGameObject* m_pMainRotorFrame = NULL;

@@ -239,59 +239,11 @@ void CScene::CreateBoundingBox(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 {
 	for (int i = 0; i < m_ppShaders.size(); ++i)
 	{
-		if(i == 1)
-			m_ppShaders[i]->CreateBoundingBox(pd3dDevice, pd3dCommandList, BBShader);
+		m_ppShaders[i]->CreateBoundingBox(pd3dDevice, pd3dCommandList, BBShader);
 	}
 }
 void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
-	BuildLightsAndMaterials();
-
-	// SkyBox Build.
-	m_pSkyBox = new CSkyBox(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-
-	// Terrain Build.
-	XMFLOAT3 xmf3Scale(12.0f, 2.0f, 12.0f);
-	XMFLOAT4 xmf4Color(0.0f, 0.1f, 0.0f, 0.0f);
-#ifdef _WITH_TERRAIN_PARTITION
-	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("../Assets/Image/Terrain/HeightMap.raw"), 257, 257, 17, 17, xmf3Scale, xmf4Color);
-#else
-	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList,
-		m_pd3dGraphicsRootSignature, _T("Image/terrain.raw"), 257, 257, 257, 257, xmf3Scale, xmf4Color);
-#endif
-
-	// ShaderObjects Build.
-	m_ppShaders.reserve(5);
-
-	CTexturedObjects* pTexturedObjectShader = new TexturedObjects_1();
-	pTexturedObjectShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	pTexturedObjectShader->BuildObjects(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, m_pTerrain);
-	m_ppShaders.push_back(pTexturedObjectShader);
-
-	CModelObjects* pModelObjectShader = new ModelObjects_1();
-	pModelObjectShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	pModelObjectShader->BuildObjects(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	m_ppShaders.push_back(pModelObjectShader);
-
-	CBillboardObjects* pBillboardObjectShader = new BillboardObjects_1();
-	pBillboardObjectShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	pBillboardObjectShader->BuildObjects(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, m_pTerrain);
-	m_ppShaders.push_back(pBillboardObjectShader);
-
-	CMultiSpriteObjects* pMultiSpriteObjectsShader = new MultiSpriteObjects_1();
-	pMultiSpriteObjectsShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	pMultiSpriteObjectsShader->BuildObjects(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, m_pTerrain);
-	m_ppShaders.push_back(pMultiSpriteObjectsShader);
-
-	CBlendTextureObjects* pBlendTextureObjectsShader = new BlendTextureObjects_1();
-	pBlendTextureObjectsShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	pBlendTextureObjectsShader->BuildObjects(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, m_pTerrain);
-	m_ppShaders.push_back(pBlendTextureObjectsShader);
-
-	CreateShaderVariables(pd3dDevice, pd3dCommandList);
-
-	// BoundingBoxObjects Build.
-	m_pBBObjects->BuildObjects(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 }
 void CScene::BuildLightsAndMaterials()
 {
@@ -377,15 +329,6 @@ bool CScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wPar
 		switch (wParam)
 		{
 		case VK_CONTROL:
-			break;
-		case 'F':
-			if (typeid(MultiSpriteObjects_1) == typeid(*m_ppShaders[3])
-				&& typeid(CAirplanePlayer) == typeid(*m_pPlayer))
-				((CAirplanePlayer*)m_pPlayer.get())->AddObject(m_ppShaders);
-			break;
-		case 'C':
-			if (m_pBBObjects && !m_pBBObjects->m_bCollisionBoxWireFrame) m_pBBObjects->m_bCollisionBoxWireFrame = true;
-			else if (m_pBBObjects && m_pBBObjects->m_bCollisionBoxWireFrame) m_pBBObjects->m_bCollisionBoxWireFrame = false;
 			break;
 		default:
 			break;

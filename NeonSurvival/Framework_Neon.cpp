@@ -253,11 +253,6 @@ void CGameFramework_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID
 		case VK_F9:
 			m_Iframe.ChangeSwapChainState();
 			break;
-		case 0x46:
-			if (typeid(CAirplanePlayer) == typeid(*m_pPlayer)) {
-				((CAirplanePlayer*)m_pPlayer.get())->m_launcher->state += add_missile;
-			}
-			break;
 		default:
 			break;
 		}

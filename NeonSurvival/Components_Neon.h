@@ -2,15 +2,25 @@
 #include "Player.h"
 #include "Scene.h"
 
-class DefaultPlayer : public CPlayer {
+//-------------------------------------------------------------------------------
+/*	Player																	   */
+//-------------------------------------------------------------------------------
+class Player_Neon : public CPlayer {
 public:
-	DefaultPlayer();
-	virtual ~DefaultPlayer();
+	Player_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext, int nMeshes = 1);
+	virtual ~Player_Neon();
+
+	void OnPlayerUpdateCallback(float fTimeElapsed) override;
+	void OnCameraUpdateCallback(float fTimeElapsed) override;
+	CCamera* ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed) override;
 };
 
+//-------------------------------------------------------------------------------
+/*	Scene																	   */
+//-------------------------------------------------------------------------------
 class Scene_Neon : public CScene {
 public:
-	Scene_Neon(ID3D12Device* pd3dDevice);
+	Scene_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual ~Scene_Neon();
 
 	void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) override;

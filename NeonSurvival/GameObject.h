@@ -8,7 +8,7 @@ class CCamera;
 struct CB_GAMEOBJECT_INFO;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
+
 #define RESOURCE_TEXTURE2D			0x01
 #define RESOURCE_TEXTURE2D_ARRAY	0x02
 #define RESOURCE_TEXTURE2DARRAY		0x03
@@ -29,22 +29,22 @@ private:
 	UINT							m_nTextureType;
 
 	int								m_nTextures = 0;
-	ID3D12Resource** m_ppd3dTextures = NULL;
-	ID3D12Resource** m_ppd3dTextureUploadBuffers;
+	ID3D12Resource**				m_ppd3dTextures = NULL;
+	ID3D12Resource**				m_ppd3dTextureUploadBuffers;
 
-	UINT* m_pnResourceTypes = NULL;
+	UINT*							m_pnResourceTypes = NULL;
 
 	_TCHAR(*m_ppstrTextureNames)[64] = NULL;
 
-	DXGI_FORMAT* m_pdxgiBufferFormats = NULL;
-	int* m_pnBufferElements = NULL;
+	DXGI_FORMAT*					m_pdxgiBufferFormats = NULL;
+	int*							m_pnBufferElements = NULL;
 
 	int								m_nRootParameters = 0;
-	int* m_pnRootParameterIndices = NULL;
-	D3D12_GPU_DESCRIPTOR_HANDLE* m_pd3dSrvGpuDescriptorHandles = NULL;
+	int*							m_pnRootParameterIndices = NULL;
+	D3D12_GPU_DESCRIPTOR_HANDLE*	m_pd3dSrvGpuDescriptorHandles = NULL;
 
 	int								m_nSamplers = 0;
-	D3D12_GPU_DESCRIPTOR_HANDLE* m_pd3dSamplerGpuDescriptorHandles = NULL;
+	D3D12_GPU_DESCRIPTOR_HANDLE*	m_pd3dSamplerGpuDescriptorHandles = NULL;
 
 public:
 	void AddRef() { m_nReferences++; }
@@ -90,8 +90,9 @@ public:
 
 	XMFLOAT4X4						m_xmf4x4Texture;
 };
-//
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 #define MATERIAL_ALBEDO_MAP			0x01
 #define MATERIAL_SPECULAR_MAP		0x02
 #define MATERIAL_NORMAL_MAP			0x04
@@ -149,6 +150,8 @@ public:
 	float							m_fMetallic = 0.0f;
 	float							m_fGlossyReflection = 0.0f;
 };
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class CGameObject {
 public:
@@ -210,7 +213,6 @@ public:
 	virtual void Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects, XMFLOAT4X4* pxmf4x4Parent = NULL);
 	virtual void Animate(float fTimeElapsed, XMFLOAT4X4* pxmf4x4Parent = NULL);
 	virtual void BatchAnimate(float fTimeElapsed, XMFLOAT4X4* pxmf4x4Parent = NULL);
-	void Rotate(XMFLOAT3* pxmfAxis, float fAngle);
 
 	// processoutput..
 	virtual void OnPrepareRender();
@@ -233,6 +235,7 @@ public:
 	void MoveUp(float fDistance = 1.0f);
 	void MoveForward(float fDistance = 1.0f);
 
+	void Rotate(XMFLOAT3* pxmfAxis, float fAngle);
 	void Rotate(float fPitch = 10.0f, float fYaw = 10.0f, float fRoll = 10.0f);
 	void Scale(float width = 1.f, float height = 1.f, float depth = 1.f);
 	void SetScale(const XMFLOAT3& scale);
@@ -277,45 +280,13 @@ public:
 
 	static void PrintFrameInfo(CGameObject* pGameObject, CGameObject* pParent);
 };
-
-class CRotatingObject : public CGameObject {
-public:
-	CRotatingObject(int nMeshes = 1);
-	virtual ~CRotatingObject();
-
-private:
-	XMFLOAT3 m_xmf3RotationAxis;
-	float m_fRotationSpeed;
-
-public:
-	void SetRotationSpeed(float fRotationSpeed) { m_fRotationSpeed = fRotationSpeed; }
-	void SetRotationAxis(XMFLOAT3 xmf3RotationAxis) { m_xmf3RotationAxis = xmf3RotationAxis; }
-	virtual void Animate(float fTimeElapsed, XMFLOAT4X4* pxmf4x4Parent = NULL);
-};
-
-class CSuperCobraObject : public CGameObject
-{
-public:
-	CSuperCobraObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature);
-	virtual ~CSuperCobraObject();
-
-private:
-	CGameObject* m_pMainRotorFrame = NULL;
-	CGameObject* m_pTailRotorFrame = NULL;
-
-public:
-	virtual void PrepareAnimate();
-	virtual void Animate(float fTimeElapsed, XMFLOAT4X4* pxmf4x4Parent = NULL);
-};
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
 class CBoundingBox : public CGameObject {
 public:
 	CBoundingBox(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature);
 	virtual ~CBoundingBox();
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
 class CSkyBox : public CGameObject
 {
 public:
@@ -325,7 +296,6 @@ public:
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL);
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
 class CHeightMapTerrain : public CGameObject {
 public:
 	CHeightMapTerrain(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, LPCTSTR pFileName, int nWidth, int nLength, int nBlockWidth, int nBlockLength, XMFLOAT3 xmf3Scale, XMFLOAT4 xmf4Color);
@@ -349,56 +319,18 @@ public:
 	float GetLength() { return m_nLength * m_xmf3Scale.z; }
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-class CBillboardObject : public CGameObject {
+class CSuperCobraObject : public CGameObject
+{
 public:
-	CBillboardObject();
-	virtual ~CBillboardObject();
+	CSuperCobraObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature);
+	virtual ~CSuperCobraObject();
 
-	float m_fSpeed = 0.1f;
-	float m_fTime = 0.0f;
+private:
+	CGameObject* m_pMainRotorFrame = NULL;
+	CGameObject* m_pTailRotorFrame = NULL;
 
-	virtual void Animate(float fTimeElapsed, XMFLOAT4X4* pxmf4x4Parent = NULL);
-	virtual void BatchAnimate(float fTimeElapsed, XMFLOAT4X4* pxmf4x4Parent = NULL);
-	void SwayInTheWind(XMFLOAT4X4* textureUV, float fTime);
-
-	float m_fRotationAngle = 0.0f;
-	float m_fRotationDelta = 1.0f;
-};
-
-class CMultiSpriteObject : public CGameObject {
 public:
-	CMultiSpriteObject(bool bAct, int m_nCols, int m_nRows);
-	virtual ~CMultiSpriteObject();
-
-	bool m_bOwner = true;
-
-	float cooltime = 0.5f;
-
-	bool bActive;
-	bool temporary;
-	float m_fTime = 0.0f;
-
-	int m_nCols = 0;
-	int m_nRows = 0;
-
-	XMFLOAT4X4	m_xmf4x4Texture;
-
+	virtual void PrepareAnimate();
 	virtual void Animate(float fTimeElapsed, XMFLOAT4X4* pxmf4x4Parent = NULL);
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-class COceanObject : public CGameObject {
-public:
-	COceanObject();
-	virtual ~COceanObject();
-
-	float m_fSpeed = 0.1f;
-	float m_fTime = 0.0f;
-
-	virtual void Animate(float fTimeElapsed, XMFLOAT4X4* pxmf4x4Parent = NULL);
-	virtual void BatchAnimate(float fTimeElapsed, XMFLOAT4X4* pxmf4x4Parent = NULL);
-	void WaterFlows(XMFLOAT4X4* textureUV, float fTime);
-};
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//

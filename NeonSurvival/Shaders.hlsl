@@ -371,8 +371,8 @@ float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
 	float4 cDetailTexColor = gtxtDetailTexture.Sample(gssWrap, input.uv1);
 	//	float fAlpha = gtxtTerrainTexture.Sample(gssWrap, input.uv0);
 
-	float4 cColor = cBaseTexColor * 0.5f + cDetailTexColor * 0.5f;
+	float4 cColor = cBaseTexColor * 0.4f + cDetailTexColor * 0.7f;
 	//	float4 cColor = saturate(lerp(cBaseTexColor, cDetailTexColor, fAlpha));
 
-	return(cColor);
+	return(cColor*0.5f);
 }

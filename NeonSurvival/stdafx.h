@@ -66,6 +66,13 @@ using Microsoft::WRL::ComPtr;
 #define RANDOM_COLOR XMFLOAT4(rand() / float(RAND_MAX), rand() / float(RAND_MAX), rand() / float(RAND_MAX), rand() / float(RAND_MAX))
 #define EPSILON 1.0e-10f
 
+#define MERTER_PER_PIXEL 10 // 1meter 10pixel~50pixel
+#define KM_PER_PIXEL (MERTER_PER_PIXEL*1000)
+
+#define PIXEL_MPS(num) num * MERTER_PER_PIXEL
+#define PIXEL_MPM(num) PIXEL_MPS(num) / 60
+#define PIXEL_KPH(num) num * KM_PER_PIXEL / 3600
+
 #define MAX_LIGHTS 8
 #define MAX_MATERIALS 8
 

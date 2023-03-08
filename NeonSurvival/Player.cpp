@@ -290,7 +290,7 @@ void CAirplanePlayer::AddObject(std::vector<CShader*>& Shaders)
 			{
 				MultiSpriteObjects_1* pShader = (MultiSpriteObjects_1*)shader[i];
 
-				if (!((CMultiSpriteObject*)pShader->GetGameObject()[1])->bActive)
+				if (!((CMultiSpriteObject_1*)pShader->GetGameObject()[1])->bActive)
 					pShader->ExecuteActive(1);
 				else
 					pShader->AddObject(m_xmf3Position, 1, 0.7f, true);
@@ -316,7 +316,7 @@ void CAirplanePlayer::Collide(const CGameSource& GameSource, CBoundingBoxObjects
 					if (typeid(MultiSpriteObjects_1) == typeid(*shader[n]))
 					{
 						MultiSpriteObjects_1* pShader = (MultiSpriteObjects_1*)shader[n];
-						//if (!((CMultiSpriteObject*)pShader->GetGameObject()[0])->bActive) pShader->ExecuteActive(0, false);
+						//if (!((CMultiSpriteObject_1*)pShader->GetGameObject()[0])->bActive) pShader->ExecuteActive(0, false);
 						pShader->AddObject((*msl)->GetPosition(), 0, 0.5f, true, false);
 					}
 				}

@@ -131,6 +131,7 @@
   <ItemGroup>
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Components_Neon.h" />
+    <ClInclude Include="Components_Test.h" />
     <ClInclude Include="Frameworks.h" />
     <ClInclude Include="d3dx12.h" />
     <ClInclude Include="DDSTextureLoader12.h" />
@@ -160,6 +161,7 @@
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Components_Neon.cpp" />
+    <ClCompile Include="Components_Test.cpp" />
     <ClCompile Include="Frameworks.cpp" />
     <ClCompile Include="DDSTextureLoader12.cpp" />
     <ClCompile Include="Framework_Neon.cpp" />

@@ -41,7 +41,7 @@ void GameKeyInput_Neon::UpdateKeyboardState()
 void GameKeyInput_Neon::UpdatePlayer()
 {
 	// 수정필요. (이유 - 임의로 정한 상수값 / 해당 값은 이동거리와 관련이 있음)
-	if (dwDirection) m_Player.Move(dwDirection, 350.0f * m_GameTimer.GetTimeElapsed(), true);
+	if (dwDirection) m_Player.Move(dwDirection, PIXEL_KPH(15) * m_GameTimer.GetTimeElapsed(), true);
 }
 //-------------------------------------------------------------------------------
 LobbyKeyInput_Neon::LobbyKeyInput_Neon(CLobbyFramework& LobbyFramework) : KeyboardInput(LobbyFramework)
@@ -145,7 +145,7 @@ void GameCompute_Neon::Collide() const
 }
 
 //-------------------------------------------------------------------------------
-/*	GameRenderDisplay_Neon : public DisplayOutput								   */
+/*	GameRenderDisplay_Neon : public DisplayOutput							   */
 //-------------------------------------------------------------------------------
 GameRenderDisplay_Neon::GameRenderDisplay_Neon(CGameFramework& GameFramework) :
 	m_Scene(m_GameSource.GetRefScene()),

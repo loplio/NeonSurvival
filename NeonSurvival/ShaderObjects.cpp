@@ -312,30 +312,30 @@ void TexturedObjects_2::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 }
 
 //-------------------------------------------------------------------------------
-/*	CBillboardObjects														   */
+/*	CBillboardObject_1s														   */
 //-------------------------------------------------------------------------------
-CBillboardObjects::CBillboardObjects()
+CBillboardObject_1s::CBillboardObject_1s()
 {
 }
-CBillboardObjects::~CBillboardObjects()
-{
-}
-
-void CBillboardObjects::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext)
+CBillboardObject_1s::~CBillboardObject_1s()
 {
 }
 
-void CBillboardObjects::AnimateObjects(float fTimeElapsed)
+void CBillboardObject_1s::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext)
 {
 }
-void CBillboardObjects::ReleaseObjects()
+
+void CBillboardObject_1s::AnimateObjects(float fTimeElapsed)
+{
+}
+void CBillboardObject_1s::ReleaseObjects()
 {
 	if (!m_ppObjects.empty()) {
 		for (int i = 0; i < m_ppObjects.size(); ++i)
 			if (m_ppObjects[i]) m_ppObjects[i]->Release();
 	}
 }
-void CBillboardObjects::ReleaseUploadBuffers()
+void CBillboardObject_1s::ReleaseUploadBuffers()
 {
 	if (!m_ppObjects.empty()) {
 		for (int i = 0; i < m_ppObjects.size(); ++i)
@@ -343,11 +343,11 @@ void CBillboardObjects::ReleaseUploadBuffers()
 	}
 }
 
-void CBillboardObjects::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int nPipelineState)
+void CBillboardObject_1s::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int nPipelineState)
 {
 }
 
-CGameObject* CBillboardObjects::PickObjectByRayIntersection(XMFLOAT3& xmf3PickPosition, XMFLOAT4X4& xmf4x4View, float* pfNearHitDistance)
+CGameObject* CBillboardObject_1s::PickObjectByRayIntersection(XMFLOAT3& xmf3PickPosition, XMFLOAT4X4& xmf4x4View, float* pfNearHitDistance)
 {
 	int nIntersected = 0;
 	*pfNearHitDistance = FLT_MAX;
@@ -441,7 +441,7 @@ void BillboardObjects_1::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 	//m_ppObjects = new CGameObject * [m_nObjects];
 	m_ppObjects.resize(nGrassObjects + nTreeObjects[0] + nTreeObjects[1]);
 
-	CBillboardObject* pBillboardObject = NULL;
+	CBillboardObject_1* pBillboardObject = NULL;
 	for (int nObjects = 0, z = 2; z <= 254; z++)
 	{
 		for (int x = 2; x <= 254; x++)
@@ -496,7 +496,7 @@ void BillboardObjects_1::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 
 			if (pMesh && pMaterial)
 			{
-				pBillboardObject = new CBillboardObject();
+				pBillboardObject = new CBillboardObject_1();
 
 				pBillboardObject->SetMesh(0, pMesh);
 				pBillboardObject->SetMaterial(0, pMaterial);
@@ -559,45 +559,45 @@ void BillboardObjects_1::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCam
 }
 
 //-------------------------------------------------------------------------------
-/*	CMultiSpriteObjects														   */
+/*	CMultiSpriteObject_1s														   */
 //-------------------------------------------------------------------------------
-CMultiSpriteObjects::CMultiSpriteObjects()
+CMultiSpriteObject_1s::CMultiSpriteObject_1s()
 {
 }
-CMultiSpriteObjects::~CMultiSpriteObjects()
-{
-}
-
-void CMultiSpriteObjects::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext)
+CMultiSpriteObject_1s::~CMultiSpriteObject_1s()
 {
 }
 
-void CMultiSpriteObjects::ReleaseObjects()
+void CMultiSpriteObject_1s::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext)
+{
+}
+
+void CMultiSpriteObject_1s::ReleaseObjects()
 {
 	if (!m_ppObjects.empty()) {
 		for (int i = 0; i < m_ppObjects.size(); ++i)
 			if (m_ppObjects[i]) m_ppObjects[i]->Release();
 	}
 }
-void CMultiSpriteObjects::ReleaseUploadBuffers()
+void CMultiSpriteObject_1s::ReleaseUploadBuffers()
 {
 	if (!m_ppObjects.empty()) {
 		for (int i = 0; i < m_ppObjects.size(); ++i)
 			m_ppObjects[i]->ReleaseUploadBuffers();
 	}
 }
-void CMultiSpriteObjects::AnimateObjects(float fTimeElapsed)
+void CMultiSpriteObject_1s::AnimateObjects(float fTimeElapsed)
 {
 	for (int i = 0; i < m_ppObjects.size(); ++i)
 	{
 		m_ppObjects[i]->Animate(fTimeElapsed);
 	}
 }
-void CMultiSpriteObjects::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int nPipelineState)
+void CMultiSpriteObject_1s::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int nPipelineState)
 {
 }
 
-CGameObject* CMultiSpriteObjects::PickObjectByRayIntersection(XMFLOAT3& xmf3PickPosition, XMFLOAT4X4& xmf4x4View, float* pfNearHitDistance)
+CGameObject* CMultiSpriteObject_1s::PickObjectByRayIntersection(XMFLOAT3& xmf3PickPosition, XMFLOAT4X4& xmf4x4View, float* pfNearHitDistance)
 {
 	int nIntersected = 0;
 	*pfNearHitDistance = FLT_MAX;
@@ -655,9 +655,9 @@ void MultiSpriteObjects_1::Render(ID3D12GraphicsCommandList* pd3dCommandList, CC
 
 	for (int j = 0; j < m_ppObjects.size(); j++)
 	{
-		if (m_ppObjects[j] && ((CMultiSpriteObject*)m_ppObjects[j])->bActive)
+		if (m_ppObjects[j] && ((CMultiSpriteObject_1*)m_ppObjects[j])->bActive)
 		{
-			if (((CMultiSpriteObject*)m_ppObjects[j])->m_bOwner)
+			if (((CMultiSpriteObject_1*)m_ppObjects[j])->m_bOwner)
 			{
 				m_ppObjects[j]->SetPosition(xmf3Position);
 				m_ppObjects[j]->SetLookAt(xmf3CameraPosition, XMFLOAT3(0.0f, 1.0f, 0.0f));
@@ -674,13 +674,13 @@ void MultiSpriteObjects_1::Render(ID3D12GraphicsCommandList* pd3dCommandList, CC
 
 	for (int i = 0; i < m_ppObjects.size(); ++i)
 	{
-		if (m_ppObjects[i] && ((CMultiSpriteObject*)m_ppObjects[i])->bActive)
+		if (m_ppObjects[i] && ((CMultiSpriteObject_1*)m_ppObjects[i])->bActive)
 		{
 			if (m_ppObjects[i]->m_pChild) m_ppObjects[i]->UpdateTransform(NULL);
 			XMFLOAT4X4 xmf4x4World;
 			XMStoreFloat4x4(&xmf4x4World, XMMatrixTranspose(XMLoadFloat4x4(&m_ppObjects[i]->m_xmf4x4World)));
 			pd3dCommandList->SetGraphicsRoot32BitConstants(2, 16, &xmf4x4World, 0);
-			pd3dCommandList->SetGraphicsRoot32BitConstants(0, 16, &((CMultiSpriteObject*)m_ppObjects[i])->m_xmf4x4Texture, 0);
+			pd3dCommandList->SetGraphicsRoot32BitConstants(0, 16, &((CMultiSpriteObject_1*)m_ppObjects[i])->m_xmf4x4Texture, 0);
 			m_ppObjects[i]->GetMaterial(0)->m_pTexture->UpdateShaderVariables(pd3dCommandList);
 			m_ppObjects[i]->GetMesh(0)->Render(pd3dCommandList, 0);
 		}
@@ -692,8 +692,8 @@ void MultiSpriteObjects_1::AddObject(const XMFLOAT3& position, int index, float 
 	int row = (index) ? 6 : 8;
 	int col = (index) ? 6 : 8;
 
-	CMultiSpriteObject* pSpriteObject = NULL;
-	pSpriteObject = new CMultiSpriteObject(btemporary, col, row);
+	CMultiSpriteObject_1* pSpriteObject = NULL;
+	pSpriteObject = new CMultiSpriteObject_1(btemporary, col, row);
 	pSpriteObject->SetMesh(0, m_pSpriteMesh);
 	pSpriteObject->SetMaterial(0, m_ppSpriteMaterials[index]);
 	pSpriteObject->SetPosition(XMFLOAT3(position.x, position.y, position.z));
@@ -706,7 +706,7 @@ void MultiSpriteObjects_1::GarbageCollector()
 {
 	for (int i = 0; i < m_ppObjects.size(); ++i)
 	{
-		if (((CMultiSpriteObject*)m_ppObjects[i])->temporary && !((CMultiSpriteObject*)m_ppObjects[i])->bActive)
+		if (((CMultiSpriteObject_1*)m_ppObjects[i])->temporary && !((CMultiSpriteObject_1*)m_ppObjects[i])->bActive)
 		{
 			m_ppObjects[i]->Release();
 			m_ppObjects.erase(m_ppObjects.begin() + i);
@@ -715,9 +715,9 @@ void MultiSpriteObjects_1::GarbageCollector()
 }
 void MultiSpriteObjects_1::ExecuteActive(int index, bool bOwner)
 {
-	((CMultiSpriteObject*)m_ppObjects[index])->bActive = true;
-	((CMultiSpriteObject*)m_ppObjects[index])->m_fTime = 0.0f;
-	((CMultiSpriteObject*)m_ppObjects[index])->m_bOwner = bOwner;
+	((CMultiSpriteObject_1*)m_ppObjects[index])->bActive = true;
+	((CMultiSpriteObject_1*)m_ppObjects[index])->m_fTime = 0.0f;
+	((CMultiSpriteObject_1*)m_ppObjects[index])->m_bOwner = bOwner;
 }
 
 //-------------------------------------------------------------------------------
@@ -811,14 +811,14 @@ void BlendTextureObjects_1::BuildObjects(ID3D12Device* pd3dDevice, ID3D12Graphic
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 	CreateShaderResourceViews(pd3dDevice, ppWaterTextures[0], 0, 4);
 
-	COceanObject* pGameObject = NULL;
+	COceanObject_1* pGameObject = NULL;
 	for (int i = 0, x = 0; x < xObjects; x++)
 	{
 		for (int z = 0; z < zObjects; z++)
 		{
 			for (int y = 0; y < yObjects; y++)
 			{
-				pGameObject = new COceanObject();
+				pGameObject = new COceanObject_1();
 
 				pGameObject->SetMesh(0, pSpriteMesh);
 				pGameObject->SetMaterial(0, ppSpriteMaterials[0]);

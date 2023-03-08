@@ -118,12 +118,12 @@ public:
 };
 
 //-------------------------------------------------------------------------------
-/*	CBillboardObjects														   */
+/*	CBillboardObject_1s														   */
 //-------------------------------------------------------------------------------
-class CBillboardObjects : public CBillboardShader {
+class CBillboardObject_1s : public CBillboardShader {
 public:
-	CBillboardObjects();
-	virtual ~CBillboardObjects();
+	CBillboardObject_1s();
+	virtual ~CBillboardObject_1s();
 
 	virtual void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext = NULL) = 0;
 
@@ -139,7 +139,7 @@ protected:
 };
 
 //--Concrete_1-------------------------------------------------------------------
-class BillboardObjects_1 : public CBillboardObjects {
+class BillboardObjects_1 : public CBillboardObject_1s {
 	UINT object_type = 3;
 
 public:
@@ -152,12 +152,12 @@ public:
 };
 
 //-------------------------------------------------------------------------------
-/*	CMultiSpriteObjects														   */
+/*	CMultiSpriteObject_1s														   */
 //-------------------------------------------------------------------------------
-class CMultiSpriteObjects : public CMultiSpriteShader {
+class CMultiSpriteObject_1s : public CMultiSpriteShader {
 public:
-	CMultiSpriteObjects();
-	virtual ~CMultiSpriteObjects();
+	CMultiSpriteObject_1s();
+	virtual ~CMultiSpriteObject_1s();
 
 	virtual void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext = NULL) = 0;
 
@@ -176,7 +176,7 @@ protected:
 };
 
 //--Concrete_1-------------------------------------------------------------------
-class MultiSpriteObjects_1 : public CMultiSpriteObjects {
+class MultiSpriteObjects_1 : public CMultiSpriteObject_1s {
 	UINT object_type = 3;
 
 public:
