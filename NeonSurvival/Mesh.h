@@ -152,6 +152,7 @@ public:
 
 	XMFLOAT3& GetAABBExtents() { return m_xmf3AABBExtents; }
 	XMFLOAT3& GetAABBCenter() { return m_xmf3AABBCenter; }
+	char* GetMeshName() { return m_pstrMeshName; }
 	
 	BoundingOrientedBox GetBoundingBox() { return m_xmBoundingBox; }
 };
