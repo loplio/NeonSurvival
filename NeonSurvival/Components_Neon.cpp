@@ -2,6 +2,7 @@
 #include "Components_Neon.h"
 #include "GameObject.h"
 #include "ShaderObjects.h"
+#include "Server.h"
 
 //-------------------------------------------------------------------------------
 /*	Player																	   */
@@ -105,6 +106,9 @@ void Player_Neon::Update(float fTimeElapsed)
 	if (fDeceleration.z > fabs(m_xmf3Velocity.z)) fDeceleration.z = m_xmf3Velocity.z;
 	fDeceleration.x *= -m_xmf3Velocity.x; fDeceleration.y *= -m_xmf3Velocity.y; fDeceleration.z *= -m_xmf3Velocity.z;
 	m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, fDeceleration);
+
+	//서버로 전송하기 위한 패킷에 위치정보를 갱신
+	//SERVER::getIncetance().UpdatePlayerPosition(GetPosition());
 }
 
 void Player_Neon::OnPrepareRender()

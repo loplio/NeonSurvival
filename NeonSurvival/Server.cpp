@@ -60,13 +60,14 @@ void SERVER::ProcessSocketMessage(HWND hWnd, UINT unit, WPARAM wParam, LPARAM lP
         {
             int len = recv(wParam, (char*)&ClientNumId, sizeof(int), 0);
             printf("ClientNum : %d\n", ClientNumId);
+            FirstConnect = true;
             break;
         }
         case MESSAGETYPE::INGAME:
         {
-            int len = recv(wParam, (char*)&PlayersPostion, sizeof(PlayersPostion), 0);
-            printf("id : %d - x : %f y : %f z : %f", PlayersPostion[0].id, PlayersPostion[0].position.x, PlayersPostion[0].position.y, PlayersPostion[0].position.z);
-            printf("id : %d - x : %f y : %f z : %f", PlayersPostion[1].id, PlayersPostion[1].position.x, PlayersPostion[1].position.y, PlayersPostion[1].position.z);
+            int len = recv(wParam, (char*)&PlayersPosition, sizeof(PlayersPosition), 0);
+            printf("id : %d - x : %f y : %f z : %f", PlayersPosition[0].id, PlayersPosition[0].position.x, PlayersPosition[0].position.y, PlayersPosition[0].position.z);
+            printf("id : %d - x : %f y : %f z : %f", PlayersPosition[1].id, PlayersPosition[1].position.x, PlayersPosition[1].position.y, PlayersPosition[1].position.z);
             break;
         }
         default:
@@ -78,19 +79,34 @@ void SERVER::ProcessSocketMessage(HWND hWnd, UINT unit, WPARAM wParam, LPARAM lP
         printf("write\n");
         if (FirstConnect == false)
         {
-            FirstConnect = true;
-            int type = MESSAGETYPE::LOGIN;
-            int len = send(wParam, (char*)&type, sizeof(type), 0);
-            printf("%d\n", (char*)type);
+           /* int type = MESSAGETYPE::LOGIN;
+            int len = send(wParam, (char*)&type, sizeof(type), 0);*/
+            SendMessageType(wParam, MESSAGETYPE::LOGIN);
         }
         else
         {
-            int len = send(wParam, buf, BUFSIZE, 0);
+            //int type = MESSAGETYPE::LOGIN;
+            //int len = send(wParam, (char*)&type, sizeof(P_InGame), 0);
+            SendMessageType(wParam, MESSAGETYPE::INGAME);
+            int len = send(wParam, (char*)&P_InGame, sizeof(P_InGame), 0);
+            printf("position\n");
 
         }
+        PostMessage(hWnd, WM_SOCKET, wParam, FD_READ);
         break;
     }
 
     }
+}
+
+void SERVER::SendMessageType(SOCKET socket,int type)
+{
+    send(socket, (char*)&type, sizeof(int), 0);
+}
+
+void SERVER::UpdatePlayerPosition(const XMFLOAT3 &position)
+{
+    P_InGame.id = ClientNumId;
+    P_InGame.position = position;
 }
 

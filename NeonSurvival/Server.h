@@ -24,13 +24,26 @@ typedef struct{
 } PACKET_INGAME;
 
 class SERVER {
+private:
+	SERVER() {}
+	SERVER(const SERVER& ref) {}
+	SERVER& operator=(const SERVER& ref) {}
+	~SERVER() {}
+
 	char buf[BUFSIZE];
 	int ClientNumId = 0;
 	bool FirstConnect = false;
 	int MessageType = 0;
 	PACKET_INGAME P_InGame;
-	PACKET_INGAME PlayersPostion[2];
+	PACKET_INGAME PlayersPosition[2];
 public:
+	static SERVER& getIncetance() {
+		static SERVER s;
+		return s;
+	}
+
 	void init(HWND);
 	void ProcessSocketMessage(HWND, UINT, WPARAM, LPARAM);
+	void SendMessageType(SOCKET socket,int type);
+	void UpdatePlayerPosition(const XMFLOAT3 &position);
 };
