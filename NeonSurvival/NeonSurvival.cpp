@@ -4,6 +4,9 @@
 #include "stdafx.h"
 #include "NeonSurvival.h"
 #include "GameScene.h"
+#include "Server.h"
+
+#pragma comment(linker, "/entry:wWinMainCRTStartup /subsystem:console") //콘솔창 띄우기
 
 #define MAX_LOADSTRING 100
 
@@ -13,7 +16,7 @@ WCHAR szTitle[MAX_LOADSTRING];                  // 제목 표시줄 텍스트입
 WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름입니다.
 
 GameScene gGameScene;
-
+SERVER    gGameServer;
 // 이 코드 모듈에 포함된 함수의 선언을 전달합니다:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
@@ -125,6 +128,9 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    ShowWindow(hWnd, nCmdShow);
    UpdateWindow(hWnd);
 
+   //서버
+   gGameServer.init(hWnd);
+
    return TRUE;
 }
 
@@ -142,6 +148,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
+    case WM_SOCKET:
+        printf("wm_socket\n");
+        gGameServer.ProcessSocketMessage(hWnd, message, wParam, lParam);
+        break;
     case WM_SIZE:
     case WM_LBUTTONDOWN:
     case WM_LBUTTONUP:

@@ -45,6 +45,7 @@ using namespace DirectX::PackedVector;
 using Microsoft::WRL::ComPtr;
 
 #include <Mmsystem.h>
+
 #pragma comment(lib, "winmm.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "d3d12.lib")
