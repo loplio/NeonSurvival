@@ -178,10 +178,11 @@ protected:
 public:
 	char m_pstrFrameName[64];
 
-	XMFLOAT4X4 m_xmf4x4World;
-	XMFLOAT4X4 m_xmf4x4Transform;
-	XMFLOAT3   m_xmf3Shift;
-	XMFLOAT3   m_xmf3Scale;
+	XMFLOAT4X4	m_xmf4x4World;
+	XMFLOAT4X4	m_xmf4x4Transform;
+	XMFLOAT3	m_xmf3Shift;
+	XMFLOAT3	m_xmf3Scale;
+	float		m_Mass;
 
 	CGameObject* m_pParent = NULL;
 	CGameObject* m_pChild = NULL;
@@ -239,6 +240,7 @@ public:
 	void Rotate(float fPitch = 10.0f, float fYaw = 10.0f, float fRoll = 10.0f);
 	void Scale(float width = 1.f, float height = 1.f, float depth = 1.f);
 	void SetScale(const XMFLOAT3& scale);
+	void SetMass(float mass);
 
 	void GenerateRayForPicking(XMFLOAT3& xmf3PickPosition, XMFLOAT4X4& xmf4x4View, XMFLOAT3* pxmf3PickRayOrigin, XMFLOAT3* pxmf3PickRayDirection);
 	int PickObjectByRayIntersection(XMFLOAT3& xmf3PickPosition, XMFLOAT4X4& xmf4x4View, float* pfHitDistance);
@@ -278,6 +280,19 @@ public:
 	static CGameObject* LoadFrameHierarchyFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CGameObject* pParent, FILE* pInFile, CShader* pShader);
 	static CGameObject* LoadGeometryFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, char* pstrFileName, CShader* pShader);
 
+	void PrintObjectInfo() {
+		for (int i = 0; i < m_nMeshes; ++i)
+		{
+			if (m_ppMeshes[i])
+			{
+				std::cout << "MeshName: " << m_pstrFrameName << ", max height: " << m_ppMeshes[i]->GetAABBCenter().y + m_ppMeshes[i]->GetAABBExtents().y << ", min height: " << m_ppMeshes[i]->GetAABBCenter().y - m_ppMeshes[i]->GetAABBExtents().y 
+					<< ", left: " << m_ppMeshes[i]->GetAABBCenter().x - m_ppMeshes[i]->GetAABBExtents().x << "right: " << m_ppMeshes[i]->GetAABBCenter().x + m_ppMeshes[i]->GetAABBExtents().x
+					<< ", back: " << m_ppMeshes[i]->GetAABBCenter().y - m_ppMeshes[i]->GetAABBExtents().y << "front: " << m_ppMeshes[i]->GetAABBCenter().y + m_ppMeshes[i]->GetAABBExtents().y << std::endl;
+			}
+		}
+		if (m_pSibling) m_pSibling->PrintObjectInfo();
+		if (m_pChild) m_pChild->PrintObjectInfo();
+	}
 	static void PrintFrameInfo(CGameObject* pGameObject, CGameObject* pParent);
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

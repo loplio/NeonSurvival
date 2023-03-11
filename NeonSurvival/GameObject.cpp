@@ -316,6 +316,7 @@ CGameObject::CGameObject(int nMeshes, int nMaterials)
 	m_xmf4x4Transform = Matrix4x4::Identity();
 	m_xmf3Shift = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	m_xmf3Scale = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	m_Mass = 0;
 
 	m_nMeshes = nMeshes;
 	m_ppMeshes = NULL;
@@ -516,6 +517,10 @@ void CGameObject::SetScale(const XMFLOAT3& scale)
 	m_xmf3Scale = scale;
 	if (m_pSibling) m_pSibling->SetScale(scale);
 	if (m_pChild) m_pChild->SetScale(scale);
+}
+void CGameObject::SetMass(float mass)
+{
+	m_Mass = mass;
 }
 
 void CGameObject::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)

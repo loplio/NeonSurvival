@@ -2,6 +2,7 @@
 #include "ProcessTool_Neon.h"
 #include "Framework_Neon.h"
 
+#define SPECIAL_SHIFT 0x01
 //-------------------------------------------------------------------------------
 /*	GameKeyInput_Neon : public KeyboardInput							       */
 //-------------------------------------------------------------------------------
@@ -26,6 +27,7 @@ void GameKeyInput_Neon::DataProcessing()
 void GameKeyInput_Neon::UpdateKeyboardState()
 {
 	dwDirection = 0;
+	dwSpecialKey = 0;
 
 	if (bInput)
 	{
@@ -35,13 +37,29 @@ void GameKeyInput_Neon::UpdateKeyboardState()
 		if (m_KeyBuffer[RIGHT_D] & 0xF0) dwDirection |= DIR_RIGHT;
 		if (m_KeyBuffer[VK_SPACE] & 0xF0) dwDirection |= DIR_UP;
 		if (m_KeyBuffer[VK_CONTROL] & 0xF0) dwDirection |= DIR_DOWN;
+
+		if (m_KeyBuffer[VK_SHIFT] & 0xF0) dwSpecialKey |= SPECIAL_SHIFT;
 	}
 }
 
 void GameKeyInput_Neon::UpdatePlayer()
 {
 	// 수정필요. (이유 - 임의로 정한 상수값 / 해당 값은 이동거리와 관련이 있음)
-	if (dwDirection) m_Player.Move(dwDirection, PIXEL_KPH(15) * m_GameTimer.GetTimeElapsed(), true);
+	if (dwDirection) {
+		m_Player.SetFriction(0.0f);
+
+		if (!dwSpecialKey) {
+			m_Player.SetMaxVelocityXZ(PIXEL_KPH(20));
+			m_Player.Move(dwDirection, PIXEL_KPH(15) * m_GameTimer.GetTimeElapsed(), true);
+		}
+		else {
+			m_Player.SetMaxVelocityXZ(PIXEL_KPH(40));
+			m_Player.Move(dwDirection, PIXEL_KPH(30) * m_GameTimer.GetTimeElapsed(), true);
+		}
+	}
+	else {
+		m_Player.SetFriction(4.0f);
+	}
 }
 //-------------------------------------------------------------------------------
 LobbyKeyInput_Neon::LobbyKeyInput_Neon(CLobbyFramework& LobbyFramework) : KeyboardInput(LobbyFramework)

@@ -39,9 +39,9 @@ public:
 	virtual ~CPlayer();
 
 	// ProcessInput..
-	void Rotate(float x, float y, float z);
-	void Move(ULONG nDirection, float fDistance, bool bVelocity = false);
-	void Move(const XMFLOAT3& xmf3Shift, bool bVelocity = false);
+	virtual void Rotate(float x, float y, float z);
+	virtual void Move(ULONG nDirection, float fDistance, bool bVelocity = false);
+	virtual void Move(const XMFLOAT3& xmf3Shift, bool bVelocity = false);
 
 	// hold off..
 	void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) override final;
@@ -49,7 +49,7 @@ public:
 	void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList) override final;
 
 	// ProcessOutput..
-	void Update(float fTimeElapsed);
+	virtual void Update(float fTimeElapsed);
 	void OnPrepareRender() override;
 	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL) override;
 	void Render(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL) override;
@@ -100,6 +100,7 @@ public:
 	void Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects, XMFLOAT4X4* pxmf4x4Parent = NULL) override;
 	void PrepareAnimate() override;
 	void Animate(float fTimeElapsed, XMFLOAT4X4* pxmf4x4Parent = NULL) override;
+	void Update(float fTimeElapsed) override;
 	void OnPrepareRender() override;
 	void Render(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL) override;
 	CCamera* ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed) override;
