@@ -289,7 +289,7 @@ void TexturedObjects_1::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 				pRotatingObject->SetPosition(xPosition, fHeight + (y * 10.0f * fyPitch) + 6.0f, zPosition);
 				if (y == 0)
 				{
-					xmf3SurfaceNormal = pTerrain->GetNormal(xPosition, zPosition);
+					xmf3SurfaceNormal = pTerrain->GetIntervalNormal(xPosition, zPosition);
 					xmf3RotateAxis = Vector3::CrossProduct(XMFLOAT3(0.0f, 1.0f, 0.0f),
 						xmf3SurfaceNormal);
 					if (Vector3::IsZero(xmf3RotateAxis)) xmf3RotateAxis = XMFLOAT3(0.0f, 1.0f,

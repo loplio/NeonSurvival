@@ -324,7 +324,8 @@ private:
 
 public:
 	float GetHeight(float x, float z) { return m_pHeightMapImage->GetHeight(x / m_xmf3Scale.x, z / m_xmf3Scale.z) * m_xmf3Scale.y; }
-	XMFLOAT3 GetNormal(float x, float z) { return m_pHeightMapImage->GetHeightMapNormal(int(x / m_xmf3Scale.x), int(z / m_xmf3Scale.z)); }
+	XMFLOAT3 GetIntervalNormal(float x, float z) { return m_pHeightMapImage->GetHeightMapNormal(int(x / m_xmf3Scale.x), int(z / m_xmf3Scale.z)); }
+	XMFLOAT3 GetNormal(float x, float z) { return m_pHeightMapImage->GetHeightMapNormal(int(x), int(z)); }
 
 	int GetHeightMapWidth() { return m_pHeightMapImage->GetRawImageWidth(); }
 	int GetHeightMapLength() { return m_pHeightMapImage->GetRawImageLength(); }

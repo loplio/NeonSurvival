@@ -74,6 +74,12 @@ using Microsoft::WRL::ComPtr;
 #define PIXEL_KPH(num) KM_PER_PIXEL(num) / 3600
 #define PIXEL_TO_KPH(num) num / KM_PER_PIXEL(1.0f) * 3600
 
+#define NUM_ROOT_PARAMETER_TYPE			5
+#define ROOT_PARAMETER_TEXUV			0
+#define ROOT_PARAMETER_CAMERA			1
+#define ROOT_PARAMETER_OBJECT			2
+#define ROOT_PARAMETER_LIGHT			3
+
 #define MAX_LIGHTS 8
 #define MAX_MATERIALS 8
 

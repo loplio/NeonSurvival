@@ -26,6 +26,7 @@ struct LIGHTS
 {
 	LIGHT m_pLights[MAX_LIGHTS];
 	XMFLOAT4 m_xmf4GlobalAmbient;
+	int gnLights;
 };
 
 //struct MATERIALS
@@ -84,4 +85,8 @@ public:
 
 	CHeightMapTerrain* GetTerrain() { return m_pTerrain; }
 	std::vector<CShader*>& GetShader() { return m_ppShaders; }
+
+	void SetLight(LIGHT& light , XMFLOAT4 xmf4Ambient, XMFLOAT4 xmf4Diffuse, XMFLOAT4 xmf4Specular,
+		XMFLOAT3 xmf3Position, XMFLOAT3 xmf3Direction, XMFLOAT3 xmf3Attenuation,
+		float fFalloff, float fTheta, float fPhi, bool bEnable, int nType, float fRange, float padding);
 };
