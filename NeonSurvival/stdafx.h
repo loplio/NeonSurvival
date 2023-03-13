@@ -66,12 +66,19 @@ using Microsoft::WRL::ComPtr;
 #define RANDOM_COLOR XMFLOAT4(rand() / float(RAND_MAX), rand() / float(RAND_MAX), rand() / float(RAND_MAX), rand() / float(RAND_MAX))
 #define EPSILON 1.0e-10f
 
-#define MERTER_PER_PIXEL 10 // 1meter 10pixel~50pixel
-#define KM_PER_PIXEL (MERTER_PER_PIXEL*1000)
+#define MERTER_PER_PIXEL(num) num * 10 // 1meter 10pixel~50pixel
+#define KM_PER_PIXEL(num) (MERTER_PER_PIXEL(num)*1000)
 
-#define PIXEL_MPS(num) num * MERTER_PER_PIXEL
+#define PIXEL_MPS(num) MERTER_PER_PIXEL(num)
 #define PIXEL_MPM(num) PIXEL_MPS(num) / 60
-#define PIXEL_KPH(num) num * KM_PER_PIXEL / 3600
+#define PIXEL_KPH(num) KM_PER_PIXEL(num) / 3600
+#define PIXEL_TO_KPH(num) num / KM_PER_PIXEL(1.0f) * 3600
+
+#define NUM_ROOT_PARAMETER_TYPE			5
+#define ROOT_PARAMETER_TEXUV			0
+#define ROOT_PARAMETER_CAMERA			1
+#define ROOT_PARAMETER_OBJECT			2
+#define ROOT_PARAMETER_LIGHT			3
 
 #define MAX_LIGHTS 8
 #define MAX_MATERIALS 8
@@ -134,7 +141,7 @@ namespace Vector3
 	}
 	inline XMFLOAT3 XMVectorToFloat3(XMVECTOR& xmvVector)
 	{
-		XMFLOAT3 xmf3Result;
+		XMFLOAT3 xmf3Result; 
 		XMStoreFloat3(&xmf3Result, xmvVector);
 		return(xmf3Result);
 	}

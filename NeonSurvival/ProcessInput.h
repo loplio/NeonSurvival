@@ -21,6 +21,7 @@ protected:
 	std::array<UCHAR, 256> m_KeyBuffer;
 	bool bInput;
 	DWORD dwDirection = 0;
+	DWORD dwSpecialKey = 0;
 
 public:
 	KeyboardInput(const BaseFramework& Framework) : m_KeyBuffer(), bInput(), ProcessInput(Framework) {}

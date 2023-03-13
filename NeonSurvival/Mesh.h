@@ -152,6 +152,7 @@ public:
 
 	XMFLOAT3& GetAABBExtents() { return m_xmf3AABBExtents; }
 	XMFLOAT3& GetAABBCenter() { return m_xmf3AABBCenter; }
+	char* GetMeshName() { return m_pstrMeshName; }
 	
 	BoundingOrientedBox GetBoundingBox() { return m_xmBoundingBox; }
 };
@@ -314,20 +315,26 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class CHeightMapTerrain;
 
-class CHeightMapGridMesh : public CMesh {
+class CHeightMapGridMesh : public CMeshIlluminated {
 protected:
 	int								m_nWidth;
 	int								m_nLength;
 	XMFLOAT3						m_xmf3Scale;
 
 	XMFLOAT4*						m_pxmf4Colors = NULL;
+	XMFLOAT3*						m_pxmf3Normals = NULL;
 	XMFLOAT2*						m_pxmf2TextureCoords0 = NULL;
 	XMFLOAT2*						m_pxmf2TextureCoords1 = NULL;
 
 	ID3D12Resource*					m_pd3dColorBuffer = NULL;
 	ID3D12Resource*					m_pd3dColorUploadBuffer = NULL;
 	D3D12_VERTEX_BUFFER_VIEW		m_d3dColorBufferView;
+
+	ID3D12Resource*					m_pd3dNormalBuffer = NULL;
+	ID3D12Resource*					m_pd3dNormalUploadBuffer = NULL;
+	D3D12_VERTEX_BUFFER_VIEW		m_d3dNormalBufferView;
 
 	ID3D12Resource*					m_pd3dTextureCoord0Buffer = NULL;
 	ID3D12Resource*					m_pd3dTextureCoord0UploadBuffer = NULL;
@@ -338,7 +345,7 @@ protected:
 	D3D12_VERTEX_BUFFER_VIEW		m_d3dTextureCoord1BufferView;
 
 public:
-	CHeightMapGridMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, int xStart, int zStart, int nWidth, int nLength, XMFLOAT3 xmf3Scale = XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT4 xmf4Color = XMFLOAT4(1.0f, 1.0f, 0.0f, 0.0f), void* pContext = NULL);
+	CHeightMapGridMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CHeightMapTerrain* heightMapTerrain, int xStart, int zStart, int nWidth, int nLength, XMFLOAT3 xmf3Scale = XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT4 xmf4Color = XMFLOAT4(1.0f, 1.0f, 0.0f, 0.0f), void* pContext = NULL);
 	virtual ~CHeightMapGridMesh();
 
 	virtual void ReleaseUploadBuffers();

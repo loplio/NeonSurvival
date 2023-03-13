@@ -133,7 +133,6 @@ void CPlayer::Move(ULONG dwDirection, float fDistance, bool bUpdateVelocity)
 		if (dwDirection & DIR_LEFT) xmf3Shift = Vector3::Add(xmf3Shift, m_xmf3Right, -fDistance);
 		if (dwDirection & DIR_UP) xmf3Shift = Vector3::Add(xmf3Shift, m_xmf3Up, fDistance);
 		if (dwDirection & DIR_DOWN) xmf3Shift = Vector3::Add(xmf3Shift, m_xmf3Up, -fDistance);
-
 		Move(xmf3Shift, bUpdateVelocity);
 	}
 }
@@ -153,22 +152,14 @@ void CPlayer::Move(const XMFLOAT3& xmf3Shift, bool bUpdateVelocity)
 //--ProcessOutput : CPlayer------------------------------------------------------
 void CPlayer::Update(float fTimeElapsed)
 {
+	// Gravity operation
 	m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, Vector3::ScalarProduct(m_xmf3Gravity, fTimeElapsed, false));
 
-	float fLength = sqrtf(m_xmf3Velocity.x * m_xmf3Velocity.x + m_xmf3Velocity.z * m_xmf3Velocity.z);
-	float fMaxVelocityXZ = m_fMaxVelocityXZ * fTimeElapsed;
-	if (fLength > m_fMaxVelocityXZ)
-	{
-		m_xmf3Velocity.x *= (m_fMaxVelocityXZ / fLength);
-		m_xmf3Velocity.z *= (m_fMaxVelocityXZ / fLength);
-	}
-	float fMaxVelocityY = m_fMaxVelocityY * fTimeElapsed;
-	fLength = sqrtf(m_xmf3Velocity.y * m_xmf3Velocity.y);
-	if (fLength > m_fMaxVelocityY) m_xmf3Velocity.y *= (m_fMaxVelocityY / fLength);
+	// Distance traveled in elapsed time
+	XMFLOAT3 timeElapsedDistance = Vector3::ScalarProduct(m_xmf3Velocity, fTimeElapsed, false);
+	Move(timeElapsedDistance, false);
 
-	XMFLOAT3 xmf3Velocity = Vector3::ScalarProduct(m_xmf3Velocity, fTimeElapsed, false);
-	Move(xmf3Velocity, false);
-
+	// Keep out of the ground and align the player and the camera.
 	if (m_pPlayerUpdatedContext) OnPlayerUpdateCallback(fTimeElapsed);
 	DWORD nCameraMode = m_pCamera->GetMode();
 	if (nCameraMode == THIRD_PERSON_CAMERA) m_pCamera->Update(m_xmf3Position, fTimeElapsed);
@@ -176,7 +167,8 @@ void CPlayer::Update(float fTimeElapsed)
 	if (nCameraMode == THIRD_PERSON_CAMERA) m_pCamera->SetLookAt(m_xmf3Position);
 	m_pCamera->RegenerateViewMatrix();
 
-	fLength = Vector3::Length(m_xmf3Velocity);
+	// Decelerated velocity operation
+	float fLength = Vector3::Length(m_xmf3Velocity);
 	float fDeceleration = (m_fFriction * fTimeElapsed);
 	if (fDeceleration > fLength) fDeceleration = fLength;
 	m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, Vector3::ScalarProduct(m_xmf3Velocity, -fDeceleration, true));
@@ -345,6 +337,42 @@ void CAirplanePlayer::Animate(float fTimeElapsed, XMFLOAT4X4* pxmf4x4Parent)
 	}
 
 	CPlayer::Animate(fTimeElapsed, pxmf4x4Parent);
+}
+void CAirplanePlayer::Update(float fTimeElapsed)
+{
+	// Gravity operation
+	m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, Vector3::ScalarProduct(m_xmf3Gravity, fTimeElapsed, false));
+
+	// Limit xz-speed
+	float fLength = sqrtf(m_xmf3Velocity.x * m_xmf3Velocity.x + m_xmf3Velocity.z * m_xmf3Velocity.z);
+	float fMaxVelocityXZ = m_fMaxVelocityXZ * fTimeElapsed;
+	if (fLength > m_fMaxVelocityXZ)
+	{
+		m_xmf3Velocity.x *= (m_fMaxVelocityXZ / fLength);
+		m_xmf3Velocity.z *= (m_fMaxVelocityXZ / fLength);
+	}
+
+	// Limit y-speed
+	float fMaxVelocityY = m_fMaxVelocityY * fTimeElapsed;
+	fLength = sqrtf(m_xmf3Velocity.y * m_xmf3Velocity.y);
+	if (fLength > m_fMaxVelocityY) m_xmf3Velocity.y *= (m_fMaxVelocityY / fLength);
+
+	// Distance traveled in elapsed time
+	XMFLOAT3 timeElapsedDistance = Vector3::ScalarProduct(m_xmf3Velocity, fTimeElapsed, false);
+	Move(timeElapsedDistance, false);
+
+	// Keep out of the ground and align the player and the camera.
+	if (m_pPlayerUpdatedContext) OnPlayerUpdateCallback(fTimeElapsed);
+	DWORD nCameraMode = m_pCamera->GetMode();
+	if (nCameraMode == THIRD_PERSON_CAMERA) m_pCamera->Update(m_xmf3Position, fTimeElapsed);
+	if (m_pCameraUpdatedContext) OnCameraUpdateCallback(fTimeElapsed);
+	if (nCameraMode == THIRD_PERSON_CAMERA) m_pCamera->SetLookAt(m_xmf3Position);
+	m_pCamera->RegenerateViewMatrix();
+
+	fLength = Vector3::Length(m_xmf3Velocity);
+	float fDeceleration = (m_fFriction * fTimeElapsed);
+	if (fDeceleration > fLength) fDeceleration = fLength;
+	m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, Vector3::ScalarProduct(m_xmf3Velocity, -fDeceleration, true));
 }
 void CAirplanePlayer::OnPrepareRender()
 {

@@ -185,23 +185,6 @@ float4 PSBlend(VS_TEXTURED_OUTPUT input) : SV_TARGET
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//struct MATERIAL
-//{
-//	float4					m_cAmbient;
-//	float4					m_cDiffuse;
-//	float4					m_cSpecular; //a = power
-//	float4					m_cEmissive;
-//};
-
-//cbuffer cbGameObjectInfo : register(b2)
-//{
-//	matrix		gmtxGameObject : packoffset(c0);
-//	MATERIAL	gMaterial : packoffset(c4);
-//	uint		gnTexturesMask : packoffset(c8);
-//};
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #define _WITH_VERTEX_LIGHTING
 
@@ -341,6 +324,7 @@ struct VS_TERRAIN_INPUT
 {
 	float3 position : POSITION;
 	float4 color : COLOR;
+	float3 normal : NORMAL;
 	float2 uv0 : TEXCOORD0;
 	float2 uv1 : TEXCOORD1;
 };
@@ -348,7 +332,10 @@ struct VS_TERRAIN_INPUT
 struct VS_TERRAIN_OUTPUT
 {
 	float4 position : SV_POSITION;
+	float3 positionW : POSITION;
 	float4 color : COLOR;
+	float3 normalW : NORMAL0;
+	float3 normalV : NORMAL1;
 	float2 uv0 : TEXCOORD0;
 	float2 uv1 : TEXCOORD1;
 };
@@ -357,6 +344,9 @@ VS_TERRAIN_OUTPUT VSTerrain(VS_TERRAIN_INPUT input)
 {
 	VS_TERRAIN_OUTPUT output;
 
+	output.normalW = mul(input.normal, (float3x3)gmtxGameObject);
+	output.normalV = mul(float4(output.normalW, 1.0f), gmtxView).xyz;
+	output.positionW = (float3)mul(float4(input.position, 1.0f), gmtxGameObject);
 	output.position = mul(mul(mul(float4(input.position, 1.0f), gmtxGameObject), gmtxView), gmtxProjection);
 	output.color = input.color;
 	output.uv0 = input.uv0;
@@ -372,7 +362,9 @@ float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
 	//	float fAlpha = gtxtTerrainTexture.Sample(gssWrap, input.uv0);
 
 	float4 cColor = cBaseTexColor * 0.4f + cDetailTexColor * 0.7f;
+	input.normalW = normalize(input.normalW);
+	float4 cIllumination = Lighting(input.positionW, input.normalW);
 	//	float4 cColor = saturate(lerp(cBaseTexColor, cDetailTexColor, fAlpha));
 
-	return(cColor*0.5f);
+	return(cColor*cIllumination);
 }
