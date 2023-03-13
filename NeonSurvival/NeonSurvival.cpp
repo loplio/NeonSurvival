@@ -128,7 +128,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    UpdateWindow(hWnd);
 
    //서버
-   //SERVER::getIncetance().init(hWnd);
+   SERVER::getInstance().init(hWnd);
 
    return TRUE;
 }
@@ -147,9 +147,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
-    //case WM_SOCKET:
-    //    //SERVER::getIncetance().ProcessSocketMessage(hWnd, message, wParam, lParam);
-    //    break;
+    case WM_SOCKET:
+        SERVER::getInstance().ProcessSocketMessage(hWnd, message, wParam, lParam);
+        break;
     case WM_SIZE:
     case WM_LBUTTONDOWN:
     case WM_LBUTTONUP:

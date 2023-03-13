@@ -108,7 +108,7 @@ void Player_Neon::Update(float fTimeElapsed)
 	m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, fDeceleration);
 
 	//서버로 전송하기 위한 패킷에 위치정보를 갱신
-	//SERVER::getIncetance().UpdatePlayerPosition(GetPosition());
+	SERVER::getInstance().SendPosition(GetPosition());
 }
 
 void Player_Neon::OnPrepareRender()

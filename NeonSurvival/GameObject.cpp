@@ -456,7 +456,7 @@ void CGameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pC
 				m_ppMaterials[i]->UpdateShaderVariables(pd3dCommandList);
 			}
 
-			if (m_d3dCbvGPUDescriptorHandle.ptr) pd3dCommandList->SetGraphicsRootDescriptorTable(2, m_d3dCbvGPUDescriptorHandle);
+			//if (m_d3dCbvGPUDescriptorHandle.ptr) pd3dCommandList->SetGraphicsRootDescriptorTable(2, m_d3dCbvGPUDescriptorHandle);
 
 			if (m_nMeshes == 1)
 			{

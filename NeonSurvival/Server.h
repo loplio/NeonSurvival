@@ -32,18 +32,23 @@ private:
 
 	char buf[BUFSIZE];
 	int ClientNumId = 0;
-	bool FirstConnect = false;
+	bool FirstConnect = true;
 	int MessageType = 0;
+	int SendByte = 0;
+	int RecvByte = 0;
+	bool RecvDelayed = false;
+	SOCKET clientSocket;
 	PACKET_INGAME P_InGame;
 	PACKET_INGAME PlayersPosition[2];
+	
 public:
-	static SERVER& getIncetance() {
+	static SERVER& getInstance() {
 		static SERVER s;
 		return s;
 	}
-
 	void init(HWND);
 	void ProcessSocketMessage(HWND, UINT, WPARAM, LPARAM);
-	void SendMessageType(SOCKET socket,int type);
+	int SendMessageType(SOCKET socket,int type);
 	void UpdatePlayerPosition(const XMFLOAT3 &position);
+	void SendPosition(const XMFLOAT3& position);
 };
