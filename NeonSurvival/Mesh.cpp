@@ -3,6 +3,9 @@
 
 CMesh::CMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
+	memset(&m_d3dPositionBufferView, 0, sizeof(m_d3dPositionBufferView));
+	memset(&m_d3dIndexBufferView, 0, sizeof(m_d3dIndexBufferView));
+	memset(&m_d3dVertexBufferView, 0, sizeof(m_d3dVertexBufferView));
 }
 CMesh::~CMesh()
 {

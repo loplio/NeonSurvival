@@ -32,10 +32,12 @@ private:
 
 	char buf[BUFSIZE];
 	int ClientNumId = 0;
-	bool FirstConnect = true;
 	int MessageType = 0;
 	int SendByte = 0;
 	int RecvByte = 0;
+	int FPSCount = 0;
+	int len = 0;
+	bool FirstConnect = false;
 	bool RecvDelayed = false;
 	SOCKET clientSocket;
 	PACKET_INGAME P_InGame;
@@ -48,7 +50,12 @@ public:
 	}
 	void init(HWND);
 	void ProcessSocketMessage(HWND, UINT, WPARAM, LPARAM);
-	int SendMessageType(SOCKET socket,int type);
+	int SendMessageType(SOCKET& socket, MESSAGETYPE type);
 	void UpdatePlayerPosition(const XMFLOAT3 &position);
 	void SendPosition(const XMFLOAT3& position);
+	void AddFPSCount();
+	bool IsCount();
+	void err_quit(const char* msg);
+	void err_display(const char* msg);
+	void err_display(int errcode);
 };

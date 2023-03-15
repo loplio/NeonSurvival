@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "Framework_Neon.h"
 #include "ProcessTool_Neon.h"
-
+#include "Server.h"
 //-------------------------------------------------------------------------------
 /*	Concrete LobbyFramework_Neon											   */
 //-------------------------------------------------------------------------------
@@ -131,6 +131,8 @@ void CGameFramework_Neon::FrameAdvance()
 {
 	m_GameTimer.Tick(0.0f);
 
+	SERVER::getInstance().AddFPSCount();
+	
 	m_KeyboardInput->DataProcessing();
 	m_MouseInput->DataProcessing();
 
@@ -146,6 +148,7 @@ void CGameFramework_Neon::FrameAdvance()
 
 	m_GameTimer.GetFrameRate(m_Iframe.m_pszFrameRate + 8, 37);
 	::SetWindowText(m_hWnd, m_Iframe.m_pszFrameRate);
+
 }
 void CGameFramework_Neon::OnDestroy()
 {

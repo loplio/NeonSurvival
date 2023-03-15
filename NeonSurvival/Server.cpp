@@ -55,19 +55,21 @@ void SERVER::ProcessSocketMessage(HWND hWnd, UINT unit, WPARAM wParam, LPARAM lP
         break;
     }
     case FD_READ: {
-      /*  if (RecvByte > 0)
-        {
-            RecvDelayed = true;
-            return;
-        }*/
-        int len = 0;
         len = recv(wParam, (char*)&MessageType, sizeof(MessageType), 0);
+        if (len == SOCKET_ERROR) {
+            printf("read error : %d\n", WSAGetLastError());
+            return;
+        }
         printf("read\n");
         switch (MessageType)
         {
         case MESSAGETYPE::LOGIN:
         {
             len = recv(wParam, (char*)&ClientNumId, sizeof(int), 0);
+            if (len == SOCKET_ERROR) {
+                printf("login error : %d\n", WSAGetLastError());
+                return;
+            }
             printf("ClientNum : %d\n", ClientNumId);
             FirstConnect = true;
             break;
@@ -75,57 +77,39 @@ void SERVER::ProcessSocketMessage(HWND hWnd, UINT unit, WPARAM wParam, LPARAM lP
         case MESSAGETYPE::INGAME:
         {
             len = recv(wParam, (char*)&PlayersPosition, sizeof(PlayersPosition), 0);
+            if (len == SOCKET_ERROR) {
+                printf("inGame error : %d\n", WSAGetLastError());
+                return;
+            }
             printf("id : %d - x : %f y : %f z : %f\n", PlayersPosition[0].id, PlayersPosition[0].position.x, PlayersPosition[0].position.y, PlayersPosition[0].position.z);
             printf("id : %d - x : %f y : %f z : %f\n", PlayersPosition[1].id, PlayersPosition[1].position.x, PlayersPosition[1].position.y, PlayersPosition[1].position.z);
-            RecvByte = 16;
             break;
         }
         default:
             break;
         }
-        printf("recv byte : %d\n", RecvByte);
-        //RecvByte += len;
         break;
     }
     case FD_WRITE: {
-        //if (RecvByte <= SendByte) return;
-        printf("write\n");
-        int len = 0;
         if (FirstConnect == false)
         {
            /* int type = MESSAGETYPE::LOGIN;
             int len = send(wParam, (char*)&type, sizeof(type), 0);*/
-            len = SendMessageType(wParam, MESSAGETYPE::LOGIN);
+            //len = SendMessageType(wParam, MESSAGETYPE::LOGIN);
         }
         else
         {
-            //int type = MESSAGETYPE::LOGIN;
-            //int len = send(wParam, (char*)&type, sizeof(P_InGame), 0);
             printf("position\n");
             len = SendMessageType(wParam, MESSAGETYPE::INGAME);
             len = send(wParam, (char*)&P_InGame, sizeof(PACKET_INGAME), 0);
 
         }
-        //PostMessage(hWnd, WM_SOCKET, wParam, FD_READ);
-        /*SendByte += len;
-        printf("sedn byte : %d\n", SendByte);
-        if (RecvByte == SendByte)
-        {
-            RecvByte = SendByte = 0;
-            printf("sedn byte : 0000\n");
-            if (RecvDelayed)
-            {
-                RecvDelayed = false;
-                PostMessage(hWnd, WM_SOCKET, wParam, FD_READ);
-            }
-        }*/
         break;
     }
-
     }
 }
 
-int SERVER::SendMessageType(SOCKET socket,int type)
+int SERVER::SendMessageType(SOCKET& socket, MESSAGETYPE type)
 {
     int byte = 0;
     byte = send(socket, (char*)&type, sizeof(int), 0);
@@ -141,10 +125,67 @@ void SERVER::UpdatePlayerPosition(const XMFLOAT3 &position)
 
 void SERVER::SendPosition(const XMFLOAT3& position)
 {
-    int len = 0;
+    if (IsCount() == false) return;
     UpdatePlayerPosition(position);
-    printf("send position\n");
+    //printf("send position\n");
     len = SendMessageType(clientSocket, MESSAGETYPE::INGAME);
     len = send(clientSocket, (char*)&P_InGame, sizeof(PACKET_INGAME), 0);
 }
 
+void SERVER::AddFPSCount()
+{
+    FPSCount++;
+}
+
+bool SERVER::IsCount()
+{
+    if (FPSCount >= 60)
+    {
+        FPSCount = 0;
+        printf("IsCount\n");
+        return true;
+    }
+    return false;
+}
+
+void SERVER::err_quit(const char* msg)
+{
+    LPVOID lpMsgBuf;
+    FormatMessage(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+        NULL, WSAGetLastError(),
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        (LPTSTR)&lpMsgBuf, 0, NULL
+    );
+    MessageBox(NULL, (LPCTSTR)&lpMsgBuf, (LPCWSTR)msg, MB_ICONERROR);
+    LocalFree(lpMsgBuf);
+    exit(1);
+}
+
+// 소켓 함수 오류 출력
+void SERVER::err_display(const char* msg)
+{
+    LPVOID lpMsgBuf;
+    FormatMessage(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+        NULL, WSAGetLastError(),
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        (LPTSTR)&lpMsgBuf, 0, NULL
+    );
+    printf("[%s] %s\n", msg, (char*)lpMsgBuf);
+    LocalFree(lpMsgBuf);
+}
+
+// 소켓 함수 오류 출력
+void SERVER::err_display(int errcode)
+{
+    LPVOID lpMsgBuf;
+    FormatMessage(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+        NULL, errcode,
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        (LPTSTR)&lpMsgBuf, 0, NULL
+    );
+    printf("[오류] %s\n", (char*)lpMsgBuf);
+    LocalFree(lpMsgBuf);
+}

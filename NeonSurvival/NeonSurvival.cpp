@@ -148,8 +148,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message)
     {
     case WM_SOCKET:
+    {
         SERVER::getInstance().ProcessSocketMessage(hWnd, message, wParam, lParam);
         break;
+    }
     case WM_SIZE:
     case WM_LBUTTONDOWN:
     case WM_LBUTTONUP:
