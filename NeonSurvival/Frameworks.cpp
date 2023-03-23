@@ -20,13 +20,16 @@ FrameworkController::~FrameworkController()
 	if (m_LobbyFramework) delete m_LobbyFramework;
 	if (m_GameFramework) delete m_GameFramework;
 	if (m_InterfaceFramework) delete m_InterfaceFramework;
+
+	CMaterial::m_pStandardShader->Release();
+	CMaterial::m_pSkinnedAnimationShader->Release();
 }
 
 void FrameworkController::OnCreate(HINSTANCE hInstance, HWND hMainWnd) {
 	m_InterfaceFramework->OnCreate(hInstance, hMainWnd);
 
-	m_GameFramework = new CGameFramework_Test(*m_InterfaceFramework);
-	m_LobbyFramework = new CLobbyFramework_Test(*m_InterfaceFramework);
+	m_GameFramework = new CGameFramework_Neon(*m_InterfaceFramework);
+	m_LobbyFramework = new CLobbyFramework_Neon(*m_InterfaceFramework);
 	((BaseFramework*)m_GameFramework)->OnCreate(hInstance, hMainWnd);
 	((BaseFramework*)m_LobbyFramework)->OnCreate(hInstance, hMainWnd);
 }

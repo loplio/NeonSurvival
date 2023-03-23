@@ -135,6 +135,7 @@ void CGameFramework_Test::FrameAdvance()
 	m_KeyboardInput->DataProcessing();
 	m_MouseInput->DataProcessing();
 
+	m_ProcessCompute->Update();
 	m_ProcessCompute->Animate();
 	m_ProcessCompute->Collide();
 

@@ -130,6 +130,12 @@ GameCompute_Test::GameCompute_Test(const CGameTimer& GameTimer, const CGameSourc
 {
 }
 
+void GameCompute_Test::Update() const
+{
+	// Player Update
+	m_Player.Update(m_GameTimer.GetTimeElapsed());
+}
+
 void GameCompute_Test::Animate() const
 {
 	// Scene Animate
@@ -165,7 +171,7 @@ void GameRenderDisplay_Test::Render()
 	m_InterfaceFramework.ClearDisplay();
 
 	// Update
-	m_Player.Update(m_GameTimer.GetTimeElapsed());
+	//m_Player.Update(m_GameTimer.GetTimeElapsed());
 	((CGameFramework_Test*)&gBaseFramework)->UpdateUI();
 
 	// Scene Render

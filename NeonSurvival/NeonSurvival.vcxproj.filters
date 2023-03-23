@@ -135,6 +135,9 @@
     <ClInclude Include="Components_Test.h">
       <Filter>TestGame_Module</Filter>
     </ClInclude>
+    <ClInclude Include="WICTextureLoader12.h">
+      <Filter>헤더 파일\LibraryFile</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ProcessInput.cpp">
@@ -211,6 +214,9 @@
     </ClCompile>
     <ClCompile Include="Components_Test.cpp">
       <Filter>TestGame_Module</Filter>
+    </ClCompile>
+    <ClCompile Include="WICTextureLoader12.cpp">
+      <Filter>소스 파일\LibraryFile</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

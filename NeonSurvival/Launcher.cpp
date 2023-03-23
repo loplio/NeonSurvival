@@ -81,7 +81,7 @@ Missile::Missile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComman
 	SetTransform(pPlayer.GetRightVector(), pPlayer.GetUpVector(), pPlayer.GetLookVector(), pPlayer.GetPosition());
 
 	CCubeMeshDiffused* pCubeMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 2.0f, 2.0f, 15.0f);
-	SetMesh(0, pCubeMesh);
+	SetMesh(pCubeMesh);
 
 	CMaterial* pMaterial = new CMaterial();
 	SetMaterial(0, pMaterial);

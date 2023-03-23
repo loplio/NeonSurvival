@@ -28,7 +28,7 @@ public:
 class TestGameSource : public CGameSource {
 public:
 	TestGameSource(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) : CGameSource(pd3dDevice, pd3dCommandList) {
-		m_pScene = std::make_shared<Scene_Test>(pd3dDevice);
+		m_pScene = std::make_shared<Scene_Test>(pd3dDevice, pd3dCommandList);
 		m_pPlayer = m_pScene->m_pPlayer = std::make_shared<CAirplanePlayer>(pd3dDevice, pd3dCommandList, m_pScene->GetGraphicsRootSignature(), 1);
 		m_pBBObjects = m_pScene->m_pBBObjects = std::make_shared<BoundingBoxObjects_1>(*m_pScene, *m_pPlayer);
 	}

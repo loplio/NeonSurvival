@@ -98,7 +98,7 @@ public:
 
 	void AddObject(std::vector<CShader*>& Shaders);
 	void Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects, XMFLOAT4X4* pxmf4x4Parent = NULL) override;
-	void PrepareAnimate() override;
+	void OnPrepareAnimate() override;
 	void Animate(float fTimeElapsed, XMFLOAT4X4* pxmf4x4Parent = NULL) override;
 	void Update(float fTimeElapsed) override;
 	void OnPrepareRender() override;

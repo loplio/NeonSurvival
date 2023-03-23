@@ -2,23 +2,11 @@
 #include "GameObject.h"
 #include "Camera.h"
 
-struct VS_VB_INSTANCE
-{
-	XMFLOAT4X4 m_xmf4x4Transform;
-	XMFLOAT4 m_xmcColor;
-};
-
-struct CB_GAMEOBJECT_INFO
-{
-	XMFLOAT4X4 m_xmf4x4World;
-	MATERIAL gMaterial;
-	UINT gnTexturesMask;
-};
-
-struct CB_PLAYER_INFO
-{
-	XMFLOAT4X4 m_xmf4x4World;
-};
+//struct VS_VB_INSTANCE
+//{
+//	XMFLOAT4X4 m_xmf4x4Transform;
+//	XMFLOAT4 m_xmcColor;
+//};
 
 class CShader {
 public:
@@ -71,8 +59,8 @@ public:
 	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUSrvDescriptorStartHandle() { return(m_d3dSrvGPUDescriptorStartHandle); }
 
 protected:
-	ID3DBlob* m_pd3dVertexShaderBlob = NULL;
-	ID3DBlob* m_pd3dPixelShaderBlob = NULL;
+	ID3DBlob*							m_pd3dVertexShaderBlob = NULL;
+	ID3DBlob*							m_pd3dPixelShaderBlob = NULL;
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC	m_d3dPipelineStateDesc;
 
 	ID3D12PipelineState					**m_ppd3dPipelineStates = NULL;
@@ -89,6 +77,8 @@ protected:
 	D3D12_GPU_DESCRIPTOR_HANDLE			m_d3dSrvGPUDescriptorNextHandle;
 
 	LPVOID								m_pBBObjects;
+
+	float								m_fElapsedTime = 0.0f;
 };
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -147,6 +137,37 @@ public:
 };
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+class CSkinnedAnimationStandardShader : public CStandardShader
+{
+public:
+	CSkinnedAnimationStandardShader();
+	virtual ~CSkinnedAnimationStandardShader();
+
+	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
+	virtual D3D12_SHADER_BYTECODE CreateVertexShader();
+};
+
+class CSkinnedAnimationObjectsShader : public CSkinnedAnimationStandardShader
+{
+public:
+	CSkinnedAnimationObjectsShader();
+	virtual ~CSkinnedAnimationObjectsShader();
+
+	virtual void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void* pContext = NULL);
+	virtual void AnimateObjects(float fTimeElapsed);
+	virtual void ReleaseObjects();
+
+	virtual void ReleaseUploadBuffers();
+
+	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
+
+protected:
+	CGameObject**					m_ppObjects = 0;
+	int								m_nObjects = 0;
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 // CObjectsShader's Shader
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -199,10 +220,6 @@ public:
 	//virtual void ReleaseShaderVariables();
 	//virtual void UpdateShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList, XMFLOAT4X4* pxmf4x4World);
 	//virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int nPipelineState = 0);
-
-protected:
-	ID3D12Resource* m_pd3dcbPlayer = NULL;
-	CB_PLAYER_INFO* m_pcbMappedPlayer = NULL;
 };
 
 //class CInstancingShader : public CModelObjects {
