@@ -7,12 +7,6 @@ struct MATERIAL
 	float4 m_cEmissive;
 };
 
-//플레이어 객체의 데이터를 위한 상수 버퍼
-cbuffer cbPlayerInfo : register(b0)
-{
-	matrix gmtxPlayerWorld : packoffset(c0);
-};
-
 //카메라 객체의 데이터를 위한 상수 버퍼(스펙큘러 조명 계산을 위하여 카메라의 위치 벡터를 추가)
 cbuffer cbCameraInfo : register(b1)
 {
@@ -185,23 +179,6 @@ float4 PSBlend(VS_TEXTURED_OUTPUT input) : SV_TARGET
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//struct MATERIAL
-//{
-//	float4					m_cAmbient;
-//	float4					m_cDiffuse;
-//	float4					m_cSpecular; //a = power
-//	float4					m_cEmissive;
-//};
-
-//cbuffer cbGameObjectInfo : register(b2)
-//{
-//	matrix		gmtxGameObject : packoffset(c0);
-//	MATERIAL	gMaterial : packoffset(c4);
-//	uint		gnTexturesMask : packoffset(c8);
-//};
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #define _WITH_VERTEX_LIGHTING
 
@@ -299,6 +276,76 @@ float4 PSStandard(VS_STANDARD_OUTPUT input) : SV_TARGET
 	return(cColor);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+#define MAX_VERTEX_INFLUENCES			4
+#define SKINNED_ANIMATION_BONES			128
+
+cbuffer cbBoneOffsets : register(b7)
+{
+	float4x4 gpmtxBoneOffsets[SKINNED_ANIMATION_BONES];
+};
+
+cbuffer cbBoneTransforms : register(b8)
+{
+	float4x4 gpmtxBoneTransforms[SKINNED_ANIMATION_BONES];
+};
+
+struct VS_SKINNED_STANDARD_INPUT
+{
+	float3 position : POSITION;
+	float2 uv : TEXCOORD;
+	float3 normal : NORMAL;
+	float3 tangent : TANGENT;
+	float3 bitangent : BITANGENT;
+	int4 indices : BONEINDEX;
+	float4 weights : BONEWEIGHT;
+};
+
+VS_STANDARD_OUTPUT VSSkinnedAnimationStandard(VS_SKINNED_STANDARD_INPUT input)
+{
+	//VS_STANDARD_OUTPUT output;
+
+	//output.positionW = (float3)mul(float4(input.position, 1.0f), gmtxGameObject);
+	//output.normalW = mul(input.normal, (float3x3)gmtxGameObject);
+	//output.tangentW = (float3)mul(float4(input.tangent, 1.0f), gmtxGameObject);
+	//output.bitangentW = (float3)mul(float4(input.bitangent, 1.0f), gmtxGameObject);
+	//output.position = mul(mul(float4(output.positionW, 1.0f), gmtxView), gmtxProjection);
+	//output.uv = input.uv;
+	VS_STANDARD_OUTPUT output;
+
+	//output.positionW = float3(0.0f, 0.0f, 0.0f);
+	//output.normalW = float3(0.0f, 0.0f, 0.0f);
+	//output.tangentW = float3(0.0f, 0.0f, 0.0f);
+	//output.bitangentW = float3(0.0f, 0.0f, 0.0f);
+	//matrix mtxVertexToBoneWorld;
+	//for (int i = 0; i < MAX_VERTEX_INFLUENCES; i++)
+	//{
+	//	mtxVertexToBoneWorld = mul(gpmtxBoneOffsets[input.indices[i]], gpmtxBoneTransforms[input.indices[i]]);
+	//	output.positionW += input.weights[i] * mul(float4(input.position, 1.0f), mtxVertexToBoneWorld).xyz;
+	//	output.normalW += input.weights[i] * mul(input.normal, (float3x3)mtxVertexToBoneWorld);
+	//	output.tangentW += input.weights[i] * mul(input.tangent, (float3x3)mtxVertexToBoneWorld);
+	//	output.bitangentW += input.weights[i] * mul(input.bitangent, (float3x3)mtxVertexToBoneWorld);
+	//}
+	float4x4 mtxVertexToBoneWorld = (float4x4)0.0f;
+	for (int i = 0; i < MAX_VERTEX_INFLUENCES; i++)
+	{
+		//		mtxVertexToBoneWorld += input.weights[i] * gpmtxBoneTransforms[input.indices[i]];
+		mtxVertexToBoneWorld += input.weights[i] * mul(gpmtxBoneOffsets[input.indices[i]], gpmtxBoneTransforms[input.indices[i]]);
+	}
+	output.positionW = mul(float4(input.position, 1.0f), mtxVertexToBoneWorld).xyz;
+	output.normalW = mul(input.normal, (float3x3)mtxVertexToBoneWorld).xyz;
+	output.tangentW = mul(input.tangent, (float3x3)mtxVertexToBoneWorld).xyz;
+	output.bitangentW = mul(input.bitangent, (float3x3)mtxVertexToBoneWorld).xyz;
+
+	//	output.positionW = mul(float4(input.position, 1.0f), gmtxGameObject).xyz;
+
+	output.position = mul(mul(float4(output.positionW, 1.0f), gmtxView), gmtxProjection);
+	output.uv = input.uv;
+
+	return(output);
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////
 struct VS_SKYBOX_CUBEMAP_INPUT
@@ -341,6 +388,7 @@ struct VS_TERRAIN_INPUT
 {
 	float3 position : POSITION;
 	float4 color : COLOR;
+	float3 normal : NORMAL;
 	float2 uv0 : TEXCOORD0;
 	float2 uv1 : TEXCOORD1;
 };
@@ -348,7 +396,10 @@ struct VS_TERRAIN_INPUT
 struct VS_TERRAIN_OUTPUT
 {
 	float4 position : SV_POSITION;
+	float3 positionW : POSITION;
 	float4 color : COLOR;
+	float3 normalW : NORMAL0;
+	float3 normalV : NORMAL1;
 	float2 uv0 : TEXCOORD0;
 	float2 uv1 : TEXCOORD1;
 };
@@ -357,6 +408,9 @@ VS_TERRAIN_OUTPUT VSTerrain(VS_TERRAIN_INPUT input)
 {
 	VS_TERRAIN_OUTPUT output;
 
+	output.normalW = mul(input.normal, (float3x3)gmtxGameObject);
+	output.normalV = mul(float4(output.normalW, 1.0f), gmtxView).xyz;
+	output.positionW = (float3)mul(float4(input.position, 1.0f), gmtxGameObject);
 	output.position = mul(mul(mul(float4(input.position, 1.0f), gmtxGameObject), gmtxView), gmtxProjection);
 	output.color = input.color;
 	output.uv0 = input.uv0;
@@ -372,7 +426,9 @@ float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
 	//	float fAlpha = gtxtTerrainTexture.Sample(gssWrap, input.uv0);
 
 	float4 cColor = cBaseTexColor * 0.4f + cDetailTexColor * 0.7f;
+	input.normalW = normalize(input.normalW);
+	float4 cIllumination = Lighting(input.positionW, input.normalW);
 	//	float4 cColor = saturate(lerp(cBaseTexColor, cDetailTexColor, fAlpha));
 
-	return(cColor*0.5f);
+	return(cColor*cIllumination);
 }

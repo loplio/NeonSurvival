@@ -44,16 +44,10 @@ int CBoundingBoxObjects::IsCollide(CGameObject* obj, ObjectType excludetype)
 		if (obj->GetObjectType() == m_BBObjects[index]->GetObjectType() ||
 			excludetype == m_BBObjects[index]->GetObjectType()) continue;
 
-		for (int nMesh = 0; nMesh < obj->GetMeshNum(); ++nMesh)
-		{
-			for (int nOthMesh = 0; nOthMesh < m_BBObjects[index]->GetMeshNum(); ++nOthMesh)
-			{
-				BoundingOrientedBox obb = m_BBObjects[index]->GetMesh(nOthMesh)->GetBoundingBox();
-				obb.Transform(obb, XMLoadFloat4x4(&m_BBObjects[index]->m_xmf4x4World));
-				if (obj->IsCollide(nMesh, obb)) {
-					return index;
-				}
-			}
+		BoundingOrientedBox obb = m_BBObjects[index]->m_pMesh->GetBoundingBox();
+		obb.Transform(obb, XMLoadFloat4x4(&m_BBObjects[index]->m_xmf4x4World));
+		if (obj->IsCollide(obb)) {
+			return index;
 		}
 	}
 	return -1;
@@ -129,22 +123,20 @@ void ModelObjects_1::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsComman
 {
 	m_ppObjects.push_back(new CGameObject(1, 1));
 
-	UINT ncbElementBytes = ((sizeof(CB_GAMEOBJECT_INFO) + 255) & ~255);
+	//CreateCbvSrvDescriptorHeaps(pd3dDevice, 0, 17);
 
-	CreateCbvSrvDescriptorHeaps(pd3dDevice, 0, 17);
+	//CGameObject* pSuperCobraModel = CGameObject::LoadGeometryFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/SuperCobra.bin", this);
 
-	CGameObject* pSuperCobraModel = CGameObject::LoadGeometryFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/SuperCobra.bin", this);
-
-	m_ppObjects[0] = new CSuperCobraObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
-	m_ppObjects[0]->SetChild(pSuperCobraModel);
-	pSuperCobraModel->AddRef();
-	m_ppObjects[0]->SetPosition(300.0f, 250.f, 300.f);
-	m_ppObjects[0]->Rotate(0.0f, 90.0f, 0.0f);
-	m_ppObjects[0]->PrepareAnimate();
-	XMFLOAT3 scale = XMFLOAT3(5.0f, 5.0f, 5.0f);
-	m_ppObjects[0]->SetScale(scale);
-	m_ppObjects[0]->Scale(scale.x, scale.y, scale.z);
-	m_ppObjects[0]->SetObjectType(ObjectType::SUPER_COBRA_OBJ);
+	//m_ppObjects[0] = new CSuperCobraObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
+	//m_ppObjects[0]->SetChild(pSuperCobraModel);
+	//pSuperCobraModel->AddRef();
+	//m_ppObjects[0]->SetPosition(300.0f, 250.f, 300.f);
+	//m_ppObjects[0]->Rotate(0.0f, 90.0f, 0.0f);
+	//m_ppObjects[0]->OnPrepareAnimate();
+	//XMFLOAT3 scale = XMFLOAT3(5.0f, 5.0f, 5.0f);
+	//m_ppObjects[0]->SetScale(scale);
+	//m_ppObjects[0]->Scale(scale.x, scale.y, scale.z);
+	//m_ppObjects[0]->SetObjectType(ObjectType::SUPER_COBRA_OBJ);
 }
 
 void ModelObjects_1::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int nPipelineState)
@@ -260,8 +252,6 @@ void TexturedObjects_1::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 	ppTextures[0] = new CTexture(1, RESOURCE_TEXTURE2D, 0, 1);
 	ppTextures[0]->LoadTextureFromDDSFile(pd3dDevice, pd3dCommandList, (wchar_t*)L"Image/Ceiling.dds", RESOURCE_TEXTURE2D, 0);
 
-	UINT ncbElementBytes = ((sizeof(CB_GAMEOBJECT_INFO) + 255) & ~255);
-
 	CreateCbvSrvDescriptorHeaps(pd3dDevice, 0, 1);
 	CreateShaderResourceViews(pd3dDevice, ppTextures[0], 0, 4);
 
@@ -271,7 +261,6 @@ void TexturedObjects_1::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 
 	CCubeMeshTextured* pCubeMesh = new CCubeMeshTextured(pd3dDevice, pd3dCommandList, 12.0f, 12.0f, 12.0f);
 
-	UINT ncbGameObjectBytes = ((sizeof(CB_GAMEOBJECT_INFO) + 255) & ~255); //256ÀÇ ¹è¼ö
 	XMFLOAT3 xmf3RotateAxis, xmf3SurfaceNormal;
 	CRotatingObject* pRotatingObject = NULL;
 	for (int i = 0, x = 0; x < xObjects; x++)
@@ -282,14 +271,14 @@ void TexturedObjects_1::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 			{
 				pRotatingObject = new CRotatingObject(1);
 				pRotatingObject->SetMaterial(0, ppMaterials[0]);
-				pRotatingObject->SetMesh(0, pCubeMesh);
+				pRotatingObject->SetMesh(pCubeMesh);
 				float xPosition = x * fxPitch;
 				float zPosition = z * fzPitch;
 				float fHeight = pTerrain->GetHeight(xPosition, zPosition);
 				pRotatingObject->SetPosition(xPosition, fHeight + (y * 10.0f * fyPitch) + 6.0f, zPosition);
 				if (y == 0)
 				{
-					xmf3SurfaceNormal = pTerrain->GetNormal(xPosition, zPosition);
+					xmf3SurfaceNormal = pTerrain->GetIntervalNormal(xPosition, zPosition);
 					xmf3RotateAxis = Vector3::CrossProduct(XMFLOAT3(0.0f, 1.0f, 0.0f),
 						xmf3SurfaceNormal);
 					if (Vector3::IsZero(xmf3RotateAxis)) xmf3RotateAxis = XMFLOAT3(0.0f, 1.0f,
@@ -419,8 +408,6 @@ void BillboardObjects_1::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 	}
 	//m_nObjects = nGrassObjects + nTreeObjects[0] + nTreeObjects[1];
 
-	UINT ncbElementBytes = ((sizeof(CB_GAMEOBJECT_INFO) + 255) & ~255);
-
 	CreateCbvSrvDescriptorHeaps(pd3dDevice, 0, 3);
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 	//CreateConstantBufferViews(pd3dDevice, m_nObjects, m_pd3dcbGameObjects, ncbElementBytes);
@@ -498,7 +485,7 @@ void BillboardObjects_1::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 			{
 				pBillboardObject = new CBillboardObject_1();
 
-				pBillboardObject->SetMesh(0, pMesh);
+				pBillboardObject->SetMesh(pMesh);
 				pBillboardObject->SetMaterial(0, pMaterial);
 
 				float xPosition = x * AspectRatioTraiMapToObjMap;
@@ -631,8 +618,6 @@ void MultiSpriteObjects_1::BuildObjects(ID3D12Device* pd3dDevice, ID3D12Graphics
 
 	m_pSpriteMesh = new CTexturedRectMesh(pd3dDevice, pd3dCommandList, 50.0f, 50.0f, 0.0f, 0.0f, 0.0f, 0.0f);
 
-	UINT ncbElementBytes = ((sizeof(CB_GAMEOBJECT_INFO) + 255) & ~255);
-
 	CreateCbvSrvDescriptorHeaps(pd3dDevice, 0, 2);
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 	CreateShaderResourceViews(pd3dDevice, m_ppSpriteTextures[0], 0, 4);
@@ -682,7 +667,7 @@ void MultiSpriteObjects_1::Render(ID3D12GraphicsCommandList* pd3dCommandList, CC
 			pd3dCommandList->SetGraphicsRoot32BitConstants(2, 16, &xmf4x4World, 0);
 			pd3dCommandList->SetGraphicsRoot32BitConstants(0, 16, &((CMultiSpriteObject_1*)m_ppObjects[i])->m_xmf4x4Texture, 0);
 			m_ppObjects[i]->GetMaterial(0)->m_pTexture->UpdateShaderVariables(pd3dCommandList);
-			m_ppObjects[i]->GetMesh(0)->Render(pd3dCommandList, 0);
+			m_ppObjects[i]->m_pMesh->Render(pd3dCommandList, 0);
 		}
 	}
 }
@@ -694,7 +679,7 @@ void MultiSpriteObjects_1::AddObject(const XMFLOAT3& position, int index, float 
 
 	CMultiSpriteObject_1* pSpriteObject = NULL;
 	pSpriteObject = new CMultiSpriteObject_1(btemporary, col, row);
-	pSpriteObject->SetMesh(0, m_pSpriteMesh);
+	pSpriteObject->SetMesh(m_pSpriteMesh);
 	pSpriteObject->SetMaterial(0, m_ppSpriteMaterials[index]);
 	pSpriteObject->SetPosition(XMFLOAT3(position.x, position.y, position.z));
 	pSpriteObject->cooltime = cooltime;
@@ -805,8 +790,6 @@ void BlendTextureObjects_1::BuildObjects(ID3D12Device* pd3dDevice, ID3D12Graphic
 
 	CTexturedRectMesh* pSpriteMesh = new CTexturedRectMesh(pd3dDevice, pd3dCommandList, 50.0f, 0.0f, 50.0f, 0.0f, 0.0f, 0.0f);
 
-	UINT ncbElementBytes = ((sizeof(CB_GAMEOBJECT_INFO) + 255) & ~255);
-
 	CreateCbvSrvDescriptorHeaps(pd3dDevice, 0, 1);
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 	CreateShaderResourceViews(pd3dDevice, ppWaterTextures[0], 0, 4);
@@ -820,7 +803,7 @@ void BlendTextureObjects_1::BuildObjects(ID3D12Device* pd3dDevice, ID3D12Graphic
 			{
 				pGameObject = new COceanObject_1();
 
-				pGameObject->SetMesh(0, pSpriteMesh);
+				pGameObject->SetMesh(pSpriteMesh);
 				pGameObject->SetMaterial(0, ppSpriteMaterials[0]);
 
 				float xPosition = (x + 0.5f) * fxPitch;

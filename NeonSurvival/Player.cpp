@@ -252,15 +252,15 @@ CAirplanePlayer::CAirplanePlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommand
 	m_pShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
 	m_pShader->CreateCbvSrvDescriptorHeaps(pd3dDevice, 0, 17);
 
-	CGameObject* pSuperCobraModel = CGameObject::LoadGeometryFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/SuperCobra.bin", m_pShader);
+	//CGameObject* pSuperCobraModel = CGameObject::LoadGeometryFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/SuperCobra.bin", m_pShader);
 
-	SetChild(pSuperCobraModel);
-	pSuperCobraModel->AddRef();
+	//SetChild(pSuperCobraModel);
+	//pSuperCobraModel->AddRef();
 	SetPosition(XMFLOAT3(1025.0f, 250.f, 1025.f));
 	SetObjectType(ObjectType::PLAYER_OBJ);
 	Rotate(0.0f, 90.0f, 0.0f);
 
-	PrepareAnimate();
+	OnPrepareAnimate();
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }
@@ -296,27 +296,23 @@ void CAirplanePlayer::Collide(const CGameSource& GameSource, CBoundingBoxObjects
 	std::list<Missile*>::iterator msl = m_launcher->m_missiles.begin();
 	for (msl; msl != m_launcher->m_missiles.end(); ++msl)
 	{
-		int mesh_num = (*msl)->GetMeshNum();
-		for (int i = 0; i < mesh_num; ++i)
+		int bbIndex = BoundingBoxObjects.IsCollide(*msl, objtype);
+		if (bbIndex != -1)
 		{
-			int bbIndex = BoundingBoxObjects.IsCollide(*msl, objtype);
-			if (bbIndex != -1)
+			std::vector<CShader*>& shader = GameSource.GetRefScene().GetShader();
+			for (int n = 0; n < shader.size(); ++n)
 			{
-				std::vector<CShader*>& shader = GameSource.GetRefScene().GetShader();
-				for (int n = 0; n < shader.size(); ++n)
+				if (typeid(MultiSpriteObjects_1) == typeid(*shader[n]))
 				{
-					if (typeid(MultiSpriteObjects_1) == typeid(*shader[n]))
-					{
-						MultiSpriteObjects_1* pShader = (MultiSpriteObjects_1*)shader[n];
-						//if (!((CMultiSpriteObject_1*)pShader->GetGameObject()[0])->bActive) pShader->ExecuteActive(0, false);
-						pShader->AddObject((*msl)->GetPosition(), 0, 0.5f, true, false);
-					}
+					MultiSpriteObjects_1* pShader = (MultiSpriteObjects_1*)shader[n];
+					//if (!((CMultiSpriteObject_1*)pShader->GetGameObject()[0])->bActive) pShader->ExecuteActive(0, false);
+					pShader->AddObject((*msl)->GetPosition(), 0, 0.5f, true, false);
 				}
 			}
 		}
 	}
 }
-void CAirplanePlayer::PrepareAnimate()
+void CAirplanePlayer::OnPrepareAnimate()
 {
 	m_pMainRotorFrame = FindFrame("MainRotor");
 	m_pTailRotorFrame = FindFrame("TailRotor");
@@ -451,7 +447,7 @@ CTerrainPlayer::CTerrainPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	SetCameraUpdatedContext(pTerrain);
 
 	CCubeMeshDiffused* pCubeMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 4.0f, 12.0f, 4.0f);
-	SetMesh(0, pCubeMesh);
+	SetMesh(pCubeMesh);
 
 	m_pShader = new CPlayerShader();
 	m_pShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);

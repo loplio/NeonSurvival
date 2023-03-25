@@ -76,6 +76,7 @@ protected:
 public:
 	GameCompute_Test(const CGameTimer& GameTimer, const CGameSource& GameSource);
 
+	void Update() const override;
 	void Animate() const override;
 	void Collide() const override;
 };

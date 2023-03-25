@@ -136,6 +136,7 @@ void CGameFramework_Neon::FrameAdvance()
 	m_KeyboardInput->DataProcessing();
 	m_MouseInput->DataProcessing();
 
+	m_ProcessCompute->Update();
 	m_ProcessCompute->Animate();
 	m_ProcessCompute->Collide();
 
@@ -163,6 +164,7 @@ void CGameFramework_Neon::BuildObjects()
 	m_pd3dCommandList.Reset(&m_pd3dCommandAllocator, NULL);
 
 	m_GameSource = new NeonGameSource(&m_pd3dDevice, &m_pd3dCommandList);
+
 	m_pScene = m_GameSource->GetSharedPtrScene();
 	m_pPlayer = m_GameSource->GetSharedPtrPlayer();
 	m_pCamera = m_pPlayer->GetCamera();
