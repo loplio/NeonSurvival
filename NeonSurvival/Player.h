@@ -1,16 +1,12 @@
 #pragma once
 #include "GameObject.h"
 #include "Camera.h"
-#include "Launcher.h"
 #define DIR_FORWARD 0x01
 #define DIR_BACKWARD 0x02
 #define DIR_LEFT 0x04
 #define DIR_RIGHT 0x08
 #define DIR_UP 0x10
 #define DIR_DOWN 0x20
-
-class CBoundingBoxObjects;
-class CGameSource;
 
 class CPlayer : public CGameObject {
 protected:
@@ -28,6 +24,7 @@ protected:
 	float m_fMaxVelocityXZ;
 	float m_fMaxVelocityY;
 	float m_fFriction;
+
 	LPVOID m_pPlayerUpdatedContext;
 	LPVOID m_pCameraUpdatedContext;
 
@@ -35,26 +32,25 @@ protected:
 	CShader* m_pShader = NULL;
 
 public:
-	CPlayer(int nMeshes = 1);
+	CPlayer();
 	virtual ~CPlayer();
 
-	// ProcessInput..
+	// ProcessCompute.
 	virtual void Rotate(float x, float y, float z);
 	virtual void Move(ULONG nDirection, float fDistance, bool bVelocity = false);
 	virtual void Move(const XMFLOAT3& xmf3Shift, bool bVelocity = false);
+	virtual void Update(float fTimeElapsed);
 
-	// hold off..
+	// ShaderVariable.
 	void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) override final;
 	void ReleaseShaderVariables() override final;
 	void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList) override final;
 
 	// ProcessOutput..
-	virtual void Update(float fTimeElapsed);
 	void OnPrepareRender() override;
 	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL) override;
-	void Render(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL) override;
 
-	// Common
+	// Others
 	XMFLOAT3 GetPosition() const { return(m_xmf3Position); }
 	XMFLOAT3 GetLookVector() const { return(m_xmf3Look); }
 	XMFLOAT3 GetUpVector() const { return(m_xmf3Up); }
@@ -83,35 +79,4 @@ public:
 	void SetPlayerUpdatedContext(LPVOID pContext) { m_pPlayerUpdatedContext = pContext; }
 	virtual void OnCameraUpdateCallback(float fTimeElapsed) {};
 	void SetCameraUpdatedContext(LPVOID pContext) { m_pCameraUpdatedContext = pContext; }
-};
-
-class Launcher;
-class CAirplanePlayer : public CPlayer {
-public:
-	CGameObject* m_pMainRotorFrame = NULL;
-	CGameObject* m_pTailRotorFrame = NULL;
-	Launcher* m_launcher;
-
-public:
-	CAirplanePlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, int nMeshes = 1);
-	virtual ~CAirplanePlayer();
-
-	void AddObject(std::vector<CShader*>& Shaders);
-	void Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects, XMFLOAT4X4* pxmf4x4Parent = NULL) override;
-	void PrepareAnimate() override;
-	void Animate(float fTimeElapsed, XMFLOAT4X4* pxmf4x4Parent = NULL) override;
-	void Update(float fTimeElapsed) override;
-	void OnPrepareRender() override;
-	void Render(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL) override;
-	CCamera* ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed) override;
-};
-
-class CTerrainPlayer : public CPlayer {
-public:
-	CTerrainPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext, int nMeshes = 1);
-	virtual ~CTerrainPlayer();
-
-	void OnPlayerUpdateCallback(float fTimeElapsed) override;
-	void OnCameraUpdateCallback(float fTimeElapsed) override;
-	CCamera* ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed) override;
 };

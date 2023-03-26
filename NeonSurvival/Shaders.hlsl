@@ -7,12 +7,6 @@ struct MATERIAL
 	float4 m_cEmissive;
 };
 
-//플레이어 객체의 데이터를 위한 상수 버퍼
-cbuffer cbPlayerInfo : register(b0)
-{
-	matrix gmtxPlayerWorld : packoffset(c0);
-};
-
 //카메라 객체의 데이터를 위한 상수 버퍼(스펙큘러 조명 계산을 위하여 카메라의 위치 벡터를 추가)
 cbuffer cbCameraInfo : register(b1)
 {
@@ -29,93 +23,10 @@ cbuffer cbGameObjectInfo : register(b2)
 	uint gnTexturesMask : packoffset(c8);
 };
 
-cbuffer cbTexturedUVInfo : register(b3)
-{
-	matrix gmtxTexture : packoffset(c0);	// 임시
-};
-
-struct VS_DIFFUSED_INPUT
-{
-	float3 position : POSITION;
-	float4 color : COLOR;
-};
-
-struct VS_DIFFUSED_OUTPUT
-{
-	float4 position : SV_POSITION;
-	float4 color : COLOR;
-};
-
 #include "Light.hlsl"
-
-VS_DIFFUSED_OUTPUT VSPlayer(VS_DIFFUSED_INPUT input)
-{
-	VS_DIFFUSED_OUTPUT output;
-	output.position = mul(mul(mul(float4(input.position, 1.0f), gmtxGameObject), gmtxView), gmtxProjection);
-	output.color = input.color;
-	return output;
-}
-
-float4 PSPlayer(VS_DIFFUSED_OUTPUT input) : SV_TARGET
-{
-	return input.color;
-}
-
-//정점 조명을 사용
-#define _WITH_VERTEX_LIGHTING
-
-//정점 쉐이더의 입력 정점 구조
-struct VS_LIGHTING_INPUT
-{
-	float3 position : POSITION;
-	float3 normal : NORMAL;
-};
-
-//정점 쉐이더의 출력 정점 구조
-struct VS_LIGHTING_OUTPUT
-{
-	float4 position : SV_POSITION;
-	float3 positionW : POSITION;
-#ifdef _WITH_VERTEX_LIGHTING
-	float4 color : COLOR;
-#else
-	float3 normalW : NORMAL;
-#endif
-};
-
-//정점 쉐이더 함수
-VS_LIGHTING_OUTPUT VSLighting(VS_LIGHTING_INPUT input)
-{
-	VS_LIGHTING_OUTPUT output;
-	output.positionW = (float3)mul(float4(input.position, 1.0f), gmtxGameObject);
-	output.position = mul(mul(float4(output.positionW, 1.0f), gmtxView), gmtxProjection);
-	float3 normalW = mul(input.normal, (float3x3)gmtxGameObject);
-#ifdef _WITH_VERTEX_LIGHTING
-	//output.color = Lighting(output.positionW, normalize(normalW));
-	output.color = float4(input.normal, 1.0f);
-#else
-	output.normalW = normalW;
-#endif
-	return output;
-}
-
-//픽셀 쉐이더 함수
-float4 PSLighting(VS_LIGHTING_OUTPUT input) : SV_TARGET
-{
-#ifdef _WITH_VERTEX_LIGHTING
-	return input.color;
-#else
-	float3 normalW = normalize(input.normalW);
-	//float4 color = Lighting(input.positionW, normalW);
-	float4 color = float4(normalW, 1.0f);
-	return color;
-#endif
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 Texture2D gtxtTexture : register(t0);
-//SamplerState gSamplerState : register(s0);
 SamplerState gssWrap : register(s0);
 SamplerState gssClamp : register(s1);
 
@@ -136,17 +47,8 @@ VS_TEXTURED_OUTPUT VSTextured(VS_TEXTURED_INPUT input)
 	VS_TEXTURED_OUTPUT output;
 
 	output.position = mul(mul(mul(float4(input.position, 1.0f), gmtxGameObject), gmtxView), gmtxProjection);
-	output.uv = mul(float3(input.uv, 1.0f), (float3x3)(gmtxTexture)).xy;
-
-	return(output);
-}
-
-VS_TEXTURED_OUTPUT VSSpriteAnimation(VS_TEXTURED_INPUT input)
-{
-	VS_TEXTURED_OUTPUT output;
-
-	output.position = mul(mul(mul(float4(input.position, 1.0f), gmtxGameObject), gmtxView), gmtxProjection);
-	output.uv = mul(float3(input.uv, 1.0f), (float3x3)(gmtxTexture)).xy;
+	output.uv = input.uv;
+	//output.uv = mul(float3(input.uv, 1.0f), (float3x3)(gmtxTexture)).xy;
 
 	return(output);
 }
@@ -156,6 +58,17 @@ float4 PSTextured(VS_TEXTURED_OUTPUT input) : SV_TARGET
 	float4 cColor = gtxtTexture.Sample(gssClamp, input.uv);
 
 	return(cColor);
+}
+
+VS_TEXTURED_OUTPUT VSSpriteAnimation(VS_TEXTURED_INPUT input)
+{
+	VS_TEXTURED_OUTPUT output;
+
+	output.position = mul(mul(mul(float4(input.position, 1.0f), gmtxGameObject), gmtxView), gmtxProjection);
+	output.uv = input.uv;
+	//output.uv = mul(float3(input.uv, 1.0f), (float3x3)(gmtxTexture)).xy;
+
+	return(output);
 }
 
 float4 PSSpriteAnimation(VS_TEXTURED_OUTPUT input) : SV_TARGET
@@ -170,8 +83,8 @@ VS_TEXTURED_OUTPUT VSBlend(VS_TEXTURED_INPUT input)
 	VS_TEXTURED_OUTPUT output;
 
 	output.position = mul(mul(mul(float4(input.position, 1.0f), gmtxGameObject), gmtxView), gmtxProjection);
-	output.uv = mul(float3(input.uv, 1.0f), (float3x3)(gmtxTexture)).xy;
-	//output.uv = input.uv;
+	output.uv = input.uv;
+	//output.uv = mul(float3(input.uv, 1.0f), (float3x3)(gmtxTexture)).xy;
 
 	return(output);
 }
@@ -209,8 +122,6 @@ Texture2D gtxtDetailNormalTexture : register(t12);
 #else
 Texture2D gtxtStandardTextures[7] : register(t6);
 #endif
-
-//SamplerState gssWrap : register(s0);
 
 struct VS_STANDARD_INPUT
 {
@@ -282,6 +193,55 @@ float4 PSStandard(VS_STANDARD_OUTPUT input) : SV_TARGET
 	return(cColor);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+#define MAX_VERTEX_INFLUENCES			4
+#define SKINNED_ANIMATION_BONES			128
+
+cbuffer cbBoneOffsets : register(b7)
+{
+	float4x4 gpmtxBoneOffsets[SKINNED_ANIMATION_BONES];
+};
+
+cbuffer cbBoneTransforms : register(b8)
+{
+	float4x4 gpmtxBoneTransforms[SKINNED_ANIMATION_BONES];
+};
+
+struct VS_SKINNED_STANDARD_INPUT
+{
+	float3 position : POSITION;
+	float2 uv : TEXCOORD;
+	float3 normal : NORMAL;
+	float3 tangent : TANGENT;
+	float3 bitangent : BITANGENT;
+	int4 indices : BONEINDEX;
+	float4 weights : BONEWEIGHT;
+};
+
+VS_STANDARD_OUTPUT VSSkinnedAnimationStandard(VS_SKINNED_STANDARD_INPUT input)
+{
+	VS_STANDARD_OUTPUT output;
+
+	float4x4 mtxVertexToBoneWorld = (float4x4)0.0f;
+	for (int i = 0; i < MAX_VERTEX_INFLUENCES; i++)
+	{
+		//		mtxVertexToBoneWorld += input.weights[i] * gpmtxBoneTransforms[input.indices[i]];
+		mtxVertexToBoneWorld += input.weights[i] * mul(gpmtxBoneOffsets[input.indices[i]], gpmtxBoneTransforms[input.indices[i]]);
+	}
+	output.positionW = mul(float4(input.position, 1.0f), mtxVertexToBoneWorld).xyz;
+	output.normalW = mul(input.normal, (float3x3)mtxVertexToBoneWorld).xyz;
+	output.tangentW = mul(input.tangent, (float3x3)mtxVertexToBoneWorld).xyz;
+	output.bitangentW = mul(input.bitangent, (float3x3)mtxVertexToBoneWorld).xyz;
+
+	//	output.positionW = mul(float4(input.position, 1.0f), gmtxGameObject).xyz;
+
+	output.position = mul(mul(float4(output.positionW, 1.0f), gmtxView), gmtxProjection);
+	output.uv = input.uv;
+
+	return(output);
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////
 struct VS_SKYBOX_CUBEMAP_INPUT
@@ -312,6 +272,33 @@ float4 PSSkyBox(VS_SKYBOX_CUBEMAP_OUTPUT input) : SV_TARGET
 	float4 cColor = gtxtSkyCubeTexture.Sample(gssClamp, input.positionL);
 
 	return(cColor);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////
+struct VS_WIREFRAME_INPUT
+{
+	float3 position : POSITION;
+};
+
+struct VS_WIREFRAME_OUTPUT
+{
+	float4 position : SV_POSITION;
+};
+
+VS_WIREFRAME_OUTPUT VSWireFrame(VS_WIREFRAME_INPUT input)
+{
+	VS_WIREFRAME_OUTPUT output;
+	output.position = mul(mul(mul(float4(input.position, 1.0f), gmtxGameObject), gmtxView), gmtxProjection);
+
+	return output;
+}
+
+float4 PSWireFrame(VS_WIREFRAME_OUTPUT input) : SV_TARGET
+{
+	float4 cColor = float4(0.0f, 1.0f, 0.0f, 1.0f);
+
+	return cColor;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

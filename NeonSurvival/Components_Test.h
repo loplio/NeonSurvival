@@ -3,11 +3,29 @@
 #include "Scene.h"
 
 //-------------------------------------------------------------------------------
+/*	Player																	   */
+//-------------------------------------------------------------------------------
+class Player_Test : public CPlayer {
+public:
+	Player_Test(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext, int nMeshes = 1);
+	virtual ~Player_Test();
+
+	void Move(ULONG nDirection, float fDistance, bool bVelocity = false) override;
+	void Update(float fTimeElapsed) override;
+
+	void OnPrepareRender() override;
+
+	void OnPlayerUpdateCallback(float fTimeElapsed) override;
+	void OnCameraUpdateCallback(float fTimeElapsed) override;
+	CCamera* ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed) override;
+};
+
+//-------------------------------------------------------------------------------
 /*	Scene																	   */
 //-------------------------------------------------------------------------------
 class Scene_Test : public CScene {
 public:
-	Scene_Test(ID3D12Device* pd3dDevice);
+	Scene_Test(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual ~Scene_Test();
 
 	void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) override;
@@ -40,7 +58,7 @@ public:
 //--CRotatingObject_1--------------------------------------------------------------
 class CRotatingObject : public CGameObject {
 public:
-	CRotatingObject(int nMeshes = 1);
+	CRotatingObject();
 	virtual ~CRotatingObject();
 
 private:

@@ -6,31 +6,27 @@
 //-------------------------------------------------------------------------------
 /*	Player																	   */
 //-------------------------------------------------------------------------------
-Player_Neon::Player_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext, int nMeshes) : CPlayer(nMeshes)
+Player_Neon::Player_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext, int nMeshes) : CPlayer()
 {
 	m_pCamera = ChangeCamera(THIRD_PERSON_CAMERA, 0.0f);
 
 	CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)pContext;
 	float fHeight = pTerrain->GetHeight(pTerrain->GetWidth() * 0.5f, pTerrain->GetLength() * 0.5f);
-	SetPosition(XMFLOAT3(pTerrain->GetWidth() * 0.5f, fHeight + MERTER_PER_PIXEL(100), pTerrain->GetLength() * 0.5f));
+	SetPosition(XMFLOAT3(pTerrain->GetWidth() * 0.5f, fHeight + MERTER_PER_PIXEL(20), pTerrain->GetLength() * 0.5f));
 	SetMass(60);
-	Rotate(0.0f, 90.0f, 0.0f);
 
 	SetPlayerUpdatedContext(pTerrain);
 	SetCameraUpdatedContext(pTerrain);
 
-	m_pShader = new CStandardShader();
-	m_pShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
-	m_pShader->CreateCbvSrvDescriptorHeaps(pd3dDevice, 0, 9);
-
-	CGameObject* Robot_Soldier_Blue = CGameObject::LoadGeometryFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Robot_Soldier_Blue.bin", m_pShader);
-
-	SetChild(Robot_Soldier_Blue);
-	Robot_Soldier_Blue->AddRef();
+	CLoadedModelInfo* pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/DefaultHuman/Walking.bin", NULL);
+	SetChild(pPlayerModel->m_pModelRootObject, true);
+	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 1, pPlayerModel);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
+	m_pSkinnedAnimationController->SetTrackEnable(0, false);
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
-	PrintObjectInfo();
+	if (pPlayerModel) delete pPlayerModel;
 }
 Player_Neon::~Player_Neon()
 {
@@ -42,6 +38,12 @@ void Player_Neon::Move(ULONG dwDirection, float fDistance, bool bUpdateVelocity)
 {
 	int count = 0;
 	ULONG RemainOp = dwDirection;
+
+	if (dwDirection)
+	{
+		//m_pSkinnedAnimationController->SetTrackEnable(0, false);
+		//m_pSkinnedAnimationController->SetTrackEnable(1, true);
+	}
 
 	// 여러 방향키를 눌렀을 때, 각 방향마다 적용되므로 각 방향에 적용되는 총 수치를 fDistance로 맞춤.
 	// When multiple direction keys are pressed, the total number applied to each direction is aligned with fDistance.
@@ -105,6 +107,17 @@ void Player_Neon::Update(float fTimeElapsed)
 	if (fDeceleration.z > fabs(m_xmf3Velocity.z)) fDeceleration.z = m_xmf3Velocity.z;
 	fDeceleration.x *= -m_xmf3Velocity.x; fDeceleration.y *= -m_xmf3Velocity.y; fDeceleration.z *= -m_xmf3Velocity.z;
 	m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, fDeceleration);
+
+	if (m_pSkinnedAnimationController)
+	{
+		float fLength = sqrtf(m_xmf3Velocity.x * m_xmf3Velocity.x + m_xmf3Velocity.z * m_xmf3Velocity.z);
+		if (::IsZero(fLength))
+		{
+			m_pSkinnedAnimationController->SetTrackEnable(0, true);
+			//m_pSkinnedAnimationController->SetTrackEnable(1, false);
+			//m_pSkinnedAnimationController->SetTrackPosition(1, 0.0f);
+		}
+	}
 }
 
 void Player_Neon::OnPrepareRender()
@@ -114,7 +127,8 @@ void Player_Neon::OnPrepareRender()
 	m_xmf4x4Transform._31 = m_xmf3Look.x; m_xmf4x4Transform._32 = m_xmf3Look.y; m_xmf4x4Transform._33 = m_xmf3Look.z;
 	m_xmf4x4Transform._41 = m_xmf3Position.x; m_xmf4x4Transform._42 = m_xmf3Position.y; m_xmf4x4Transform._43 = m_xmf3Position.z;
 
-	Scale(10.0f, 10.0f, 10.0f);
+	SetScale(XMFLOAT3(1.f, 1.f, 1.f));
+	m_xmf4x4Transform = Matrix4x4::Multiply(XMMatrixScaling(m_xmf3Scale.x, m_xmf3Scale.y, m_xmf3Scale.z), m_xmf4x4Transform);
 }
 
 void Player_Neon::OnPlayerUpdateCallback(float fTimeElapsed)
@@ -170,8 +184,8 @@ CCamera* Player_Neon::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 	case SPACESHIP_CAMERA:
 		SetFriction(0.0f);
 		SetGravity(XMFLOAT3(0.0f, 0.0f, 0.0f));
-		SetMaxVelocityXZ(500.0f);
-		SetMaxVelocityY(400.0f);
+		SetMaxVelocityXZ(5000.0f);
+		SetMaxVelocityY(4000.0f);
 		m_pCamera = OnChangeCamera(SPACESHIP_CAMERA, nCurrentCameraMode);
 		m_pCamera->SetTimeLag(0.0f);
 		m_pCamera->SetOffset(XMFLOAT3(0.0f, 0.0f, 0.0f));
@@ -202,17 +216,18 @@ CCamera* Player_Neon::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 //-------------------------------------------------------------------------------
 /*	Scene																	   */
 //-------------------------------------------------------------------------------
-Scene_Neon::Scene_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) : CScene(pd3dDevice)
+Scene_Neon::Scene_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) : CScene(pd3dDevice, pd3dCommandList)
 {
+	CreateCbvSrvDescriptorHeaps(pd3dDevice, 10, 100);
+
 	// Terrain Build.
 	XMFLOAT3 xmf3Scale(12.0f, 1.0f, 12.0f);
 	XMFLOAT4 xmf4Color(0.0f, 0.1f, 0.0f, 0.0f);
-#ifdef _WITH_TERRAIN_PARTITION
-	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("../Assets/Image/Terrain/HeightMap.raw"), 257, 257, 17, 17, xmf3Scale, xmf4Color);
-#else
-	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList,
-		m_pd3dGraphicsRootSignature, _T("GameTexture/terrain.raw"), 512, 512, 512, 512, xmf3Scale, xmf4Color);
-#endif
+	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature,
+		_T("GameTexture/terrain.raw"),
+		(wchar_t*)L"GameTexture/neon_tile4_1.dds",
+		(wchar_t*)L"GameTexture/neon_tile3_1.dds", 
+		512, 512, xmf3Scale, xmf4Color);
 }
 Scene_Neon::~Scene_Neon()
 {
@@ -241,30 +256,11 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	BuildLightsAndMaterials();
 
 	// SkyBox Build.
-	m_pSkyBox = new CSkyBox(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_pSkyBox = new CSkyBox(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (wchar_t*)L"SkyBox/NeonCity.dds");
 
 	// ShaderObjects Build.
 	m_ppShaders.reserve(5);
 
-	CModelObjects* pModelObjectShader = new ModelObjects_1();
-	pModelObjectShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	pModelObjectShader->BuildObjects(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	m_ppShaders.push_back(pModelObjectShader);
-
-	//CBillboardObject_1s* pBillboardObjectShader = new BillboardObjects_1();
-	//pBillboardObjectShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	//pBillboardObjectShader->BuildObjects(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, m_pTerrain);
-	//m_ppShaders.push_back(pBillboardObjectShader);
-
-	CMultiSpriteObject_1s* pMultiSpriteObjectsShader = new MultiSpriteObjects_1();
-	pMultiSpriteObjectsShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	pMultiSpriteObjectsShader->BuildObjects(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, m_pTerrain);
-	m_ppShaders.push_back(pMultiSpriteObjectsShader);
-
-	//CBlendTextureObjects* pBlendTextureObjectsShader = new BlendTextureObjects_1();
-	//pBlendTextureObjectsShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	//pBlendTextureObjectsShader->BuildObjects(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, m_pTerrain);
-	//m_ppShaders.push_back(pBlendTextureObjectsShader);
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
@@ -275,22 +271,25 @@ void Scene_Neon::BuildLightsAndMaterials()
 {
 	CScene::BuildLightsAndMaterials();
 
-	m_pLights->m_xmf4GlobalAmbient = XMFLOAT4(0.1f, 0.1, 0.1f, 0.1f);
-	m_pLights->gnLights = 4;
+	m_nLights = 4;
+	m_pLights = new LIGHT[m_nLights];
+	::ZeroMemory(m_pLights, sizeof(LIGHT) * m_nLights);
 
-	SetLight(m_pLights->m_pLights[0], XMFLOAT4(0.1f, 0.0f, 0.0f, 1.0f), XMFLOAT4(0.8f, 0.0f, 0.0f, 1.0f), XMFLOAT4(0.1f, 0.1f, 0.1f, 0.0f),
+	m_xmf4GlobalAmbient = XMFLOAT4(0.1f, 0.1f, 0.1f, 1.0f);
+
+	SetLight(m_pLights[0], XMFLOAT4(0.1f, 0.0f, 0.0f, 1.0f), XMFLOAT4(0.8f, 0.0f, 0.0f, 1.0f), XMFLOAT4(0.1f, 0.1f, 0.1f, 0.0f),
 		XMFLOAT3(130.0f, 30.0f, 30.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 0.001f, 0.0001f),
 		0, 0, 0, true, POINT_LIGHT, 100.0f, 0);
 
-	SetLight(m_pLights->m_pLights[1], XMFLOAT4(0.1f, 0.1f, 0.1f, 1.0f), XMFLOAT4(0.4f, 0.4f, 0.4f, 1.0f), XMFLOAT4(0.1f, 0.1f, 0.1f, 0.0f),
+	SetLight(m_pLights[1], XMFLOAT4(0.1f, 0.1f, 0.1f, 1.0f), XMFLOAT4(0.4f, 0.4f, 0.4f, 1.0f), XMFLOAT4(0.1f, 0.1f, 0.1f, 0.0f),
 		XMFLOAT3(-50.0f, 20.0f, -5.0f), XMFLOAT3(0.0f, 0.0f, 1.0f), XMFLOAT3(1.0f, 0.01f, 0.0001f),
 		8.0f, (float)cos(XMConvertToRadians(20.0f)), (float)cos(XMConvertToRadians(40.0f)), true, SPOT_LIGHT, 50.0f, 0);
 
-	SetLight(m_pLights->m_pLights[2], XMFLOAT4(0.8f, 0.6f, 0.6f, 1.0f), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f),
+	SetLight(m_pLights[2], XMFLOAT4(0.8f, 0.6f, 0.6f, 1.0f), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f),
 		XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, 0.0f),
 		0, 0, 0, true, DIRECTIONAL_LIGHT, 0.0f, 0);
 
-	SetLight(m_pLights->m_pLights[3], XMFLOAT4(0.1f, 0.1f, 0.1f, 1.0f), XMFLOAT4(0.5f, 0.0f, 0.0f, 1.0f), XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f),
+	SetLight(m_pLights[3], XMFLOAT4(0.1f, 0.1f, 0.1f, 1.0f), XMFLOAT4(0.5f, 0.0f, 0.0f, 1.0f), XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f),
 		XMFLOAT3(-150.0f, 30.0f, 30.0f), XMFLOAT3(0.0f, 1.0f, 1.0f), XMFLOAT3(1.0f, 0.01f, 0.0001f),
 		8.0f, (float)cos(XMConvertToRadians(30.0f)), (float)cos(XMConvertToRadians(90.0f)), true, SPOT_LIGHT, 60.0f, 0);
 }

@@ -17,7 +17,7 @@ public:
 	virtual void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature) = 0;
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int nPipelineState = 0);
 	void AddBBObject(CGameObject* obj) { m_BBObjects.push_back(obj); }
-	int IsCollide(CGameObject* obj, ObjectType excludetype);
+	int IsCollide(CGameObject* obj/*, ObjectType excludetype*/);
 
 	bool m_bCollisionBoxWireFrame = false;
 
@@ -118,12 +118,12 @@ public:
 };
 
 //-------------------------------------------------------------------------------
-/*	CBillboardObject_1s														   */
+/*	CBillboardObjects														   */
 //-------------------------------------------------------------------------------
-class CBillboardObject_1s : public CBillboardShader {
+class CBillboardObjects : public CBillboardShader {
 public:
-	CBillboardObject_1s();
-	virtual ~CBillboardObject_1s();
+	CBillboardObjects();
+	virtual ~CBillboardObjects();
 
 	virtual void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext = NULL) = 0;
 
@@ -139,25 +139,14 @@ protected:
 };
 
 //--Concrete_1-------------------------------------------------------------------
-class BillboardObjects_1 : public CBillboardObject_1s {
-	UINT object_type = 3;
-
-public:
-	BillboardObjects_1() {};
-	virtual ~BillboardObjects_1() {};
-
-	void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext = NULL) override;
-	void AnimateObjects(float fTimeElapsed) override;
-	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int nPipelineState = 0) override;
-};
 
 //-------------------------------------------------------------------------------
-/*	CMultiSpriteObject_1s														   */
+/*	CMultiSpriteObjects														   */
 //-------------------------------------------------------------------------------
-class CMultiSpriteObject_1s : public CMultiSpriteShader {
+class CMultiSpriteObjects : public CMultiSpriteShader {
 public:
-	CMultiSpriteObject_1s();
-	virtual ~CMultiSpriteObject_1s();
+	CMultiSpriteObjects();
+	virtual ~CMultiSpriteObjects();
 
 	virtual void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext = NULL) = 0;
 
@@ -176,21 +165,6 @@ protected:
 };
 
 //--Concrete_1-------------------------------------------------------------------
-class MultiSpriteObjects_1 : public CMultiSpriteObject_1s {
-	UINT object_type = 3;
-
-public:
-	MultiSpriteObjects_1() {};
-	virtual ~MultiSpriteObjects_1() {};
-
-	void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext = NULL) override;
-	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int nPipelineState = 0) override;
-
-	void AddObject(const XMFLOAT3& position, int index, float cooltime, bool btemporary, bool bOwner = true);
-	void GarbageCollector();
-	void ExecuteActive(int index, bool bOwner = true);
-	std::vector<CGameObject*>& GetGameObject() { return m_ppObjects; }
-};
 
 //-------------------------------------------------------------------------------
 /*	CBlendTextureObjects													   */

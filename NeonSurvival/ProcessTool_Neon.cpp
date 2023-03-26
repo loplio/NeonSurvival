@@ -148,6 +148,12 @@ GameCompute_Neon::GameCompute_Neon(const CGameTimer& GameTimer, const CGameSourc
 {
 }
 
+void GameCompute_Neon::Update() const
+{
+	// Player Update
+	m_Player.Update(m_GameTimer.GetTimeElapsed());
+}
+
 void GameCompute_Neon::Animate() const
 {
 	// Scene Animate
@@ -183,7 +189,6 @@ void GameRenderDisplay_Neon::Render()
 	m_InterfaceFramework.ClearDisplay();
 
 	// Update
-	m_Player.Update(m_GameTimer.GetTimeElapsed());
 	((CGameFramework_Neon*)&gBaseFramework)->UpdateUI();
 
 	// Scene Render
@@ -191,7 +196,7 @@ void GameRenderDisplay_Neon::Render()
 	m_Scene.Render(&m_pd3dCommandList, Camera);
 
 	// Player Render
-	m_Player.Render(&m_pd3dDevice, &m_pd3dCommandList, Camera);
+	m_Player.Render(&m_pd3dCommandList, Camera);
 
 	// BoundingBox Render
 	m_BoundingBox.Render(&m_pd3dCommandList, Camera);

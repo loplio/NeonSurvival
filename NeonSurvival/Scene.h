@@ -24,69 +24,99 @@ struct LIGHT
 
 struct LIGHTS
 {
-	LIGHT m_pLights[MAX_LIGHTS];
+	LIGHT m_pLightss[MAX_LIGHTS];
 	XMFLOAT4 m_xmf4GlobalAmbient;
 	int gnLights;
 };
 
-//struct MATERIALS
-//{
-//	MATERIAL m_pReflections[MAX_MATERIALS];
-//};
-
 class CScene {
 public:
-	CScene(ID3D12Device* pd3dDevice);
+	CScene(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual ~CScene();
 
-	// hold..
 	ID3D12RootSignature* CreateGraphicsRootSignature(ID3D12Device* pd3dDevice);
 	ID3D12RootSignature* GetGraphicsRootSignature();
 
+	// ShaderVariable.
 	virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void ReleaseShaderVariables();
 
-	// Build..
+	// Build.
 	virtual void CreateBoundingBox(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CBoundingBoxObjects* BBShader);
 	virtual void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void BuildLightsAndMaterials();
 	virtual void ReleaseUploadBuffers();
 	virtual void ReleaseObjects();
 
-	// ProcessInput..
+	// ProcessInput.
 	virtual bool OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
 	virtual bool OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
 	CGameObject* PickObjectPointedByCursor(int xClient, int yClient, CCamera* pCamera);
 
-	// ProcessAnimaiton..
+	// ProcessCompute.
 	virtual void AnimateObjects(float fTimeElapsed);
 
-	// ProcessOutput..
+	// ProcessOutput.
 	virtual void OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera *pCamera);
 
 protected:
-	ID3D12RootSignature* m_pd3dGraphicsRootSignature = NULL;
+	ID3D12RootSignature*				m_pd3dGraphicsRootSignature = NULL;
 
-	LIGHTS* m_pLights = NULL;
-	ID3D12Resource* m_pd3dcbLights = NULL;
-	LIGHTS* m_pcbMappedLights = NULL;
+	static ID3D12DescriptorHeap*		m_pd3dCbvSrvDescriptorHeap;
 
-	CHeightMapTerrain* m_pTerrain = NULL;
+	static D3D12_CPU_DESCRIPTOR_HANDLE	m_d3dCbvCPUDescriptorStartHandle;
+	static D3D12_GPU_DESCRIPTOR_HANDLE	m_d3dCbvGPUDescriptorStartHandle;
+	static D3D12_CPU_DESCRIPTOR_HANDLE	m_d3dSrvCPUDescriptorStartHandle;
+	static D3D12_GPU_DESCRIPTOR_HANDLE	m_d3dSrvGPUDescriptorStartHandle;
 
-	//CInstancingShader* m_pShaders = NULL;
-	std::vector<CShader*> m_ppShaders;
+	static D3D12_CPU_DESCRIPTOR_HANDLE	m_d3dCbvCPUDescriptorNextHandle;
+	static D3D12_GPU_DESCRIPTOR_HANDLE	m_d3dCbvGPUDescriptorNextHandle;
+	static D3D12_CPU_DESCRIPTOR_HANDLE	m_d3dSrvCPUDescriptorNextHandle;
+	static D3D12_GPU_DESCRIPTOR_HANDLE	m_d3dSrvGPUDescriptorNextHandle;
 
 public:
-	CSkyBox* m_pSkyBox = NULL;
-	std::shared_ptr<CPlayer> m_pPlayer = NULL;
-	std::shared_ptr<CBoundingBoxObjects> m_pBBObjects = NULL;
+	static void CreateCbvSrvDescriptorHeaps(ID3D12Device* pd3dDevice, int nConstantBufferViews, int nShaderResourceViews);
 
-	CHeightMapTerrain* GetTerrain() { return m_pTerrain; }
-	std::vector<CShader*>& GetShader() { return m_ppShaders; }
+	static D3D12_GPU_DESCRIPTOR_HANDLE CreateConstantBufferViews(ID3D12Device* pd3dDevice, int nConstantBufferViews, ID3D12Resource* pd3dConstantBuffers, UINT nStride);
+	static D3D12_GPU_DESCRIPTOR_HANDLE CreateShaderResourceViews(ID3D12Device* pd3dDevice, CTexture* pTexture, UINT nRootParameter, bool bAutoIncrement);
 
-	void SetLight(LIGHT& light , XMFLOAT4 xmf4Ambient, XMFLOAT4 xmf4Diffuse, XMFLOAT4 xmf4Specular,
+	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUCbvDescriptorStartHandle() { return(m_d3dCbvCPUDescriptorStartHandle); }
+	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUCbvDescriptorStartHandle() { return(m_d3dCbvGPUDescriptorStartHandle); }
+	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUSrvDescriptorStartHandle() { return(m_d3dSrvCPUDescriptorStartHandle); }
+	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUSrvDescriptorStartHandle() { return(m_d3dSrvGPUDescriptorStartHandle); }
+
+	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUCbvDescriptorNextHandle() { return(m_d3dCbvCPUDescriptorNextHandle); }
+	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUCbvDescriptorNextHandle() { return(m_d3dCbvGPUDescriptorNextHandle); }
+	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUSrvDescriptorNextHandle() { return(m_d3dSrvCPUDescriptorNextHandle); }
+	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUSrvDescriptorNextHandle() { return(m_d3dSrvGPUDescriptorNextHandle); }
+
+	void SetLight(LIGHT& light, XMFLOAT4 xmf4Ambient, XMFLOAT4 xmf4Diffuse, XMFLOAT4 xmf4Specular,
 		XMFLOAT3 xmf3Position, XMFLOAT3 xmf3Direction, XMFLOAT3 xmf3Attenuation,
 		float fFalloff, float fTheta, float fPhi, bool bEnable, int nType, float fRange, float padding);
+
+	float									m_fElapsedTime = 0.0f;
+
+	// Lighting.
+	int										m_nLights = 0;
+	LIGHT*									m_pLights = NULL;
+	ID3D12Resource*							m_pd3dcbLights = NULL;
+	LIGHTS*									m_pcbMappedLights = NULL;
+
+	XMFLOAT4								m_xmf4GlobalAmbient;
+
+	// Shader(Include Object).
+	std::vector<CShader*>					m_ppShaders;
+	//CInstancingShader*					m_pShaders = NULL;
+
+	// Objects.
+	CSkyBox*								m_pSkyBox = NULL;
+	CHeightMapTerrain*						m_pTerrain = NULL;
+	std::shared_ptr<CPlayer>				m_pPlayer = NULL;
+	std::shared_ptr<CBoundingBoxObjects>	m_pBBObjects = NULL;
+	//int									m_nGameObjects = 0;
+	//CGameObject**							m_ppGameObjects = NULL;
+	int										m_nHierarchicalGameObjects = 0;
+	CGameObject**							m_ppHierarchicalGameObjects = NULL;
 };
