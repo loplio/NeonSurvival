@@ -179,7 +179,7 @@ void GameRenderDisplay_Test::Render()
 	m_Scene.Render(&m_pd3dCommandList, Camera);
 
 	// Player Render
-	m_Player.Render(&m_pd3dDevice, &m_pd3dCommandList, Camera);
+	m_Player.Render(&m_pd3dCommandList, Camera);
 
 	// BoundingBox Render
 	m_BoundingBox.Render(&m_pd3dCommandList, Camera);

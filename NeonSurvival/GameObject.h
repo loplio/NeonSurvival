@@ -193,8 +193,7 @@ struct SRVROOTARGUMENTINFO
 	D3D12_GPU_DESCRIPTOR_HANDLE		m_d3dSrvGpuDescriptorHandle;
 };
 
-class CTexture
-{
+class CTexture {
 public:
 	CTexture(int nTextureResources, UINT nResourceType, int nSamplers, int nRootParameters, int nRows = 1, int nCols = 1);
 	virtual ~CTexture();
@@ -207,17 +206,6 @@ private:
 	int								m_nTextures = 0;
 	ID3D12Resource**				m_ppd3dTextures = NULL;
 	ID3D12Resource**				m_ppd3dTextureUploadBuffers;
-
-	UINT*							m_pnResourceTypes = NULL;
-
-	_TCHAR							(*m_ppstrTextureNames)[64] = NULL;
-
-	DXGI_FORMAT*					m_pdxgiBufferFormats = NULL;
-	int*							m_pnBufferElements = NULL;
-
-	int								m_nRootParameters = 0;
-	int*							m_pnRootParameterIndices = NULL;
-	D3D12_GPU_DESCRIPTOR_HANDLE*	m_pd3dSrvGpuDescriptorHandles = NULL;
 
 	int								m_nSamplers = 0;
 	D3D12_GPU_DESCRIPTOR_HANDLE*	m_pd3dSamplerGpuDescriptorHandles = NULL;
@@ -232,45 +220,17 @@ public:
 	void SetRootArgument(int nIndex, UINT nRootParameterIndex, D3D12_GPU_DESCRIPTOR_HANDLE d3dsrvGpuDescriptorHandle);
 	void SetSampler(int nIndex, D3D12_GPU_DESCRIPTOR_HANDLE d3dSamplerGpuDescriptorHandle);
 
-	void UpdateShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList, int nParameterIndex, int nTextureIndex);
 	void UpdateShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList, int nIndex);
 	void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
 	void ReleaseShaderVariables();
 
-	int LoadTextureFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGameObject* pParent, FILE* pInFile, CShader* pShader, UINT nIndex);
 	void LoadTextureFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, wchar_t* pszFileName, UINT nIndex, bool bIsDDSFile = true);
-	void LoadTextureFromDDSFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, wchar_t* pszFileName, UINT nResourceType, UINT nIndex);
-	void LoadBuffer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, void* pData, UINT nElements, UINT nStride, DXGI_FORMAT ndxgiFormat, UINT nIndex);
-	ID3D12Resource* CreateTexture(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, UINT nIndex, UINT nResourceType, UINT nWidth, UINT nHeight, UINT nElements, UINT nMipLevels, DXGI_FORMAT dxgiFormat, D3D12_RESOURCE_FLAGS d3dResourceFlags, D3D12_RESOURCE_STATES d3dResourceStates, D3D12_CLEAR_VALUE* pd3dClearValue);
 
-	void SetRootParameterIndex(int nIndex, UINT nRootParameterIndex);
-	void SetGpuDescriptorHandle(int nIndex, D3D12_GPU_DESCRIPTOR_HANDLE d3dSrvGpuDescriptorHandle);
-
-	int GetRootParameters() { return(m_nRootParameters); }
 	int GetTextures() { return(m_nTextures); }
-	_TCHAR* GetTextureName(int nIndex) { return(m_ppstrTextureNames[nIndex]); }
-	ID3D12Resource* GetResource(int nIndex) { return(m_ppd3dTextures[nIndex]); }
 	ID3D12Resource* GetTexture(int nIndex) { return(m_ppd3dTextures[nIndex]); }
-	D3D12_GPU_DESCRIPTOR_HANDLE GetGpuDescriptorHandle(int nIndex) { return(m_pd3dSrvGpuDescriptorHandles[nIndex]); }
-	int GetRootParameter(int nIndex) { return(m_pnRootParameterIndices[nIndex]); }
-
 	UINT GetTextureType() { return(m_nTextureType); }
-	UINT GetTextureType(int nIndex) { return(m_pnResourceTypes[nIndex]); }
-	DXGI_FORMAT GetBufferFormat(int nIndex) { return(m_pdxgiBufferFormats[nIndex]); }
-	int GetBufferElements(int nIndex) { return(m_pnBufferElements[nIndex]); }
-
-	D3D12_SHADER_RESOURCE_VIEW_DESC GetShaderResourceViewDesc(int nIndex);
 
 	void ReleaseUploadBuffers();
-
-	void Animate() { }
-	void AnimateRowColumn(bool& bAct, float& fTime, float coolTime = 1.0f);		// 昏力 - test module code
-
-public:
-	int 							m_nRows = 1;	// 昏力 - test module code
-	int 							m_nCols = 1;	// 昏力 - test module code
-
-	XMFLOAT4X4						m_xmf4x4Texture;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -310,7 +270,6 @@ public:
 
 public:
 	CShader*						m_pShader = NULL;
-	CTexture*						m_pTexture = NULL;
 
 	XMFLOAT4						m_xmf4AlbedoColor = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	XMFLOAT4						m_xmf4EmissiveColor = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -325,10 +284,6 @@ public:
 	float							m_fSpecularHighlight = 0.0f;
 	float							m_fMetallic = 0.0f;
 	float							m_fGlossyReflection = 0.0f;
-
-//protected:
-//	ID3D12Resource*					m_pd3dcbTextureUV = NULL;
-//	CB_TEXTURE_UV_INFO*				m_pcbMappedTextureUV = NULL;
 
 public:
 	int 							m_nTextures = 0;
@@ -351,7 +306,7 @@ public:
 
 class CGameObject {
 public:
-	CGameObject(int nMeshes = 1, int nMaterials = 1);
+	CGameObject(int nMaterials = 1);
 	virtual ~CGameObject();
 
 private:
@@ -366,14 +321,12 @@ public:
 
 protected:
 	std::vector<CBoundingBoxMesh*> m_ppBBMeshes;
-	ObjectType objtype = ObjectType::NONE;
 
 public:
 	char						m_pstrFrameName[64];
 
 	XMFLOAT4X4					m_xmf4x4World;
 	XMFLOAT4X4					m_xmf4x4Transform;
-	XMFLOAT3					m_xmf3Shift;
 	XMFLOAT3					m_xmf3Scale;
 	float						m_Mass;
 
@@ -385,10 +338,8 @@ public:
 	CMaterial**					m_ppMaterials;
 	CMesh*						m_pMesh;
 
-	D3D12_GPU_DESCRIPTOR_HANDLE m_d3dCbvGPUDescriptorHandle;
-
 public:
-	// hold off..
+	// ShaderVariable.
 	virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void UpdateShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList, CMaterial* pMaterial);
@@ -396,9 +347,9 @@ public:
 	virtual void ReleaseShaderVariables();
 	void ReleaseUploadBuffers();
 
-	virtual void SetMesh(CMesh* pMesh);
+	void SetMesh(CMesh* pMesh);
 	void SetShader(CShader* pShader);
-	virtual void SetShader(int nMaterial, CShader* pShader);
+	void SetShader(int nMaterial, CShader* pShader);
 	void SetMaterial(int nMaterial, CMaterial* pMaterial);
 	void SetChild(CGameObject* pChild, bool bReferenceUpdate = false);
 
@@ -411,27 +362,26 @@ public:
 	// processoutput..
 	virtual void OnPrepareRender();
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
-	virtual void Render(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL);
 
 	XMFLOAT3 GetPosition();
 	XMFLOAT3 GetLook();
 	XMFLOAT3 GetUp();
 	XMFLOAT3 GetRight();
 
+	void UpdateTransform(XMFLOAT4X4* pxmf4x4Parent = NULL);
+	
 	void MoveStrafe(float fDistance = 1.0f);
 	void MoveUp(float fDistance = 1.0f);
 	void MoveForward(float fDistance = 1.0f);
 	
-	void UpdateTransform(XMFLOAT4X4* pxmf4x4Parent = NULL);
-
 	void Rotate(XMFLOAT4* pxmf4Quaternion);
 	void Rotate(XMFLOAT3* pxmfAxis, float fAngle);
 	void Rotate(float fPitch = 10.0f, float fYaw = 10.0f, float fRoll = 10.0f);
-	void Scale(float width = 1.f, float height = 1.f, float depth = 1.f);
+
+	void SetScale(float width = 1.f, float height = 1.f, float depth = 1.f);
 	void SetScale(const XMFLOAT3& scale);
 	void SetMass(float mass);
 	void SetLookAt(XMFLOAT3& xmf3Target, XMFLOAT3&& xmf3Up = XMFLOAT3(0.0f, 1.0f, 0.0f));
-	void SetLookAt2(XMFLOAT3& xmf3Target, XMFLOAT3&& xmf3Up = XMFLOAT3(0.0f, 1.0f, 0.0f));	//昏力 - test module 内靛.
 	void SetPosition(float x, float y, float z);
 	void SetPosition(XMFLOAT3 xmf3Position);
 	void SetTransform(const XMFLOAT3& right, const XMFLOAT3& up, const XMFLOAT3& look, const XMFLOAT3& pos);
@@ -439,25 +389,15 @@ public:
 	void GenerateRayForPicking(XMFLOAT3& xmf3PickPosition, XMFLOAT4X4& xmf4x4View, XMFLOAT3* pxmf3PickRayOrigin, XMFLOAT3* pxmf3PickRayDirection);
 	int PickObjectByRayIntersection(XMFLOAT3& xmf3PickPosition, XMFLOAT4X4& xmf4x4View, float* pfHitDistance);
 
-	void SetCbvGPUDescriptorHandle(D3D12_GPU_DESCRIPTOR_HANDLE d3dCbvGPUDescriptorHandle) { m_d3dCbvGPUDescriptorHandle = d3dCbvGPUDescriptorHandle; }
-	void SetCbvGPUDescriptorHandlePtr(UINT64 nCbvGPUDescriptorHandlePtr) { m_d3dCbvGPUDescriptorHandle.ptr = nCbvGPUDescriptorHandlePtr; }
-	D3D12_GPU_DESCRIPTOR_HANDLE GetCbvGPUDescriptorHandle() { return m_d3dCbvGPUDescriptorHandle; }
-
 public:
-	ObjectType GetObjectType() { return objtype; }		// 昏力 - test moudule code
-	void SetObjectType(ObjectType type);		// 昏力 - test moudule code
-	
-	std::vector<CBoundingBoxMesh*>& GetBBMesh() { return m_ppBBMeshes; }
+	std::vector<CBoundingBoxMesh*>& GetBoundingBoxMesh() { return m_ppBBMeshes; }
 	void CreateBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader);
-	void AddBoundingBoxMesh(CBoundingBoxMesh* pBBMesh) { m_ppBBMeshes.push_back(pBBMesh); }
+	void AppendBoundingBoxMesh(CBoundingBoxMesh* pBBMesh) { m_ppBBMeshes.push_back(pBBMesh); }
 
 	UINT GetMeshType() { return((m_pMesh) ? m_pMesh->GetType() : 0x00); }
-	CMaterial* GetMaterial(int n) { return m_ppMaterials[n]; }
-
 	CGameObject* GetParent() { return(m_pParent); }
 	CGameObject* FindFrame(const char* pstrFrameName);
 
-	int FindReplicatedTexture(_TCHAR* pstrTextureName, D3D12_GPU_DESCRIPTOR_HANDLE* pd3dSrvGpuDescriptorHandle);
 	CTexture* FindReplicatedTexture(_TCHAR* pstrTextureName);
 
 public:
@@ -477,16 +417,6 @@ public:
 
 	static void PrintFrameInfo(CGameObject* pGameObject, CGameObject* pParent);
 	static std::string m_pstrTextureFilePath;
-
-	void PrintObjectInfo() {		// 昏力 - test debug
-		if (m_pMesh)
-			std::cout << "MeshName: " << m_pstrFrameName << ", max height: " << m_pMesh->GetAABBCenter().y + m_pMesh->GetAABBExtents().y << ", min height: " << m_pMesh->GetAABBCenter().y - m_pMesh->GetAABBExtents().y
-			<< ", left: " << m_pMesh->GetAABBCenter().x - m_pMesh->GetAABBExtents().x << "right: " << m_pMesh->GetAABBCenter().x + m_pMesh->GetAABBExtents().x
-			<< ", back: " << m_pMesh->GetAABBCenter().y - m_pMesh->GetAABBExtents().y << "front: " << m_pMesh->GetAABBCenter().y + m_pMesh->GetAABBExtents().y << std::endl;
-
-		if (m_pSibling) m_pSibling->PrintObjectInfo();
-		if (m_pChild) m_pChild->PrintObjectInfo();
-	}
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CBoundingBox : public CGameObject {
@@ -498,7 +428,7 @@ public:
 class CSkyBox : public CGameObject
 {
 public:
-	CSkyBox(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature);
+	CSkyBox(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, wchar_t* pszFileName);
 	virtual ~CSkyBox();
 
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL);
@@ -506,7 +436,7 @@ public:
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CHeightMapTerrain : public CGameObject {
 public:
-	CHeightMapTerrain(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, LPCTSTR pFileName, int nWidth, int nLength, XMFLOAT3 xmf3Scale, XMFLOAT4 xmf4Color);
+	CHeightMapTerrain(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, LPCTSTR pFileName, wchar_t* baseTexture, wchar_t* detailTexture, int nWidth, int nLength, XMFLOAT3 xmf3Scale, XMFLOAT4 xmf4Color);
 	virtual ~CHeightMapTerrain();
 
 private:
@@ -526,20 +456,5 @@ public:
 	XMFLOAT3 GetScale() { return m_xmf3Scale; }
 	float GetWidth() { return m_nWidth * m_xmf3Scale.x; }
 	float GetLength() { return m_nLength * m_xmf3Scale.z; }
-};
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class CSuperCobraObject : public CGameObject
-{
-public:
-	CSuperCobraObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature);
-	virtual ~CSuperCobraObject();
-
-private:
-	CGameObject* m_pMainRotorFrame = NULL;
-	CGameObject* m_pTailRotorFrame = NULL;
-
-public:
-	virtual void OnPrepareAnimate();
-	virtual void Animate(float fTimeElapsed, XMFLOAT4X4* pxmf4x4Parent = NULL);
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

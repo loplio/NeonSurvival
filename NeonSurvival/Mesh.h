@@ -17,8 +17,6 @@
 #define VERTEXT_NORMAL_DETAIL			(VERTEXT_POSITION | VERTEXT_NORMAL | VERTEXT_TEXTURE_COORD0 | VERTEXT_TEXTURE_COORD1)
 #define VERTEXT_NORMAL_TANGENT__DETAIL	(VERTEXT_POSITION | VERTEXT_NORMAL | VERTEXT_TANGENT | VERTEXT_TEXTURE_COORD0 | VERTEXT_TEXTURE_COORD1)
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
 class CVertex {
 protected:
 	XMFLOAT3 m_xmf3Position;
@@ -48,41 +46,8 @@ public:
 
 	XMFLOAT3 GetPosition() { return m_xmf3Position; }
 };
-
-class CIlluminatedVertex : public CVertex {
-protected:
-	XMFLOAT3 m_xmf3Normal;
-
-public:
-	CIlluminatedVertex() {
-		m_xmf3Position = XMFLOAT3(0.0f, 0.0f, 0.0f);
-		m_xmf3Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	}
-	CIlluminatedVertex(float x, float y, float z, XMFLOAT3 xmf3Normal = XMFLOAT3(0.0f, 0.0f, 0.0f)) {
-		m_xmf3Position = XMFLOAT3(x, y, z);
-		m_xmf3Normal = xmf3Normal;
-	}
-	CIlluminatedVertex(XMFLOAT3 xmf3Position, XMFLOAT3 xmf3Normal = XMFLOAT3(0.0f, 0.0f, 0.0f)) {
-		m_xmf3Position = xmf3Position;
-		m_xmf3Normal = xmf3Normal;
-	}
-	~CIlluminatedVertex() {}
-};
-
-class CTexturedVertex : public CVertex
-{
-public:
-	XMFLOAT2						m_xmf2TexCoord;
-
-public:
-	CTexturedVertex() { m_xmf3Position = XMFLOAT3(0.0f, 0.0f, 0.0f); m_xmf2TexCoord = XMFLOAT2(0.0f, 0.0f); }
-	CTexturedVertex(float x, float y, float z, XMFLOAT2 xmf2TexCoord) { m_xmf3Position = XMFLOAT3(x, y, z); m_xmf2TexCoord = xmf2TexCoord; }
-	CTexturedVertex(XMFLOAT3 xmf3Position, XMFLOAT2 xmf2TexCoord = XMFLOAT2(0.0f, 0.0f)) { m_xmf3Position = xmf3Position; m_xmf2TexCoord = xmf2TexCoord; }
-	~CTexturedVertex() { }
-};
-
+//
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////
 
 class CMesh {
 public:
@@ -119,22 +84,8 @@ protected:
 	ID3D12Resource**				m_ppd3dSubSetIndexUploadBuffers = NULL;
 	D3D12_INDEX_BUFFER_VIEW*		m_pd3dSubSetIndexBufferViews = NULL;
 
-	ID3D12Resource*					m_pd3dIndexBuffer = NULL;
-	ID3D12Resource*					m_pd3dIndexUploadBuffer = NULL;
-
-	ID3D12Resource*					m_pd3dVertexBuffer = NULL;
-	ID3D12Resource*					m_pd3dVertexUploadBuffer = NULL;
-
-	D3D12_INDEX_BUFFER_VIEW			m_d3dIndexBufferView;
-	D3D12_VERTEX_BUFFER_VIEW		m_d3dVertexBufferView;
-
 	D3D12_PRIMITIVE_TOPOLOGY		m_d3dPrimitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 
-	CTexturedVertex*				m_pTexturedVertices = NULL;
-	CIlluminatedVertex*				m_pIlluminatedVertices = NULL;
-	CDiffusedVertex*				m_pVertices = NULL;
-	UINT*							m_pnIndices = NULL;
-	
 	BoundingOrientedBox				m_xmBoundingBox;
 
 	UINT m_nIndices = 0;
@@ -143,8 +94,10 @@ protected:
 
 	UINT m_nSlot = 0;
 	UINT m_nVertices = 0;
-	UINT m_nStride = 0;
 	UINT m_nOffset = 0;
+	UINT m_nStride = sizeof(XMFLOAT3);
+
+	BOOL m_bUpdateBounds = false;
 
 public:
 	virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) { }
@@ -152,14 +105,14 @@ public:
 	virtual void ReleaseShaderVariables() { }
 
 	virtual void OnPreRender(ID3D12GraphicsCommandList* pd3dCommandList, void* pContext);
-	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, UINT nInstances, D3D12_VERTEX_BUFFER_VIEW d3dInstancingBufferView);
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, int nSubSet);
 	virtual void OnPostRender(ID3D12GraphicsCommandList* pd3dCommandList, void* pContext);
+
+	virtual bool IsSkinnedMesh() const { return false; }
 
 	int CheckRayIntersection(XMFLOAT3& xmRayPosition, XMFLOAT3& xmRayDirection, float* pfNearHitDistance);
 
 	UINT GetType() { return(m_nType); }
-	char* GetMeshName() { return m_pstrMeshName; }
 	XMFLOAT3& GetAABBExtents() { return m_xmf3AABBExtents; }
 	XMFLOAT3& GetAABBCenter() { return m_xmf3AABBCenter; }
 	BoundingOrientedBox GetBoundingBox() { return m_xmBoundingBox; }
@@ -216,7 +169,7 @@ public:
 
 class CBoundingBoxMesh : public CMesh {
 public:
-	CBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const XMFLOAT3& Extents, const XMFLOAT3& Center);
+	CBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const XMFLOAT3& Extents, const XMFLOAT3& Center, CMesh* pMesh);
 	virtual ~CBoundingBoxMesh();
 };
 
@@ -229,26 +182,6 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class CTriangleMesh : public CMesh {
-public:
-	CTriangleMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
-	virtual ~CTriangleMesh();
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class CAirplaneMeshDiffused : public CMesh {
-public:
-	CAirplaneMeshDiffused(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float fWidth = 20.0f, float fHeight = 20.0f, float fDepth = 4.0f, XMFLOAT4 xmf4Color = XMFLOAT4(1.0f, 1.0f, 0.0f, 0.0f));
-	virtual ~CAirplaneMeshDiffused();
-};
-
-class CSphereMeshDiffused : public CMesh {
-public:
-	CSphereMeshDiffused(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float fRadius = 2.0f, int nSlices = 20, int nStacks = 20);
-	virtual ~CSphereMeshDiffused();
-};
 
 class CCubeMeshDiffused : public CStandardMesh {
 public:
@@ -264,6 +197,16 @@ public:
 	virtual ~CCubeMeshTextured();
 
 public:
+	virtual void OnPreRender(ID3D12GraphicsCommandList* pd3dCommandList, void* pContext);
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class CTexturedRectMesh : public CStandardMesh {
+public:
+	CTexturedRectMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float fWidth = 20.0f, float fHeight = 20.0f, float fDepth = 20.0f, float fxPosition = 0.0f, float fyPosition = 0.0f, float fzPosition = 0.0f);
+	virtual ~CTexturedRectMesh();
+
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, int nSubSet);
 };
 
@@ -279,12 +222,6 @@ public:
 	void CalculateTriangleListVertexNormals(XMFLOAT3* pxmf3Normals, XMFLOAT3* pxmf3Positions, UINT nVertices, UINT* pnIndices, UINT nIndices);
 	void CalculateTriangleStripVertexNormals(XMFLOAT3* pxmf3Normals, XMFLOAT3* pxmf3Positions, UINT nVertices, UINT* pnIndices, UINT nIndices);
 	void CalculateVertexNormals(XMFLOAT3* pxmf3Normals, XMFLOAT3* pxmf3Positions, int nVertices, UINT* pnIndices, int nIndices);
-};
-
-class CCubeMeshIlluminated : public CMeshIlluminated {
-public:
-	CCubeMeshIlluminated(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float fWidth = 2.0f, float fHeight = 2.0f, float fDepth = 2.0f);
-	virtual ~CCubeMeshIlluminated();
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -368,16 +305,6 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class CTexturedRectMesh : public CStandardMesh {
-public:
-	CTexturedRectMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float fWidth = 20.0f, float fHeight = 20.0f, float fDepth = 20.0f, float fxPosition = 0.0f, float fyPosition = 0.0f, float fzPosition = 0.0f);
-	virtual ~CTexturedRectMesh();
-
-	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, int nSubSet);
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #define SKINNED_ANIMATION_BONES		128
 
 class CGameObject;
@@ -390,6 +317,7 @@ public:
 
 protected:
 	int								m_nBonesPerVertex = 4;
+	int								m_RootBoneIndex = 0;
 
 	XMINT4*							m_pxmn4BoneIndices = NULL;
 	XMFLOAT4*						m_pxmf4BoneWeights = NULL;
@@ -419,6 +347,7 @@ public:
 public:
 	void PrepareSkinning(CGameObject* pModelRootObject);
 	void LoadSkinInfoFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, FILE* pInFile);
+	CGameObject* GetSkinningBoneFrameCache() { return m_ppSkinningBoneFrameCaches[m_RootBoneIndex]; }
 
 	virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
@@ -427,4 +356,6 @@ public:
 	virtual void ReleaseUploadBuffers();
 
 	virtual void OnPreRender(ID3D12GraphicsCommandList* pd3dCommandList, void* pContext);
+
+	virtual bool IsSkinnedMesh() const { return true; }
 };

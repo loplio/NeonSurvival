@@ -7,15 +7,6 @@ CMesh::CMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandLis
 }
 CMesh::~CMesh()
 {
-	if (m_pd3dIndexBuffer) m_pd3dIndexBuffer->Release();
-	if (m_pd3dIndexUploadBuffer) m_pd3dIndexUploadBuffer->Release();
-	if (m_pd3dVertexBuffer) m_pd3dVertexBuffer->Release();
-	if (m_pd3dVertexUploadBuffer) m_pd3dVertexUploadBuffer->Release();
-	if (m_pVertices) delete[] m_pVertices;
-	if (m_pIlluminatedVertices) delete[] m_pIlluminatedVertices;
-	if (m_pTexturedVertices) delete[] m_pTexturedVertices;
-	if (m_pnIndices) delete[] m_pnIndices;
-
 	if (m_pd3dPositionBuffer) m_pd3dPositionBuffer->Release();
 	if (m_nSubMeshes > 0)
 	{
@@ -34,11 +25,6 @@ CMesh::~CMesh()
 }
 void CMesh::ReleaseUploadBuffers()
 {
-	if (m_pd3dIndexUploadBuffer) m_pd3dIndexUploadBuffer->Release();
-	m_pd3dIndexUploadBuffer = NULL;
-	if (m_pd3dVertexUploadBuffer) m_pd3dVertexUploadBuffer->Release();
-	m_pd3dVertexUploadBuffer = NULL;
-
 	if (m_pd3dPositionUploadBuffer) m_pd3dPositionUploadBuffer->Release();
 	m_pd3dPositionUploadBuffer = NULL;
 	if ((m_nSubMeshes > 0) && m_ppd3dSubSetIndexUploadBuffers)
@@ -74,12 +60,6 @@ void CMesh::Render(ID3D12GraphicsCommandList* pd3dCommandList, int nSubSet)
 		pd3dCommandList->DrawInstanced(m_nVertices, 1, m_nOffset, 0);
 	}
 }
-void CMesh::Render(ID3D12GraphicsCommandList* pd3dCommandList, UINT nInstances, D3D12_VERTEX_BUFFER_VIEW d3dInstancingBufferView)
-{
-	D3D12_VERTEX_BUFFER_VIEW pVertexBufferViews[] = { m_d3dVertexBufferView, d3dInstancingBufferView };
-	pd3dCommandList->IASetVertexBuffers(m_nSlot, _countof(pVertexBufferViews), pVertexBufferViews);
-	Render(pd3dCommandList, nInstances);
-}
 void CMesh::OnPostRender(ID3D12GraphicsCommandList* pd3dCommandList, void* pContext)
 {
 }
@@ -87,13 +67,14 @@ void CMesh::OnPostRender(ID3D12GraphicsCommandList* pd3dCommandList, void* pCont
 int CMesh::CheckRayIntersection(XMFLOAT3& xmf3RayOrigin, XMFLOAT3& xmf3RayDirection, float* pfNearHitDistance)
 {
 	int nIntersections = 0;
-	BYTE* pbPositions = (m_pVertices) ? (BYTE*)m_pVertices : (BYTE*)/*m_pIlluminatedVertices*/m_pTexturedVertices;
-
-	if (!m_pTexturedVertices) return 0;
+	BYTE* pbPositions = (BYTE*)m_pxmf3Positions;
 
 	int nOffset = (m_d3dPrimitiveTopology == D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST) ? 3 : 1;
 	int nPrimitives = (m_d3dPrimitiveTopology == D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST) ? (m_nVertices / 3) : (m_nVertices - 2);
-	if (m_nIndices > 0) nPrimitives = (m_d3dPrimitiveTopology == D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST) ? (m_nIndices / 3) : (m_nIndices - 2);
+	if (m_nIndices > 0) {
+		nPrimitives = 0;
+		for (int i = 0; i < m_nSubMeshes; ++i) nPrimitives += (m_d3dPrimitiveTopology == D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST) ? (m_pnSubSetIndices[i] / 3) : (m_pnSubSetIndices[i] - 2);
+	}
 
 	XMVECTOR xmRayOrigin = XMLoadFloat3(&xmf3RayOrigin);
 	XMVECTOR xmRayDirection = XMLoadFloat3(&xmf3RayDirection);
@@ -102,14 +83,16 @@ int CMesh::CheckRayIntersection(XMFLOAT3& xmf3RayOrigin, XMFLOAT3& xmf3RayDirect
 	if (bIntersected)
 	{
 		float fNearHitDistance = FLT_MAX;
-		for (int i = 0; i < nPrimitives; i++)
+		for (int i = 0, k = 0; i < nPrimitives; i++)
 		{
-			XMVECTOR v0 = XMLoadFloat3((XMFLOAT3*)(pbPositions + ((m_pnIndices) ?
-				(m_pnIndices[(i * nOffset) + 0]) : ((i * nOffset) + 0)) * m_nStride));
-			XMVECTOR v1 = XMLoadFloat3((XMFLOAT3*)(pbPositions + ((m_pnIndices) ?
-				(m_pnIndices[(i * nOffset) + 1]) : ((i * nOffset) + 1)) * m_nStride));
-			XMVECTOR v2 = XMLoadFloat3((XMFLOAT3*)(pbPositions + ((m_pnIndices) ?
-				(m_pnIndices[(i * nOffset) + 2]) : ((i * nOffset) + 2)) * m_nStride));
+			if (m_ppnSubSetIndices && m_ppnSubSetIndices[k] && i >= m_pnSubSetIndices[k]) k++;
+			
+			XMVECTOR v0 = XMLoadFloat3((XMFLOAT3*)(pbPositions + ((m_ppnSubSetIndices && m_ppnSubSetIndices[k]) ?
+				(m_ppnSubSetIndices[k][(i * nOffset) + 0]) : ((i * nOffset) + 0)) * sizeof(XMFLOAT3)));
+			XMVECTOR v1 = XMLoadFloat3((XMFLOAT3*)(pbPositions + ((m_ppnSubSetIndices && m_ppnSubSetIndices[k]) ?
+				(m_ppnSubSetIndices[k][(i * nOffset) + 1]) : ((i * nOffset) + 1)) * sizeof(XMFLOAT3)));
+			XMVECTOR v2 = XMLoadFloat3((XMFLOAT3*)(pbPositions + ((m_ppnSubSetIndices && m_ppnSubSetIndices[k]) ?
+				(m_ppnSubSetIndices[k][(i * nOffset) + 2]) : ((i * nOffset) + 2)) * sizeof(XMFLOAT3)));
 			float fHitDistance;
 			BOOL bIntersected = TriangleTests::Intersects(xmRayOrigin, xmRayDirection, v0, v1, v2, fHitDistance);
 			if (bIntersected)
@@ -193,9 +176,18 @@ void CStandardMesh::LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 
 		if (!strcmp(pstrToken, "<Bounds>:"))
 		{
-			nReads = (UINT)::fread(&m_xmf3AABBCenter, sizeof(XMFLOAT3), 1, pInFile);
-			nReads = (UINT)::fread(&m_xmf3AABBExtents, sizeof(XMFLOAT3), 1, pInFile);
-			m_xmBoundingBox = BoundingOrientedBox(m_xmf3AABBCenter, m_xmf3AABBExtents, XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
+			if (m_bUpdateBounds)
+			{
+				XMFLOAT3 Data;
+				nReads = (UINT)::fread(&Data, sizeof(XMFLOAT3), 1, pInFile);
+				nReads = (UINT)::fread(&Data, sizeof(XMFLOAT3), 1, pInFile);
+			}
+			else
+			{
+				nReads = (UINT)::fread(&m_xmf3AABBCenter, sizeof(XMFLOAT3), 1, pInFile);
+				nReads = (UINT)::fread(&m_xmf3AABBExtents, sizeof(XMFLOAT3), 1, pInFile);
+				m_xmBoundingBox = BoundingOrientedBox(m_xmf3AABBCenter, m_xmf3AABBExtents, XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
+			}
 		}
 		else if (!strcmp(pstrToken, "<Positions>:"))
 		{
@@ -348,56 +340,79 @@ void CStandardMesh::LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 //-------------------------------------------------------------------------------
 /*	CBoundingBoxMesh : public CMesh											   */
 //-------------------------------------------------------------------------------
-CBoundingBoxMesh::CBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const XMFLOAT3& Extents, const XMFLOAT3& Center) : CMesh(pd3dDevice, pd3dCommandList)
+CBoundingBoxMesh::CBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const XMFLOAT3& Extents, const XMFLOAT3& Center, CMesh* pMesh) : CMesh(pd3dDevice, pd3dCommandList)
 {
 	// default setting.
 	m_nVertices = 8;
-	m_nStride = sizeof(CDiffusedVertex);
 	m_d3dPrimitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 
 	// BoundingBox setting.
 	m_xmf3AABBCenter = Center;
 	m_xmf3AABBExtents = Extents;
 
-	// Vertices setting.
+	// Position setting.
 	float fx = Extents.x, fy = Extents.y, fz = Extents.z;
-	m_pVertices = new CDiffusedVertex[m_nVertices];
-	m_pVertices[0] = CDiffusedVertex(XMFLOAT3(-fx, +fy, -fz), RANDOM_COLOR);
-	m_pVertices[1] = CDiffusedVertex(XMFLOAT3(+fx, +fy, -fz), RANDOM_COLOR);
-	m_pVertices[2] = CDiffusedVertex(XMFLOAT3(+fx, +fy, +fz), RANDOM_COLOR);
-	m_pVertices[3] = CDiffusedVertex(XMFLOAT3(-fx, +fy, +fz), RANDOM_COLOR);
-	m_pVertices[4] = CDiffusedVertex(XMFLOAT3(-fx, -fy, -fz), RANDOM_COLOR);
-	m_pVertices[5] = CDiffusedVertex(XMFLOAT3(+fx, -fy, -fz), RANDOM_COLOR);
-	m_pVertices[6] = CDiffusedVertex(XMFLOAT3(+fx, -fy, +fz), RANDOM_COLOR);
-	m_pVertices[7] = CDiffusedVertex(XMFLOAT3(-fx, -fy, +fz), RANDOM_COLOR);
+	m_pxmf3Positions = new XMFLOAT3[m_nVertices];
+	if (pMesh->IsSkinnedMesh())
+	{
+		XMFLOAT4X4 RootBone = ((CSkinnedMesh*)pMesh)->GetSkinningBoneFrameCache()->m_xmf4x4World;
+		m_pxmf3Positions[0] = Vector3::TransformCoord(XMFLOAT3(-fx, +fy, -fz), RootBone);
+		m_pxmf3Positions[1] = Vector3::TransformCoord(XMFLOAT3(+fx, +fy, -fz), RootBone);
+		m_pxmf3Positions[2] = Vector3::TransformCoord(XMFLOAT3(+fx, +fy, +fz), RootBone);
+		m_pxmf3Positions[3] = Vector3::TransformCoord(XMFLOAT3(-fx, +fy, +fz), RootBone);
+		m_pxmf3Positions[4] = Vector3::TransformCoord(XMFLOAT3(-fx, -fy, -fz), RootBone);
+		m_pxmf3Positions[5] = Vector3::TransformCoord(XMFLOAT3(+fx, -fy, -fz), RootBone);
+		m_pxmf3Positions[6] = Vector3::TransformCoord(XMFLOAT3(+fx, -fy, +fz), RootBone);
+		m_pxmf3Positions[7] = Vector3::TransformCoord(XMFLOAT3(-fx, -fy, +fz), RootBone);
+	}
+	else
+	{
+		m_pxmf3Positions[0] = XMFLOAT3(-fx, +fy, -fz);
+		m_pxmf3Positions[1] = XMFLOAT3(+fx, +fy, -fz);
+		m_pxmf3Positions[2] = XMFLOAT3(+fx, +fy, +fz);
+		m_pxmf3Positions[3] = XMFLOAT3(-fx, +fy, +fz);
+		m_pxmf3Positions[4] = XMFLOAT3(-fx, -fy, -fz);
+		m_pxmf3Positions[5] = XMFLOAT3(+fx, -fy, -fz);
+		m_pxmf3Positions[6] = XMFLOAT3(+fx, -fy, +fz);
+		m_pxmf3Positions[7] = XMFLOAT3(-fx, -fy, +fz);
+	}
 
-	// VertexBuffer setting.
-	m_pd3dVertexBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList, m_pVertices, m_nStride * m_nVertices, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pd3dVertexUploadBuffer);
-	m_d3dVertexBufferView.BufferLocation = m_pd3dVertexBuffer->GetGPUVirtualAddress();
-	m_d3dVertexBufferView.StrideInBytes = m_nStride;
-	m_d3dVertexBufferView.SizeInBytes = m_nStride * m_nVertices;
+	// PositionBuffer setting.
+	m_pd3dPositionBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList, m_pxmf3Positions, sizeof(XMFLOAT3) * m_nVertices, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pd3dPositionUploadBuffer);
+	m_d3dPositionBufferView.BufferLocation = m_pd3dPositionBuffer->GetGPUVirtualAddress();
+	m_d3dPositionBufferView.StrideInBytes = sizeof(XMFLOAT3);
+	m_d3dPositionBufferView.SizeInBytes = sizeof(XMFLOAT3) * m_nVertices;
 
-	// Index setting.
-	m_nIndices = 36;
-	m_pnIndices = new UINT[m_nIndices];
-	m_pnIndices[0] = 3; m_pnIndices[1] = 1; m_pnIndices[2] = 0;
-	m_pnIndices[3] = 2; m_pnIndices[4] = 1; m_pnIndices[5] = 3;
-	m_pnIndices[6] = 0; m_pnIndices[7] = 5; m_pnIndices[8] = 4;
-	m_pnIndices[9] = 1; m_pnIndices[10] = 5; m_pnIndices[11] = 0;
-	m_pnIndices[12] = 3; m_pnIndices[13] = 4; m_pnIndices[14] = 7;
-	m_pnIndices[15] = 0; m_pnIndices[16] = 4; m_pnIndices[17] = 3;
-	m_pnIndices[18] = 1; m_pnIndices[19] = 6; m_pnIndices[20] = 5;
-	m_pnIndices[21] = 2; m_pnIndices[22] = 6; m_pnIndices[23] = 1;
-	m_pnIndices[24] = 2; m_pnIndices[25] = 7; m_pnIndices[26] = 6;
-	m_pnIndices[27] = 3; m_pnIndices[28] = 7; m_pnIndices[29] = 2;
-	m_pnIndices[30] = 6; m_pnIndices[31] = 4; m_pnIndices[32] = 5;
-	m_pnIndices[33] = 7; m_pnIndices[34] = 4; m_pnIndices[35] = 6;
+	// SubSetIndex setting.
+	m_nSubMeshes = 1;
+	m_pnSubSetIndices = new int[m_nSubMeshes];
+	m_ppnSubSetIndices = new UINT * [m_nSubMeshes];
 
-	// IndexBuffer setting.
-	m_pd3dIndexBuffer = CreateBufferResource(pd3dDevice, pd3dCommandList, m_pnIndices, sizeof(UINT) * m_nIndices, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_INDEX_BUFFER, &m_pd3dIndexUploadBuffer);
-	m_d3dIndexBufferView.BufferLocation = m_pd3dIndexBuffer->GetGPUVirtualAddress();
-	m_d3dIndexBufferView.Format = DXGI_FORMAT_R32_UINT;
-	m_d3dIndexBufferView.SizeInBytes = sizeof(UINT) * m_nIndices;
+	m_ppd3dSubSetIndexBuffers = new ID3D12Resource * [m_nSubMeshes];
+	m_ppd3dSubSetIndexUploadBuffers = new ID3D12Resource * [m_nSubMeshes];
+	m_pd3dSubSetIndexBufferViews = new D3D12_INDEX_BUFFER_VIEW[m_nSubMeshes];
+
+	m_pnSubSetIndices[0] = 36;
+	m_ppnSubSetIndices[0] = new UINT[m_pnSubSetIndices[0]];
+	m_ppnSubSetIndices[0][0] = 3; m_ppnSubSetIndices[0][1] = 1; m_ppnSubSetIndices[0][2] = 0;
+	m_ppnSubSetIndices[0][3] = 2; m_ppnSubSetIndices[0][4] = 1; m_ppnSubSetIndices[0][5] = 3;
+	m_ppnSubSetIndices[0][6] = 0; m_ppnSubSetIndices[0][7] = 5; m_ppnSubSetIndices[0][8] = 4;
+	m_ppnSubSetIndices[0][9] = 1; m_ppnSubSetIndices[0][10] = 5; m_ppnSubSetIndices[0][11] = 0;
+	m_ppnSubSetIndices[0][12] = 3; m_ppnSubSetIndices[0][13] = 4; m_ppnSubSetIndices[0][14] = 7;
+	m_ppnSubSetIndices[0][15] = 0; m_ppnSubSetIndices[0][16] = 4; m_ppnSubSetIndices[0][17] = 3;
+	m_ppnSubSetIndices[0][18] = 1; m_ppnSubSetIndices[0][19] = 6; m_ppnSubSetIndices[0][20] = 5;
+	m_ppnSubSetIndices[0][21] = 2; m_ppnSubSetIndices[0][22] = 6; m_ppnSubSetIndices[0][23] = 1;
+	m_ppnSubSetIndices[0][24] = 2; m_ppnSubSetIndices[0][25] = 7; m_ppnSubSetIndices[0][26] = 6;
+	m_ppnSubSetIndices[0][27] = 3; m_ppnSubSetIndices[0][28] = 7; m_ppnSubSetIndices[0][29] = 2;
+	m_ppnSubSetIndices[0][30] = 6; m_ppnSubSetIndices[0][31] = 4; m_ppnSubSetIndices[0][32] = 5;
+	m_ppnSubSetIndices[0][33] = 7; m_ppnSubSetIndices[0][34] = 4; m_ppnSubSetIndices[0][35] = 6;
+
+
+	// SubSetIndexBuffer setting.
+	m_ppd3dSubSetIndexBuffers[0] = ::CreateBufferResource(pd3dDevice, pd3dCommandList, m_ppnSubSetIndices[0], sizeof(UINT) * m_pnSubSetIndices[0], D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_INDEX_BUFFER, &m_ppd3dSubSetIndexUploadBuffers[0]);
+	m_pd3dSubSetIndexBufferViews[0].BufferLocation = m_ppd3dSubSetIndexBuffers[0]->GetGPUVirtualAddress();
+	m_pd3dSubSetIndexBufferViews[0].Format = DXGI_FORMAT_R32_UINT;
+	m_pd3dSubSetIndexBufferViews[0].SizeInBytes = sizeof(UINT) * m_pnSubSetIndices[0];
 }
 CBoundingBoxMesh::~CBoundingBoxMesh()
 {
@@ -466,221 +481,6 @@ CSkyBoxMesh::CSkyBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd
 	m_d3dPositionBufferView.SizeInBytes = m_nStride * m_nVertices;
 }
 CSkyBoxMesh::~CSkyBoxMesh()
-{
-}
-
-//-------------------------------------------------------------------------------
-/*	CTriangleMesh : public CMesh											   */
-//-------------------------------------------------------------------------------
-CTriangleMesh::CTriangleMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) : CMesh(pd3dDevice, pd3dCommandList)
-{
-	// default setting.
-	m_nVertices = 3;
-	m_nStride = sizeof(CDiffusedVertex);
-	m_d3dPrimitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-
-	// Vertices setting.
-	CDiffusedVertex pVertices[3];
-	pVertices[0] = CDiffusedVertex(XMFLOAT3(0.0f, 0.5f, 0.0f), XMFLOAT4(Colors::Red));
-	pVertices[1] = CDiffusedVertex(XMFLOAT3(0.5f, -0.5f, 0.0f), XMFLOAT4(Colors::Green));
-	pVertices[2] = CDiffusedVertex(XMFLOAT3(-0.5f, -0.5f, 0.0f), XMFLOAT4(Colors::Blue));
-
-	// VertexBuffer setting.
-	m_pd3dVertexBuffer = CreateBufferResource(pd3dDevice, pd3dCommandList, pVertices, m_nStride * m_nVertices, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pd3dVertexUploadBuffer);
-	m_d3dVertexBufferView.BufferLocation = m_pd3dVertexBuffer->GetGPUVirtualAddress();
-	m_d3dVertexBufferView.StrideInBytes = m_nStride;
-	m_d3dVertexBufferView.SizeInBytes = m_nStride * m_nVertices;
-}
-CTriangleMesh::~CTriangleMesh()
-{
-}
-
-//-------------------------------------------------------------------------------
-/*	CAirplaneMeshDiffused : public CMesh									   */
-//-------------------------------------------------------------------------------
-CAirplaneMeshDiffused::CAirplaneMeshDiffused(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float fWidth, float fHeight, float fDepth, XMFLOAT4 xmf4Color) : CMesh(pd3dDevice, pd3dCommandList)
-{
-	// default setting.
-	m_nVertices = 24 * 3;
-	m_nStride = sizeof(CDiffusedVertex);
-	m_nOffset = 0;
-	m_nSlot = 0;
-	m_d3dPrimitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-
-	// Vertices setting.
-	float fx = fWidth * 0.5f, fy = fHeight * 0.5f, fz = fDepth * 0.5f;
-	float x1 = fx * 0.2f, y1 = fy * 0.2f, x2 = fx * 0.1f, y3 = fy * 0.3f, y2 = ((y1 - (fy - y3)) / x1) * x2 + (fy - y3);
-	int i = 0;
-	m_pVertices = new CDiffusedVertex[m_nVertices];
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(0.0f, +(fy + y3), -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(+x1, -y1, -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(0.0f, 0.0f, -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(0.0f, +(fy + y3), -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(0.0f, 0.0f, -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(-x1, -y1, -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(+x2, +y2, -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(+fx, -y3, -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(+x1, -y1, -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(-x2, +y2, -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(-x1, -y1, -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(-fx, -y3, -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	//비행기 메쉬의 아래쪽 면
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(0.0f, +(fy + y3), +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(0.0f, 0.0f, +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(+x1, -y1, +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(0.0f, +(fy + y3), +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(-x1, -y1, +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(0.0f, 0.0f, +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(+x2, +y2, +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(+x1, -y1, +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(+fx, -y3, +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(-x2, +y2, +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(-fx, -y3, +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(-x1, -y1, +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	//비행기 메쉬의 오른쪽 면
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(0.0f, +(fy + y3), -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(0.0f, +(fy + y3), +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(+x2, +y2, -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(+x2, +y2, -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(0.0f, +(fy + y3), +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(+x2, +y2, +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(+x2, +y2, -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(+x2, +y2, +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(+fx, -y3, -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(+fx, -y3, -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(+x2, +y2, +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(+fx, -y3, +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	//비행기 메쉬의 뒤쪽/오른쪽 면
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(+x1, -y1, -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(+fx, -y3, -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(+fx, -y3, +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(+x1, -y1, -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(+fx, -y3, +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(+x1, -y1, +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(0.0f, 0.0f, -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(+x1, -y1, -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(+x1, -y1, +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(0.0f, 0.0f, -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(+x1, -y1, +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(0.0f, 0.0f, +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	//비행기 메쉬의 왼쪽 면
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(0.0f, +(fy + y3), +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(0.0f, +(fy + y3), -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(-x2, +y2, -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(0.0f, +(fy + y3), +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(-x2, +y2, -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(-x2, +y2, +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(-x2, +y2, +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(-x2, +y2, -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(-fx, -y3, -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(-x2, +y2, +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(-fx, -y3, -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(-fx, -y3, +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	//비행기 메쉬의 뒤쪽/왼쪽 면
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(0.0f, 0.0f, -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(0.0f, 0.0f, +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(-x1, -y1, +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(0.0f, 0.0f, -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(-x1, -y1, +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(-x1, -y1, -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(-x1, -y1, -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(-x1, -y1, +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(-fx, -y3, +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(-x1, -y1, -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(-fx, -y3, +fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	m_pVertices[i++] = CDiffusedVertex(XMFLOAT3(-fx, -y3, -fz), Vector4::Add(xmf4Color, RANDOM_COLOR));
-	
-	// VertexBuffer setting.
-	m_pd3dVertexBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList, m_pVertices, m_nStride * m_nVertices, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pd3dVertexUploadBuffer);
-	m_d3dVertexBufferView.BufferLocation = m_pd3dVertexBuffer->GetGPUVirtualAddress();
-	m_d3dVertexBufferView.StrideInBytes = m_nStride;
-	m_d3dVertexBufferView.SizeInBytes = m_nStride * m_nVertices;
-
-	// BoundingOrientedBox setting.
-	m_xmBoundingBox = BoundingOrientedBox(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(fx, fy, fz), XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
-}
-CAirplaneMeshDiffused::~CAirplaneMeshDiffused()
-{
-}
-
-//-------------------------------------------------------------------------------
-/*	CSphereMeshDiffused : public CMesh									       */
-//-------------------------------------------------------------------------------
-CSphereMeshDiffused::CSphereMeshDiffused(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float fRadius, int nSlices, int nStacks) : CMesh(pd3dDevice, pd3dCommandList)
-{
-	// default setting.
-	m_nStride = sizeof(CDiffusedVertex);
-	m_d3dPrimitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-
-	// Vertices setting.
-	m_nVertices = 2 + (nSlices * (nStacks - 1));
-	m_pVertices = new CDiffusedVertex[m_nVertices];
-
-	float fDeltaPhi = float(XM_PI / nStacks);
-	float fDeltaTheta = float((2.0f * XM_PI) / nSlices);
-
-	int k = 0;
-	m_pVertices[k++] = CDiffusedVertex(0.0f, fRadius, 0.0f, RANDOM_COLOR);
-	float theta_i, phi_j;
-	for (int j = 1; j < nStacks; ++j)
-	{
-		phi_j = fDeltaPhi * j;
-		for (int i = 0; i < nSlices; ++i)
-		{
-			theta_i = fDeltaTheta * i;
-			m_pVertices[k++] = CDiffusedVertex(fRadius * sinf(phi_j) * cosf(theta_i), fRadius * cosf(phi_j), fRadius * sinf(phi_j) * sinf(theta_i), RANDOM_COLOR);
-		}
-	}
-	m_pVertices[k] = CDiffusedVertex(0.0f, -fRadius, 0.0f, RANDOM_COLOR);
-	
-	// VertexBuffer setting.
-	m_pd3dVertexBuffer = CreateBufferResource(pd3dDevice, pd3dCommandList, m_pVertices, m_nStride * m_nVertices, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pd3dVertexUploadBuffer);
-	m_d3dVertexBufferView.BufferLocation = m_pd3dVertexBuffer->GetGPUVirtualAddress();
-	m_d3dVertexBufferView.StrideInBytes = m_nStride;
-	m_d3dVertexBufferView.SizeInBytes = m_nStride * m_nVertices;
-
-	// Index setting.
-	m_nIndices = (nSlices * 3) * 2 + (nSlices * (nStacks - 2) * 3 * 2);
-	m_pnIndices = new UINT[m_nIndices];
-
-	k = 0;
-
-	for (int i = 0; i < nSlices; ++i)
-	{
-		m_pnIndices[k++] = 0;
-		m_pnIndices[k++] = 1 + ((i + 1) % nSlices);
-		m_pnIndices[k++] = 1 + i;
-	}
-	for (int j = 0; j < nStacks - 2; ++j)
-	{
-		for (int i = 0; i < nSlices; ++i)
-		{
-			m_pnIndices[k++] = 1 + (i + (j * nSlices));
-			m_pnIndices[k++] = 1 + (((i + 1) % nSlices) + (j * nSlices));
-			m_pnIndices[k++] = 1 + (i + ((j + 1) * nSlices));
-			
-			m_pnIndices[k++] = 1 + (i + ((j + 1) * nSlices));
-			m_pnIndices[k++] = 1 + (((i + 1) % nSlices) + (j * nSlices));
-			m_pnIndices[k++] = 1 + (((i + 1) % nSlices) + ((j + 1) * nSlices));
-		}
-	}
-	for (int i = 0; i < nSlices; i++)
-	{
-		m_pnIndices[k++] = (m_nVertices - 1);
-		m_pnIndices[k++] = ((m_nVertices - 1) - nSlices) + i;
-		m_pnIndices[k++] = ((m_nVertices - 1) - nSlices) + ((i + 1) % nSlices);
-	}
-
-	// IndexBuffer setting.
-	m_pd3dIndexBuffer = CreateBufferResource(pd3dDevice, pd3dCommandList, m_pnIndices, sizeof(UINT) * m_nIndices, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_INDEX_BUFFER, &m_pd3dIndexUploadBuffer);
-	m_d3dIndexBufferView.BufferLocation = m_pd3dIndexBuffer->GetGPUVirtualAddress();
-	m_d3dIndexBufferView.Format = DXGI_FORMAT_R32_UINT;
-	m_d3dIndexBufferView.SizeInBytes = sizeof(UINT) * m_nIndices;
-
-	// BoundingOrientedBox setting.
-	m_xmBoundingBox = BoundingOrientedBox(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(fRadius, fRadius, fRadius), XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
-}
-CSphereMeshDiffused::~CSphereMeshDiffused()
 {
 }
 
@@ -772,7 +572,6 @@ CCubeMeshTextured::CCubeMeshTextured(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 {
 	// default setting.
 	m_nVertices = 36;
-	m_nStride = sizeof(CTexturedVertex);
 	m_nOffset = 0;
 	m_nSlot = 0;
 	m_d3dPrimitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
@@ -851,14 +650,10 @@ CCubeMeshTextured::~CCubeMeshTextured()
 {
 }
 
-void CCubeMeshTextured::Render(ID3D12GraphicsCommandList* pd3dCommandList, int nSubSet)
+void CCubeMeshTextured::OnPreRender(ID3D12GraphicsCommandList* pd3dCommandList, void* pContext)
 {
-	pd3dCommandList->IASetPrimitiveTopology(m_d3dPrimitiveTopology);
-
 	D3D12_VERTEX_BUFFER_VIEW pVertexBufferViews[2] = { m_d3dPositionBufferView, m_d3dTextureCoord0BufferView };
 	pd3dCommandList->IASetVertexBuffers(m_nSlot, 2, pVertexBufferViews);
-
-	pd3dCommandList->DrawInstanced(m_nVertices, 1, m_nOffset, 0);
 }
 
 //-------------------------------------------------------------------------------
@@ -951,72 +746,6 @@ void CMeshIlluminated::CalculateVertexNormals(XMFLOAT3* pxmf3Normals, XMFLOAT3* 
 	default:
 		break;
 	}
-}
-
-//-------------------------------------------------------------------------------
-/*	CCubeMeshIlluminated : public CMeshIlluminated							   */
-//-------------------------------------------------------------------------------
-CCubeMeshIlluminated::CCubeMeshIlluminated(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float fWidth, float fHeight, float fDepth) : CMeshIlluminated(pd3dDevice, pd3dCommandList)
-{
-	// default setting.
-	m_nVertices = 8;
-	m_nStride = sizeof(CIlluminatedVertex);
-	m_nOffset = 0;
-	m_nSlot = 0;
-	m_d3dPrimitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-
-	// Indices setting.
-	m_nIndices = 36;
-	UINT pnIndices[36];
-	pnIndices[0] = 3; pnIndices[1] = 1; pnIndices[2] = 0;
-	pnIndices[3] = 2; pnIndices[4] = 1; pnIndices[5] = 3;
-	pnIndices[6] = 0; pnIndices[7] = 5; pnIndices[8] = 4;
-	pnIndices[9] = 1; pnIndices[10] = 5; pnIndices[11] = 0;
-	pnIndices[12] = 3; pnIndices[13] = 4; pnIndices[14] = 7;
-	pnIndices[15] = 0; pnIndices[16] = 4; pnIndices[17] = 3;
-	pnIndices[18] = 1; pnIndices[19] = 6; pnIndices[20] = 5;
-	pnIndices[21] = 2; pnIndices[22] = 6; pnIndices[23] = 1;
-	pnIndices[24] = 2; pnIndices[25] = 7; pnIndices[26] = 6;
-	pnIndices[27] = 3; pnIndices[28] = 7; pnIndices[29] = 2;
-	pnIndices[30] = 6; pnIndices[31] = 4; pnIndices[32] = 5;
-	pnIndices[33] = 7; pnIndices[34] = 4; pnIndices[35] = 6;
-	
-	// IndexBuffer setting.
-	m_pd3dIndexBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList, pnIndices, sizeof(UINT) * m_nIndices, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_INDEX_BUFFER, &m_pd3dIndexUploadBuffer);
-	m_d3dIndexBufferView.BufferLocation = m_pd3dIndexBuffer->GetGPUVirtualAddress();
-	m_d3dIndexBufferView.Format = DXGI_FORMAT_R32_UINT;
-	m_d3dIndexBufferView.SizeInBytes = sizeof(UINT) * m_nIndices;
-
-	// Vertices setting.
-	XMFLOAT3 pxmf3Positions[8];
-	float fx = fWidth * 0.5f, fy = fHeight * 0.5f, fz = fDepth * 0.5f;
-	pxmf3Positions[0] = XMFLOAT3(-fx, +fy, -fz);
-	pxmf3Positions[1] = XMFLOAT3(+fx, +fy, -fz);
-	pxmf3Positions[2] = XMFLOAT3(+fx, +fy, +fz);
-	pxmf3Positions[3] = XMFLOAT3(-fx, +fy, +fz);
-	pxmf3Positions[4] = XMFLOAT3(-fx, -fy, -fz);
-	pxmf3Positions[5] = XMFLOAT3(+fx, -fy, -fz);
-	pxmf3Positions[6] = XMFLOAT3(+fx, -fy, +fz);
-	pxmf3Positions[7] = XMFLOAT3(-fx, -fy, +fz);
-
-	XMFLOAT3 pxmf3Normals[8];
-	for (int i = 0; i < 8; i++) pxmf3Normals[i] = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	CalculateVertexNormals(pxmf3Normals, pxmf3Positions, m_nVertices, pnIndices, m_nIndices);
-
-	m_pIlluminatedVertices = new CIlluminatedVertex[m_nVertices];
-	for (int i = 0; i < 8; i++) m_pIlluminatedVertices[i] = CIlluminatedVertex(pxmf3Positions[i], pxmf3Normals[i]);
-	
-	// VertexBuffer setting.
-	m_pd3dVertexBuffer = CreateBufferResource(pd3dDevice, pd3dCommandList, m_pIlluminatedVertices, m_nStride * m_nVertices, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pd3dVertexUploadBuffer);
-	m_d3dVertexBufferView.BufferLocation = m_pd3dVertexBuffer->GetGPUVirtualAddress();
-	m_d3dVertexBufferView.StrideInBytes = m_nStride;
-	m_d3dVertexBufferView.SizeInBytes = m_nStride * m_nVertices;
-
-	// BoundingOrientedBox setting.
-	m_xmBoundingBox = BoundingOrientedBox(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(fx, fy, fz), XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
-}
-CCubeMeshIlluminated::~CCubeMeshIlluminated()
-{
 }
 
 //-------------------------------------------------------------------------------
@@ -1326,150 +1055,74 @@ CTexturedRectMesh::CTexturedRectMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 {
 	// default setting.
 	m_nVertices = 6;
-	m_nStride = sizeof(CTexturedVertex);
 	m_d3dPrimitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 
-	// Vertices setting.
-	CTexturedVertex pVertices[6];
+	// Position setting.
+	m_pxmf3Positions = new XMFLOAT3[m_nVertices];
+	m_pxmf2TextureCoords0 = new XMFLOAT2[m_nVertices];
 
 	float fx = (fWidth * 0.5f) + fxPosition, fy = (fHeight * 0.5f) + fyPosition, fz = (fDepth * 0.5f) + fzPosition;
-
 	if (fWidth == 0.0f)
 	{
 		if (fxPosition > 0.0f)
 		{
-			pVertices[0] = CTexturedVertex(XMFLOAT3(fx, +fy, -fz), XMFLOAT2(1.0f, 0.0f));
-			pVertices[1] = CTexturedVertex(XMFLOAT3(fx, -fy, -fz), XMFLOAT2(1.0f, 1.0f));
-			pVertices[2] = CTexturedVertex(XMFLOAT3(fx, -fy, +fz), XMFLOAT2(0.0f, 1.0f));
-			pVertices[3] = CTexturedVertex(XMFLOAT3(fx, -fy, +fz), XMFLOAT2(0.0f, 1.0f));
-			pVertices[4] = CTexturedVertex(XMFLOAT3(fx, +fy, +fz), XMFLOAT2(0.0f, 0.0f));
-			pVertices[5] = CTexturedVertex(XMFLOAT3(fx, +fy, -fz), XMFLOAT2(1.0f, 0.0f));
+			m_pxmf3Positions[0] = XMFLOAT3(fx, +fy, -fz), m_pxmf2TextureCoords0[0] = XMFLOAT2(1.0f, 0.0f);
+			m_pxmf3Positions[1] = XMFLOAT3(fx, -fy, -fz), m_pxmf2TextureCoords0[1] = XMFLOAT2(1.0f, 1.0f);
+			m_pxmf3Positions[2] = XMFLOAT3(fx, -fy, +fz), m_pxmf2TextureCoords0[2] = XMFLOAT2(0.0f, 1.0f);
+			m_pxmf3Positions[3] = XMFLOAT3(fx, -fy, +fz), m_pxmf2TextureCoords0[3] = XMFLOAT2(0.0f, 1.0f);
+			m_pxmf3Positions[4] = XMFLOAT3(fx, +fy, +fz), m_pxmf2TextureCoords0[4] = XMFLOAT2(0.0f, 0.0f);
+			m_pxmf3Positions[5] = XMFLOAT3(fx, +fy, -fz), m_pxmf2TextureCoords0[5] = XMFLOAT2(1.0f, 0.0f);
 		}
 		else
 		{
-			pVertices[0] = CTexturedVertex(XMFLOAT3(fx, +fy, +fz), XMFLOAT2(1.0f, 0.0f));
-			pVertices[1] = CTexturedVertex(XMFLOAT3(fx, -fy, +fz), XMFLOAT2(1.0f, 1.0f));
-			pVertices[2] = CTexturedVertex(XMFLOAT3(fx, -fy, -fz), XMFLOAT2(0.0f, 1.0f));
-			pVertices[3] = CTexturedVertex(XMFLOAT3(fx, -fy, -fz), XMFLOAT2(0.0f, 1.0f));
-			pVertices[4] = CTexturedVertex(XMFLOAT3(fx, +fy, -fz), XMFLOAT2(0.0f, 0.0f));
-			pVertices[5] = CTexturedVertex(XMFLOAT3(fx, +fy, +fz), XMFLOAT2(1.0f, 0.0f));
+			m_pxmf3Positions[0] = XMFLOAT3(fx, +fy, +fz), m_pxmf2TextureCoords0[0] = XMFLOAT2(1.0f, 0.0f);
+			m_pxmf3Positions[1] = XMFLOAT3(fx, -fy, +fz), m_pxmf2TextureCoords0[1] = XMFLOAT2(1.0f, 1.0f);
+			m_pxmf3Positions[2] = XMFLOAT3(fx, -fy, -fz), m_pxmf2TextureCoords0[2] = XMFLOAT2(0.0f, 1.0f);
+			m_pxmf3Positions[3] = XMFLOAT3(fx, -fy, -fz), m_pxmf2TextureCoords0[3] = XMFLOAT2(0.0f, 1.0f);
+			m_pxmf3Positions[4] = XMFLOAT3(fx, +fy, -fz), m_pxmf2TextureCoords0[4] = XMFLOAT2(0.0f, 0.0f);
+			m_pxmf3Positions[5] = XMFLOAT3(fx, +fy, +fz), m_pxmf2TextureCoords0[5] = XMFLOAT2(1.0f, 0.0f);
 		}
 	}
 	else if (fHeight == 0.0f)
 	{
 		if (fyPosition > 0.0f)
 		{
-			pVertices[0] = CTexturedVertex(XMFLOAT3(+fx, fy, -fz), XMFLOAT2(1.0f, 0.0f));
-			pVertices[1] = CTexturedVertex(XMFLOAT3(+fx, fy, +fz), XMFLOAT2(1.0f, 1.0f));
-			pVertices[2] = CTexturedVertex(XMFLOAT3(-fx, fy, +fz), XMFLOAT2(0.0f, 1.0f));
-			pVertices[3] = CTexturedVertex(XMFLOAT3(-fx, fy, +fz), XMFLOAT2(0.0f, 1.0f));
-			pVertices[4] = CTexturedVertex(XMFLOAT3(-fx, fy, -fz), XMFLOAT2(0.0f, 0.0f));
-			pVertices[5] = CTexturedVertex(XMFLOAT3(+fx, fy, -fz), XMFLOAT2(1.0f, 0.0f));
+			m_pxmf3Positions[0] = XMFLOAT3(+fx, fy, -fz), m_pxmf2TextureCoords0[0] = XMFLOAT2(1.0f, 0.0f);
+			m_pxmf3Positions[1] = XMFLOAT3(+fx, fy, +fz), m_pxmf2TextureCoords0[1] = XMFLOAT2(1.0f, 1.0f);
+			m_pxmf3Positions[2] = XMFLOAT3(-fx, fy, +fz), m_pxmf2TextureCoords0[2] = XMFLOAT2(0.0f, 1.0f);
+			m_pxmf3Positions[3] = XMFLOAT3(-fx, fy, +fz), m_pxmf2TextureCoords0[3] = XMFLOAT2(0.0f, 1.0f);
+			m_pxmf3Positions[4] = XMFLOAT3(-fx, fy, -fz), m_pxmf2TextureCoords0[4] = XMFLOAT2(0.0f, 0.0f);
+			m_pxmf3Positions[5] = XMFLOAT3(+fx, fy, -fz), m_pxmf2TextureCoords0[5] = XMFLOAT2(1.0f, 0.0f);
 		}
 		else
 		{
-			pVertices[0] = CTexturedVertex(XMFLOAT3(+fx, fy, +fz), XMFLOAT2(1.0f, 0.0f));
-			pVertices[1] = CTexturedVertex(XMFLOAT3(+fx, fy, -fz), XMFLOAT2(1.0f, 1.0f));
-			pVertices[2] = CTexturedVertex(XMFLOAT3(-fx, fy, -fz), XMFLOAT2(0.0f, 1.0f));
-			pVertices[3] = CTexturedVertex(XMFLOAT3(-fx, fy, -fz), XMFLOAT2(0.0f, 1.0f));
-			pVertices[4] = CTexturedVertex(XMFLOAT3(-fx, fy, +fz), XMFLOAT2(0.0f, 0.0f));
-			pVertices[5] = CTexturedVertex(XMFLOAT3(+fx, fy, +fz), XMFLOAT2(1.0f, 0.0f));
+			m_pxmf3Positions[0] = XMFLOAT3(+fx, fy, +fz), m_pxmf2TextureCoords0[0] = XMFLOAT2(1.0f, 0.0f);
+			m_pxmf3Positions[1] = XMFLOAT3(+fx, fy, -fz), m_pxmf2TextureCoords0[1] = XMFLOAT2(1.0f, 1.0f);
+			m_pxmf3Positions[2] = XMFLOAT3(-fx, fy, -fz), m_pxmf2TextureCoords0[2] = XMFLOAT2(0.0f, 1.0f);
+			m_pxmf3Positions[3] = XMFLOAT3(-fx, fy, -fz), m_pxmf2TextureCoords0[3] = XMFLOAT2(0.0f, 1.0f);
+			m_pxmf3Positions[4] = XMFLOAT3(-fx, fy, +fz), m_pxmf2TextureCoords0[4] = XMFLOAT2(0.0f, 0.0f);
+			m_pxmf3Positions[5] = XMFLOAT3(+fx, fy, +fz), m_pxmf2TextureCoords0[5] = XMFLOAT2(1.0f, 0.0f);
 		}
 	}
 	else if (fDepth == 0.0f)
 	{
 		if (fzPosition > 0.0f)
 		{
-			pVertices[0] = CTexturedVertex(XMFLOAT3(+fx, +fy, fz), XMFLOAT2(1.0f, 0.0f));
-			pVertices[1] = CTexturedVertex(XMFLOAT3(+fx, -fy, fz), XMFLOAT2(1.0f, 1.0f));
-			pVertices[2] = CTexturedVertex(XMFLOAT3(-fx, -fy, fz), XMFLOAT2(0.0f, 1.0f));
-			pVertices[3] = CTexturedVertex(XMFLOAT3(-fx, -fy, fz), XMFLOAT2(0.0f, 1.0f));
-			pVertices[4] = CTexturedVertex(XMFLOAT3(-fx, +fy, fz), XMFLOAT2(0.0f, 0.0f));
-			pVertices[5] = CTexturedVertex(XMFLOAT3(+fx, +fy, fz), XMFLOAT2(1.0f, 0.0f));
+			m_pxmf3Positions[0] = XMFLOAT3(+fx, +fy, fz), m_pxmf2TextureCoords0[0] = XMFLOAT2(1.0f, 0.0f);
+			m_pxmf3Positions[1] = XMFLOAT3(+fx, -fy, fz), m_pxmf2TextureCoords0[1] = XMFLOAT2(1.0f, 1.0f);
+			m_pxmf3Positions[2] = XMFLOAT3(-fx, -fy, fz), m_pxmf2TextureCoords0[2] = XMFLOAT2(0.0f, 1.0f);
+			m_pxmf3Positions[3] = XMFLOAT3(-fx, -fy, fz), m_pxmf2TextureCoords0[3] = XMFLOAT2(0.0f, 1.0f);
+			m_pxmf3Positions[4] = XMFLOAT3(-fx, +fy, fz), m_pxmf2TextureCoords0[4] = XMFLOAT2(0.0f, 0.0f);
+			m_pxmf3Positions[5] = XMFLOAT3(+fx, +fy, fz), m_pxmf2TextureCoords0[5] = XMFLOAT2(1.0f, 0.0f);
 		}
 		else
 		{
-			pVertices[0] = CTexturedVertex(XMFLOAT3(-fx, +fy, fz), XMFLOAT2(1.0f, 0.0f));
-			pVertices[1] = CTexturedVertex(XMFLOAT3(-fx, -fy, fz), XMFLOAT2(1.0f, 1.0f));
-			pVertices[2] = CTexturedVertex(XMFLOAT3(+fx, -fy, fz), XMFLOAT2(0.0f, 1.0f));
-			pVertices[3] = CTexturedVertex(XMFLOAT3(+fx, -fy, fz), XMFLOAT2(0.0f, 1.0f));
-			pVertices[4] = CTexturedVertex(XMFLOAT3(+fx, +fy, fz), XMFLOAT2(0.0f, 0.0f));
-			pVertices[5] = CTexturedVertex(XMFLOAT3(-fx, +fy, fz), XMFLOAT2(1.0f, 0.0f));
-		}
-	}
-
-	m_pd3dVertexBuffer = CreateBufferResource(pd3dDevice, pd3dCommandList, pVertices, m_nStride * m_nVertices, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pd3dVertexUploadBuffer);
-
-	m_d3dVertexBufferView.BufferLocation = m_pd3dVertexBuffer->GetGPUVirtualAddress();
-	m_d3dVertexBufferView.StrideInBytes = m_nStride;
-	m_d3dVertexBufferView.SizeInBytes = m_nStride * m_nVertices;
-
-	{
-		m_pxmf3Positions = new XMFLOAT3[m_nVertices];
-		m_pxmf2TextureCoords0 = new XMFLOAT2[m_nVertices];
-
-		if (fWidth == 0.0f)
-		{
-			if (fxPosition > 0.0f)
-			{
-				m_pxmf3Positions[0] = XMFLOAT3(fx, +fy, -fz), m_pxmf2TextureCoords0[0] = XMFLOAT2(1.0f, 0.0f);
-				m_pxmf3Positions[1] = XMFLOAT3(fx, -fy, -fz), m_pxmf2TextureCoords0[1] = XMFLOAT2(1.0f, 1.0f);
-				m_pxmf3Positions[2] = XMFLOAT3(fx, -fy, +fz), m_pxmf2TextureCoords0[2] = XMFLOAT2(0.0f, 1.0f);
-				m_pxmf3Positions[3] = XMFLOAT3(fx, -fy, +fz), m_pxmf2TextureCoords0[3] = XMFLOAT2(0.0f, 1.0f);
-				m_pxmf3Positions[4] = XMFLOAT3(fx, +fy, +fz), m_pxmf2TextureCoords0[4] = XMFLOAT2(0.0f, 0.0f);
-				m_pxmf3Positions[5] = XMFLOAT3(fx, +fy, -fz), m_pxmf2TextureCoords0[5] = XMFLOAT2(1.0f, 0.0f);
-			}
-			else
-			{
-				m_pxmf3Positions[0] = XMFLOAT3(fx, +fy, +fz), m_pxmf2TextureCoords0[0] = XMFLOAT2(1.0f, 0.0f);
-				m_pxmf3Positions[1] = XMFLOAT3(fx, -fy, +fz), m_pxmf2TextureCoords0[1] = XMFLOAT2(1.0f, 1.0f);
-				m_pxmf3Positions[2] = XMFLOAT3(fx, -fy, -fz), m_pxmf2TextureCoords0[2] = XMFLOAT2(0.0f, 1.0f);
-				m_pxmf3Positions[3] = XMFLOAT3(fx, -fy, -fz), m_pxmf2TextureCoords0[3] = XMFLOAT2(0.0f, 1.0f);
-				m_pxmf3Positions[4] = XMFLOAT3(fx, +fy, -fz), m_pxmf2TextureCoords0[4] = XMFLOAT2(0.0f, 0.0f);
-				m_pxmf3Positions[5] = XMFLOAT3(fx, +fy, +fz), m_pxmf2TextureCoords0[5] = XMFLOAT2(1.0f, 0.0f);
-			}
-		}
-		else if (fHeight == 0.0f)
-		{
-			if (fyPosition > 0.0f)
-			{
-				m_pxmf3Positions[0] = XMFLOAT3(+fx, fy, -fz), m_pxmf2TextureCoords0[0] = XMFLOAT2(1.0f, 0.0f);
-				m_pxmf3Positions[1] = XMFLOAT3(+fx, fy, +fz), m_pxmf2TextureCoords0[1] = XMFLOAT2(1.0f, 1.0f);
-				m_pxmf3Positions[2] = XMFLOAT3(-fx, fy, +fz), m_pxmf2TextureCoords0[2] = XMFLOAT2(0.0f, 1.0f);
-				m_pxmf3Positions[3] = XMFLOAT3(-fx, fy, +fz), m_pxmf2TextureCoords0[3] = XMFLOAT2(0.0f, 1.0f);
-				m_pxmf3Positions[4] = XMFLOAT3(-fx, fy, -fz), m_pxmf2TextureCoords0[4] = XMFLOAT2(0.0f, 0.0f);
-				m_pxmf3Positions[5] = XMFLOAT3(+fx, fy, -fz), m_pxmf2TextureCoords0[5] = XMFLOAT2(1.0f, 0.0f);
-			}
-			else
-			{
-				m_pxmf3Positions[0] = XMFLOAT3(+fx, fy, +fz), m_pxmf2TextureCoords0[0] = XMFLOAT2(1.0f, 0.0f);
-				m_pxmf3Positions[1] = XMFLOAT3(+fx, fy, -fz), m_pxmf2TextureCoords0[1] = XMFLOAT2(1.0f, 1.0f);
-				m_pxmf3Positions[2] = XMFLOAT3(-fx, fy, -fz), m_pxmf2TextureCoords0[2] = XMFLOAT2(0.0f, 1.0f);
-				m_pxmf3Positions[3] = XMFLOAT3(-fx, fy, -fz), m_pxmf2TextureCoords0[3] = XMFLOAT2(0.0f, 1.0f);
-				m_pxmf3Positions[4] = XMFLOAT3(-fx, fy, +fz), m_pxmf2TextureCoords0[4] = XMFLOAT2(0.0f, 0.0f);
-				m_pxmf3Positions[5] = XMFLOAT3(+fx, fy, +fz), m_pxmf2TextureCoords0[5] = XMFLOAT2(1.0f, 0.0f);
-			}
-		}
-		else if (fDepth == 0.0f)
-		{
-			if (fzPosition > 0.0f)
-			{
-				m_pxmf3Positions[0] = XMFLOAT3(+fx, +fy, fz), m_pxmf2TextureCoords0[0] = XMFLOAT2(1.0f, 0.0f);
-				m_pxmf3Positions[1] = XMFLOAT3(+fx, -fy, fz), m_pxmf2TextureCoords0[1] = XMFLOAT2(1.0f, 1.0f);
-				m_pxmf3Positions[2] = XMFLOAT3(-fx, -fy, fz), m_pxmf2TextureCoords0[2] = XMFLOAT2(0.0f, 1.0f);
-				m_pxmf3Positions[3] = XMFLOAT3(-fx, -fy, fz), m_pxmf2TextureCoords0[3] = XMFLOAT2(0.0f, 1.0f);
-				m_pxmf3Positions[4] = XMFLOAT3(-fx, +fy, fz), m_pxmf2TextureCoords0[4] = XMFLOAT2(0.0f, 0.0f);
-				m_pxmf3Positions[5] = XMFLOAT3(+fx, +fy, fz), m_pxmf2TextureCoords0[5] = XMFLOAT2(1.0f, 0.0f);
-			}
-			else
-			{
-				m_pxmf3Positions[0] = XMFLOAT3(-fx, +fy, fz), m_pxmf2TextureCoords0[0] = XMFLOAT2(1.0f, 0.0f);
-				m_pxmf3Positions[1] = XMFLOAT3(-fx, -fy, fz), m_pxmf2TextureCoords0[1] = XMFLOAT2(1.0f, 1.0f);
-				m_pxmf3Positions[2] = XMFLOAT3(+fx, -fy, fz), m_pxmf2TextureCoords0[2] = XMFLOAT2(0.0f, 1.0f);
-				m_pxmf3Positions[3] = XMFLOAT3(+fx, -fy, fz), m_pxmf2TextureCoords0[3] = XMFLOAT2(0.0f, 1.0f);
-				m_pxmf3Positions[4] = XMFLOAT3(+fx, +fy, fz), m_pxmf2TextureCoords0[4] = XMFLOAT2(0.0f, 0.0f);
-				m_pxmf3Positions[5] = XMFLOAT3(-fx, +fy, fz), m_pxmf2TextureCoords0[5] = XMFLOAT2(1.0f, 0.0f);
-			}
+			m_pxmf3Positions[0] = XMFLOAT3(-fx, +fy, fz), m_pxmf2TextureCoords0[0] = XMFLOAT2(1.0f, 0.0f);
+			m_pxmf3Positions[1] = XMFLOAT3(-fx, -fy, fz), m_pxmf2TextureCoords0[1] = XMFLOAT2(1.0f, 1.0f);
+			m_pxmf3Positions[2] = XMFLOAT3(+fx, -fy, fz), m_pxmf2TextureCoords0[2] = XMFLOAT2(0.0f, 1.0f);
+			m_pxmf3Positions[3] = XMFLOAT3(+fx, -fy, fz), m_pxmf2TextureCoords0[3] = XMFLOAT2(0.0f, 1.0f);
+			m_pxmf3Positions[4] = XMFLOAT3(+fx, +fy, fz), m_pxmf2TextureCoords0[4] = XMFLOAT2(0.0f, 0.0f);
+			m_pxmf3Positions[5] = XMFLOAT3(-fx, +fy, fz), m_pxmf2TextureCoords0[5] = XMFLOAT2(1.0f, 0.0f);
 		}
 		// VertexBuffer setting.
 		m_pd3dPositionBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList, m_pxmf3Positions, sizeof(XMFLOAT3) * m_nVertices, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pd3dPositionUploadBuffer);
@@ -1589,6 +1242,8 @@ void CSkinnedMesh::LoadSkinInfoFromFile(ID3D12Device* pd3dDevice, ID3D12Graphics
 		{
 			nReads = (UINT)::fread(&m_xmf3AABBCenter, sizeof(XMFLOAT3), 1, pInFile);
 			nReads = (UINT)::fread(&m_xmf3AABBExtents, sizeof(XMFLOAT3), 1, pInFile);
+			m_xmBoundingBox = BoundingOrientedBox(m_xmf3AABBCenter, m_xmf3AABBExtents, XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
+			m_bUpdateBounds = true;
 		}
 		else if (!strcmp(pstrToken, "<BoneNames>:"))
 		{
@@ -1603,6 +1258,10 @@ void CSkinnedMesh::LoadSkinInfoFromFile(ID3D12Device* pd3dDevice, ID3D12Graphics
 					m_ppSkinningBoneFrameCaches[i] = NULL;
 				}
 			}
+		}
+		else if (!strcmp(pstrToken, "<RootBoneIndex>:"))
+		{
+			m_RootBoneIndex = ::ReadIntegerFromFile(pInFile);
 		}
 		else if (!strcmp(pstrToken, "<BoneOffsets>:"))
 		{

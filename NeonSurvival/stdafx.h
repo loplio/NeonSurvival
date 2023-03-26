@@ -140,13 +140,6 @@ extern ID3D12Resource* CreateTextureResourceFromWICFile(ID3D12Device* pd3dDevice
 extern ID3D12Resource* CreateTexture2DResource(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, UINT nWidth,
 	UINT nHeight, UINT nElements, UINT nMipLevels, DXGI_FORMAT dxgiFormat, D3D12_RESOURCE_FLAGS d3dResourceFlags, D3D12_RESOURCE_STATES d3dResourceStates, D3D12_CLEAR_VALUE* pd3dClearValue);
 
-enum class ObjectType{
-	NONE,
-	MISSILE_OBJ,
-	SUPER_COBRA_OBJ,
-	PLAYER_OBJ
-};
-
 namespace Vector3
 {
 	inline bool IsZero(XMFLOAT3& xmf3Vector)
@@ -293,6 +286,10 @@ namespace Vector3
 		return(xmf3Result);
 	}
 	inline XMFLOAT3 TransformCoord(XMFLOAT3& xmf3Vector, XMFLOAT4X4& xmmtx4x4Matrix)
+	{
+		return(TransformCoord(xmf3Vector, XMLoadFloat4x4(&xmmtx4x4Matrix)));
+	}
+	inline XMFLOAT3 TransformCoord(XMFLOAT3&& xmf3Vector, XMFLOAT4X4& xmmtx4x4Matrix)
 	{
 		return(TransformCoord(xmf3Vector, XMLoadFloat4x4(&xmmtx4x4Matrix)));
 	}
