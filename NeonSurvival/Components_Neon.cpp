@@ -121,7 +121,7 @@ void Player_Neon::Update(float fTimeElapsed)
 	}
 
 	//SERVER::getInstance().SendPosition(m_xmf3Position);
-	SERVER::getInstance().SendPosition(m_xmf4x4World);
+	SERVER::getInstance().SendPosition(m_xmf4x4Transform);
 }
 
 void Player_Neon::OnPrepareRender()
@@ -344,16 +344,25 @@ bool Scene_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM 
 //--ProcessAnimation : Scene_Neon----------------------------------------------------
 void Scene_Neon::AnimateObjects(float fTimeElapsed)
 {
-	for (int i = 0; i < 2; ++i)
-	{
-		int id = SERVER::getInstance().GetClientNumId();
-		if (id != OtherPlayerPos[i].id && -1 != OtherPlayerPos[i].id)
-		{
-			//m_OtherPlayers[0]->SetPosition(OtherPlayerPos[i].position);
-			m_OtherPlayers[0]->m_xmf4x4World = OtherPlayerPos[i].position;
-		}
-	}
+	SERVER::getInstance().AddFPSCount();
+
+	//for (int i = 0; i < 2; ++i)
+	//{
+	//	int id = SERVER::getInstance().GetClientNumId();
+	//	if (id != OtherPlayerPos[i].id && -1 != OtherPlayerPos[i].id)
+	//	{
+	//		//m_OtherPlayers[0]->SetPosition(OtherPlayerPos[i].position);
+	//		m_OtherPlayers[0]->m_xmf4x4Transform = OtherPlayerPos[i].position;
+	//		m_OtherPlayers[0]->Animate(fTimeElapsed);
+	//		m_OtherPlayers[0]->UpdateTransform(&m_OtherPlayers[0]->m_xmf4x4Transform);
+	//	}
+	//}
 	//m_OtherPlayers[0]->SetPosition(Vector3::Add(m_pPlayer->GetPosition(), XMFLOAT3(10.0f, 0.0f, 0.0f)));
+	m_OtherPlayers[0]->m_xmf4x4Transform = m_pPlayer->m_xmf4x4Transform;
+	m_OtherPlayers[0]->m_xmf4x4World = m_pPlayer->m_xmf4x4World;
+	m_OtherPlayers[0]->m_pSkinnedAnimationController->SetTrackEnable(0, true);
+	m_OtherPlayers[0]->Animate(fTimeElapsed);
+
 	CScene::AnimateObjects(fTimeElapsed);
 }
 
@@ -364,9 +373,10 @@ void Scene_Neon::OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCa
 }
 void Scene_Neon::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
-	for (int i = 0; i < m_OtherPlayers.size(); ++i)
+	/*for (int i = 0; i < m_OtherPlayers.size(); ++i)
 	{
 		m_OtherPlayers[i]->Render(pd3dCommandList, pCamera);
-	}
+	}*/
+	m_OtherPlayers[0]->Render(pd3dCommandList, pCamera);
 	CScene::Render(pd3dCommandList, pCamera);
 }

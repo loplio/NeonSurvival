@@ -90,7 +90,8 @@ void SERVER::ProcessSocketMessage(HWND hWnd, UINT unit, WPARAM wParam, LPARAM lP
                 printf("inGame error : %d\n", WSAGetLastError());
                 return;
             }
-
+            //printxmfloat4x4(PlayersPosition[0].position);
+            //printxmfloat4x4(PlayersPosition[1].position);
             //printf("id : %d - x : %f y : %f z : %f\n", PlayersPosition[0].id, PlayersPosition[0].position.x, PlayersPosition[0].position.y, PlayersPosition[0].position.z);
             //printf("id : %d - x : %f y : %f z : %f\n", PlayersPosition[1].id, PlayersPosition[1].position.x, PlayersPosition[1].position.y, PlayersPosition[1].position.z);
             break;
@@ -142,7 +143,7 @@ void SERVER::UpdatePlayerPosition(const XMFLOAT4X4 &position)
 
 void SERVER::SendPosition(const XMFLOAT4X4& position)
 {
-    //if (IsCount() == false) return;
+    if (IsCount() == false) return;
     UpdatePlayerPosition(position);
     printf("send position\n");
     //len = SendMessageType(clientSocket, MESSAGETYPE::INGAME);
@@ -214,6 +215,14 @@ void SERVER::err_display(int errcode)
 PACKET_INGAME* SERVER::GetPlayersPosition()
 {
     return PlayersPosition;
+}
+
+void SERVER::printxmfloat4x4(const XMFLOAT4X4& p)
+{
+    std::cout << p._11 << p._12 << p._13 << p._14 << std::endl <<
+        p._21 << p._22 << p._23 << p._24 << std::endl <<
+        p._31 << p._32 << p._33 << p._34 << std::endl <<
+        p._41 << p._42 << p._43 << p._44 << std::endl << std::endl;
 }
 
 //void SERVER::SetOtherPlayerPosition(std::vector<CGameObject*> &m_OtherPlayers)

@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <conio.h>
+#include <iostream>
 
 #include <DirectXMath.h>
 #include <vector>
@@ -43,7 +44,7 @@ private:
 	int MessageType = 0;
 	int SendByte = 0;
 	int RecvByte = 0;
-	int FPSCount = 60;
+	int FPSCount = 0;
 	int len = 0;
 	bool FirstConnect = false;
 	bool RecvDelayed = false;
@@ -73,4 +74,5 @@ public:
 	void err_quit(const char* msg);
 	void err_display(const char* msg);
 	void err_display(int errcode);
+	void printxmfloat4x4(const XMFLOAT4X4& p);
 };
