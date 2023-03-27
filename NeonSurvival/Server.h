@@ -7,6 +7,8 @@
 #include <conio.h>
 
 #include <DirectXMath.h>
+#include <vector>
+
 using namespace DirectX;
 
 #define SERVERPORT	9000
@@ -23,6 +25,12 @@ typedef struct{
 	int id;
 } PACKET_INGAME;
 
+typedef struct {
+	int MessageType;
+	int byte;
+	char buf[BUFSIZE];
+}PACKET;
+
 class SERVER {
 private:
 	SERVER() {}
@@ -30,7 +38,7 @@ private:
 	SERVER& operator=(const SERVER& ref) {}
 	~SERVER() {}
 
-	char buf[BUFSIZE];
+	PACKET m_Packet;
 	int ClientNumId = 0;
 	int MessageType = 0;
 	int SendByte = 0;
@@ -55,6 +63,11 @@ public:
 	void SendPosition(const XMFLOAT3& position);
 	void AddFPSCount();
 	bool IsCount();
+
+	int GetClientNumId() { return ClientNumId; }
+	PACKET_INGAME* GetPlayersPosition();
+	//void SetOtherPlayerPosition(std::vector<CGameObject*> &m_OtherPlayers);
+
 	void err_quit(const char* msg);
 	void err_display(const char* msg);
 	void err_display(int errcode);

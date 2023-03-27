@@ -49,6 +49,9 @@
     <Filter Include="TestGame_Module">
       <UniqueIdentifier>{86f33cf7-8188-458d-954c-3afd09e59fad}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Server">
+      <UniqueIdentifier>{a07f364b-566e-4b37-aec7-7331bfc5d82a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ProcessCompute.h">
@@ -138,6 +141,9 @@
     <ClInclude Include="WICTextureLoader12.h">
       <Filter>헤더 파일\LibraryFile</Filter>
     </ClInclude>
+    <ClInclude Include="Server.h">
+      <Filter>Server</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ProcessInput.cpp">
@@ -217,6 +223,9 @@
     </ClCompile>
     <ClCompile Include="WICTextureLoader12.cpp">
       <Filter>소스 파일\LibraryFile</Filter>
+    </ClCompile>
+    <ClCompile Include="Server.cpp">
+      <Filter>Server</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

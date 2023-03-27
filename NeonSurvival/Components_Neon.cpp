@@ -2,6 +2,7 @@
 #include "Components_Neon.h"
 #include "GameObject.h"
 #include "ShaderObjects.h"
+#include "Server.h"
 
 //-------------------------------------------------------------------------------
 /*	Player																	   */
@@ -131,6 +132,9 @@ void Player_Neon::Update(float fTimeElapsed)
 			//m_pSkinnedAnimationController->SetTrackPosition(1, 0.0f);
 		}
 	}
+
+	//서버로 위치정보 보냄
+	SERVER::getInstance().SendPosition(m_xmf3Position);
 }
 
 void Player_Neon::OnPrepareRender()
@@ -268,9 +272,17 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 {
 	BuildLightsAndMaterials();
 
+	//다른 플레이어 생성
+	m_OtherPlayers.push_back(new CGameObject);
+	CLoadedModelInfo* pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/DefaultHuman/Walking.bin", NULL);
+	m_OtherPlayers[0]->SetChild(pPlayerModel->m_pModelRootObject, true);
+	m_OtherPlayers[0]->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 1, pPlayerModel);
+	m_OtherPlayers[0]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
+	m_OtherPlayers[0]->m_pSkinnedAnimationController->SetTrackEnable(0, false);
+
 	// SkyBox Build.
 	m_pSkyBox = new CSkyBox(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-
+	
 	// ShaderObjects Build.
 	m_ppShaders.reserve(5);
 
@@ -365,6 +377,9 @@ bool Scene_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM 
 //--ProcessAnimation : Scene_Neon----------------------------------------------------
 void Scene_Neon::AnimateObjects(float fTimeElapsed)
 {
+	//다른 플레이어의 위치값을 넣어줌
+	//SERVER::getInstance().SetOtherPlayerPosition(m_OtherPlayers);
+	
 	CScene::AnimateObjects(fTimeElapsed);
 }
 
@@ -375,5 +390,10 @@ void Scene_Neon::OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCa
 }
 void Scene_Neon::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
+	/*for (int i = 0; i < m_OtherPlayers.size(); ++i)
+	{
+		m_OtherPlayers[i]->Render(pd3dCommandList, pCamera);
+	}*/
+
 	CScene::Render(pd3dCommandList, pCamera);
 }
