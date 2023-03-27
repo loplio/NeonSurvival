@@ -1,5 +1,4 @@
-﻿//#include "GameObject.h"
-#include "Server.h"
+﻿#include "Server.h"
 
 void SERVER::init(HWND hWnd)
 {
@@ -149,7 +148,7 @@ void SERVER::UpdatePlayerPosition(const XMFLOAT3 &position)
 
 void SERVER::SendPosition(const XMFLOAT3& position)
 {
-    if (IsCount() == false) return;
+    //if (IsCount() == false) return;
     UpdatePlayerPosition(position);
     printf("send position\n");
     //len = SendMessageType(clientSocket, MESSAGETYPE::INGAME);

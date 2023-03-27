@@ -43,7 +43,7 @@ private:
 	int MessageType = 0;
 	int SendByte = 0;
 	int RecvByte = 0;
-	int FPSCount = 0;
+	int FPSCount = 60;
 	int len = 0;
 	bool FirstConnect = false;
 	bool RecvDelayed = false;

@@ -130,8 +130,6 @@ void CGameFramework_Neon::OnCreate(HINSTANCE hInstance, HWND hMainWnd)
 void CGameFramework_Neon::FrameAdvance()
 {
 	m_GameTimer.Tick(0.0f);
-
-	SERVER::getInstance().AddFPSCount();
 	
 	m_KeyboardInput->DataProcessing();
 	m_MouseInput->DataProcessing();

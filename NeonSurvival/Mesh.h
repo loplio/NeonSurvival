@@ -75,6 +75,8 @@ protected:
 	ID3D12Resource*					m_pd3dPositionBuffer = NULL;
 	ID3D12Resource*					m_pd3dPositionUploadBuffer = NULL;
 	D3D12_VERTEX_BUFFER_VIEW		m_d3dPositionBufferView;
+	D3D12_VERTEX_BUFFER_VIEW		m_d3dIndexBufferView;
+	D3D12_VERTEX_BUFFER_VIEW		m_d3dVertexBufferView;
 
 	int								m_nSubMeshes = 0;
 	int*							m_pnSubSetIndices = NULL;
