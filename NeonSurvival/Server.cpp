@@ -90,40 +90,14 @@ void SERVER::ProcessSocketMessage(HWND hWnd, UINT unit, WPARAM wParam, LPARAM lP
                 printf("inGame error : %d\n", WSAGetLastError());
                 return;
             }
-            printf("id : %d - x : %f y : %f z : %f\n", PlayersPosition[0].id, PlayersPosition[0].position.x, PlayersPosition[0].position.y, PlayersPosition[0].position.z);
-            printf("id : %d - x : %f y : %f z : %f\n", PlayersPosition[1].id, PlayersPosition[1].position.x, PlayersPosition[1].position.y, PlayersPosition[1].position.z);
+
+            //printf("id : %d - x : %f y : %f z : %f\n", PlayersPosition[0].id, PlayersPosition[0].position.x, PlayersPosition[0].position.y, PlayersPosition[0].position.z);
+            //printf("id : %d - x : %f y : %f z : %f\n", PlayersPosition[1].id, PlayersPosition[1].position.x, PlayersPosition[1].position.y, PlayersPosition[1].position.z);
             break;
         }
         default:
             break;
         }
-       /* switch (MessageType)
-        {
-        case MESSAGETYPE::LOGIN:
-        {
-            len = recv(wParam, (char*)&ClientNumId, sizeof(int), 0);
-            if (len == SOCKET_ERROR) {
-                printf("login error : %d\n", WSAGetLastError());
-                return;
-            }
-            printf("ClientNum : %d\n", ClientNumId);
-            FirstConnect = true;
-            break;
-        }
-        case MESSAGETYPE::INGAME:
-        {
-            len = recv(wParam, (char*)&PlayersPosition, sizeof(PlayersPosition), 0);
-            if (len == SOCKET_ERROR) {
-                printf("inGame error : %d\n", WSAGetLastError());
-                return;
-            }
-            printf("id : %d - x : %f y : %f z : %f\n", PlayersPosition[0].id, PlayersPosition[0].position.x, PlayersPosition[0].position.y, PlayersPosition[0].position.z);
-            printf("id : %d - x : %f y : %f z : %f\n", PlayersPosition[1].id, PlayersPosition[1].position.x, PlayersPosition[1].position.y, PlayersPosition[1].position.z);
-            break;
-        }
-        default:
-            break;
-        }*/
         break;
     }
     case FD_WRITE: {
@@ -139,14 +113,34 @@ int SERVER::SendMessageType(SOCKET& socket, MESSAGETYPE type)
     return byte;
 }
 
-void SERVER::UpdatePlayerPosition(const XMFLOAT3 &position)
+//void SERVER::UpdatePlayerPosition(const XMFLOAT3 &position)
+//{
+//    P_InGame.id = ClientNumId;
+//    P_InGame.position = position;
+//    //printf("x : %f y : %f z : %f\n", P_InGame.position.x, P_InGame.position.y, P_InGame.position.z);
+//}
+
+void SERVER::UpdatePlayerPosition(const XMFLOAT4X4 &position)
 {
     P_InGame.id = ClientNumId;
     P_InGame.position = position;
     //printf("x : %f y : %f z : %f\n", P_InGame.position.x, P_InGame.position.y, P_InGame.position.z);
 }
 
-void SERVER::SendPosition(const XMFLOAT3& position)
+//void SERVER::SendPosition(const XMFLOAT3& position)
+//{
+//    //if (IsCount() == false) return;
+//    UpdatePlayerPosition(position);
+//    printf("send position\n");
+//    //len = SendMessageType(clientSocket, MESSAGETYPE::INGAME);
+//
+//    m_Packet.MessageType = MESSAGETYPE::INGAME;
+//    m_Packet.byte = sizeof(PACKET_INGAME);
+//    memcpy(m_Packet.buf, &P_InGame, sizeof(P_InGame));
+//    len = send(clientSocket, (char*)&m_Packet, sizeof(m_Packet), 0);
+//}
+
+void SERVER::SendPosition(const XMFLOAT4X4& position)
 {
     //if (IsCount() == false) return;
     UpdatePlayerPosition(position);

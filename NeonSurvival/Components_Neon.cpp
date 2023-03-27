@@ -120,7 +120,8 @@ void Player_Neon::Update(float fTimeElapsed)
 		}
 	}
 
-	SERVER::getInstance().SendPosition(m_xmf3Position);
+	//SERVER::getInstance().SendPosition(m_xmf3Position);
+	SERVER::getInstance().SendPosition(m_xmf4x4World);
 }
 
 void Player_Neon::OnPrepareRender()
@@ -348,7 +349,8 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 		int id = SERVER::getInstance().GetClientNumId();
 		if (id != OtherPlayerPos[i].id && -1 != OtherPlayerPos[i].id)
 		{
-			m_OtherPlayers[0]->SetPosition(OtherPlayerPos[i].position);
+			//m_OtherPlayers[0]->SetPosition(OtherPlayerPos[i].position);
+			m_OtherPlayers[0]->m_xmf4x4World = OtherPlayerPos[i].position;
 		}
 	}
 	//m_OtherPlayers[0]->SetPosition(Vector3::Add(m_pPlayer->GetPosition(), XMFLOAT3(10.0f, 0.0f, 0.0f)));

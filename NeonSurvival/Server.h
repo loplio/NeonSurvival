@@ -21,7 +21,7 @@ enum MESSAGETYPE{
 };
 
 typedef struct{
-	XMFLOAT3 position;
+	XMFLOAT4X4 position;
 	int id;
 } PACKET_INGAME;
 
@@ -59,8 +59,10 @@ public:
 	void init(HWND);
 	void ProcessSocketMessage(HWND, UINT, WPARAM, LPARAM);
 	int SendMessageType(SOCKET& socket, MESSAGETYPE type);
-	void UpdatePlayerPosition(const XMFLOAT3 &position);
-	void SendPosition(const XMFLOAT3& position);
+	//void UpdatePlayerPosition(const XMFLOAT3 &position);
+	void UpdatePlayerPosition(const XMFLOAT4X4 &position);
+	//void SendPosition(const XMFLOAT3& position);
+	void SendPosition(const XMFLOAT4X4& woldpos);
 	void AddFPSCount();
 	bool IsCount();
 
