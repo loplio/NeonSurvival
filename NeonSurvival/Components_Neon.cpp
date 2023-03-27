@@ -2,44 +2,30 @@
 #include "Components_Neon.h"
 #include "GameObject.h"
 #include "ShaderObjects.h"
-#include "Server.h"
 
 //-------------------------------------------------------------------------------
 /*	Player																	   */
 //-------------------------------------------------------------------------------
-Player_Neon::Player_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext, int nMeshes) : CPlayer(nMeshes)
+Player_Neon::Player_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext, int nMeshes) : CPlayer()
 {
 	m_pCamera = ChangeCamera(THIRD_PERSON_CAMERA, 0.0f);
 
 	CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)pContext;
 	float fHeight = pTerrain->GetHeight(pTerrain->GetWidth() * 0.5f, pTerrain->GetLength() * 0.5f);
-	SetPosition(XMFLOAT3(pTerrain->GetWidth() * 0.5f, fHeight + MERTER_PER_PIXEL(100), pTerrain->GetLength() * 0.5f));
+	SetPosition(XMFLOAT3(pTerrain->GetWidth() * 0.5f, fHeight + MERTER_PER_PIXEL(20), pTerrain->GetLength() * 0.5f));
 	SetMass(60);
-	//Rotate(0.0f, 90.0f, 0.0f);
 
 	SetPlayerUpdatedContext(pTerrain);
 	SetCameraUpdatedContext(pTerrain);
 
-	//m_pShader = new CStandardShader();
-	//m_pShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
-	//m_pShader->CreateCbvSrvDescriptorHeaps(pd3dDevice, 0, 9);
-
-	//CGameObject* Robot_Soldier_Blue = CGameObject::LoadGeometryFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Robot_Soldier_Blue.bin", m_pShader);
 	CLoadedModelInfo* pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/DefaultHuman/Walking.bin", NULL);
 	SetChild(pPlayerModel->m_pModelRootObject, true);
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 1, pPlayerModel);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
 	m_pSkinnedAnimationController->SetTrackEnable(0, false);
 
-	//UINT ncbElementBytes = ((sizeof(CB_BONE_INFO) + 255) & ~255);
-	//CScene::CreateConstantBufferViews(pd3dDevice, 1, , ncbElementBytes);
-	// 
-	//SetChild(Robot_Soldier_Blue);
-	//Robot_Soldier_Blue->AddRef();
-
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
-	PrintObjectInfo();
 	if (pPlayerModel) delete pPlayerModel;
 }
 Player_Neon::~Player_Neon()
@@ -55,7 +41,7 @@ void Player_Neon::Move(ULONG dwDirection, float fDistance, bool bUpdateVelocity)
 
 	if (dwDirection)
 	{
-		m_pSkinnedAnimationController->SetTrackEnable(0, false);
+		//m_pSkinnedAnimationController->SetTrackEnable(0, false);
 		//m_pSkinnedAnimationController->SetTrackEnable(1, true);
 	}
 
@@ -132,9 +118,6 @@ void Player_Neon::Update(float fTimeElapsed)
 			//m_pSkinnedAnimationController->SetTrackPosition(1, 0.0f);
 		}
 	}
-
-	//서버로 위치정보 보냄
-	SERVER::getInstance().SendPosition(m_xmf3Position);
 }
 
 void Player_Neon::OnPrepareRender()
@@ -201,8 +184,8 @@ CCamera* Player_Neon::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 	case SPACESHIP_CAMERA:
 		SetFriction(0.0f);
 		SetGravity(XMFLOAT3(0.0f, 0.0f, 0.0f));
-		SetMaxVelocityXZ(500.0f);
-		SetMaxVelocityY(400.0f);
+		SetMaxVelocityXZ(5000.0f);
+		SetMaxVelocityY(4000.0f);
 		m_pCamera = OnChangeCamera(SPACESHIP_CAMERA, nCurrentCameraMode);
 		m_pCamera->SetTimeLag(0.0f);
 		m_pCamera->SetOffset(XMFLOAT3(0.0f, 0.0f, 0.0f));
@@ -240,11 +223,11 @@ Scene_Neon::Scene_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 	// Terrain Build.
 	XMFLOAT3 xmf3Scale(12.0f, 1.0f, 12.0f);
 	XMFLOAT4 xmf4Color(0.0f, 0.1f, 0.0f, 0.0f);
-#ifdef _WITH_TERRAIN_PARTITION
-	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("../Assets/Image/Terrain/HeightMap.raw"), 17, 17, xmf3Scale, xmf4Color);
-#else
-	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("GameTexture/terrain.raw"), 512, 512, xmf3Scale, xmf4Color);
-#endif
+	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature,
+		_T("GameTexture/terrain.raw"),
+		(wchar_t*)L"GameTexture/neon_tile4_1.dds",
+		(wchar_t*)L"GameTexture/neon_tile3_1.dds", 
+		512, 512, xmf3Scale, xmf4Color);
 }
 Scene_Neon::~Scene_Neon()
 {
@@ -272,39 +255,12 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 {
 	BuildLightsAndMaterials();
 
-	//다른 플레이어 생성
-	m_OtherPlayers.push_back(new CGameObject);
-	CLoadedModelInfo* pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/DefaultHuman/Walking.bin", NULL);
-	m_OtherPlayers[0]->SetChild(pPlayerModel->m_pModelRootObject, true);
-	m_OtherPlayers[0]->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 1, pPlayerModel);
-	m_OtherPlayers[0]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
-	m_OtherPlayers[0]->m_pSkinnedAnimationController->SetTrackEnable(0, false);
-
 	// SkyBox Build.
-	m_pSkyBox = new CSkyBox(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	
+	m_pSkyBox = new CSkyBox(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (wchar_t*)L"SkyBox/NeonCity.dds");
+
 	// ShaderObjects Build.
 	m_ppShaders.reserve(5);
 
-	//CModelObjects* pModelObjectShader = new ModelObjects_1();
-	//pModelObjectShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	//pModelObjectShader->BuildObjects(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	//m_ppShaders.push_back(pModelObjectShader);
-
-	//CBillboardObject_1s* pBillboardObjectShader = new BillboardObjects_1();
-	//pBillboardObjectShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	//pBillboardObjectShader->BuildObjects(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, m_pTerrain);
-	//m_ppShaders.push_back(pBillboardObjectShader);
-
-	CMultiSpriteObject_1s* pMultiSpriteObjectsShader = new MultiSpriteObjects_1();
-	pMultiSpriteObjectsShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	pMultiSpriteObjectsShader->BuildObjects(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, m_pTerrain);
-	m_ppShaders.push_back(pMultiSpriteObjectsShader);
-
-	//CBlendTextureObjects* pBlendTextureObjectsShader = new BlendTextureObjects_1();
-	//pBlendTextureObjectsShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	//pBlendTextureObjectsShader->BuildObjects(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, m_pTerrain);
-	//m_ppShaders.push_back(pBlendTextureObjectsShader);
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
@@ -377,9 +333,6 @@ bool Scene_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM 
 //--ProcessAnimation : Scene_Neon----------------------------------------------------
 void Scene_Neon::AnimateObjects(float fTimeElapsed)
 {
-	//다른 플레이어의 위치값을 넣어줌
-	//SERVER::getInstance().SetOtherPlayerPosition(m_OtherPlayers);
-	
 	CScene::AnimateObjects(fTimeElapsed);
 }
 
@@ -390,10 +343,5 @@ void Scene_Neon::OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCa
 }
 void Scene_Neon::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
-	/*for (int i = 0; i < m_OtherPlayers.size(); ++i)
-	{
-		m_OtherPlayers[i]->Render(pd3dCommandList, pCamera);
-	}*/
-
 	CScene::Render(pd3dCommandList, pCamera);
 }

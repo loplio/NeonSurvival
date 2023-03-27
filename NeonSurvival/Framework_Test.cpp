@@ -194,13 +194,6 @@ void CGameFramework_Test::ReleaseObjects()
 
 void CGameFramework_Test::UpdateUI() const
 {
-	if (typeid(CAirplanePlayer) == typeid(*m_pPlayer))
-	{
-		char text[128];
-		_itoa_s(missile_num - ((CAirplanePlayer*)m_pPlayer.get())->m_launcher->m_missiles.size(), text, 10);
-		memset(text + 1, 0, sizeof(char) * 127);
-		m_pUILayer->UpdateTextOutputs(1, (_TCHAR*)text, NULL, NULL, NULL);
-	}
 }
 
 void CGameFramework_Test::ProcessSelectedObject(DWORD dwDirection, float cxDelta, float cyDelta)
@@ -263,9 +256,6 @@ void CGameFramework_Test::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID
 			m_Iframe.ChangeSwapChainState();
 			break;
 		case 0x46:
-			if (typeid(CAirplanePlayer) == typeid(*m_pPlayer)) {
-				((CAirplanePlayer*)m_pPlayer.get())->m_launcher->state += add_missile;
-			}
 			break;
 		default:
 			break;

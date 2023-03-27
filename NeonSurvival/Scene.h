@@ -34,30 +34,30 @@ public:
 	CScene(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual ~CScene();
 
-	// hold..
 	ID3D12RootSignature* CreateGraphicsRootSignature(ID3D12Device* pd3dDevice);
 	ID3D12RootSignature* GetGraphicsRootSignature();
 
+	// ShaderVariable.
 	virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void ReleaseShaderVariables();
 
-	// Build..
+	// Build.
 	virtual void CreateBoundingBox(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CBoundingBoxObjects* BBShader);
 	virtual void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void BuildLightsAndMaterials();
 	virtual void ReleaseUploadBuffers();
 	virtual void ReleaseObjects();
 
-	// ProcessInput..
+	// ProcessInput.
 	virtual bool OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
 	virtual bool OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
 	CGameObject* PickObjectPointedByCursor(int xClient, int yClient, CCamera* pCamera);
 
-	// ProcessAnimaiton..
+	// ProcessCompute.
 	virtual void AnimateObjects(float fTimeElapsed);
 
-	// ProcessOutput..
+	// ProcessOutput.
 	virtual void OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera *pCamera);
 
@@ -92,14 +92,13 @@ public:
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUSrvDescriptorNextHandle() { return(m_d3dSrvCPUDescriptorNextHandle); }
 	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUSrvDescriptorNextHandle() { return(m_d3dSrvGPUDescriptorNextHandle); }
 
+	void SetLight(LIGHT& light, XMFLOAT4 xmf4Ambient, XMFLOAT4 xmf4Diffuse, XMFLOAT4 xmf4Specular,
+		XMFLOAT3 xmf3Position, XMFLOAT3 xmf3Direction, XMFLOAT3 xmf3Attenuation,
+		float fFalloff, float fTheta, float fPhi, bool bEnable, int nType, float fRange, float padding);
+
 	float									m_fElapsedTime = 0.0f;
 
-	//int										m_nGameObjects = 0;
-	//CGameObject**							m_ppGameObjects = NULL;
-
-	int										m_nHierarchicalGameObjects = 0;
-	CGameObject**							m_ppHierarchicalGameObjects = NULL;
-
+	// Lighting.
 	int										m_nLights = 0;
 	LIGHT*									m_pLights = NULL;
 	ID3D12Resource*							m_pd3dcbLights = NULL;
@@ -107,20 +106,17 @@ public:
 
 	XMFLOAT4								m_xmf4GlobalAmbient;
 
-	CHeightMapTerrain*						m_pTerrain = NULL;
-
-	//CInstancingShader*					m_pShaders = NULL;
+	// Shader(Include Object).
 	std::vector<CShader*>					m_ppShaders;
+	//CInstancingShader*					m_pShaders = NULL;
 
-public:
+	// Objects.
 	CSkyBox*								m_pSkyBox = NULL;
+	CHeightMapTerrain*						m_pTerrain = NULL;
 	std::shared_ptr<CPlayer>				m_pPlayer = NULL;
 	std::shared_ptr<CBoundingBoxObjects>	m_pBBObjects = NULL;
-
-	CHeightMapTerrain* GetTerrain() { return m_pTerrain; }
-	std::vector<CShader*>& GetShader() { return m_ppShaders; }
-
-	void SetLight(LIGHT& light , XMFLOAT4 xmf4Ambient, XMFLOAT4 xmf4Diffuse, XMFLOAT4 xmf4Specular,
-		XMFLOAT3 xmf3Position, XMFLOAT3 xmf3Direction, XMFLOAT3 xmf3Attenuation,
-		float fFalloff, float fTheta, float fPhi, bool bEnable, int nType, float fRange, float padding);
+	//int									m_nGameObjects = 0;
+	//CGameObject**							m_ppGameObjects = NULL;
+	int										m_nHierarchicalGameObjects = 0;
+	CGameObject**							m_ppHierarchicalGameObjects = NULL;
 };
