@@ -117,6 +117,5 @@ public:
 	std::shared_ptr<CBoundingBoxObjects>	m_pBBObjects = NULL;
 	//int									m_nGameObjects = 0;
 	//CGameObject**							m_ppGameObjects = NULL;
-	int										m_nHierarchicalGameObjects = 0;
-	CGameObject**							m_ppHierarchicalGameObjects = NULL;
+	std::vector<CGameObject*>				m_vHierarchicalGameObjects;
 };

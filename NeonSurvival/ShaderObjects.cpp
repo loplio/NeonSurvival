@@ -21,20 +21,17 @@ void CBoundingBoxObjects::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCa
 
 	for (int i = 0; i < m_BBObjects.size(); ++i)
 	{
-		if (m_BBObjects[i])
+		for (int n = 0; n < m_BBObjects[i]->GetBoundingBoxMesh().size(); ++n)
 		{
-			for (int n = 0; n < m_BBObjects[i]->GetBoundingBoxMesh().size(); ++n)
+			if (m_BBObjects[i]->GetBoundingBoxMesh()[n])
 			{
-				if (m_BBObjects[i]->GetBoundingBoxMesh()[n])
-				{
-					XMFLOAT4X4 CenterPosition = Matrix4x4::Identity();
-					CenterPosition._41 += m_BBObjects[i]->GetBoundingBoxMesh()[n]->GetAABBCenter().x;
-					CenterPosition._42 += m_BBObjects[i]->GetBoundingBoxMesh()[n]->GetAABBCenter().y;
-					CenterPosition._43 += m_BBObjects[i]->GetBoundingBoxMesh()[n]->GetAABBCenter().z;
-					CenterPosition = Matrix4x4::Multiply(CenterPosition, m_BBObjects[i]->m_xmf4x4World);
-					m_BBObjects[i]->UpdateShaderVariable(pd3dCommandList, &CenterPosition);
-					m_BBObjects[i]->GetBoundingBoxMesh()[n]->Render(pd3dCommandList, 0);
-				}
+				XMFLOAT4X4 CenterPosition = Matrix4x4::Identity();
+				CenterPosition._41 += m_BBObjects[i]->GetBoundingBoxMesh()[n]->GetAABBCenter().x;
+				CenterPosition._42 += m_BBObjects[i]->GetBoundingBoxMesh()[n]->GetAABBCenter().y;
+				CenterPosition._43 += m_BBObjects[i]->GetBoundingBoxMesh()[n]->GetAABBCenter().z;
+				CenterPosition = Matrix4x4::Multiply(CenterPosition, m_BBObjects[i]->m_xmf4x4World);
+				m_BBObjects[i]->UpdateShaderVariable(pd3dCommandList, &CenterPosition);
+				m_BBObjects[i]->GetBoundingBoxMesh()[n]->Render(pd3dCommandList, 0);
 			}
 		}
 	}

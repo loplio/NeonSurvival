@@ -179,7 +179,8 @@ float4 PSStandard(VS_STANDARD_OUTPUT input) : SV_TARGET
 #endif
 
 	float4 cIllumination = float4(1.0f, 1.0f, 1.0f, 1.0f);
-	float4 cColor = cAlbedoColor + cSpecularColor + cEmissionColor;
+	float4 SpecularRatio = float4(0.1f, 0.1f, 0.1f, 1.0f);
+	float4 cColor = cAlbedoColor + /*cSpecularColor * SpecularRatio +*/ cEmissionColor;
 	if (gnTexturesMask & MATERIAL_NORMAL_MAP)
 	{
 		float3 normalW = input.normalW;
@@ -348,7 +349,8 @@ float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
 	float4 cDetailTexColor = gtxtDetailTexture.Sample(gssWrap, input.uv1);
 	//	float fAlpha = gtxtTerrainTexture.Sample(gssWrap, input.uv0);
 
-	float4 cColor = cBaseTexColor * 0.4f + cDetailTexColor * 0.7f;
+	//float4 cColor = cBaseTexColor * 0.4f + cDetailTexColor * 0.7f;
+	float4 cColor = cBaseTexColor;
 	input.normalW = normalize(input.normalW);
 	float4 cIllumination = Lighting(input.positionW, input.normalW);
 	//	float4 cColor = saturate(lerp(cBaseTexColor, cDetailTexColor, fAlpha));

@@ -49,8 +49,13 @@ public:
 	// ProcessOutput..
 	void OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
 	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
-
-public:
-	std::vector<CGameObject*> m_OtherPlayer;
 };
 
+//-------------------------------------------------------------------------------
+/*	Other Object															   */
+//-------------------------------------------------------------------------------
+class NexusObject : public CGameObject {
+public:
+	NexusObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks);
+	virtual ~NexusObject();
+};
