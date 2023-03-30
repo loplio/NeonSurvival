@@ -8,7 +8,7 @@
 //-------------------------------------------------------------------------------
 Player_Neon::Player_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext, int nMeshes) : CPlayer()
 {
-	m_pCamera = ChangeCamera(THIRD_PERSON_CAMERA, 0.0f);
+	m_pCamera = ChangeCamera(FIRST_PERSON_CAMERA, 0.0f);
 
 	CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)pContext;
 	float fHeight = pTerrain->GetHeight(pTerrain->GetWidth() * 0.5f, pTerrain->GetLength() * 0.5f);
@@ -259,8 +259,13 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_pSkyBox = new CSkyBox(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (wchar_t*)L"SkyBox/NeonCity.dds");
 
 	// Objects build.
+	m_vGameObjects.reserve(1);
 	m_vHierarchicalGameObjects.reserve(2);
 
+	// GameObjects.
+	m_vGameObjects.push_back(new Crosshair(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, 0.0035f, 0.02f, 0.03f, 0.003f, true));
+
+	// HierarchicalGameObjects.
 	CLoadedModelInfo* pNexusModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Nexus/Nexus.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new NexusObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pNexusModel, 1));
 	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
@@ -351,7 +356,6 @@ bool Scene_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM 
 void Scene_Neon::AnimateObjects(float fTimeElapsed)
 {
 	m_vHierarchicalGameObjects[1]->SetPosition(m_pPlayer->GetPosition().x + 10.f, m_pPlayer->GetPosition().y, m_pPlayer->GetPosition().z);
-
 	CScene::AnimateObjects(fTimeElapsed);
 }
 
@@ -377,5 +381,17 @@ NexusObject::NexusObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd
 	if(pNexusModel->m_pAnimationSets) m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimationTracks, pNexusModel);
 }
 NexusObject::~NexusObject()
+{
+}
+//-------------------------------------------------------------------------------
+Crosshair::Crosshair(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, float fthickness, float flength, float interval, float radDot, bool bDot)
+{
+	SetMesh(new CCrosshairMesh(pd3dDevice, pd3dCommandList, fthickness, flength, interval, radDot, bDot));
+	SetMaterial(0, new CMaterial());
+	m_ppMaterials[0]->SetShader(new CCrosshairShader());
+	m_ppMaterials[0]->m_pShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
+	m_ppMaterials[0]->m_pShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
+}
+Crosshair::~Crosshair()
 {
 }

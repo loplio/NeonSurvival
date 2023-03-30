@@ -22,6 +22,12 @@ void MouseInput::DataProcessing()
 {
 }
 
+void MouseInput::SetOldCursorPos(POINT pos)
+{
+	m_ptOldCursorPos.x = pos.x;
+	m_ptOldCursorPos.y = pos.y;
+}
+
 POINT& MouseInput::GetOldCursorPos()
 {
 	return m_ptOldCursorPos;

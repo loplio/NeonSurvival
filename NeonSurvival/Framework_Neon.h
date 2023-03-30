@@ -48,4 +48,5 @@ private:
 
 public:
 	CGameObject* m_pSelectedObject = NULL;
+	bool m_bReleaseCapture = false;
 };

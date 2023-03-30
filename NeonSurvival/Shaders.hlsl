@@ -301,6 +301,33 @@ float4 PSWireFrame(VS_WIREFRAME_OUTPUT input) : SV_TARGET
 
 	return cColor;
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////
+struct VS_POSITION_INPUT
+{
+	float3 position : POSITION;
+};
+
+struct VS_POSITION_OUTPUT
+{
+	float4 position : SV_POSITION;
+};
+
+VS_POSITION_OUTPUT VSCrosshairFrame(VS_POSITION_INPUT input)
+{
+	VS_POSITION_OUTPUT output;
+	output.position = float4(input.position, 1.0f);
+
+	return output;
+}
+
+float4 PSCrosshairFrame(VS_POSITION_OUTPUT input) : SV_TARGET
+{
+	float4 cColor = float4(0.8f, 0.8f, 0.8f, 1.0f);
+
+	return cColor;
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////

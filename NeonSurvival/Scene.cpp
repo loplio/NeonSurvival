@@ -292,6 +292,7 @@ void CScene::ReleaseUploadBuffers()
 
 	for (int i = 0; i < m_ppShaders.size(); ++i) m_ppShaders[i]->ReleaseUploadBuffers();
 	for (int i = 0; i < m_vHierarchicalGameObjects.size(); i++) m_vHierarchicalGameObjects[i]->ReleaseUploadBuffers();
+	for (int i = 0; i < m_vGameObjects.size(); i++) m_vGameObjects[i]->ReleaseUploadBuffers();
 }
 void CScene::ReleaseObjects()
 {
@@ -311,6 +312,10 @@ void CScene::ReleaseObjects()
 	if (!m_vHierarchicalGameObjects.empty())
 	{
 		for (int i = 0; i < m_vHierarchicalGameObjects.size(); i++) m_vHierarchicalGameObjects[i]->Release();
+	}
+	if (!m_vGameObjects.empty())
+	{
+		for (int i = 0; i < m_vGameObjects.size(); i++) m_vGameObjects[i]->Release();
 	}
 
 	if (m_pTerrain) delete m_pTerrain;
@@ -419,6 +424,10 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 	for (int i = 0; i < m_vHierarchicalGameObjects.size(); i++)
 	{
 		m_vHierarchicalGameObjects[i]->Render(pd3dCommandList, pCamera);
+	}
+	for (int i = 0; i < m_vGameObjects.size(); i++)
+	{
+		m_vGameObjects[i]->Render(pd3dCommandList, pCamera);
 	}
 }
 

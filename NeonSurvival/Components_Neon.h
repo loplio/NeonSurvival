@@ -59,3 +59,9 @@ public:
 	NexusObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks);
 	virtual ~NexusObject();
 };
+
+class Crosshair : public CGameObject {
+public:
+	Crosshair(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, float thickness = 0.005f, float length = 0.0125f, float interval = 0.025f, float radDot = 0.0025f, bool bDot = true);
+	virtual ~Crosshair();
+};

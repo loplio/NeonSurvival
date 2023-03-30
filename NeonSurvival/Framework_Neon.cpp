@@ -220,15 +220,20 @@ void CGameFramework_Neon::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, W
 	case WM_LBUTTONDOWN:
 	case WM_RBUTTONDOWN:
 		m_pSelectedObject = m_pScene->PickObjectPointedByCursor(LOWORD(lParam), HIWORD(lParam), m_pCamera);
-		SetCapture(hWnd);
-		GetCursorPos(&m_MouseInput->GetOldCursorPos());
+		m_bReleaseCapture = false;
 		break;
 	case WM_LBUTTONUP:
 	case WM_RBUTTONUP:
 		m_pSelectedObject = NULL;
-		ReleaseCapture();
 		break;
 	case WM_MOUSEMOVE:
+		if (!m_bReleaseCapture)
+		{
+			RECT rect;
+			GetWindowRect(hWnd, &rect);
+			SetCapture(hWnd);
+			m_MouseInput->SetOldCursorPos(POINT((rect.right + rect.left) / 2, (rect.bottom + rect.top) / 2));
+		}
 		break;
 	default:
 		break;
@@ -254,6 +259,10 @@ void CGameFramework_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID
 			break;
 		case VK_F9:
 			m_Iframe.ChangeSwapChainState();
+			break;
+		case VK_F11:
+			m_bReleaseCapture = true;
+			ReleaseCapture();
 			break;
 		default:
 			break;

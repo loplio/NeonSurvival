@@ -749,6 +749,67 @@ void CMeshIlluminated::CalculateVertexNormals(XMFLOAT3* pxmf3Normals, XMFLOAT3* 
 }
 
 //-------------------------------------------------------------------------------
+/*	CCrosshairMesh : public CMesh											   */
+//-------------------------------------------------------------------------------
+CCrosshairMesh::CCrosshairMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float fthickness, float flength, float interval, float radDot, bool bDot) : CMesh(pd3dDevice, pd3dCommandList)
+{
+	// default setting.
+	m_nVertices = (bDot) ? 30 : 24;
+	m_d3dPrimitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+	// Position setting.
+	float thickness = fthickness * 0.5f, length = flength * 0.5f, fx = 0.5f;
+	m_pxmf3Positions = new XMFLOAT3[m_nVertices];
+	// Left Cross
+	m_pxmf3Positions[0] = XMFLOAT3(-length - interval, +thickness, +fx);
+	m_pxmf3Positions[1] = XMFLOAT3(+length - interval, +thickness, +fx);
+	m_pxmf3Positions[2] = XMFLOAT3(-length - interval, -thickness, +fx);
+	m_pxmf3Positions[3] = XMFLOAT3(-length - interval, -thickness, +fx);
+	m_pxmf3Positions[4] = XMFLOAT3(+length - interval, +thickness, +fx);
+	m_pxmf3Positions[5] = XMFLOAT3(+length - interval, -thickness, +fx);
+	// Right Cross										
+	m_pxmf3Positions[6] = XMFLOAT3(-length + interval, +thickness, +fx);
+	m_pxmf3Positions[7] = XMFLOAT3(+length + interval, +thickness, +fx);
+	m_pxmf3Positions[8] = XMFLOAT3(-length + interval, -thickness, +fx);
+	m_pxmf3Positions[9] = XMFLOAT3(-length + interval, -thickness, +fx);
+	m_pxmf3Positions[10] = XMFLOAT3(+length + interval, +thickness, +fx);
+	m_pxmf3Positions[11] = XMFLOAT3(+length + interval, -thickness, +fx);
+	// Top Cross										
+	m_pxmf3Positions[12] = XMFLOAT3(-thickness, +length - interval, +fx);
+	m_pxmf3Positions[13] = XMFLOAT3(+thickness, +length - interval, +fx);
+	m_pxmf3Positions[14] = XMFLOAT3(-thickness, -length - interval, +fx);
+	m_pxmf3Positions[15] = XMFLOAT3(-thickness, -length - interval, +fx);
+	m_pxmf3Positions[16] = XMFLOAT3(+thickness, +length - interval, +fx);
+	m_pxmf3Positions[17] = XMFLOAT3(+thickness, -length - interval, +fx);
+	// Bottom Cross										
+	m_pxmf3Positions[18] = XMFLOAT3(-thickness, +length + interval, +fx);
+	m_pxmf3Positions[19] = XMFLOAT3(+thickness, +length + interval, +fx);
+	m_pxmf3Positions[20] = XMFLOAT3(-thickness, -length + interval, +fx);
+	m_pxmf3Positions[21] = XMFLOAT3(-thickness, -length + interval, +fx);
+	m_pxmf3Positions[22] = XMFLOAT3(+thickness, +length + interval, +fx);
+	m_pxmf3Positions[23] = XMFLOAT3(+thickness, -length + interval, +fx);
+	// Dot Cross									
+	if (bDot)
+	{
+		m_pxmf3Positions[24] = XMFLOAT3(-radDot, +radDot, +fx);
+		m_pxmf3Positions[25] = XMFLOAT3(+radDot, +radDot, +fx);
+		m_pxmf3Positions[26] = XMFLOAT3(-radDot, -radDot, +fx);
+		m_pxmf3Positions[27] = XMFLOAT3(-radDot, -radDot, +fx);
+		m_pxmf3Positions[28] = XMFLOAT3(+radDot, +radDot, +fx);
+		m_pxmf3Positions[29] = XMFLOAT3(+radDot, -radDot, +fx);
+	}
+
+	// PositionBuffer setting.
+	m_pd3dPositionBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList, m_pxmf3Positions, m_nStride * m_nVertices, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pd3dPositionUploadBuffer);
+	m_d3dPositionBufferView.BufferLocation = m_pd3dPositionBuffer->GetGPUVirtualAddress();
+	m_d3dPositionBufferView.StrideInBytes = m_nStride;
+	m_d3dPositionBufferView.SizeInBytes = m_nStride * m_nVertices;
+}
+CCrosshairMesh::~CCrosshairMesh()
+{
+}
+
+//-------------------------------------------------------------------------------
 /*	CRawFormatImage															   */
 //-------------------------------------------------------------------------------
 CRawFormatImage::CRawFormatImage(LPCTSTR pFileName, int nWidth, int nLength, bool bFlipY)

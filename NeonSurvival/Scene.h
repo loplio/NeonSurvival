@@ -115,7 +115,6 @@ public:
 	CHeightMapTerrain*						m_pTerrain = NULL;
 	std::shared_ptr<CPlayer>				m_pPlayer = NULL;
 	std::shared_ptr<CBoundingBoxObjects>	m_pBBObjects = NULL;
-	//int									m_nGameObjects = 0;
-	//CGameObject**							m_ppGameObjects = NULL;
+	std::vector<CGameObject*>				m_vGameObjects;
 	std::vector<CGameObject*>				m_vHierarchicalGameObjects;
 };

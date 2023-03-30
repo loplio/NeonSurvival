@@ -274,6 +274,46 @@ void CSkyBoxShader::CreateGraphicsPipelineState(ID3D12Device* pd3dDevice, ID3D12
 }
 
 //-------------------------------------------------------------------------------
+/*	CCrosshairShader : public Shader										   */
+//-------------------------------------------------------------------------------
+CCrosshairShader::CCrosshairShader()
+{
+}
+CCrosshairShader::~CCrosshairShader()
+{
+}
+
+D3D12_INPUT_LAYOUT_DESC CCrosshairShader::CreateInputLayout()
+{
+	UINT nInputElementDescs = 1;
+	D3D12_INPUT_ELEMENT_DESC* pd3dInputElementDescs = new D3D12_INPUT_ELEMENT_DESC[nInputElementDescs];
+
+	pd3dInputElementDescs[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+
+	D3D12_INPUT_LAYOUT_DESC d3dInputLayoutDesc;
+	d3dInputLayoutDesc.pInputElementDescs = pd3dInputElementDescs;
+	d3dInputLayoutDesc.NumElements = nInputElementDescs;
+
+	return d3dInputLayoutDesc;
+}
+D3D12_SHADER_BYTECODE CCrosshairShader::CreateVertexShader()
+{
+	return CShader::CompileShaderFromFile((wchar_t*)L"Shaders.hlsl", "VSCrosshairFrame", "vs_5_1", &m_pd3dVertexShaderBlob);
+}
+D3D12_SHADER_BYTECODE CCrosshairShader::CreatePixelShader()
+{
+	return CShader::CompileShaderFromFile((wchar_t*)L"Shaders.hlsl", "PSCrosshairFrame", "ps_5_1", &m_pd3dPixelShaderBlob);
+}
+
+void CCrosshairShader::CreateGraphicsPipelineState(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature)
+{
+	m_nPipelineStates = 1;
+	m_ppd3dPipelineStates = new ID3D12PipelineState * [m_nPipelineStates];
+
+	CShader::CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
+}
+
+//-------------------------------------------------------------------------------
 /*	CStandardShader : public Shader										       */
 //-------------------------------------------------------------------------------
 CStandardShader::CStandardShader()
