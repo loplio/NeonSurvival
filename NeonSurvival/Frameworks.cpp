@@ -25,8 +25,8 @@ FrameworkController::~FrameworkController()
 void FrameworkController::OnCreate(HINSTANCE hInstance, HWND hMainWnd) {
 	m_InterfaceFramework->OnCreate(hInstance, hMainWnd);
 
-	m_GameFramework = new CGameFramework_Test(*m_InterfaceFramework);
-	m_LobbyFramework = new CLobbyFramework_Test(*m_InterfaceFramework);
+	m_GameFramework = new CGameFramework_Neon(*m_InterfaceFramework);
+	m_LobbyFramework = new CLobbyFramework_Neon(*m_InterfaceFramework);
 	((BaseFramework*)m_GameFramework)->OnCreate(hInstance, hMainWnd);
 	((BaseFramework*)m_LobbyFramework)->OnCreate(hInstance, hMainWnd);
 }

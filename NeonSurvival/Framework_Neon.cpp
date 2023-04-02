@@ -192,6 +192,7 @@ void CGameFramework_Neon::ReleaseObjects()
 
 void CGameFramework_Neon::UpdateUI() const
 {
+	RECT image;
 }
 
 void CGameFramework_Neon::ProcessSelectedObject(DWORD dwDirection, float cxDelta, float cyDelta)
