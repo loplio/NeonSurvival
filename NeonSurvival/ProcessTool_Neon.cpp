@@ -150,6 +150,9 @@ GameCompute_Neon::GameCompute_Neon(const CGameTimer& GameTimer, const CGameSourc
 
 void GameCompute_Neon::Update() const
 {
+	// Scene Update
+	m_Scene.Update(m_GameTimer.GetTotalTime(), m_GameTimer.GetTimeElapsed());
+
 	// Player Update
 	m_Player.Update(m_GameTimer.GetTimeElapsed());
 }
@@ -202,6 +205,8 @@ void GameRenderDisplay_Neon::Render()
 	m_BoundingBox.Render(&m_pd3dCommandList, Camera);
 
 	m_InterfaceFramework.ExecuteCommand();
+
+	m_Scene.OnPostRenderParticle();
 }
 //-------------------------------------------------------------------------------
 LobbyRenderDisplay_Neon::LobbyRenderDisplay_Neon(CLobbyFramework& LobbyFramework) : DisplayOutput(LobbyFramework)

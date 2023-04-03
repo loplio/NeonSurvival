@@ -179,11 +179,13 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#define RESOURCE_TEXTURE2D			0x01
-#define RESOURCE_TEXTURE2D_ARRAY	0x02
-#define RESOURCE_TEXTURE2DARRAY		0x03
-#define RESOURCE_TEXTURE_CUBE		0x04
-#define RESOURCE_BUFFER				0x05
+#define RESOURCE_TEXTURE1D			0x01
+#define RESOURCE_TEXTURE2D			0x02
+#define RESOURCE_TEXTURE2D_ARRAY	0x03	//[]
+#define RESOURCE_TEXTURE2DARRAY		0x04
+#define RESOURCE_TEXTURE_CUBE		0x05
+#define RESOURCE_BUFFER				0x06
+#define RESOURCE_STRUCTURED_BUFFER	0x07
 
 class CGameObject;
 
@@ -202,6 +204,9 @@ private:
 	int								m_nReferences = 0;
 
 	UINT							m_nTextureType = RESOURCE_TEXTURE2D;
+	DXGI_FORMAT						m_dxgiBufferFormat = DXGI_FORMAT_UNKNOWN;
+	int								m_nBufferElement = 0;
+	int								m_nBufferStride = 0;
 
 	int								m_nTextures = 0;
 	ID3D12Resource**				m_ppd3dTextures = NULL;
@@ -225,10 +230,15 @@ public:
 	void ReleaseShaderVariables();
 
 	void LoadTextureFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, wchar_t* pszFileName, UINT nIndex, bool bIsDDSFile = true);
+	void CreateBuffer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, void* pData, UINT nElements, UINT nStride, DXGI_FORMAT dxgiFormat, D3D12_HEAP_TYPE d3dHeapType, D3D12_RESOURCE_STATES d3dResourceStates, UINT nIndex);
+	void CreateTexture(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, void* pData, UINT nBytes, UINT nResourceType, UINT nWidth, UINT nHeight, UINT nDepthOrArraySize, UINT nMipLevels, D3D12_RESOURCE_FLAGS d3dResourceFlags, DXGI_FORMAT dxgiFormat, UINT nIndex);
 
-	int GetTextures() { return(m_nTextures); }
-	ID3D12Resource* GetTexture(int nIndex) { return(m_ppd3dTextures[nIndex]); }
-	UINT GetTextureType() { return(m_nTextureType); }
+	int GetTextures() const { return(m_nTextures); }
+	int GetBufferElement() const { return m_nBufferElement; }
+	int GetBufferStride() const { return m_nBufferStride; }
+	ID3D12Resource* GetTexture(int nIndex) { return m_ppd3dTextures[nIndex]; }
+	UINT GetTextureType() const { return m_nTextureType; }
+	DXGI_FORMAT GetBufferFormat() const { return m_dxgiBufferFormat; }
 
 	void ReleaseUploadBuffers();
 };
@@ -417,6 +427,20 @@ public:
 
 	static void PrintFrameInfo(CGameObject* pGameObject, CGameObject* pParent);
 	static std::string m_pstrTextureFilePath;
+};
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class CParticleObject : public CGameObject {
+public:
+	CParticleObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, XMFLOAT3 xmf3Position, XMFLOAT3 xmf3Velocity, float fLifetime, XMFLOAT3 xmf3Acceleration, XMFLOAT3 xmf3Color, XMFLOAT2 xmf2Size, UINT nMaxParticles);
+	virtual ~CParticleObject();
+
+	CTexture*					m_pRandowmValueTexture = NULL;
+	CTexture*					m_pRandowmValueOnSphereTexture = NULL;
+
+	void ReleaseUploadBuffers();
+
+	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
+	virtual void OnPostRender();
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CBoundingBox : public CGameObject {

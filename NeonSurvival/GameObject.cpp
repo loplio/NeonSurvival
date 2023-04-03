@@ -382,7 +382,21 @@ void CTexture::LoadTextureFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 	else
 		m_ppd3dTextures[nIndex] = ::CreateTextureResourceFromWICFile(pd3dDevice, pd3dCommandList, pszFileName, &(m_ppd3dTextureUploadBuffers[nIndex]), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 }
-
+void CTexture::CreateBuffer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, void* pData, UINT nElements, UINT nStride, DXGI_FORMAT ndxgiFormat, D3D12_HEAP_TYPE d3dHeapType, D3D12_RESOURCE_STATES d3dResourceStates, UINT nIndex)
+{
+	m_nTextureType = RESOURCE_BUFFER;
+	m_dxgiBufferFormat = ndxgiFormat;
+	m_nBufferElement = nElements;
+	m_nBufferStride = nStride;
+	m_ppd3dTextures[nIndex] = ::CreateBufferResource(pd3dDevice, pd3dCommandList, pData, nElements * nStride, d3dHeapType, d3dResourceStates, &m_ppd3dTextureUploadBuffers[nIndex]);
+}
+void CTexture::CreateTexture(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, void* pData, UINT nBytes, UINT nResourceType, UINT nWidth, UINT nHeight, UINT nDepthOrArraySize, UINT nMipLevels, D3D12_RESOURCE_FLAGS d3dResourceFlags, DXGI_FORMAT dxgiFormat, UINT nIndex)
+{
+	m_nTextureType = nResourceType;
+	m_dxgiBufferFormat = dxgiFormat;
+	D3D12_RESOURCE_DIMENSION d3dResourceDimension = (nResourceType == RESOURCE_TEXTURE2D) ? D3D12_RESOURCE_DIMENSION_TEXTURE2D : D3D12_RESOURCE_DIMENSION_TEXTURE1D;
+	m_ppd3dTextures[nIndex] = ::CreateTextureResource(pd3dDevice, pd3dCommandList, pData, nBytes, d3dResourceDimension, nWidth, nHeight, nDepthOrArraySize, nMipLevels, d3dResourceFlags, dxgiFormat, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_GENERIC_READ, &m_ppd3dTextureUploadBuffers[nIndex]);
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 CMaterial::CMaterial(int nTextures)
@@ -1295,6 +1309,61 @@ CLoadedModelInfo* CGameObject::LoadGeometryAndAnimationFromFile(ID3D12Device* pd
 #endif
 
 	return(pLoadedModel);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+CParticleObject::CParticleObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, XMFLOAT3 xmf3Position, XMFLOAT3 xmf3Velocity, float fLifetime, XMFLOAT3 xmf3Acceleration, XMFLOAT3 xmf3Color, XMFLOAT2 xmf2Size, UINT nMaxParticles)
+{
+}
+CParticleObject::~CParticleObject()
+{
+	if (m_pRandowmValueTexture) m_pRandowmValueTexture->Release();
+	if (m_pRandowmValueOnSphereTexture) m_pRandowmValueOnSphereTexture->Release();
+}
+
+void CParticleObject::ReleaseUploadBuffers()
+{
+	if (m_pRandowmValueTexture) m_pRandowmValueTexture->ReleaseUploadBuffers();
+	if (m_pRandowmValueOnSphereTexture) m_pRandowmValueOnSphereTexture->ReleaseUploadBuffers();
+
+	CGameObject::ReleaseUploadBuffers();
+}
+
+void CParticleObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
+{
+	OnPrepareRender();
+
+	for (int i = 0; i < m_nMaterials; ++i)
+	{
+		if (m_ppMaterials[i])
+		{
+			if (m_ppMaterials[i]->m_pShader) m_ppMaterials[i]->m_pShader->OnPrepareRender(pd3dCommandList, 0);
+			for (int t = 0; t < m_ppMaterials[i]->m_nTextures; ++t)
+			{
+				if (m_ppMaterials[i]->m_ppTextures[t]) m_ppMaterials[i]->m_ppTextures[t]->UpdateShaderVariables(pd3dCommandList);
+			}
+
+			if (m_pRandowmValueTexture) m_pRandowmValueTexture->UpdateShaderVariables(pd3dCommandList);
+			if (m_pRandowmValueOnSphereTexture) m_pRandowmValueOnSphereTexture->UpdateShaderVariables(pd3dCommandList);
+		}
+	}
+
+	UpdateShaderVariables(pd3dCommandList);
+
+	if (m_pMesh) m_pMesh->PreRender(pd3dCommandList, 0); //Stream Output
+	if (m_pMesh) m_pMesh->Render(pd3dCommandList, 0); //Stream Output
+	if (m_pMesh) m_pMesh->PostRender(pd3dCommandList, 0); //Stream Output
+
+	for (int i = 0; i < m_nMaterials; ++i)
+		if (m_ppMaterials[i] && m_ppMaterials[i]->m_pShader) m_ppMaterials[i]->m_pShader->OnPrepareRender(pd3dCommandList, 1);
+
+	if (m_pMesh) m_pMesh->PreRender(pd3dCommandList, 1); //Draw
+	if (m_pMesh) m_pMesh->Render(pd3dCommandList, 1); //Draw
+}
+void CParticleObject::OnPostRender()
+{
+	if (m_pMesh) m_pMesh->OnPostRender(0); //Read Stream Output Buffer Filled Size
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -29,6 +29,16 @@ struct LIGHTS
 	int gnLights;
 };
 
+struct FRAMEWORK_INFO
+{
+	float					m_fCurrentTime;
+	float					m_fElapsedTime;
+	float					m_fSecondsPerFirework = 1.0f;
+	int						m_nFlareParticlesToEmit = 30;
+	XMFLOAT3				m_xmf3Gravity = XMFLOAT3(0.0f, -9.8f, 0.0f);
+	int						m_nMaxFlareType2Particles = 15;
+};
+
 class CScene {
 public:
 	CScene(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
@@ -55,9 +65,12 @@ public:
 	CGameObject* PickObjectPointedByCursor(int xClient, int yClient, CCamera* pCamera);
 
 	// ProcessCompute.
+	void Update(float fTimeElapsed, float fTotalTime);
 	virtual void AnimateObjects(float fTimeElapsed);
 
 	// ProcessOutput.
+	void RenderParticle(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
+	void OnPostRenderParticle();
 	virtual void OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera *pCamera);
 
@@ -97,12 +110,17 @@ public:
 		float fFalloff, float fTheta, float fPhi, bool bEnable, int nType, float fRange, float padding);
 
 	float									m_fElapsedTime = 0.0f;
+	float									m_fCurrentTime = 0.0f;
 
 	// Lighting.
 	int										m_nLights = 0;
 	LIGHT*									m_pLights = NULL;
 	ID3D12Resource*							m_pd3dcbLights = NULL;
 	LIGHTS*									m_pcbMappedLights = NULL;
+
+	// Framwork_info.
+	ID3D12Resource*							m_pd3dcbFrameworkInfo = NULL;
+	FRAMEWORK_INFO*							m_pcbMappedFrameworkInfo = NULL;
 
 	XMFLOAT4								m_xmf4GlobalAmbient;
 
@@ -115,6 +133,7 @@ public:
 	CHeightMapTerrain*						m_pTerrain = NULL;
 	std::shared_ptr<CPlayer>				m_pPlayer = NULL;
 	std::shared_ptr<CBoundingBoxObjects>	m_pBBObjects = NULL;
+	std::vector<CParticleObject*>			m_vParticleObjects;
 	std::vector<CGameObject*>				m_vGameObjects;
 	std::vector<CGameObject*>				m_vHierarchicalGameObjects;
 };

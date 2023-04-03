@@ -129,7 +129,7 @@ void CGameFramework_Neon::OnCreate(HINSTANCE hInstance, HWND hMainWnd)
 }
 void CGameFramework_Neon::FrameAdvance()
 {
-	m_GameTimer.Tick(0.0f);
+	m_GameTimer.Tick(60.0f);
 
 	m_KeyboardInput->DataProcessing();
 	m_MouseInput->DataProcessing();

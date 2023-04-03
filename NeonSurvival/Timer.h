@@ -13,6 +13,7 @@ public:
 	void Tick(float fLockFPS = 0.0f);
 	unsigned long GetFrameRate(LPTSTR lpszString = NULL, int nCharacters = 0) const;
 	float GetTimeElapsed() const;
+	float GetTotalTime() const;
 
 private:
 	bool m_bHardwareHasPerformanceCounter;
@@ -21,6 +22,7 @@ private:
 	__int64 m_nCurrentTime;
 	__int64 m_nLastTime;
 	__int64 m_nPerformanceFrequency;
+	__int64	m_nBasePerformanceCounter;
 
 	float m_fFrameTime[MAX_SAMPLE_COUNT];
 	ULONG m_nSampleCount;

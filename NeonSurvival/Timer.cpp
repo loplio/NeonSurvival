@@ -19,6 +19,7 @@ CGameTimer::CGameTimer()
 	m_nCurrentFrameRate = 0;
 	m_nFramesPerSecond = 0;
 	m_fFPSTimeElapsed = 0.0f;
+	m_nBasePerformanceCounter = m_nLastTime;
 }
 
 CGameTimer::~CGameTimer()
@@ -94,6 +95,11 @@ unsigned long CGameTimer::GetFrameRate(LPTSTR lpszString, int nCharacters) const
 float CGameTimer::GetTimeElapsed() const
 {
 	return(m_fTimeElapsed);
+}
+
+float CGameTimer::GetTotalTime() const
+{
+	return(float((m_nCurrentTime - m_nBasePerformanceCounter) * m_fTimeScale));
 }
 
 void CGameTimer::Reset()
