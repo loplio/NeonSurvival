@@ -2,6 +2,8 @@
 #include "DDSTextureLoader12.h"
 #include "WICTextureLoader12.h"
 
+UINT gnRtvDescriptorIncrementSize = 0;
+UINT gnDsvDescriptorIncrementSize = 0;
 UINT gnCbvSrvDescriptorIncrementSize = 0;
 
 void WaitForGpuComplete(ID3D12CommandQueue* pd3dCommandQueue, ID3D12Fence* pd3dFence, UINT64 nFenceValue, HANDLE hFenceEvent)

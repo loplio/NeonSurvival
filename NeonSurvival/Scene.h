@@ -35,7 +35,7 @@ struct FRAMEWORK_INFO
 	float					m_fElapsedTime;
 	float					m_fSecondsPerFirework = 1.0f;
 	int						m_nFlareParticlesToEmit = 30;
-	XMFLOAT3				m_xmf3Gravity = XMFLOAT3(0.0f, -9.8f, 0.0f);
+	XMFLOAT3				m_xmf3Gravity = XMFLOAT3(0.0f, PIXEL_KPH(-9.8), 0.0f);
 	int						m_nMaxFlareType2Particles = 15;
 };
 
@@ -44,8 +44,11 @@ public:
 	CScene(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual ~CScene();
 
+	ID3D12RootSignature* CreateComputeRootSignature(ID3D12Device* pd3dDevice);
+	ID3D12RootSignature* GetComputeRootSignature();
 	ID3D12RootSignature* CreateGraphicsRootSignature(ID3D12Device* pd3dDevice);
 	ID3D12RootSignature* GetGraphicsRootSignature();
+	ID3D12RootSignature* CreateRootSignature(ID3D12Device* pd3dDevice, D3D12_ROOT_SIGNATURE_FLAGS d3dRootSignatureFlags, UINT nRootParameters, D3D12_ROOT_PARAMETER* pd3dRootParameters, UINT nStaticSamplerDescs, D3D12_STATIC_SAMPLER_DESC* pd3dStaticSamplerDescs);
 
 	// ShaderVariable.
 	virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
@@ -75,25 +78,30 @@ public:
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera *pCamera);
 
 protected:
+	ID3D12RootSignature*				m_pd3dComputeRootSignature = NULL;
 	ID3D12RootSignature*				m_pd3dGraphicsRootSignature = NULL;
 
-	static ID3D12DescriptorHeap*		m_pd3dCbvSrvDescriptorHeap;
+	static ID3D12DescriptorHeap*		m_pd3dCbvSrvUavDescriptorHeap;
 
 	static D3D12_CPU_DESCRIPTOR_HANDLE	m_d3dCbvCPUDescriptorStartHandle;
 	static D3D12_GPU_DESCRIPTOR_HANDLE	m_d3dCbvGPUDescriptorStartHandle;
 	static D3D12_CPU_DESCRIPTOR_HANDLE	m_d3dSrvCPUDescriptorStartHandle;
 	static D3D12_GPU_DESCRIPTOR_HANDLE	m_d3dSrvGPUDescriptorStartHandle;
-
+	static D3D12_CPU_DESCRIPTOR_HANDLE	m_d3dUavCPUDescriptorStartHandle;
+	static D3D12_GPU_DESCRIPTOR_HANDLE	m_d3dUavGPUDescriptorStartHandle;
+	
 	static D3D12_CPU_DESCRIPTOR_HANDLE	m_d3dCbvCPUDescriptorNextHandle;
 	static D3D12_GPU_DESCRIPTOR_HANDLE	m_d3dCbvGPUDescriptorNextHandle;
 	static D3D12_CPU_DESCRIPTOR_HANDLE	m_d3dSrvCPUDescriptorNextHandle;
 	static D3D12_GPU_DESCRIPTOR_HANDLE	m_d3dSrvGPUDescriptorNextHandle;
+	static D3D12_CPU_DESCRIPTOR_HANDLE	m_d3dUavCPUDescriptorNextHandle;
+	static D3D12_GPU_DESCRIPTOR_HANDLE	m_d3dUavGPUDescriptorNextHandle;
 
 public:
-	static void CreateCbvSrvDescriptorHeaps(ID3D12Device* pd3dDevice, int nConstantBufferViews, int nShaderResourceViews);
+	static void CreateCbvSrvDescriptorHeaps(ID3D12Device* pd3dDevice, int nConstantBufferViews, int nShaderResourceViews, int nUnorderedAccessViews);
 
 	static D3D12_GPU_DESCRIPTOR_HANDLE CreateConstantBufferViews(ID3D12Device* pd3dDevice, int nConstantBufferViews, ID3D12Resource* pd3dConstantBuffers, UINT nStride);
-	static D3D12_GPU_DESCRIPTOR_HANDLE CreateShaderResourceViews(ID3D12Device* pd3dDevice, CTexture* pTexture, UINT nRootParameter, bool bAutoIncrement);
+	static D3D12_GPU_DESCRIPTOR_HANDLE CreateSRVUAVs(ID3D12Device* pd3dDevice, CTexture* pTexture, UINT nRootParameter, bool bAutoIncrement, bool IsGraphics = true, bool IsSrv = true, UINT startIndex = 0, UINT nViews = 0);
 
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUCbvDescriptorStartHandle() { return(m_d3dCbvCPUDescriptorStartHandle); }
 	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUCbvDescriptorStartHandle() { return(m_d3dCbvGPUDescriptorStartHandle); }
@@ -126,6 +134,7 @@ public:
 
 	// Shader(Include Object).
 	std::vector<CShader*>					m_ppShaders;
+	std::vector<CComputeShader*>			m_ppComputeShaders;
 	//CInstancingShader*					m_pShaders = NULL;
 
 	// Objects.

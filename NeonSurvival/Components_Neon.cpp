@@ -218,7 +218,7 @@ CCamera* Player_Neon::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 //-------------------------------------------------------------------------------
 Scene_Neon::Scene_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) : CScene(pd3dDevice, pd3dCommandList)
 {
-	CreateCbvSrvDescriptorHeaps(pd3dDevice, 10, 100);
+	CreateCbvSrvDescriptorHeaps(pd3dDevice, 10, 100, 1);
 
 	// Terrain Build.
 	XMFLOAT3 xmf3Scale(12.0f, 1.0f, 12.0f);
@@ -264,7 +264,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.reserve(5);
 
 	// ParticleObjects.
-	m_vParticleObjects.push_back(new CParticleObject_Neon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, XMFLOAT3(3100.0f, 290.0f, 3100.0f), XMFLOAT3(0.0f, 65.0f, 0.0f), 0.0f, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 0.0f, 0.0f), XMFLOAT2(8.0f, 8.0f), MAX_PARTICLES));
+	m_vParticleObjects.push_back(new CParticleObject_Neon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, XMFLOAT3(3100.0f, 290.0f, 3100.0f), XMFLOAT3(0.0f, PIXEL_KPH(60), 0.0f), 0.0f, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 0.0f, 0.0f), XMFLOAT2(8.0f, 8.0f), MAX_PARTICLES));
 
 	// GameObjects.
 	m_vGameObjects.push_back(new Crosshair(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, 0.0035f, 0.02f, 0.03f, 0.003f, true));
@@ -289,6 +289,17 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 
 	// ShaderObjects Build.
 	m_ppShaders.reserve(5);
+	m_ppShaders.push_back(new CShader);
+	m_ppComputeShaders.reserve(5);
+	m_ppComputeShaders.push_back(new CComputeShader);
+
+	CAddTexturesComputeShader* pComputeShader = new CAddTexturesComputeShader();
+	pComputeShader->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
+	m_ppComputeShaders.back() = pComputeShader;
+
+	CTextureToFullScreenShader* pGraphicsShader = new CTextureToFullScreenShader(pComputeShader->m_pTexture);
+	pGraphicsShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_ppShaders.back() = pGraphicsShader;
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
@@ -410,9 +421,9 @@ CParticleObject_Neon::CParticleObject_Neon(ID3D12Device* pd3dDevice, ID3D12Graph
 	CParticleShader* pShader = new CParticleShader();
 	pShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
 
-	CScene::CreateShaderResourceViews(pd3dDevice, pParticleTexture, ROOT_PARAMETER_PARTICLE_TEXTURE, true);
-	CScene::CreateShaderResourceViews(pd3dDevice, m_pRandowmValueTexture, ROOT_PARAMETER_RANDOM_TEXTURE, true);
-	CScene::CreateShaderResourceViews(pd3dDevice, m_pRandowmValueOnSphereTexture, ROOT_PARAMETER_RANDOM_ON_SPHERE_TEXTURE, true);
+	CScene::CreateSRVUAVs(pd3dDevice, pParticleTexture, ROOT_PARAMETER_PARTICLE_TEXTURE, true);
+	CScene::CreateSRVUAVs(pd3dDevice, m_pRandowmValueTexture, ROOT_PARAMETER_RANDOM_TEXTURE, true);
+	CScene::CreateSRVUAVs(pd3dDevice, m_pRandowmValueOnSphereTexture, ROOT_PARAMETER_RANDOM_ON_SPHERE_TEXTURE, true);
 
 	pMaterial->SetShader(pShader);
 	SetMaterial(0, pMaterial);

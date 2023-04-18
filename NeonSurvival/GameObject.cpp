@@ -307,14 +307,23 @@ void CLoadedModelInfo::PrepareSkinning()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-CTexture::CTexture(int nTextures, UINT nTextureType, int nSamplers, int nRootParameters, int nRows, int nCols)
+CTexture::CTexture(int nTextures, UINT nTextureType, int nSamplers, int nRootParameters, int nGraphicsSrvGpuHandles, int nComputeSrvGpuHandles, int nComputeUavGpuHandles)
 {
 	m_nTextureType = nTextureType;
 	m_nTextures = nTextures;
+	if(nGraphicsSrvGpuHandles || nComputeSrvGpuHandles || nComputeUavGpuHandles)
+		m_nGraphicsSrvGpuHandles = nGraphicsSrvGpuHandles;
+	else 
+		m_nGraphicsSrvGpuHandles = nTextures;
+	m_nComputeSrvGpuHandles = nComputeSrvGpuHandles;
+	m_nComputeUavGpuHandles = nComputeUavGpuHandles;
 
 	if (m_nTextures > 0)
 	{
-		m_pRootArgumentInfos = new SRVROOTARGUMENTINFO[m_nTextures];
+		if (m_nGraphicsSrvGpuHandles) m_pGraphicsSrvRootArgumentInfos = new GRAPHICS_SRVROOTARGUMENTINFO[m_nGraphicsSrvGpuHandles];
+		if (m_nComputeSrvGpuHandles) m_pComputeSrvRootArgumentInfos = new COMPUTE_SRVROOTARGUMENTINFO[m_nComputeSrvGpuHandles];
+		if (m_nComputeUavGpuHandles) m_pComputeUavRootArgumentInfos = new COMPUTE_UAVROOTARGUMENTINFO[m_nComputeUavGpuHandles];
+
 		m_ppd3dTextureUploadBuffers = new ID3D12Resource * [m_nTextures];
 		m_ppd3dTextures = new ID3D12Resource * [m_nTextures];
 		for (int i = 0; i < m_nTextures; i++) m_ppd3dTextureUploadBuffers[i] = m_ppd3dTextures[i] = NULL;
@@ -332,35 +341,76 @@ CTexture::~CTexture()
 	}
 
 	if (m_pd3dSamplerGpuDescriptorHandles) delete[] m_pd3dSamplerGpuDescriptorHandles;
+
+	if (m_pGraphicsSrvRootArgumentInfos) delete m_pGraphicsSrvRootArgumentInfos;
+	if (m_pComputeSrvRootArgumentInfos) delete m_pComputeSrvRootArgumentInfos;
+	if (m_pComputeUavRootArgumentInfos) delete m_pComputeUavRootArgumentInfos;
 }
 
-void CTexture::SetRootArgument(int nIndex, UINT nRootParameterIndex, D3D12_GPU_DESCRIPTOR_HANDLE d3dSrvGpuDescriptorHandle)
+void CTexture::SetGraphicsSrvRootArgument(int nIndex, UINT nRootParameterIndex, D3D12_GPU_DESCRIPTOR_HANDLE d3dSrvGpuDescriptorHandle)
 {
-	m_pRootArgumentInfos[nIndex].m_nRootParameterIndex = nRootParameterIndex;
-	m_pRootArgumentInfos[nIndex].m_d3dSrvGpuDescriptorHandle = d3dSrvGpuDescriptorHandle;
+	m_pGraphicsSrvRootArgumentInfos[nIndex].m_nRootParameterIndex = nRootParameterIndex;
+	m_pGraphicsSrvRootArgumentInfos[nIndex].m_d3dSrvGpuDescriptorHandle = d3dSrvGpuDescriptorHandle;
+}
+void CTexture::SetComputeSrvRootArgument(int nIndex, UINT nRootParameterIndex, D3D12_GPU_DESCRIPTOR_HANDLE d3dSrvGpuDescriptorHandle)
+{
+	m_pComputeSrvRootArgumentInfos[nIndex].m_nRootParameterIndex = nRootParameterIndex;
+	m_pComputeSrvRootArgumentInfos[nIndex].m_d3dSrvGpuDescriptorHandle = d3dSrvGpuDescriptorHandle;
+}
+void CTexture::SetComputeUavRootArgument(int nIndex, UINT nRootParameterIndex, D3D12_GPU_DESCRIPTOR_HANDLE d3dUavGpuDescriptorHandle)
+{
+	m_pComputeUavRootArgumentInfos[nIndex].m_nRootParameterIndex = nRootParameterIndex;
+	m_pComputeUavRootArgumentInfos[nIndex].m_d3dUavGpuDescriptorHandle = d3dUavGpuDescriptorHandle;
 }
 void CTexture::SetSampler(int nIndex, D3D12_GPU_DESCRIPTOR_HANDLE d3dSamplerGpuDescriptorHandle)
 {
 	m_pd3dSamplerGpuDescriptorHandles[nIndex] = d3dSamplerGpuDescriptorHandle;
 }
 
-void CTexture::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
+void CTexture::UpdateGraphicsShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
 {
 	if (m_nTextureType == RESOURCE_TEXTURE2D_ARRAY)
 	{
-		pd3dCommandList->SetGraphicsRootDescriptorTable(m_pRootArgumentInfos[0].m_nRootParameterIndex, m_pRootArgumentInfos[0].m_d3dSrvGpuDescriptorHandle);
+		pd3dCommandList->SetGraphicsRootDescriptorTable(m_pGraphicsSrvRootArgumentInfos[0].m_nRootParameterIndex, m_pGraphicsSrvRootArgumentInfos[0].m_d3dSrvGpuDescriptorHandle);
 	}
 	else
 	{
-		for (int i = 0; i < m_nTextures; i++)
+		for (int i = 0; i < m_nGraphicsSrvGpuHandles; i++)
 		{
-			pd3dCommandList->SetGraphicsRootDescriptorTable(m_pRootArgumentInfos[i].m_nRootParameterIndex, m_pRootArgumentInfos[i].m_d3dSrvGpuDescriptorHandle);
+			pd3dCommandList->SetGraphicsRootDescriptorTable(m_pGraphicsSrvRootArgumentInfos[i].m_nRootParameterIndex, m_pGraphicsSrvRootArgumentInfos[i].m_d3dSrvGpuDescriptorHandle);
 		}
 	}
 }
-void CTexture::UpdateShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList, int nIndex)
+void CTexture::UpdateComputeShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
 {
-	pd3dCommandList->SetGraphicsRootDescriptorTable(m_pRootArgumentInfos[nIndex].m_nRootParameterIndex, m_pRootArgumentInfos[nIndex].m_d3dSrvGpuDescriptorHandle);
+	if (m_nTextureType == RESOURCE_TEXTURE2D_ARRAY)
+	{
+		pd3dCommandList->SetComputeRootDescriptorTable(m_pComputeSrvRootArgumentInfos[0].m_nRootParameterIndex, m_pComputeSrvRootArgumentInfos[0].m_d3dSrvGpuDescriptorHandle);
+	}
+	else
+	{
+		for (int i = 0; i < m_nComputeSrvGpuHandles; i++)
+		{
+			pd3dCommandList->SetComputeRootDescriptorTable(m_pComputeSrvRootArgumentInfos[i].m_nRootParameterIndex, m_pComputeSrvRootArgumentInfos[i].m_d3dSrvGpuDescriptorHandle);
+		}
+	}
+
+	for (int i = 0; i < m_nComputeUavGpuHandles; i++)
+	{
+		pd3dCommandList->SetComputeRootDescriptorTable(m_pComputeUavRootArgumentInfos[i].m_nRootParameterIndex, m_pComputeUavRootArgumentInfos[i].m_d3dUavGpuDescriptorHandle);
+	}
+}
+void CTexture::UpdateGraphicsSrvShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList, int nIndex)
+{
+	pd3dCommandList->SetGraphicsRootDescriptorTable(m_pGraphicsSrvRootArgumentInfos[nIndex].m_nRootParameterIndex, m_pGraphicsSrvRootArgumentInfos[nIndex].m_d3dSrvGpuDescriptorHandle);
+}
+void CTexture::UpdateComputeSrvShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList, int nIndex)
+{
+	pd3dCommandList->SetComputeRootDescriptorTable(m_pComputeSrvRootArgumentInfos[nIndex].m_nRootParameterIndex, m_pComputeSrvRootArgumentInfos[nIndex].m_d3dSrvGpuDescriptorHandle);
+}
+void CTexture::UpdateComputeUavShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList, int nIndex)
+{
+	pd3dCommandList->SetComputeRootDescriptorTable(m_pComputeUavRootArgumentInfos[nIndex].m_nRootParameterIndex, m_pComputeUavRootArgumentInfos[nIndex].m_d3dUavGpuDescriptorHandle);
 }
 void CTexture::ReleaseShaderVariables()
 {
@@ -451,7 +501,10 @@ void CMaterial::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList
 
 	for (int i = 0; i < m_nTextures; i++)
 	{
-		if (m_ppTextures[i]) m_ppTextures[i]->UpdateShaderVariable(pd3dCommandList, 0);
+		if (m_ppTextures[i])
+		{
+			if (m_ppTextures[i]->m_nGraphicsSrvGpuHandles) m_ppTextures[i]->UpdateGraphicsSrvShaderVariable(pd3dCommandList, 0);
+		}
 	}
 }
 void CMaterial::ReleaseShaderVariables()
@@ -522,7 +575,7 @@ void CMaterial::LoadTextureFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsComm
 			(*ppTexture)->LoadTextureFromFile(pd3dDevice, pd3dCommandList, pwstrTextureName, 0, true);
 			if (*ppTexture) (*ppTexture)->AddRef();
 
-			CScene::CreateShaderResourceViews(pd3dDevice, *ppTexture, nRootParameter, false);
+			CScene::CreateSRVUAVs(pd3dDevice, *ppTexture, nRootParameter, false);
 		}
 		else
 		{
@@ -1341,11 +1394,11 @@ void CParticleObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera
 			if (m_ppMaterials[i]->m_pShader) m_ppMaterials[i]->m_pShader->OnPrepareRender(pd3dCommandList, 0);
 			for (int t = 0; t < m_ppMaterials[i]->m_nTextures; ++t)
 			{
-				if (m_ppMaterials[i]->m_ppTextures[t]) m_ppMaterials[i]->m_ppTextures[t]->UpdateShaderVariables(pd3dCommandList);
+				if (m_ppMaterials[i]->m_ppTextures[t]) m_ppMaterials[i]->m_ppTextures[t]->UpdateGraphicsShaderVariables(pd3dCommandList);
 			}
 
-			if (m_pRandowmValueTexture) m_pRandowmValueTexture->UpdateShaderVariables(pd3dCommandList);
-			if (m_pRandowmValueOnSphereTexture) m_pRandowmValueOnSphereTexture->UpdateShaderVariables(pd3dCommandList);
+			if (m_pRandowmValueTexture) m_pRandowmValueTexture->UpdateGraphicsShaderVariables(pd3dCommandList);
+			if (m_pRandowmValueOnSphereTexture) m_pRandowmValueOnSphereTexture->UpdateGraphicsShaderVariables(pd3dCommandList);
 		}
 	}
 
@@ -1389,7 +1442,7 @@ CSkyBox::CSkyBox(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComman
 	pSkyBoxShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
 	pSkyBoxShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
-	CScene::CreateShaderResourceViews(pd3dDevice, pSkyBoxTexture, PARAMETER_SKYBOX_CUBE_TEXTURE, false);
+	CScene::CreateSRVUAVs(pd3dDevice, pSkyBoxTexture, PARAMETER_SKYBOX_CUBE_TEXTURE, false);
 
 	CMaterial* pSkyBoxMaterial = new CMaterial();
 	pSkyBoxMaterial->SetTexture(pSkyBoxTexture);
@@ -1431,7 +1484,7 @@ CHeightMapTerrain::CHeightMapTerrain(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 	pTerrainShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
 	pTerrainShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
 	
-	CScene::CreateShaderResourceViews(pd3dDevice, pTerrainTexture, PARAMETER_MAP_TEXTURE, false);
+	CScene::CreateSRVUAVs(pd3dDevice, pTerrainTexture, PARAMETER_MAP_TEXTURE, false);
 
 	CMaterial* pTerrainMaterial = new CMaterial();
 	pTerrainMaterial->SetTexture(pTerrainTexture);

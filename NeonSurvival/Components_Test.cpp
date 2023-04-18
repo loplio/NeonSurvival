@@ -209,7 +209,7 @@ CCamera* Player_Test::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 //-------------------------------------------------------------------------------
 Scene_Test::Scene_Test(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) : CScene(pd3dDevice, pd3dCommandList)
 {
-	CreateCbvSrvDescriptorHeaps(pd3dDevice, 0, 100);
+	CreateCbvSrvDescriptorHeaps(pd3dDevice, 0, 100, 1);
 
 	// Terrain Build.
 	XMFLOAT3 xmf3Scale(12.0f, 2.0f, 12.0f);

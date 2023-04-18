@@ -655,6 +655,65 @@ float4 PSParticleDraw(GS_PARTICLE_DRAW_OUTPUT input) : SV_TARGET
 {
 	float4 cColor = gtxtParticleTexture.Sample(gssWrap, input.uv);
 	cColor *= input.color;
+	//float2 center = float2(0.5f, 0.5f);
+	//float2 offset = input.uv - center;
+	//float distance = length(offset);
+	//cColor.rgb += pow(1.0f - distance, 8.0f);
+	return(cColor);
+}
+// Sample kernel used for Gaussian blur
+//float blurKernel[9] = { 1.0f / 16.0f, 2.0f / 16.0f, 1.0f / 16.0f, 2.0f / 16.0f, 4.0f / 16.0f, 2.0f / 16.0f, 1.0f / 16.0f, 2.0f / 16.0f, 1.0f / 16.0f };
+//float4 Glow(float2 uv)
+//{
+//	float4 color = 0;
+//	float2 center = float2(0.5f, 0.5f);
+//	float2 offset = uv - center;
+//	float distance = length(offset);
+//	float4 texel = tex2D(inputTexture, uv);
+//	float2 texelSize = 1.0f / float2(textureSize(inputTexture, 0)); // Apply the blur kernel
+//	for(int x = -1; x <= 1; x++)
+//	{
+//		for(int y = -1; y <= 1; y++)
+//		{
+//			float2 blurOffset = float2(x, y) * texelSize;
+//			float4 blurTexel = tex2D(inputTexture, uv + blurOffset); // Add a glow effect based on distance from center
+//			blurTexel.rgb += pow(1.0f - distance, 4.0f) * 0.5f;
+//			color += blurKernel[x+1 + (y+1)*3] * blurTexel;
+//		}
+//	}
+//	return color;
+//}
+
+Texture2D gtxtInputA : register(t0);
+Texture2D gtxtInputB : register(t1);
+
+RWTexture2D<float4> gtxtRWOutput : register(u0);
+
+[numthreads(32, 32, 1)]
+void CSAddTextures(int3 nDispatchID : SV_DispatchThreadID)
+{
+	//	gtxtRWOutput[nDispatchID.xy] = gtxtInputA[nDispatchID.xy] + gtxtInputB[nDispatchID.xy];
+	gtxtRWOutput[nDispatchID.xy] = lerp(gtxtInputA[nDispatchID.xy], gtxtInputB[nDispatchID.xy], 0.35f);
+}
+
+VS_TEXTURED_OUTPUT VSTextureToFullScreen(uint nVertexID : SV_VertexID)
+{
+	VS_TEXTURED_OUTPUT output;
+	if (nVertexID == 0) { output.position = float4(-1.0f, +1.0f, 0.0f, 1.0f); output.uv = float2(0.0f, 0.0f); }
+	if (nVertexID == 1) { output.position = float4(+1.0f, +1.0f, 0.0f, 1.0f); output.uv = float2(1.0f, 0.0f); }
+	if (nVertexID == 2) { output.position = float4(+1.0f, -1.0f, 0.0f, 1.0f); output.uv = float2(1.0f, 1.0f); }
+	if (nVertexID == 3) { output.position = float4(-1.0f, +1.0f, 0.0f, 1.0f); output.uv = float2(0.0f, 0.0f); }
+	if (nVertexID == 4) { output.position = float4(+1.0f, -1.0f, 0.0f, 1.0f); output.uv = float2(1.0f, 1.0f); }
+	if (nVertexID == 5) { output.position = float4(-1.0f, -1.0f, 0.0f, 1.0f); output.uv = float2(0.0f, 1.0f); }
+
+	return(output);
+}
+
+Texture2D gtxtOutput : register(t4);
+
+float4 PSTextureToFullScreen(VS_TEXTURED_OUTPUT input) : SV_Target
+{
+	float4 cColor = gtxtOutput.Sample(gssWrap, input.uv);
 
 	return(cColor);
 }

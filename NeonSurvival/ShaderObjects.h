@@ -196,3 +196,54 @@ public:
 	void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext = NULL) override;
 	void AnimateObjects(float fTimeElapsed) override;
 };
+
+//-------------------------------------------------------------------------------
+/*	CTextureToFullScreenShader												   */
+//-------------------------------------------------------------------------------
+class CTextureToFullScreenShader : public CShader {
+public:
+	CTextureToFullScreenShader(CTexture* pTexture);
+	virtual ~CTextureToFullScreenShader();
+
+	virtual D3D12_DEPTH_STENCIL_DESC CreateDepthStencilState();
+	virtual D3D12_SHADER_BYTECODE CreateVertexShader();
+	virtual D3D12_SHADER_BYTECODE CreatePixelShader();
+
+	virtual void CreateGraphicsPipelineState(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dRootSignature);
+
+	virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
+	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
+	virtual void ReleaseShaderVariables();
+
+	virtual void ReleaseUploadBuffers();
+
+	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int nPipelineState = 0);
+
+public:
+	CTexture* m_pTexture = NULL;
+};
+
+//-------------------------------------------------------------------------------
+/*	CAddTexturesComputeShader												   */
+//-------------------------------------------------------------------------------
+class CAddTexturesComputeShader : public CComputeShader {
+public:
+	CAddTexturesComputeShader();
+	virtual ~CAddTexturesComputeShader();
+
+public:
+	virtual D3D12_SHADER_BYTECODE CreateComputeShader();
+
+	virtual void CreateComputePipelineState(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dRootSignature, UINT cxThreadGroups = 1, UINT cyThreadGroups = 1, UINT czThreadGroups = 1);
+
+	virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
+	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
+	virtual void ReleaseShaderVariables();
+
+	virtual void ReleaseUploadBuffers();
+
+	virtual void Dispatch(ID3D12GraphicsCommandList* pd3dCommandList);
+
+public:
+	CTexture* m_pTexture = NULL;
+};

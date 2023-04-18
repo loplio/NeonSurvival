@@ -90,6 +90,7 @@ using Microsoft::WRL::ComPtr;
 #define ROOT_PARAMETER_RANDOM_TEXTURE	17
 #define ROOT_PARAMETER_RANDOM_ON_SPHERE_TEXTURE	18
 #define ROOT_PARAMETER_FRAMEWORK_INFO	19
+#define ROOT_PARAMETER_OUTPUT			20
 
 #define MAX_LIGHTS 8
 #define MAX_MATERIALS 8
@@ -124,6 +125,8 @@ inline bool IsEqual(float fA, float fB, float fEpsilon) { return(::IsZero(fA - f
 inline float InverseSqrt(float fValue) { return 1.0f / sqrtf(fValue); }
 inline void Swap(float* pfS, float* pfT) { float fTemp = *pfS; *pfS = *pfT; *pfT = fTemp; }
 
+extern UINT	gnRtvDescriptorIncrementSize;
+extern UINT gnDsvDescriptorIncrementSize;
 extern UINT gnCbvSrvDescriptorIncrementSize;
 
 extern BYTE ReadStringFromFile(FILE* pInFile, char* pstrToken);

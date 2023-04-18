@@ -218,7 +218,7 @@ void TexturedObjects_1::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 	ppTextures[0] = new CTexture(1, RESOURCE_TEXTURE2D, 0, 1);
 	ppTextures[0]->LoadTextureFromFile(pd3dDevice, pd3dCommandList, (wchar_t*)L"Image/Ceiling.dds", 0, true);
 
-	CScene::CreateShaderResourceViews(pd3dDevice, ppTextures[0], 4, true);
+	CScene::CreateSRVUAVs(pd3dDevice, ppTextures[0], 4, true);
 
 	CMaterial* ppMaterials[1];
 	ppMaterials[0] = new CMaterial();
@@ -494,4 +494,167 @@ void BlendTextureObjects_1::BuildObjects(ID3D12Device* pd3dDevice, ID3D12Graphic
 void BlendTextureObjects_1::AnimateObjects(float fTimeElapsed)
 {
 	//if (!m_ppObjects.empty()) m_ppObjects[0]->BatchAnimate(fTimeElapsed);
+}
+
+//-------------------------------------------------------------------------------
+/*	CTextureToFullScreenShader												   */
+//-------------------------------------------------------------------------------
+CTextureToFullScreenShader::CTextureToFullScreenShader(CTexture* pTexture)
+{
+#ifdef _WITH_SHARED_TEXTURE
+	m_pTexture = pTexture;
+	if (m_pTexture) m_pTexture->AddRef();
+#endif
+}
+
+CTextureToFullScreenShader::~CTextureToFullScreenShader()
+{
+#ifndef _WITH_SHARED_TEXTURE
+	if (m_pTexture) m_pTexture->Release();
+#endif
+}
+
+D3D12_DEPTH_STENCIL_DESC CTextureToFullScreenShader::CreateDepthStencilState()
+{
+	D3D12_DEPTH_STENCIL_DESC d3dDepthStencilDesc;
+	::ZeroMemory(&d3dDepthStencilDesc, sizeof(D3D12_DEPTH_STENCIL_DESC));
+	d3dDepthStencilDesc.DepthEnable = FALSE;
+	d3dDepthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+	d3dDepthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+	d3dDepthStencilDesc.StencilEnable = FALSE;
+	d3dDepthStencilDesc.StencilReadMask = 0x00;
+	d3dDepthStencilDesc.StencilWriteMask = 0x00;
+	d3dDepthStencilDesc.FrontFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
+	d3dDepthStencilDesc.FrontFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+	d3dDepthStencilDesc.FrontFace.StencilPassOp = D3D12_STENCIL_OP_KEEP;
+	d3dDepthStencilDesc.FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_NEVER;
+	d3dDepthStencilDesc.BackFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
+	d3dDepthStencilDesc.BackFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+	d3dDepthStencilDesc.BackFace.StencilPassOp = D3D12_STENCIL_OP_KEEP;
+	d3dDepthStencilDesc.BackFace.StencilFunc = D3D12_COMPARISON_FUNC_NEVER;
+
+	return(d3dDepthStencilDesc);
+}
+
+D3D12_SHADER_BYTECODE CTextureToFullScreenShader::CreateVertexShader()
+{
+	return(CShader::CompileShaderFromFile((wchar_t*)L"Shaders.hlsl", "VSTextureToFullScreen", "vs_5_1", &m_pd3dVertexShaderBlob));
+}
+
+D3D12_SHADER_BYTECODE CTextureToFullScreenShader::CreatePixelShader()
+{
+	return(CShader::CompileShaderFromFile((wchar_t*)L"Shaders.hlsl", "PSTextureToFullScreen", "ps_5_1", &m_pd3dPixelShaderBlob));
+}
+
+void CTextureToFullScreenShader::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+{
+#ifdef _WITH_SHARED_TEXTURE
+	CreateGraphicsShaderResourceView(pd3dDevice, m_pTexture, 2, 0, 0, 1);
+#else
+	m_pTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0, 1, 1);
+	m_pTexture->CreateTexture(pd3dDevice, pd3dCommandList, NULL, 0, RESOURCE_TEXTURE2D, 1024, 1024, 1, 1, D3D12_RESOURCE_FLAG_NONE, DXGI_FORMAT_R8G8B8A8_UNORM, 0);
+
+	CScene::CreateSRVUAVs(pd3dDevice, m_pTexture, ROOT_PARAMETER_OUTPUT, true);
+#endif
+
+}
+
+void CTextureToFullScreenShader::ReleaseShaderVariables()
+{
+}
+
+void CTextureToFullScreenShader::ReleaseUploadBuffers()
+{
+}
+
+void CTextureToFullScreenShader::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	if (m_pTexture) m_pTexture->UpdateGraphicsSrvShaderVariable(pd3dCommandList, 0);
+}
+
+void CTextureToFullScreenShader::CreateGraphicsPipelineState(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dRootSignature)
+{
+	m_nPipelineStates = 1;
+	m_ppd3dPipelineStates = new ID3D12PipelineState * [m_nPipelineStates];
+
+	SetDSVFormat(DXGI_FORMAT_D32_FLOAT);
+	CShader::CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, pd3dRootSignature);
+
+	CreateShaderVariables(pd3dDevice, pd3dCommandList);
+}
+
+void CTextureToFullScreenShader::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int nPipelineState)
+{
+	OnPrepareRender(pd3dCommandList);
+	UpdateShaderVariables(pd3dCommandList);
+
+	pd3dCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	pd3dCommandList->DrawInstanced(6, 1, 0, 0);
+}
+
+//-------------------------------------------------------------------------------
+/*	CAddTexturesComputeShader : public CComputeShader						   */
+//-------------------------------------------------------------------------------
+CAddTexturesComputeShader::CAddTexturesComputeShader()
+{
+}
+
+CAddTexturesComputeShader::~CAddTexturesComputeShader()
+{
+}
+
+D3D12_SHADER_BYTECODE CAddTexturesComputeShader::CreateComputeShader()
+{
+	return(CShader::CompileShaderFromFile((wchar_t*)L"Shaders.hlsl", "CSAddTextures", "cs_5_1", &m_pd3dGeometryShaderBlob));
+}
+
+void CAddTexturesComputeShader::CreateComputePipelineState(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dRootSignature, UINT cxThreadGroups, UINT cyThreadGroups, UINT czThreadGroups)
+{
+	m_nPipelineStates = 1;
+	m_ppd3dPipelineStates = new ID3D12PipelineState * [m_nPipelineStates];
+
+	CComputeShader::CreateComputePipelineState(pd3dDevice, pd3dRootSignature, cxThreadGroups, cyThreadGroups, czThreadGroups);
+
+	CreateShaderVariables(pd3dDevice, pd3dCommandList);
+}
+
+void CAddTexturesComputeShader::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	m_pTexture = new CTexture(3, RESOURCE_TEXTURE2D, 0, 1, 0, 2, 1);
+
+	m_pTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, (wchar_t*)L"Image/InputA.dds", 0); //1024x1024
+	m_pTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, (wchar_t*)L"Image/InputC.dds", 1); //1024x1024
+	ID3D12Resource* pd3dResource = m_pTexture->GetTexture(0);
+	D3D12_RESOURCE_DESC d3dResourceDesc = pd3dResource->GetDesc();
+	m_pTexture->CreateTexture(pd3dDevice, pd3dCommandList, NULL, 0, RESOURCE_TEXTURE2D, d3dResourceDesc.Width, d3dResourceDesc.Height, 1, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, DXGI_FORMAT_R8G8B8A8_UNORM, 2);
+
+	CScene::CreateSRVUAVs(pd3dDevice, m_pTexture, 0, true, false, true, 0, 2);
+	CScene::CreateSRVUAVs(pd3dDevice, m_pTexture, 1, true, false, false, 2, 1);
+
+	m_cxThreadGroups = ceil(d3dResourceDesc.Width / 32.0f);
+	m_cyThreadGroups = ceil(d3dResourceDesc.Height / 32.0f);
+}
+
+void CAddTexturesComputeShader::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	if (m_pTexture) m_pTexture->UpdateComputeSrvShaderVariable(pd3dCommandList, 0);
+	if (m_pTexture) m_pTexture->UpdateComputeUavShaderVariable(pd3dCommandList, 0);
+}
+
+void CAddTexturesComputeShader::ReleaseShaderVariables()
+{
+	if (m_pTexture) m_pTexture->Release();
+}
+
+void CAddTexturesComputeShader::ReleaseUploadBuffers()
+{
+	if (m_pTexture) m_pTexture->ReleaseUploadBuffers();
+}
+
+void CAddTexturesComputeShader::Dispatch(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	OnPrepareRender(pd3dCommandList);
+	UpdateShaderVariables(pd3dCommandList);
+
+	pd3dCommandList->Dispatch(m_cxThreadGroups, m_cyThreadGroups, m_czThreadGroups);
 }
