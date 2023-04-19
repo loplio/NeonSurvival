@@ -190,10 +190,10 @@ ID3D12RootSignature* CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevic
 			pd3dRootParameters[ROOT_PARAMETER_LIGHT].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 			break;
 		default:
-			pd3dRootParameters[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-			pd3dRootParameters[4].DescriptorTable.NumDescriptorRanges = 1; //Texture
-			pd3dRootParameters[4].DescriptorTable.pDescriptorRanges = &pd3dDescriptorRanges[0];
-			pd3dRootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+			pd3dRootParameters[ROOT_PARAMETER_TEXTURE].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+			pd3dRootParameters[ROOT_PARAMETER_TEXTURE].DescriptorTable.NumDescriptorRanges = 1; //Texture
+			pd3dRootParameters[ROOT_PARAMETER_TEXTURE].DescriptorTable.pDescriptorRanges = &pd3dDescriptorRanges[0];
+			pd3dRootParameters[ROOT_PARAMETER_TEXTURE].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 			pd3dRootParameters[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 			pd3dRootParameters[5].DescriptorTable.NumDescriptorRanges = 1;
@@ -559,11 +559,11 @@ void CScene::OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera
 	{
 		m_ppComputeShaders[i]->Dispatch(pd3dCommandList);
 
-		ID3D12Resource* pd3dSource = ((CAddTexturesComputeShader*)m_ppComputeShaders[0])->m_pTexture->GetTexture(2);
-		::SynchronizeResourceTransition(pd3dCommandList, pd3dSource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
-		ID3D12Resource* pd3dDestination = ((CTextureToFullScreenShader*)m_ppShaders[0])->m_pTexture->GetTexture(0);
-		pd3dCommandList->CopyResource(pd3dDestination, pd3dSource);
-		::SynchronizeResourceTransition(pd3dCommandList, pd3dSource, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+		//ID3D12Resource* pd3dSource = ((CAddTexturesComputeShader*)m_ppComputeShaders[0])->m_pTexture->GetTexture(2);
+		//::SynchronizeResourceTransition(pd3dCommandList, pd3dSource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
+		//ID3D12Resource* pd3dDestination = ((CTextureToFullScreenShader*)m_ppShaders[0])->m_pTexture->GetTexture(0);
+		//pd3dCommandList->CopyResource(pd3dDestination, pd3dSource);
+		//::SynchronizeResourceTransition(pd3dCommandList, pd3dSource, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	}
 	pCamera->SetViewportsAndScissorRects(pd3dCommandList);
 	pCamera->UpdateShaderVariables(pd3dCommandList);
@@ -736,7 +736,7 @@ D3D12_UNORDERED_ACCESS_VIEW_DESC GetUnorderedAccessViewDesc(D3D12_RESOURCE_DESC 
 	return(d3dUnorderedAccessViewDesc);
 }
 
-D3D12_GPU_DESCRIPTOR_HANDLE CScene::CreateSRVUAVs(ID3D12Device* pd3dDevice, CTexture* pTexture, UINT nRootParameter, bool bAutoIncrement, bool IsGraphics, bool IsSrv, UINT startIndex, UINT nViews)
+D3D12_GPU_DESCRIPTOR_HANDLE CScene::CreateSRVUAVs(ID3D12Device* pd3dDevice, CTexture* pTexture, UINT nRootParameter, bool bAutoIncrement, bool IsGraphics, bool IsSrv, UINT startIndex, UINT nViews, UINT nRepetition)
 {
 	D3D12_GPU_DESCRIPTOR_HANDLE d3dSrvGPUDescriptorHandle = m_d3dSrvGPUDescriptorNextHandle;
 	if (pTexture)
@@ -760,9 +760,9 @@ D3D12_GPU_DESCRIPTOR_HANDLE CScene::CreateSRVUAVs(ID3D12Device* pd3dDevice, CTex
 				m_d3dSrvCPUDescriptorNextHandle.ptr += ::gnCbvSrvDescriptorIncrementSize;
 
 				if (IsGraphics) 
-					pTexture->SetGraphicsSrvRootArgument(argumentIndex, (bAutoIncrement) ? (nRootParameter + argumentIndex) : nRootParameter, m_d3dSrvGPUDescriptorNextHandle);
+					pTexture->SetGraphicsSrvRootArgument(argumentIndex + nRepetition, (bAutoIncrement) ? (nRootParameter + argumentIndex) : nRootParameter, m_d3dSrvGPUDescriptorNextHandle);
 				else 
-					pTexture->SetComputeSrvRootArgument(argumentIndex, (bAutoIncrement) ? (nRootParameter + argumentIndex) : nRootParameter, m_d3dSrvGPUDescriptorNextHandle);
+					pTexture->SetComputeSrvRootArgument(argumentIndex + nRepetition, (bAutoIncrement) ? (nRootParameter + argumentIndex) : nRootParameter, m_d3dSrvGPUDescriptorNextHandle);
 				m_d3dSrvGPUDescriptorNextHandle.ptr += ::gnCbvSrvDescriptorIncrementSize;
 			}
 			else
@@ -771,7 +771,7 @@ D3D12_GPU_DESCRIPTOR_HANDLE CScene::CreateSRVUAVs(ID3D12Device* pd3dDevice, CTex
 				pd3dDevice->CreateUnorderedAccessView(pShaderResource, NULL, &d3dUnorderedAccessViewDesc, m_d3dUavCPUDescriptorNextHandle);
 				m_d3dUavCPUDescriptorNextHandle.ptr += ::gnCbvSrvDescriptorIncrementSize;
 
-				pTexture->SetComputeUavRootArgument(argumentIndex, (bAutoIncrement) ? (nRootParameter + argumentIndex) : nRootParameter, m_d3dUavGPUDescriptorNextHandle);
+				pTexture->SetComputeUavRootArgument(argumentIndex + nRepetition, (bAutoIncrement) ? (nRootParameter + argumentIndex) : nRootParameter, m_d3dUavGPUDescriptorNextHandle);
 				m_d3dUavGPUDescriptorNextHandle.ptr += ::gnCbvSrvDescriptorIncrementSize;
 			}
 		}

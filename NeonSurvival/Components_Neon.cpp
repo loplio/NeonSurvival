@@ -218,7 +218,7 @@ CCamera* Player_Neon::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 //-------------------------------------------------------------------------------
 Scene_Neon::Scene_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) : CScene(pd3dDevice, pd3dCommandList)
 {
-	CreateCbvSrvDescriptorHeaps(pd3dDevice, 10, 100, 1);
+	CreateCbvSrvDescriptorHeaps(pd3dDevice, 10, 100, 10);
 
 	// Terrain Build.
 	XMFLOAT3 xmf3Scale(12.0f, 1.0f, 12.0f);
@@ -293,9 +293,13 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_ppComputeShaders.reserve(5);
 	m_ppComputeShaders.push_back(new CComputeShader);
 
-	CAddTexturesComputeShader* pComputeShader = new CAddTexturesComputeShader();
+	CGaussian2DBlurComputeShader* pComputeShader = new CGaussian2DBlurComputeShader();
 	pComputeShader->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
 	m_ppComputeShaders.back() = pComputeShader;
+
+	//CAddTexturesComputeShader* pComputeShader = new CAddTexturesComputeShader();
+	//pComputeShader->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
+	//m_ppComputeShaders.back() = pComputeShader;
 
 	CTextureToFullScreenShader* pGraphicsShader = new CTextureToFullScreenShader(pComputeShader->m_pTexture);
 	pGraphicsShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);

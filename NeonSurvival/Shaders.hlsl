@@ -714,6 +714,98 @@ Texture2D gtxtOutput : register(t4);
 float4 PSTextureToFullScreen(VS_TEXTURED_OUTPUT input) : SV_Target
 {
 	float4 cColor = gtxtOutput.Sample(gssWrap, input.uv);
+	float4 cEdgeColor = gtxtOutput.Sample(gssWrap, input.uv) * 1.25f;
 
-	return(cColor);
+	return(cEdgeColor);
+	//	return(cColor * cEdgeColor);
+	//	return(cColor + cEdgeColor);
 }
+
+
+static float3 gf3ToLuminance = float3(0.3f, 0.59f, 0.11f);
+
+#define _WITH_2D_GAUSSIAN_BLUR
+#define _WITH_GROUPSHARED_MEMORY
+
+#ifdef _WITH_2D_GAUSSIAN_BLUR
+groupshared float4 gf4GroupSharedCache[2 + 32 + 2][2 + 32 + 2];
+
+static float gfGaussianBlurMask2D[5][5] = {
+	{ 1.0f / 273.0f, 4.0f / 273.0f, 7.0f / 273.0f, 4.0f / 273.0f, 1.0f / 273.0f },
+	{ 4.0f / 273.0f, 16.0f / 273.0f, 26.0f / 273.0f, 16.0f / 273.0f, 4.0f / 273.0f },
+	{ 7.0f / 273.0f, 26.0f / 273.0f, 41.0f / 273.0f, 26.0f / 273.0f, 7.0f / 273.0f },
+	{ 4.0f / 273.0f, 16.0f / 273.0f, 26.0f / 273.0f, 16.0f / 273.0f, 4.0f / 273.0f },
+	{ 1.0f / 273.0f, 4.0f / 273.0f, 7.0f / 273.0f, 4.0f / 273.0f, 1.0f / 273.0f }
+};
+
+[numthreads(32, 32, 1)]
+void CSGaussian2DBlur(int3 n3GroupThreadID : SV_GroupThreadID, int3 n3DispatchThreadID : SV_DispatchThreadID)
+{
+	if ((n3DispatchThreadID.x < 2) || (n3DispatchThreadID.x >= int(gtxtInputA.Length.x - 2)) || (n3DispatchThreadID.y < 2) || (n3DispatchThreadID.y >= int(gtxtInputA.Length.y - 2)))
+	{
+		gtxtRWOutput[n3DispatchThreadID.xy] = gtxtInputA[n3DispatchThreadID.xy];
+	}
+	else
+	{
+		float4 f4Color = float4(0, 0, 0, 0);
+		for (int i = -2; i <= 2; i++)
+		{
+			for (int j = -2; j <= 2; j++)
+			{
+				f4Color += gfGaussianBlurMask2D[i + 2][j + 2] * gtxtInputA[n3DispatchThreadID.xy + int2(i, j)];
+			}
+		}
+		gtxtRWOutput[n3DispatchThreadID.xy] = f4Color;
+	}
+}
+#else
+static float gfGaussianBlurMask1D[11] = { 0.05f, 0.05f, 0.1f, 0.1f, 0.1f, 0.2f, 0.1f, 0.1f, 0.1f, 0.05f, 0.05f };
+
+groupshared float4 gf4GroupSharedCache[256 + 5 + 5];
+
+[numthreads(256, 1, 1)]
+void CSHorizontalBlur(int3 n3GroupThreadID : SV_GroupThreadID, int3 n3DispatchThreadID : SV_DispatchThreadID)
+{
+	if (n3GroupThreadID.x < 5)
+	{
+		int x = max(n3DispatchThreadID.x - 5, 0);
+		gf4GroupSharedCache[n3GroupThreadID.x] = gtxtInputA[int2(x, n3DispatchThreadID.y)];
+	}
+	else if (n3GroupThreadID.x >= (256 - 5))
+	{
+		int x = min(n3DispatchThreadID.x + 5, gtxtInputA.Length.x - 1);
+		gf4GroupSharedCache[n3GroupThreadID.x + (2 * 5)] = gtxtInputA[int2(x, n3DispatchThreadID.y)];
+	}
+	gf4GroupSharedCache[n3GroupThreadID.x + 5] = gtxtInputA[min(n3DispatchThreadID.xy, gtxtInputA.Length.xy - 1)];
+
+	GroupMemoryBarrierWithGroupSync();
+
+	float4 vColor = float4(0, 0, 0, 0);
+	for (int i = -5; i <= 5; i++) vColor += gfGaussianBlurMask1D[i + 5] * gf4GroupSharedCache[n3GroupThreadID.x + 5 + i];
+
+	gtxtRWOutput[n3DispatchThreadID.xy] = vColor;
+}
+
+[numthreads(1, 256, 1)]
+void CSVerticalBlur(int3 n3GroupThreadID : SV_GroupThreadID, int3 n3DispatchThreadID : SV_DispatchThreadID)
+{
+	if (n3GroupThreadID.y < 5)
+	{
+		int y = max(n3DispatchThreadID.y - 5, 0);
+		gf4GroupSharedCache[n3GroupThreadID.y] = gtxtInputA[int2(n3DispatchThreadID.x, y)];
+	}
+	else if (n3GroupThreadID.y >= 256 - 5)
+	{
+		int y = min(n3DispatchThreadID.y + 5, gtxtInputA.Length.y - 1);
+		gf4GroupSharedCache[n3GroupThreadID.y + (2 * 5)] = gtxtInputA[int2(n3DispatchThreadID.x, y)];
+	}
+	gf4GroupSharedCache[n3GroupThreadID.y + 5] = gtxtInputA[min(n3DispatchThreadID.xy, gtxtInputA.Length.xy - 1)];
+
+	GroupMemoryBarrierWithGroupSync();
+
+	float4 vColor = float4(0, 0, 0, 0);
+	for (int i = -5; i <= 5; i++) vColor += gfGaussianBlurMask1D[i + 5] * gf4GroupSharedCache[n3GroupThreadID.y + 5 + i];
+
+	gtxtRWOutput[n3DispatchThreadID.xy] = vColor;
+}
+#endif

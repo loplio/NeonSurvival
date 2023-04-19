@@ -242,13 +242,13 @@ void CComputeShader::CreateComputePipelineState(ID3D12Device* pd3dDevice, ID3D12
 	m_czThreadGroups = czThreadGroups;
 }
 
-void CComputeShader::Dispatch(ID3D12GraphicsCommandList* pd3dCommandList)
+void CComputeShader::Dispatch(ID3D12GraphicsCommandList* pd3dCommandList, int nPipelineState)
 {
 	UpdateShaderVariables(pd3dCommandList);
 	pd3dCommandList->Dispatch(m_cxThreadGroups, m_cyThreadGroups, m_czThreadGroups);
 }
 
-void CComputeShader::Dispatch(ID3D12GraphicsCommandList* pd3dCommandList, UINT cxThreadGroups, UINT cyThreadGroups, UINT czThreadGroups)
+void CComputeShader::Dispatch(ID3D12GraphicsCommandList* pd3dCommandList, UINT cxThreadGroups, UINT cyThreadGroups, UINT czThreadGroups, int nPipelineState)
 {
 	UpdateShaderVariables(pd3dCommandList);
 	pd3dCommandList->Dispatch(cxThreadGroups, cyThreadGroups, czThreadGroups);
