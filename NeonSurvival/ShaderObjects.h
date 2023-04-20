@@ -249,13 +249,12 @@ public:
 };
 
 //-------------------------------------------------------------------------------
-/*	CGaussian2DBlurComputeShader											   */
+/*	CBrightAreaComputeShader													   */
 //-------------------------------------------------------------------------------
-class CGaussian2DBlurComputeShader : public CComputeShader
-{
+class CBrightAreaComputeShader : public CComputeShader {
 public:
-	CGaussian2DBlurComputeShader();
-	virtual ~CGaussian2DBlurComputeShader();
+	CBrightAreaComputeShader();
+	virtual ~CBrightAreaComputeShader();
 
 public:
 	virtual D3D12_SHADER_BYTECODE CreateComputeShader();
@@ -272,6 +271,33 @@ public:
 
 public:
 	CTexture* m_pTexture = NULL;
+};
+
+//-------------------------------------------------------------------------------
+/*	CGaussian2DBlurComputeShader											   */
+//-------------------------------------------------------------------------------
+class CGaussian2DBlurComputeShader : public CComputeShader {
+public:
+	CGaussian2DBlurComputeShader();
+	virtual ~CGaussian2DBlurComputeShader();
+
+public:
+	virtual D3D12_SHADER_BYTECODE CreateComputeShader();
+
+	virtual void CreateComputePipelineState(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dRootSignature, UINT cxThreadGroups = 1, UINT cyThreadGroups = 1, UINT czThreadGroups = 1);
+
+	virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
+	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
+	virtual void ReleaseShaderVariables();
+	virtual void ReleaseUploadBuffers();
+
+	virtual void Dispatch(ID3D12GraphicsCommandList* pd3dCommandList, int nPipelineState = 0);
+
+	void SetSourceResource(ID3D12Resource* pSourceResource) { m_pSourceResource = pSourceResource; }
+
+public:
+	CTexture* m_pTexture = NULL;
+	ID3D12Resource* m_pSourceResource = NULL;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

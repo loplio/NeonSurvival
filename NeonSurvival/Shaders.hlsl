@@ -690,6 +690,18 @@ Texture2D gtxtInputB : register(t1);
 RWTexture2D<float4> gtxtRWOutput : register(u0);
 
 [numthreads(32, 32, 1)]
+void CSBrightArea(int3 nDispatchID : SV_DispatchThreadID)
+{
+	// Blur only the bright parts
+	float4 BrightColor = pow(gtxtInputA[nDispatchID.xy], 16.0f);
+	float maxValue = max(max(gtxtInputA[nDispatchID.xy].r, gtxtInputA[nDispatchID.xy].g), gtxtInputA[nDispatchID.xy].b);
+	BrightColor.r *= pow(maxValue / gtxtInputA[nDispatchID.xy].r, 10.0f);
+	BrightColor.g *= pow(maxValue / gtxtInputA[nDispatchID.xy].g, 10.0f);
+	BrightColor.b *= pow(maxValue / gtxtInputA[nDispatchID.xy].b, 10.0f);
+	gtxtRWOutput[nDispatchID.xy] = BrightColor;
+}
+
+[numthreads(32, 32, 1)]
 void CSAddTextures(int3 nDispatchID : SV_DispatchThreadID)
 {
 	//	gtxtRWOutput[nDispatchID.xy] = gtxtInputA[nDispatchID.xy] + gtxtInputB[nDispatchID.xy];
@@ -713,12 +725,14 @@ Texture2D gtxtOutput : register(t4);
 
 float4 PSTextureToFullScreen(VS_TEXTURED_OUTPUT input) : SV_Target
 {
-	float4 cColor = gtxtOutput.Sample(gssWrap, input.uv);
+	float4 cColor = gtxtInputA.Sample(gssWrap, input.uv);
+
 	float4 cEdgeColor = gtxtOutput.Sample(gssWrap, input.uv) * 1.25f;
 
-	return(cEdgeColor);
-	//	return(cColor * cEdgeColor);
-	//	return(cColor + cEdgeColor);
+	//return(cEdgeColor);
+	//return(cColor);
+		//return(cColor * cEdgeColor + cColor);
+		return(cColor + cEdgeColor);
 }
 
 
@@ -755,6 +769,7 @@ void CSGaussian2DBlur(int3 n3GroupThreadID : SV_GroupThreadID, int3 n3DispatchTh
 				f4Color += gfGaussianBlurMask2D[i + 2][j + 2] * gtxtInputA[n3DispatchThreadID.xy + int2(i, j)];
 			}
 		}
+
 		gtxtRWOutput[n3DispatchThreadID.xy] = f4Color;
 	}
 }

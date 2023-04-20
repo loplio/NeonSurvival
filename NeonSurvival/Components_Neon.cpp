@@ -289,19 +289,21 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 
 	// ShaderObjects Build.
 	m_ppShaders.reserve(5);
-	m_ppShaders.push_back(new CShader);
 	m_ppComputeShaders.reserve(5);
+
 	m_ppComputeShaders.push_back(new CComputeShader);
+	CBrightAreaComputeShader* pBrightAreaComputeShader = new CBrightAreaComputeShader();
+	pBrightAreaComputeShader->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
+	m_ppComputeShaders.back() = pBrightAreaComputeShader;
 
-	CGaussian2DBlurComputeShader* pComputeShader = new CGaussian2DBlurComputeShader();
-	pComputeShader->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
-	m_ppComputeShaders.back() = pComputeShader;
+	m_ppComputeShaders.push_back(new CComputeShader);
+	CGaussian2DBlurComputeShader* pBlurComputeShader = new CGaussian2DBlurComputeShader();
+	pBlurComputeShader->SetSourceResource(pBrightAreaComputeShader->m_pTexture->GetTexture(1));
+	pBlurComputeShader->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
+	m_ppComputeShaders.back() = pBlurComputeShader;
 
-	//CAddTexturesComputeShader* pComputeShader = new CAddTexturesComputeShader();
-	//pComputeShader->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
-	//m_ppComputeShaders.back() = pComputeShader;
-
-	CTextureToFullScreenShader* pGraphicsShader = new CTextureToFullScreenShader(pComputeShader->m_pTexture);
+	m_ppShaders.push_back(new CShader);
+	CTextureToFullScreenShader* pGraphicsShader = new CTextureToFullScreenShader(pBlurComputeShader->m_pTexture);
 	pGraphicsShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 	m_ppShaders.back() = pGraphicsShader;
 

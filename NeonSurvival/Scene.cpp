@@ -558,12 +558,6 @@ void CScene::OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera
 	for (int i = 0; i < m_ppComputeShaders.size(); ++i)
 	{
 		m_ppComputeShaders[i]->Dispatch(pd3dCommandList);
-
-		//ID3D12Resource* pd3dSource = ((CAddTexturesComputeShader*)m_ppComputeShaders[0])->m_pTexture->GetTexture(2);
-		//::SynchronizeResourceTransition(pd3dCommandList, pd3dSource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
-		//ID3D12Resource* pd3dDestination = ((CTextureToFullScreenShader*)m_ppShaders[0])->m_pTexture->GetTexture(0);
-		//pd3dCommandList->CopyResource(pd3dDestination, pd3dSource);
-		//::SynchronizeResourceTransition(pd3dCommandList, pd3dSource, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	}
 	pCamera->SetViewportsAndScissorRects(pd3dCommandList);
 	pCamera->UpdateShaderVariables(pd3dCommandList);
