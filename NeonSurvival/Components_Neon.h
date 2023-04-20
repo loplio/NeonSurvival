@@ -52,7 +52,7 @@ public:
 	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
 
 public:
-	std::vector<CGameObject*> m_OtherPlayers;
+	CGameObject** m_OtherPlayers;
 	PACKET_INGAME* OtherPlayerPos = SERVER::getInstance().GetPlayersPosition();
 };
 

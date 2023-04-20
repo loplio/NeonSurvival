@@ -262,16 +262,21 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	// SkyBox Build.
 	m_pSkyBox = new CSkyBox(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (wchar_t*)L"SkyBox/NeonCity.dds");
 
-	m_OtherPlayers.push_back(new CGameObject);
-	CLoadedModelInfo* pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/DefaultHuman/Walking.bin", NULL);
-	m_OtherPlayers[0]->SetChild(pPlayerModel->m_pModelRootObject, true);
-	m_OtherPlayers[0]->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 1, pPlayerModel);
-	m_OtherPlayers[0]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
-	m_OtherPlayers[0]->m_pSkinnedAnimationController->SetTrackEnable(0, false);
+	m_nHierarchicalGameObjects = 1;
+	m_ppHierarchicalGameObjects = new CGameObject * [m_nHierarchicalGameObjects];
+
+	CLoadedModelInfo* pOtherModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/DefaultHuman/Walking.bin", NULL);
+	m_ppHierarchicalGameObjects[0] = new CGameObject();
+	m_ppHierarchicalGameObjects[0]->SetChild(pOtherModel->m_pModelRootObject);
+	m_ppHierarchicalGameObjects[0]->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 1, pOtherModel);
+	m_ppHierarchicalGameObjects[0]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
+	m_ppHierarchicalGameObjects[0]->m_pSkinnedAnimationController->SetTrackEnable(0, 0);
+	m_ppHierarchicalGameObjects[0]->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
+	m_ppHierarchicalGameObjects[0]->SetPosition(m_pPlayer->GetPosition().x, m_pPlayer->GetPosition().y, m_pPlayer->GetPosition().z);
+	if (pOtherModel) delete pOtherModel;
 
 	// ShaderObjects Build.
 	m_ppShaders.reserve(5);
-
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
@@ -346,22 +351,7 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 {
 	SERVER::getInstance().AddFPSCount();
 
-	//for (int i = 0; i < 2; ++i)
-	//{
-	//	int id = SERVER::getInstance().GetClientNumId();
-	//	if (id != OtherPlayerPos[i].id && -1 != OtherPlayerPos[i].id)
-	//	{
-	//		//m_OtherPlayers[0]->SetPosition(OtherPlayerPos[i].position);
-	//		m_OtherPlayers[0]->m_xmf4x4Transform = OtherPlayerPos[i].position;
-	//		m_OtherPlayers[0]->Animate(fTimeElapsed);
-	//		m_OtherPlayers[0]->UpdateTransform(&m_OtherPlayers[0]->m_xmf4x4Transform);
-	//	}
-	//}
-	//m_OtherPlayers[0]->SetPosition(Vector3::Add(m_pPlayer->GetPosition(), XMFLOAT3(10.0f, 0.0f, 0.0f)));
-	m_OtherPlayers[0]->m_xmf4x4Transform = m_pPlayer->m_xmf4x4Transform;
-	m_OtherPlayers[0]->m_xmf4x4World = m_pPlayer->m_xmf4x4World;
-	m_OtherPlayers[0]->m_pSkinnedAnimationController->SetTrackEnable(0, true);
-	m_OtherPlayers[0]->Animate(fTimeElapsed);
+	m_ppHierarchicalGameObjects[0]->SetPosition(m_pPlayer->GetPosition().x + 10.f, m_pPlayer->GetPosition().y, m_pPlayer->GetPosition().z);
 
 	CScene::AnimateObjects(fTimeElapsed);
 }
@@ -373,10 +363,5 @@ void Scene_Neon::OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCa
 }
 void Scene_Neon::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
-	/*for (int i = 0; i < m_OtherPlayers.size(); ++i)
-	{
-		m_OtherPlayers[i]->Render(pd3dCommandList, pCamera);
-	}*/
-	m_OtherPlayers[0]->Render(pd3dCommandList, pCamera);
 	CScene::Render(pd3dCommandList, pCamera);
 }

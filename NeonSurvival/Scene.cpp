@@ -374,6 +374,15 @@ void CScene::AnimateObjects(float fTimeElapsed)
 		m_ppShaders[i]->AnimateObjects(fTimeElapsed);
 	}
 
+	for (int i = 0; i < m_nHierarchicalGameObjects; i++)
+	{
+		if (m_ppHierarchicalGameObjects[i])
+		{
+			if (m_ppHierarchicalGameObjects[i]->m_pSkinnedAnimationController) m_ppHierarchicalGameObjects[i]->m_pSkinnedAnimationController->SetTrackEnable(0, true);
+			m_ppHierarchicalGameObjects[i]->Animate(fTimeElapsed);
+		}
+	}
+
 	if (m_pLights)
 	{
 		m_pLights[1].m_xmf3Position = m_pPlayer->GetPosition();
@@ -409,8 +418,6 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 	{
 		if (m_ppHierarchicalGameObjects[i])
 		{
-			m_ppHierarchicalGameObjects[i]->Animate(m_fElapsedTime);
-			//if (!m_ppHierarchicalGameObjects[i]->m_pSkinnedAnimationController) m_ppHierarchicalGameObjects[i]->UpdateTransform(NULL);
 			m_ppHierarchicalGameObjects[i]->Render(pd3dCommandList, pCamera);
 		}
 	}
