@@ -97,6 +97,9 @@ public:
 };
 
 class LobbyRenderDisplay_Neon : public DisplayOutput {
+	CScene& m_Scene;
+	CCamera& m_Camera;
+
 public:
 	LobbyRenderDisplay_Neon(CLobbyFramework& LobbyFramework);
 	virtual ~LobbyRenderDisplay_Neon();

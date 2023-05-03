@@ -411,6 +411,7 @@ void CScene::ReleaseUploadBuffers()
 	if (m_pSkyBox) m_pSkyBox->ReleaseUploadBuffers();
 
 	for (int i = 0; i < m_ppShaders.size(); ++i) m_ppShaders[i]->ReleaseUploadBuffers();
+	for (int i = 0; i < m_UIShaders.size(); ++i) m_UIShaders[i]->ReleaseUploadBuffers();
 	for (int i = 0; i < m_ppComputeShaders.size(); ++i) m_ppComputeShaders[i]->ReleaseUploadBuffers();
 	for (int i = 0; i < m_vHierarchicalGameObjects.size(); i++) m_vHierarchicalGameObjects[i]->ReleaseUploadBuffers();
 	for (int i = 0; i < m_vGameObjects.size(); i++) m_vGameObjects[i]->ReleaseUploadBuffers();
@@ -420,8 +421,11 @@ void CScene::ReleaseObjects()
 {
 	if (m_pd3dGraphicsRootSignature) m_pd3dGraphicsRootSignature->Release();
 	if (m_pd3dComputeRootSignature) m_pd3dComputeRootSignature->Release();
-	if (m_pd3dCbvSrvUavDescriptorHeap) m_pd3dCbvSrvUavDescriptorHeap->Release();
-
+	if (m_pd3dCbvSrvUavDescriptorHeap) 
+	{
+		m_pd3dCbvSrvUavDescriptorHeap->Release();
+		m_pd3dCbvSrvUavDescriptorHeap = NULL;
+	}
 	if (!m_ppShaders.empty())
 	{
 		for (int i = 0; i < m_ppShaders.size(); ++i)
@@ -429,6 +433,15 @@ void CScene::ReleaseObjects()
 			m_ppShaders[i]->ReleaseShaderVariables();
 			m_ppShaders[i]->ReleaseObjects();
 			m_ppShaders[i]->Release();
+		}
+	}
+	if (!m_UIShaders.empty())
+	{
+		for (int i = 0; i < m_UIShaders.size(); ++i)
+		{
+			m_UIShaders[i]->ReleaseShaderVariables();
+			m_UIShaders[i]->ReleaseObjects();
+			m_UIShaders[i]->Release();
 		}
 	}
 	if (!m_ppComputeShaders.empty())
@@ -559,9 +572,11 @@ void CScene::OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera
 	{
 		m_ppComputeShaders[i]->Dispatch(pd3dCommandList);
 	}
-	pCamera->SetViewportsAndScissorRects(pd3dCommandList);
-	pCamera->UpdateShaderVariables(pd3dCommandList);
-
+	if (pCamera)
+	{
+		pCamera->SetViewportsAndScissorRects(pd3dCommandList);
+		pCamera->UpdateShaderVariables(pd3dCommandList);
+	}
 	UpdateShaderVariables(pd3dCommandList);
 
 	D3D12_GPU_VIRTUAL_ADDRESS d3dcbLightsGpuVirtualAddress = m_pd3dcbLights->GetGPUVirtualAddress();
@@ -588,6 +603,14 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 	for (int i = 0; i < m_vParticleObjects.size(); i++)
 	{
 		m_vParticleObjects[i]->Render(pd3dCommandList, pCamera);
+	}
+}
+
+void CScene::DrawUI(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
+{
+	for (int i = 0; i < m_UIShaders.size(); ++i)
+	{
+		m_UIShaders[i]->Render(pd3dCommandList, pCamera);
 	}
 }
 

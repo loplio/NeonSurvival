@@ -17,11 +17,37 @@ Player_Neon::Player_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd
 	SetPlayerUpdatedContext(pTerrain);
 	SetCameraUpdatedContext(pTerrain);
 
-	CLoadedModelInfo* pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/NeonHuman/NeonHuman.bin", NULL);
+	CLoadedModelInfo* pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/NeonHuman/GunAnimation.bin", NULL);
 	SetChild(pPlayerModel->m_pModelRootObject, true);
-	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 1, pPlayerModel);
+	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 14, pPlayerModel);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(1, 1);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(2, 2);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(3, 3);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(4, 4);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(5, 5);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(6, 6);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(7, 7);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(8, 8);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(9, 9);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(10, 10);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(11, 11);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(12, 12);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(13, 13);
 	m_pSkinnedAnimationController->SetTrackEnable(0, false);
+	m_pSkinnedAnimationController->SetTrackEnable(1, false);
+	m_pSkinnedAnimationController->SetTrackEnable(2, false);
+	m_pSkinnedAnimationController->SetTrackEnable(3, false);
+	m_pSkinnedAnimationController->SetTrackEnable(4, false);
+	m_pSkinnedAnimationController->SetTrackEnable(5, false);
+	m_pSkinnedAnimationController->SetTrackEnable(6, false);
+	m_pSkinnedAnimationController->SetTrackEnable(7, false);
+	m_pSkinnedAnimationController->SetTrackEnable(8, false);
+	m_pSkinnedAnimationController->SetTrackEnable(9, false);
+	m_pSkinnedAnimationController->SetTrackEnable(10, false);
+	m_pSkinnedAnimationController->SetTrackEnable(11, false);
+	m_pSkinnedAnimationController->SetTrackEnable(12, false);
+	m_pSkinnedAnimationController->SetTrackEnable(13, false);
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
@@ -113,9 +139,27 @@ void Player_Neon::Update(float fTimeElapsed)
 		float fLength = sqrtf(m_xmf3Velocity.x * m_xmf3Velocity.x + m_xmf3Velocity.z * m_xmf3Velocity.z);
 		if (::IsZero(fLength))
 		{
-			m_pSkinnedAnimationController->SetTrackEnable(0, true);
-			//m_pSkinnedAnimationController->SetTrackEnable(1, false);
+			m_pSkinnedAnimationController->SetOneOfTrackEnable(0);
 			//m_pSkinnedAnimationController->SetTrackPosition(1, 0.0f);
+		}
+		else if (!IsDash)	// walking
+		{
+			m_pSkinnedAnimationController->SetOneOfTrackEnable(1);
+			m_pSkinnedAnimationController->SetTrackSpeed(1, fLength / m_fMaxVelocityXZ);
+			if (m_fFriction > 0.0f)
+			{
+				m_pSkinnedAnimationController->SetTrackPosition(1,fLength / m_fMaxVelocityXZ);
+				m_pSkinnedAnimationController->SetHandOverPosition(1, true);
+			}
+			else
+			{
+				m_pSkinnedAnimationController->SetHandOverPosition(1, false);
+			}
+		}
+		else				// slow runing
+		{
+			m_pSkinnedAnimationController->SetOneOfTrackEnable(3);
+			m_pSkinnedAnimationController->SetTrackSpeed(3, fLength / m_fMaxVelocityXZ);
 		}
 	}
 }
@@ -258,13 +302,66 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	// SkyBox Build.
 	m_pSkyBox = new CSkyBox(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (wchar_t*)L"SkyBox/NeonCity.dds");
 
+	// ShaderObjects Build.
+	m_ppShaders.reserve(5);
+	m_ppComputeShaders.reserve(5);
+
+	/// UI ///
+	m_UIShaders.push_back(new CShader);
+	CTextureToScreenShader* pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/ex.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, FRAME_BUFFER_WIDTH, 10, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT - 5, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+
+	//m_UIShaders.push_back(new CShader);
+	//pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/hpbg.dds");
+	//pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 220, 24, 0, 90, FRAME_BUFFER_HEIGHT - 50, 0);
+	//pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	//m_UIShaders.back() = pUITexture;
+
+	//m_UIShaders.push_back(new CShader);
+	//pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/hp.dds");
+	//pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 200, 18, 0, 100, FRAME_BUFFER_HEIGHT - 50, 0);
+	//pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	//m_UIShaders.back() = pUITexture;
+
+	/// background ///
+	m_ppComputeShaders.push_back(new CComputeShader);
+	CBrightAreaComputeShader* pBrightAreaComputeShader = new CBrightAreaComputeShader((wchar_t*)L"Image/Light3.dds");
+	pBrightAreaComputeShader->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
+	m_ppComputeShaders.back() = pBrightAreaComputeShader;
+
+	m_ppComputeShaders.push_back(new CComputeShader);
+	CGaussian2DBlurComputeShader* pBlurComputeShader = new CGaussian2DBlurComputeShader((wchar_t*)L"Image/Light3.dds");
+	pBlurComputeShader->SetSourceResource(pBrightAreaComputeShader->m_pTexture->GetTexture(1));
+	pBlurComputeShader->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
+	m_ppComputeShaders.back() = pBlurComputeShader;
+
+	//m_ppShaders.push_back(new CShader);
+	//CTextureToFullScreenShader* pGraphicsShader = new CTextureToFullScreenShader(pBlurComputeShader->m_pTexture);
+	//pGraphicsShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	//m_ppShaders.back() = pGraphicsShader;
+	//---------------------------------------------------------------------------------------------------//
+
+	/// Particle1 ///
+	m_ppComputeShaders.push_back(new CComputeShader);
+	pBrightAreaComputeShader = new CBrightAreaComputeShader((wchar_t*)L"Image/Particle/RoundSoftParticle.dds");
+	pBrightAreaComputeShader->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
+	m_ppComputeShaders.back() = pBrightAreaComputeShader;
+
+	m_ppComputeShaders.push_back(new CComputeShader);
+	CGaussian2DBlurComputeShader* pParticleBlurComputeShader1 = new CGaussian2DBlurComputeShader((wchar_t*)L"Image/Particle/RoundSoftParticle.dds");
+	pParticleBlurComputeShader1->SetSourceResource(pBrightAreaComputeShader->m_pTexture->GetTexture(1));
+	pParticleBlurComputeShader1->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
+	m_ppComputeShaders.back() = pParticleBlurComputeShader1;
+
 	// Objects build.
 	m_vParticleObjects.reserve(5);
 	m_vGameObjects.reserve(5);
 	m_vHierarchicalGameObjects.reserve(5);
 
 	// ParticleObjects.
-	m_vParticleObjects.push_back(new CParticleObject_Neon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, XMFLOAT3(3100.0f, 290.0f, 3100.0f), XMFLOAT3(0.0f, PIXEL_KPH(60), 0.0f), 0.0f, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 0.0f, 0.0f), XMFLOAT2(8.0f, 8.0f), MAX_PARTICLES));
+	m_vParticleObjects.push_back(new CParticleObject_Neon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pParticleBlurComputeShader1->m_pTexture, XMFLOAT3(3100.0f, 290.0f, 3100.0f), XMFLOAT3(0.0f, PIXEL_KPH(60), 0.0f), 0.0f, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 0.0f, 0.0f), XMFLOAT2(8.0f, 8.0f), MAX_PARTICLES));
 
 	// GameObjects.
 	m_vGameObjects.push_back(new Crosshair(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, 0.0035f, 0.02f, 0.03f, 0.003f, true));
@@ -278,34 +375,14 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
 	if (pNexusModel) delete pNexusModel;
 
-	CLoadedModelInfo* pOtherModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/DefaultHuman/Walking.bin", NULL);
-	m_vHierarchicalGameObjects.push_back(new CGameObject());
-	m_vHierarchicalGameObjects.back()->SetChild(pOtherModel->m_pModelRootObject);
-	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 1, pOtherModel);
-	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
-	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackEnable(0, 0);
-	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
-	if (pOtherModel) delete pOtherModel;
-
-	// ShaderObjects Build.
-	m_ppShaders.reserve(5);
-	m_ppComputeShaders.reserve(5);
-
-	m_ppComputeShaders.push_back(new CComputeShader);
-	CBrightAreaComputeShader* pBrightAreaComputeShader = new CBrightAreaComputeShader();
-	pBrightAreaComputeShader->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
-	m_ppComputeShaders.back() = pBrightAreaComputeShader;
-
-	m_ppComputeShaders.push_back(new CComputeShader);
-	CGaussian2DBlurComputeShader* pBlurComputeShader = new CGaussian2DBlurComputeShader();
-	pBlurComputeShader->SetSourceResource(pBrightAreaComputeShader->m_pTexture->GetTexture(1));
-	pBlurComputeShader->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
-	m_ppComputeShaders.back() = pBlurComputeShader;
-
-	m_ppShaders.push_back(new CShader);
-	CTextureToFullScreenShader* pGraphicsShader = new CTextureToFullScreenShader(pBlurComputeShader->m_pTexture);
-	pGraphicsShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	m_ppShaders.back() = pGraphicsShader;
+	//CLoadedModelInfo* pOtherModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/DefaultHuman/Walking.bin", NULL);
+	//m_vHierarchicalGameObjects.push_back(new CGameObject());
+	//m_vHierarchicalGameObjects.back()->SetChild(pOtherModel->m_pModelRootObject);
+	//m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 1, pOtherModel);
+	//m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
+	//m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackEnable(0, 0);
+	//m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
+	//if (pOtherModel) delete pOtherModel;
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
@@ -376,7 +453,6 @@ bool Scene_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM 
 //--ProcessAnimation : Scene_Neon----------------------------------------------------
 void Scene_Neon::AnimateObjects(float fTimeElapsed)
 {
-	m_vHierarchicalGameObjects[1]->SetPosition(m_pPlayer->GetPosition().x + 10.f, m_pPlayer->GetPosition().y, m_pPlayer->GetPosition().z);
 	CScene::AnimateObjects(fTimeElapsed);
 }
 
@@ -389,22 +465,38 @@ void Scene_Neon::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCa
 {
 	CScene::Render(pd3dCommandList, pCamera);
 }
+void Scene_Neon::DrawUI(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
+{
+	CScene::DrawUI(pd3dCommandList, pCamera);
+}
 
 //-------------------------------------------------------------------------------
 /*	Other Object															   */
 //-------------------------------------------------------------------------------
-CParticleObject_Neon::CParticleObject_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, XMFLOAT3 xmf3Position, XMFLOAT3 xmf3Velocity, float fLifetime, XMFLOAT3 xmf3Acceleration, XMFLOAT3 xmf3Color, XMFLOAT2 xmf2Size, UINT nMaxParticles) 
+CParticleObject_Neon::CParticleObject_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CTexture* pTexture, XMFLOAT3 xmf3Position, XMFLOAT3 xmf3Velocity, float fLifetime, XMFLOAT3 xmf3Acceleration, XMFLOAT3 xmf3Color, XMFLOAT2 xmf2Size, UINT nMaxParticles)
 	: CParticleObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, xmf3Position, xmf3Velocity, fLifetime, xmf3Acceleration, xmf3Color, xmf2Size, nMaxParticles)
 {
 	CParticleMesh* pMesh = new CParticleMesh(pd3dDevice, pd3dCommandList, xmf3Position, xmf3Velocity, fLifetime, xmf3Acceleration, xmf3Color, xmf2Size, nMaxParticles);
 	SetMesh(pMesh);
 
-	CTexture* pParticleTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0, 1);
-	pParticleTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, (wchar_t*)L"Image/Particle/RoundSoftParticle.dds", 0);
-
 	CMaterial* pMaterial = new CMaterial();
-	pMaterial->SetTexture(pParticleTexture);
+	if (pTexture)
+	{
+		pMaterial->SetTexture(pTexture);
+		pTexture->AddRef();
 
+		CScene::CreateSRVUAVs(pd3dDevice, pMaterial->m_ppTextures[0], ROOT_PARAMETER_PARTICLE_TEXTURE, true, true, true, 0, 1);
+		CScene::CreateSRVUAVs(pd3dDevice, pMaterial->m_ppTextures[0], ROOT_PARAMETER_OUTPUT, true, true, true, 2, 1, 1);
+	}
+	else
+	{
+		CTexture* pParticleTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0, 1);
+		pParticleTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, (wchar_t*)L"Image/Particle/RoundSoftParticle.dds", 0);
+
+		pMaterial->SetTexture(pParticleTexture);
+
+		CScene::CreateSRVUAVs(pd3dDevice, pParticleTexture, ROOT_PARAMETER_PARTICLE_TEXTURE, true);
+	}
 	/*
 		XMFLOAT4 *pxmf4RandomValues = new XMFLOAT4[1024];
 		random_device rd;   // non-deterministic generator
@@ -427,7 +519,6 @@ CParticleObject_Neon::CParticleObject_Neon(ID3D12Device* pd3dDevice, ID3D12Graph
 	CParticleShader* pShader = new CParticleShader();
 	pShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
 
-	CScene::CreateSRVUAVs(pd3dDevice, pParticleTexture, ROOT_PARAMETER_PARTICLE_TEXTURE, true);
 	CScene::CreateSRVUAVs(pd3dDevice, m_pRandowmValueTexture, ROOT_PARAMETER_RANDOM_TEXTURE, true);
 	CScene::CreateSRVUAVs(pd3dDevice, m_pRandowmValueOnSphereTexture, ROOT_PARAMETER_RANDOM_ON_SPHERE_TEXTURE, true);
 
@@ -460,4 +551,140 @@ Crosshair::Crosshair(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCo
 }
 Crosshair::~Crosshair()
 {
+}
+
+//-------------------------------------------------------------------------------
+/*	SceneLobby																   */
+//-------------------------------------------------------------------------------
+SceneLobby_Neon::SceneLobby_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) : CScene(pd3dDevice, pd3dCommandList)
+{
+}
+
+void SceneLobby_Neon::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	CScene::CreateShaderVariables(pd3dDevice, pd3dCommandList);
+}
+void SceneLobby_Neon::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	CScene::UpdateShaderVariables(pd3dCommandList);
+}
+void SceneLobby_Neon::ReleaseShaderVariables()
+{
+	CScene::ReleaseShaderVariables();
+}
+
+//--Build : SceneLobby_Neon---------------------------------------------------------------
+void SceneLobby_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	BuildLightsAndMaterials();
+
+	/// UI ///
+	m_UIShaders.push_back(new CShader);
+	CTextureToScreenShader* pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/Lobby.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT / 2, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/title.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 400, 400, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 0.7 / 2, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/bar1on.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 35, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 1.2 / 2, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/bar2on.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 35, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 1.4 / 2, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/bar3on.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 35, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 1.6 / 2, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/bar4on.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 35, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 1.8 / 2, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+
+	CreateShaderVariables(pd3dDevice, pd3dCommandList);
+}
+
+void SceneLobby_Neon::BuildLightsAndMaterials()
+{
+	CScene::BuildLightsAndMaterials();
+
+	m_nLights = 2;
+	m_pLights = new LIGHT[m_nLights];
+	::ZeroMemory(m_pLights, sizeof(LIGHT) * m_nLights);
+
+	m_xmf4GlobalAmbient = XMFLOAT4(0.1f, 0.1f, 0.1f, 1.0f);
+
+	SetLight(m_pLights[0], XMFLOAT4(0.1f, 0.1f, 0.1f, 1.0f), XMFLOAT4(1.0f, 0.5f, 0.5f, 1.0f), XMFLOAT4(0.1f, 0.1f, 0.1f, 0.0f),
+		XMFLOAT3(-50.0f, 20.0f, -5.0f), XMFLOAT3(0.0f, 0.0f, 1.0f), XMFLOAT3(1.0f, 0.01f, 0.0001f),
+		6.0f, (float)cos(XMConvertToRadians(20.0f)), (float)cos(XMConvertToRadians(40.0f)), true, SPOT_LIGHT, 150.0f, 0);
+
+	SetLight(m_pLights[1], XMFLOAT4(0.8f, 0.6f, 0.6f, 1.0f), XMFLOAT4(0.035f, 0.05f, 0.13f, 1.0f), XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f),
+		XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, 0.0f),
+		0, 0, 0, true, DIRECTIONAL_LIGHT, 0.0f, 0);
+}
+void SceneLobby_Neon::ReleaseUploadBuffers()
+{
+	CScene::ReleaseUploadBuffers();
+}
+void SceneLobby_Neon::ReleaseObjects()
+{
+	CScene::ReleaseObjects();
+}
+
+//--ProcessInput : SceneLobby_Neon--------------------------------------------------------
+bool SceneLobby_Neon::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
+{
+	return false;
+}
+bool SceneLobby_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
+{
+	switch (nMessageID)
+	{
+	case WM_KEYDOWN:
+		switch (wParam)
+		{
+		case VK_CONTROL:
+			break;
+		default:
+			break;
+		}
+		break;
+	default:
+		break;
+	}
+	return(false);
+}
+
+//--ProcessAnimation : SceneLobby_Neon----------------------------------------------------
+void SceneLobby_Neon::AnimateObjects(float fTimeElapsed)
+{
+	CScene::AnimateObjects(fTimeElapsed);
+}
+
+//--ProcessOutput : SceneLobby_Neon-------------------------------------------------------
+void SceneLobby_Neon::OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
+{
+	CScene::OnPrepareRender(pd3dCommandList, pCamera);
+}
+void SceneLobby_Neon::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
+{
+	CScene::Render(pd3dCommandList, pCamera);
+}
+void SceneLobby_Neon::DrawUI(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
+{
+	CScene::DrawUI(pd3dCommandList, pCamera);
 }

@@ -25,7 +25,7 @@ void CLobbyFramework_Neon::FrameAdvance()
 	m_MouseInput->DataProcessing();
 
 	m_DisplayOutput->Render();
-	m_pUILayer->Render(m_nSwapChainBufferIndex);
+	//m_pUILayer->Render(m_nSwapChainBufferIndex);
 
 	m_pdxgiSwapChain.Present(0, 0);
 
@@ -46,11 +46,19 @@ void CLobbyFramework_Neon::BuildObjects()
 {
 	m_pd3dCommandList.Reset(&m_pd3dCommandAllocator, NULL);
 
+	m_GameSource = new NeonLobbySource(&m_pd3dDevice, &m_pd3dCommandList);
+
+	m_pScene = m_GameSource->GetSharedPtrScene();
+
+	if (m_pScene) m_pScene->BuildObjects(&m_pd3dDevice, &m_pd3dCommandList);
+
 	m_pd3dCommandList.Close();
 	ID3D12CommandList* ppd3dCommandLists[] = { &m_pd3dCommandList };
 	m_pd3dCommandQueue.ExecuteCommandLists(1, ppd3dCommandLists);
 
 	m_Iframe.WaitForGpuComplete();
+
+	if (m_pScene) m_pScene->ReleaseUploadBuffers();
 
 	m_GameTimer.Reset();
 }
@@ -139,7 +147,7 @@ void CGameFramework_Neon::FrameAdvance()
 	m_ProcessCompute->Collide();
 
 	m_DisplayOutput->Render();
-	m_pUILayer->Render(m_nSwapChainBufferIndex);
+	//m_pUILayer->Render(m_nSwapChainBufferIndex);
 
 	m_pdxgiSwapChain.Present(0, 0);
 

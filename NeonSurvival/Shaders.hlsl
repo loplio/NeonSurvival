@@ -339,6 +339,24 @@ float4 PSCrosshairFrame(VS_POSITION_OUTPUT input) : SV_TARGET
 	return cColor;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//// TextureToScreen
+VS_TEXTURED_OUTPUT VSTextureToScreen(VS_TEXTURED_INPUT input)
+{
+	VS_TEXTURED_OUTPUT output;
+
+	output.position = float4(input.position, 1.0f);
+	output.uv = input.uv;
+
+	return(output);
+}
+
+float4 PSTextureToScreen(VS_TEXTURED_OUTPUT input) : SV_TARGET
+{
+	float4 cColor = gtxtTexture.Sample(gssClamp, input.uv);
+
+	return(cColor);
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //// Terrain
@@ -597,6 +615,29 @@ void GSParticleStreamOutput(point VS_PARTICLE_INPUT input[1], inout PointStream<
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
+Texture2D gtxtInputA : register(t0);
+Texture2D gtxtInputB : register(t1);
+Texture2D gtxtOutput : register(t4);
+
+float4 GlowEffect(VS_TEXTURED_OUTPUT input)
+{
+	float4 cColor = gtxtInputA.Sample(gssWrap, input.uv);
+
+	float4 cEdgeColor = gtxtOutput.Sample(gssWrap, input.uv) * 1.25f;
+
+	//return(cEdgeColor);
+	//return(cColor);
+		//return(cColor * cEdgeColor + cColor);
+	return(cColor + cEdgeColor);
+}
+
+float4 GlowEffect(float2 uv, float4 color)
+{
+	float4 cEdgeColor = gtxtOutput.Sample(gssWrap, uv) * 1.25f;
+
+	return(color + cEdgeColor);
+}
+
 struct VS_PARTICLE_DRAW_OUTPUT
 {
 	float3 position : POSITION;
@@ -659,33 +700,10 @@ float4 PSParticleDraw(GS_PARTICLE_DRAW_OUTPUT input) : SV_TARGET
 	//float2 offset = input.uv - center;
 	//float distance = length(offset);
 	//cColor.rgb += pow(1.0f - distance, 8.0f);
-	return(cColor);
+	//return(cColor);
+	return GlowEffect(input.uv, cColor);
 }
-// Sample kernel used for Gaussian blur
-//float blurKernel[9] = { 1.0f / 16.0f, 2.0f / 16.0f, 1.0f / 16.0f, 2.0f / 16.0f, 4.0f / 16.0f, 2.0f / 16.0f, 1.0f / 16.0f, 2.0f / 16.0f, 1.0f / 16.0f };
-//float4 Glow(float2 uv)
-//{
-//	float4 color = 0;
-//	float2 center = float2(0.5f, 0.5f);
-//	float2 offset = uv - center;
-//	float distance = length(offset);
-//	float4 texel = tex2D(inputTexture, uv);
-//	float2 texelSize = 1.0f / float2(textureSize(inputTexture, 0)); // Apply the blur kernel
-//	for(int x = -1; x <= 1; x++)
-//	{
-//		for(int y = -1; y <= 1; y++)
-//		{
-//			float2 blurOffset = float2(x, y) * texelSize;
-//			float4 blurTexel = tex2D(inputTexture, uv + blurOffset); // Add a glow effect based on distance from center
-//			blurTexel.rgb += pow(1.0f - distance, 4.0f) * 0.5f;
-//			color += blurKernel[x+1 + (y+1)*3] * blurTexel;
-//		}
-//	}
-//	return color;
-//}
 
-Texture2D gtxtInputA : register(t0);
-Texture2D gtxtInputB : register(t1);
 
 RWTexture2D<float4> gtxtRWOutput : register(u0);
 
@@ -694,11 +712,12 @@ void CSBrightArea(int3 nDispatchID : SV_DispatchThreadID)
 {
 	// Blur only the bright parts
 	float4 BrightColor = pow(gtxtInputA[nDispatchID.xy], 16.0f);
+	float4 BrightColor2 = pow(gtxtInputA[nDispatchID.xy], 8.0f);
 	float maxValue = max(max(gtxtInputA[nDispatchID.xy].r, gtxtInputA[nDispatchID.xy].g), gtxtInputA[nDispatchID.xy].b);
 	BrightColor.r *= pow(maxValue / gtxtInputA[nDispatchID.xy].r, 10.0f);
 	BrightColor.g *= pow(maxValue / gtxtInputA[nDispatchID.xy].g, 10.0f);
 	BrightColor.b *= pow(maxValue / gtxtInputA[nDispatchID.xy].b, 10.0f);
-	gtxtRWOutput[nDispatchID.xy] = BrightColor;
+	gtxtRWOutput[nDispatchID.xy] = BrightColor*1.0 + BrightColor2 * 0.3;
 }
 
 [numthreads(32, 32, 1)]
@@ -721,20 +740,17 @@ VS_TEXTURED_OUTPUT VSTextureToFullScreen(uint nVertexID : SV_VertexID)
 	return(output);
 }
 
-Texture2D gtxtOutput : register(t4);
-
 float4 PSTextureToFullScreen(VS_TEXTURED_OUTPUT input) : SV_Target
 {
-	float4 cColor = gtxtInputA.Sample(gssWrap, input.uv);
+	//float4 cColor = gtxtInputA.Sample(gssWrap, input.uv);
 
-	float4 cEdgeColor = gtxtOutput.Sample(gssWrap, input.uv) * 1.25f;
+	//float4 cEdgeColor = gtxtOutput.Sample(gssWrap, input.uv) * 1.25f;
 
 	//return(cEdgeColor);
 	//return(cColor);
 		//return(cColor * cEdgeColor + cColor);
-		return(cColor + cEdgeColor);
+		return GlowEffect(input);
 }
-
 
 static float3 gf3ToLuminance = float3(0.3f, 0.59f, 0.11f);
 

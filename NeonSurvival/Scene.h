@@ -76,6 +76,7 @@ public:
 	void OnPostRenderParticle();
 	virtual void OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera *pCamera);
+	virtual void DrawUI(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
 
 protected:
 	ID3D12RootSignature*				m_pd3dComputeRootSignature = NULL;
@@ -134,6 +135,7 @@ public:
 
 	// Shader(Include Object).
 	std::vector<CShader*>					m_ppShaders;
+	std::vector<CShader*>					m_UIShaders;
 	std::vector<CComputeShader*>			m_ppComputeShaders;
 	//CInstancingShader*					m_pShaders = NULL;
 

@@ -198,6 +198,38 @@ public:
 };
 
 //-------------------------------------------------------------------------------
+/*	CTextureToScreenShader												   */
+//-------------------------------------------------------------------------------
+class CTextureToScreenShader : public CTexturedShader {
+public:
+	CTextureToScreenShader(wchar_t* texturePath);
+	virtual ~CTextureToScreenShader();
+
+	virtual D3D12_RASTERIZER_DESC CreateRasterizerState();
+	virtual D3D12_BLEND_DESC CreateBlendState();
+	virtual D3D12_DEPTH_STENCIL_DESC CreateDepthStencilState();
+	virtual D3D12_SHADER_BYTECODE CreateVertexShader();
+	virtual D3D12_SHADER_BYTECODE CreatePixelShader();
+
+	virtual void CreateGraphicsPipelineState(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dRootSignature);
+
+	virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
+	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
+	virtual void ReleaseShaderVariables();
+
+	virtual void ReleaseUploadBuffers();
+
+	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int nPipelineState = 0);
+
+	void CreateRectTexture(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float fWidth, float fHeight, float fDepth, float fxPosition, float fyPosition, float fzPosition);
+
+public:
+	CTexturedRectMesh* m_RectMesh = NULL;
+	CTexture* m_pTexture = NULL;
+	wchar_t* pszFileName = NULL;
+};
+
+//-------------------------------------------------------------------------------
 /*	CTextureToFullScreenShader												   */
 //-------------------------------------------------------------------------------
 class CTextureToFullScreenShader : public CShader {
@@ -254,6 +286,7 @@ public:
 class CBrightAreaComputeShader : public CComputeShader {
 public:
 	CBrightAreaComputeShader();
+	CBrightAreaComputeShader(wchar_t* pszFileName);
 	virtual ~CBrightAreaComputeShader();
 
 public:
@@ -271,6 +304,7 @@ public:
 
 public:
 	CTexture* m_pTexture = NULL;
+	wchar_t* pszFileName = NULL;
 };
 
 //-------------------------------------------------------------------------------
@@ -279,6 +313,7 @@ public:
 class CGaussian2DBlurComputeShader : public CComputeShader {
 public:
 	CGaussian2DBlurComputeShader();
+	CGaussian2DBlurComputeShader(wchar_t* pszFileName);
 	virtual ~CGaussian2DBlurComputeShader();
 
 public:
@@ -297,6 +332,7 @@ public:
 
 public:
 	CTexture* m_pTexture = NULL;
+	wchar_t* pszFileName = NULL;
 	ID3D12Resource* m_pSourceResource = NULL;
 };
 

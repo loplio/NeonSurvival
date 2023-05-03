@@ -233,6 +233,35 @@ void CAnimationController::SetTrackEnable(int nAnimationTrack, bool bEnable)
 	if (m_pAnimationTracks) m_pAnimationTracks[nAnimationTrack].SetEnable(bEnable);
 }
 
+void CAnimationController::SetOneOfTrackEnable(int nAnimationTrack)
+{
+	if (m_pAnimationTracks)
+	{
+		for (int i = 0; i < m_nAnimationTracks; ++i)
+		{
+			m_pAnimationTracks[i].SetEnable(false);
+		}
+
+		m_pAnimationTracks[nAnimationTrack].SetEnable(true);
+	}
+}
+
+void CAnimationController::SetHandOverPosition(int nAnimationTrack, bool bEnable)
+{
+	if (m_pAnimationTracks) m_pAnimationTracks[nAnimationTrack].SetHandOverPosition(bEnable);
+}
+
+void CAnimationController::InitEndAnimPosition()
+{
+	m_fEndAnimPosition = -1.0f;
+}
+
+void CAnimationController::SetEndAnimPosition(float fPosition)
+{
+	if(m_fEndAnimPosition > 0.0f)
+		m_fEndAnimPosition = fPosition;
+}
+
 void CAnimationController::SetTrackPosition(int nAnimationTrack, float fPosition)
 {
 	if (m_pAnimationTracks) m_pAnimationTracks[nAnimationTrack].SetPosition(fPosition);
@@ -262,8 +291,14 @@ void CAnimationController::AdvanceTime(float fTimeElapsed, CGameObject* pRootGam
 	m_fTime += fTimeElapsed;
 	if (m_pAnimationTracks)
 	{
-		//		for (int k = 0; k < m_nAnimationTracks; k++) m_pAnimationTracks[k].m_fPosition += (fTimeElapsed * m_pAnimationTracks[k].m_fSpeed);
-		for (int k = 0; k < m_nAnimationTracks; k++) m_pAnimationSets->m_pAnimationSets[m_pAnimationTracks[k].m_nAnimationSet]->SetPosition(fTimeElapsed * m_pAnimationTracks[k].m_fSpeed);
+		//for (int k = 0; k < m_nAnimationTracks; k++) m_pAnimationTracks[k].m_fPosition += (fTimeElapsed * m_pAnimationTracks[k].m_fSpeed);
+		for (int k = 0; k < m_nAnimationTracks; k++)
+		{
+			m_pAnimationSets->m_pAnimationSets[m_pAnimationTracks[k].m_nAnimationSet]->SetPosition(fTimeElapsed * m_pAnimationTracks[k].m_fSpeed);
+			
+			if (m_pAnimationTracks[k].m_bHandOverPosition)
+				m_pAnimationSets->m_pAnimationSets[m_pAnimationTracks[k].m_nAnimationSet]->m_fPosition = m_pAnimationTracks[k].m_fPosition;
+		}
 
 		for (int j = 0; j < m_pAnimationSets->m_nAnimatedBoneFrames; j++)
 		{
@@ -528,15 +563,21 @@ CShader* CMaterial::m_pSkinnedAnimationShader = NULL;
 CShader* CMaterial::m_pStandardShader = NULL;
 void CMaterial::PrepareShaders(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature)
 {
-	m_pStandardShader = new CStandardShader();
-	m_pStandardShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
-	m_pStandardShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
-	m_pStandardShader->AddRef();
+	if (!m_pStandardShader)
+	{
+		m_pStandardShader = new CStandardShader();
+		m_pStandardShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
+		m_pStandardShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
+		m_pStandardShader->AddRef();
+	}
 
-	m_pSkinnedAnimationShader = new CSkinnedAnimationStandardShader();
-	m_pSkinnedAnimationShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
-	m_pSkinnedAnimationShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
-	m_pSkinnedAnimationShader->AddRef();
+	if (!m_pSkinnedAnimationShader)
+	{
+		m_pSkinnedAnimationShader = new CSkinnedAnimationStandardShader();
+		m_pSkinnedAnimationShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
+		m_pSkinnedAnimationShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
+		m_pSkinnedAnimationShader->AddRef();
+	}
 }
 
 void CMaterial::LoadTextureFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, UINT nType, UINT nRootParameter, _TCHAR* pwstrTextureName, CTexture** ppTexture, CGameObject* pParent, FILE* pInFile, CShader* pShader)

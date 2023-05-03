@@ -47,18 +47,21 @@ void GameKeyInput_Neon::UpdatePlayer()
 	// 수정필요. (이유 - 임의로 정한 상수값 / 해당 값은 이동거리와 관련이 있음)
 	if (dwDirection) {
 		m_Player.SetFriction(0.0f);
-
+		m_Player.m_pSkinnedAnimationController->InitEndAnimPosition();
 		if (!dwSpecialKey) {
 			m_Player.SetMaxVelocityXZ(PIXEL_KPH(20));
 			m_Player.Move(dwDirection, PIXEL_KPH(15) * m_GameTimer.GetTimeElapsed(), true);
+			m_Player.IsDash = false;
 		}
 		else {
 			m_Player.SetMaxVelocityXZ(PIXEL_KPH(40));
 			m_Player.Move(dwDirection, PIXEL_KPH(30) * m_GameTimer.GetTimeElapsed(), true);
+			m_Player.IsDash = true;
 		}
 	}
 	else {
 		m_Player.SetFriction(4.0f);
+		m_Player.m_pSkinnedAnimationController->SetEndAnimPosition(m_Player.GetCurrentVelToMaxVel());
 	}
 }
 //-------------------------------------------------------------------------------
@@ -201,15 +204,21 @@ void GameRenderDisplay_Neon::Render()
 	// Player Render
 	m_Player.Render(&m_pd3dCommandList, Camera);
 
+	// UI Draw
+	m_Scene.DrawUI(&m_pd3dCommandList, Camera);
+
 	// BoundingBox Render
 	m_BoundingBox.Render(&m_pd3dCommandList, Camera);
 
+	m_InterfaceFramework.SynchronizeResourceTransition(D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 	m_InterfaceFramework.ExecuteCommand();
 
 	m_Scene.OnPostRenderParticle();
 }
 //-------------------------------------------------------------------------------
-LobbyRenderDisplay_Neon::LobbyRenderDisplay_Neon(CLobbyFramework& LobbyFramework) : DisplayOutput(LobbyFramework)
+LobbyRenderDisplay_Neon::LobbyRenderDisplay_Neon(CLobbyFramework& LobbyFramework) : 
+	m_Scene(m_GameSource.GetRefScene()), m_Camera(m_GameSource.GetRefCamera()),
+	DisplayOutput(LobbyFramework)
 {
 }
 LobbyRenderDisplay_Neon::~LobbyRenderDisplay_Neon()
@@ -218,13 +227,15 @@ LobbyRenderDisplay_Neon::~LobbyRenderDisplay_Neon()
 
 void LobbyRenderDisplay_Neon::Render()
 {
-	m_InterfaceFramework.ClearDisplay(XMFLOAT4(0.8f, 0.35f, 0.9f, 1.0f));
+	m_InterfaceFramework.ClearDisplay();
 
 	// Update
 
 	// Render
+	m_Scene.OnPrepareRender(&m_pd3dCommandList, &m_Camera);
+	m_Scene.DrawUI(&m_pd3dCommandList, &m_Camera);
 
-	//m_InterfaceFramework.SynchronizeResourceTransition(D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+	m_InterfaceFramework.SynchronizeResourceTransition(D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 	m_InterfaceFramework.ExecuteCommand();
 }
 

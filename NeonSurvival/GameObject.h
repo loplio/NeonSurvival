@@ -108,6 +108,7 @@ public:
 
 public:
 	BOOL 							m_bEnable = true;
+	BOOL							m_bHandOverPosition = false;
 	float 							m_fSpeed = 1.0f;
 	float 							m_fPosition = 0.0f;
 	float 							m_fWeight = 1.0f;
@@ -121,6 +122,7 @@ public:
 	void SetSpeed(float fSpeed) { m_fSpeed = fSpeed; }
 	void SetWeight(float fWeight) { m_fWeight = fWeight; }
 	void SetPosition(float fPosition) { m_fPosition = fPosition; }
+	void SetHandOverPosition(bool bEnable) { m_bHandOverPosition = bEnable; }
 };
 
 class CLoadedModelInfo
@@ -148,6 +150,7 @@ public:
 
 public:
 	float 							m_fTime = 0.0f;
+	float							m_fEndAnimPosition = -1.f;
 
 	int 							m_nAnimationTracks = 0;
 	CAnimationTrack*				m_pAnimationTracks = NULL;
@@ -165,6 +168,10 @@ public:
 
 	void SetTrackAnimationSet(int nAnimationTrack, int nAnimationSet);
 
+	void InitEndAnimPosition();
+	void SetEndAnimPosition(float fPosition);
+	void SetOneOfTrackEnable(int nAnimationTrack);
+	void SetHandOverPosition(int nAnimationTrack, bool bEnable);
 	void SetTrackEnable(int nAnimationTrack, bool bEnable);
 	void SetTrackPosition(int nAnimationTrack, float fPosition);
 	void SetTrackSpeed(int nAnimationTrack, float fSpeed);

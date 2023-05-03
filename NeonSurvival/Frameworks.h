@@ -133,6 +133,9 @@ public:
 /*	CLobbyFramework : BaseFramework											   */
 //-------------------------------------------------------------------------------
 class CLobbyFramework : public BaseFramework {
+protected:
+	std::shared_ptr<CScene>		m_pScene = NULL;
+
 public:
 	CLobbyFramework(InterfaceFramework& Iframe);
 	virtual ~CLobbyFramework();

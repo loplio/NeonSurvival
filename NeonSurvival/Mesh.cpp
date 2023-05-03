@@ -1119,80 +1119,27 @@ CTexturedRectMesh::CTexturedRectMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 	m_pxmf3Positions = new XMFLOAT3[m_nVertices];
 	m_pxmf2TextureCoords0 = new XMFLOAT2[m_nVertices];
 
-	float fx = (fWidth * 0.5f) + fxPosition, fy = (fHeight * 0.5f) + fyPosition, fz = (fDepth * 0.5f) + fzPosition;
-	if (fWidth == 0.0f)
-	{
-		if (fxPosition > 0.0f)
-		{
-			m_pxmf3Positions[0] = XMFLOAT3(fx, +fy, -fz), m_pxmf2TextureCoords0[0] = XMFLOAT2(1.0f, 0.0f);
-			m_pxmf3Positions[1] = XMFLOAT3(fx, -fy, -fz), m_pxmf2TextureCoords0[1] = XMFLOAT2(1.0f, 1.0f);
-			m_pxmf3Positions[2] = XMFLOAT3(fx, -fy, +fz), m_pxmf2TextureCoords0[2] = XMFLOAT2(0.0f, 1.0f);
-			m_pxmf3Positions[3] = XMFLOAT3(fx, -fy, +fz), m_pxmf2TextureCoords0[3] = XMFLOAT2(0.0f, 1.0f);
-			m_pxmf3Positions[4] = XMFLOAT3(fx, +fy, +fz), m_pxmf2TextureCoords0[4] = XMFLOAT2(0.0f, 0.0f);
-			m_pxmf3Positions[5] = XMFLOAT3(fx, +fy, -fz), m_pxmf2TextureCoords0[5] = XMFLOAT2(1.0f, 0.0f);
-		}
-		else
-		{
-			m_pxmf3Positions[0] = XMFLOAT3(fx, +fy, +fz), m_pxmf2TextureCoords0[0] = XMFLOAT2(1.0f, 0.0f);
-			m_pxmf3Positions[1] = XMFLOAT3(fx, -fy, +fz), m_pxmf2TextureCoords0[1] = XMFLOAT2(1.0f, 1.0f);
-			m_pxmf3Positions[2] = XMFLOAT3(fx, -fy, -fz), m_pxmf2TextureCoords0[2] = XMFLOAT2(0.0f, 1.0f);
-			m_pxmf3Positions[3] = XMFLOAT3(fx, -fy, -fz), m_pxmf2TextureCoords0[3] = XMFLOAT2(0.0f, 1.0f);
-			m_pxmf3Positions[4] = XMFLOAT3(fx, +fy, -fz), m_pxmf2TextureCoords0[4] = XMFLOAT2(0.0f, 0.0f);
-			m_pxmf3Positions[5] = XMFLOAT3(fx, +fy, +fz), m_pxmf2TextureCoords0[5] = XMFLOAT2(1.0f, 0.0f);
-		}
-	}
-	else if (fHeight == 0.0f)
-	{
-		if (fyPosition > 0.0f)
-		{
-			m_pxmf3Positions[0] = XMFLOAT3(+fx, fy, -fz), m_pxmf2TextureCoords0[0] = XMFLOAT2(1.0f, 0.0f);
-			m_pxmf3Positions[1] = XMFLOAT3(+fx, fy, +fz), m_pxmf2TextureCoords0[1] = XMFLOAT2(1.0f, 1.0f);
-			m_pxmf3Positions[2] = XMFLOAT3(-fx, fy, +fz), m_pxmf2TextureCoords0[2] = XMFLOAT2(0.0f, 1.0f);
-			m_pxmf3Positions[3] = XMFLOAT3(-fx, fy, +fz), m_pxmf2TextureCoords0[3] = XMFLOAT2(0.0f, 1.0f);
-			m_pxmf3Positions[4] = XMFLOAT3(-fx, fy, -fz), m_pxmf2TextureCoords0[4] = XMFLOAT2(0.0f, 0.0f);
-			m_pxmf3Positions[5] = XMFLOAT3(+fx, fy, -fz), m_pxmf2TextureCoords0[5] = XMFLOAT2(1.0f, 0.0f);
-		}
-		else
-		{
-			m_pxmf3Positions[0] = XMFLOAT3(+fx, fy, +fz), m_pxmf2TextureCoords0[0] = XMFLOAT2(1.0f, 0.0f);
-			m_pxmf3Positions[1] = XMFLOAT3(+fx, fy, -fz), m_pxmf2TextureCoords0[1] = XMFLOAT2(1.0f, 1.0f);
-			m_pxmf3Positions[2] = XMFLOAT3(-fx, fy, -fz), m_pxmf2TextureCoords0[2] = XMFLOAT2(0.0f, 1.0f);
-			m_pxmf3Positions[3] = XMFLOAT3(-fx, fy, -fz), m_pxmf2TextureCoords0[3] = XMFLOAT2(0.0f, 1.0f);
-			m_pxmf3Positions[4] = XMFLOAT3(-fx, fy, +fz), m_pxmf2TextureCoords0[4] = XMFLOAT2(0.0f, 0.0f);
-			m_pxmf3Positions[5] = XMFLOAT3(+fx, fy, +fz), m_pxmf2TextureCoords0[5] = XMFLOAT2(1.0f, 0.0f);
-		}
-	}
-	else if (fDepth == 0.0f)
-	{
-		if (fzPosition > 0.0f)
-		{
-			m_pxmf3Positions[0] = XMFLOAT3(+fx, +fy, fz), m_pxmf2TextureCoords0[0] = XMFLOAT2(1.0f, 0.0f);
-			m_pxmf3Positions[1] = XMFLOAT3(+fx, -fy, fz), m_pxmf2TextureCoords0[1] = XMFLOAT2(1.0f, 1.0f);
-			m_pxmf3Positions[2] = XMFLOAT3(-fx, -fy, fz), m_pxmf2TextureCoords0[2] = XMFLOAT2(0.0f, 1.0f);
-			m_pxmf3Positions[3] = XMFLOAT3(-fx, -fy, fz), m_pxmf2TextureCoords0[3] = XMFLOAT2(0.0f, 1.0f);
-			m_pxmf3Positions[4] = XMFLOAT3(-fx, +fy, fz), m_pxmf2TextureCoords0[4] = XMFLOAT2(0.0f, 0.0f);
-			m_pxmf3Positions[5] = XMFLOAT3(+fx, +fy, fz), m_pxmf2TextureCoords0[5] = XMFLOAT2(1.0f, 0.0f);
-		}
-		else
-		{
-			m_pxmf3Positions[0] = XMFLOAT3(-fx, +fy, fz), m_pxmf2TextureCoords0[0] = XMFLOAT2(1.0f, 0.0f);
-			m_pxmf3Positions[1] = XMFLOAT3(-fx, -fy, fz), m_pxmf2TextureCoords0[1] = XMFLOAT2(1.0f, 1.0f);
-			m_pxmf3Positions[2] = XMFLOAT3(+fx, -fy, fz), m_pxmf2TextureCoords0[2] = XMFLOAT2(0.0f, 1.0f);
-			m_pxmf3Positions[3] = XMFLOAT3(+fx, -fy, fz), m_pxmf2TextureCoords0[3] = XMFLOAT2(0.0f, 1.0f);
-			m_pxmf3Positions[4] = XMFLOAT3(+fx, +fy, fz), m_pxmf2TextureCoords0[4] = XMFLOAT2(0.0f, 0.0f);
-			m_pxmf3Positions[5] = XMFLOAT3(-fx, +fy, fz), m_pxmf2TextureCoords0[5] = XMFLOAT2(1.0f, 0.0f);
-		}
-		// VertexBuffer setting.
-		m_pd3dPositionBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList, m_pxmf3Positions, sizeof(XMFLOAT3) * m_nVertices, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pd3dPositionUploadBuffer);
-		m_d3dPositionBufferView.BufferLocation = m_pd3dPositionBuffer->GetGPUVirtualAddress();
-		m_d3dPositionBufferView.StrideInBytes = sizeof(XMFLOAT3);
-		m_d3dPositionBufferView.SizeInBytes = sizeof(XMFLOAT3) * m_nVertices;
+	float fx = fWidth / FRAME_BUFFER_WIDTH, fy = fHeight / FRAME_BUFFER_HEIGHT, fz = fDepth;
+	float fxp = (fxPosition - FRAME_BUFFER_WIDTH * 0.5f) / (FRAME_BUFFER_WIDTH * 0.5f);
+	float fyp = (fyPosition - FRAME_BUFFER_HEIGHT * 0.5f) / (FRAME_BUFFER_HEIGHT * 0.5f);
 
-		m_pd3dTextureCoord0Buffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList, m_pxmf2TextureCoords0, sizeof(XMFLOAT2) * m_nVertices, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pd3dTextureCoord0UploadBuffer);
-		m_d3dTextureCoord0BufferView.BufferLocation = m_pd3dTextureCoord0Buffer->GetGPUVirtualAddress();
-		m_d3dTextureCoord0BufferView.StrideInBytes = sizeof(XMFLOAT2);
-		m_d3dTextureCoord0BufferView.SizeInBytes = sizeof(XMFLOAT2) * m_nVertices;
-	}
+	m_pxmf3Positions[0] = XMFLOAT3(+fx + fxp, +fy - fyp, fz), m_pxmf2TextureCoords0[0] = XMFLOAT2(1.0f, 0.0f);
+	m_pxmf3Positions[1] = XMFLOAT3(+fx + fxp, -fy - fyp, fz), m_pxmf2TextureCoords0[1] = XMFLOAT2(1.0f, 1.0f);
+	m_pxmf3Positions[2] = XMFLOAT3(-fx + fxp, -fy - fyp, fz), m_pxmf2TextureCoords0[2] = XMFLOAT2(0.0f, 1.0f);
+	m_pxmf3Positions[3] = XMFLOAT3(-fx + fxp, -fy - fyp, fz), m_pxmf2TextureCoords0[3] = XMFLOAT2(0.0f, 1.0f);
+	m_pxmf3Positions[4] = XMFLOAT3(-fx + fxp, +fy - fyp, fz), m_pxmf2TextureCoords0[4] = XMFLOAT2(0.0f, 0.0f);
+	m_pxmf3Positions[5] = XMFLOAT3(+fx + fxp, +fy - fyp, fz), m_pxmf2TextureCoords0[5] = XMFLOAT2(1.0f, 0.0f);
+
+	// VertexBuffer setting.
+	m_pd3dPositionBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList, m_pxmf3Positions, sizeof(XMFLOAT3) * m_nVertices, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pd3dPositionUploadBuffer);
+	m_d3dPositionBufferView.BufferLocation = m_pd3dPositionBuffer->GetGPUVirtualAddress();
+	m_d3dPositionBufferView.StrideInBytes = sizeof(XMFLOAT3);
+	m_d3dPositionBufferView.SizeInBytes = sizeof(XMFLOAT3) * m_nVertices;
+
+	m_pd3dTextureCoord0Buffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList, m_pxmf2TextureCoords0, sizeof(XMFLOAT2) * m_nVertices, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pd3dTextureCoord0UploadBuffer);
+	m_d3dTextureCoord0BufferView.BufferLocation = m_pd3dTextureCoord0Buffer->GetGPUVirtualAddress();
+	m_d3dTextureCoord0BufferView.StrideInBytes = sizeof(XMFLOAT2);
+	m_d3dTextureCoord0BufferView.SizeInBytes = sizeof(XMFLOAT2) * m_nVertices;
 
 	// BoundingOrientedBox setting.
 	m_xmBoundingBox = BoundingOrientedBox(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(fx, fy, fz), XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
