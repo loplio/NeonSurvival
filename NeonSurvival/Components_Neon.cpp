@@ -229,8 +229,8 @@ Scene_Neon::Scene_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 	XMFLOAT4 xmf4Color(0.0f, 0.1f, 0.0f, 0.0f);
 	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature,
 		_T("GameTexture/terrain.raw"),
-		(wchar_t*)L"GameTexture/Ground2.dds",
-		(wchar_t*)L"GameTexture/Ground2.dds", 
+		(wchar_t*)L"GameTexture/tiled_ground.dds",
+		(wchar_t*)L"GameTexture/tiled_ground.dds",
 		512, 512, xmf3Scale, xmf4Color);
 }
 Scene_Neon::~Scene_Neon()
