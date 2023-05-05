@@ -48,7 +48,7 @@ void CPlayer::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
 void CPlayer::Rotate(float x, float y, float z)
 {
 	DWORD nCameraMode = m_pCamera->GetMode();
-	if ((nCameraMode == FIRST_PERSON_CAMERA) || (nCameraMode == THIRD_PERSON_CAMERA))
+	if ((nCameraMode == FIRST_PERSON_CAMERA) || (nCameraMode == THIRD_PERSON_CAMERA) || (nCameraMode == SHOULDER_HOLD_CAMERA))
 	{
 		if (x != 0.0f)
 		{
@@ -124,7 +124,7 @@ void CPlayer::Move(ULONG dwDirection, float fDistance, bool bUpdateVelocity)
 				count++;
 			}
 		}
-		if (count) fDistance *= sqrt(count) / count;
+		if (count % 2 == 0) fDistance *= sqrt(count) / count;
 
 		XMFLOAT3 xmf3Shift = XMFLOAT3(0, 0, 0);
 		if (dwDirection & DIR_FORWARD) xmf3Shift = Vector3::Add(xmf3Shift, m_xmf3Look, fDistance);
@@ -140,7 +140,17 @@ void CPlayer::Move(const XMFLOAT3& xmf3Shift, bool bUpdateVelocity)
 {
 	if (bUpdateVelocity)
 	{
-		m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, xmf3Shift);
+		//m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, xmf3Shift);
+		XMFLOAT3 xmf3Direction = xmf3Shift;
+		float fLength = sqrtf(m_xmf3Velocity.x * m_xmf3Velocity.x + m_xmf3Velocity.z * m_xmf3Velocity.z);
+		float fLength2 = sqrtf(xmf3Shift.x * xmf3Shift.x + xmf3Shift.z * xmf3Shift.z);
+		if (fLength < EPSILON)
+			m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, xmf3Shift);
+		else
+		{
+			m_xmf3Velocity.x = xmf3Direction.x * (fLength / fLength2 + 1);
+			m_xmf3Velocity.z = xmf3Direction.z * (fLength / fLength2 + 1);
+		}
 	}
 	else
 	{
@@ -162,9 +172,9 @@ void CPlayer::Update(float fTimeElapsed)
 	// Keep out of the ground and align the player and the camera.
 	if (m_pPlayerUpdatedContext) OnPlayerUpdateCallback(fTimeElapsed);
 	DWORD nCameraMode = m_pCamera->GetMode();
-	if (nCameraMode == THIRD_PERSON_CAMERA) m_pCamera->Update(m_xmf3Position, fTimeElapsed);
+	if (nCameraMode == THIRD_PERSON_CAMERA || nCameraMode == SHOULDER_HOLD_CAMERA) m_pCamera->Update(m_xmf3Position, fTimeElapsed);
 	if (m_pCameraUpdatedContext) OnCameraUpdateCallback(fTimeElapsed);
-	if (nCameraMode == THIRD_PERSON_CAMERA) m_pCamera->SetLookAt(m_xmf3Position);
+	if (nCameraMode == THIRD_PERSON_CAMERA || nCameraMode == SHOULDER_HOLD_CAMERA) m_pCamera->SetLookAt(m_xmf3Position);
 	m_pCamera->RegenerateViewMatrix();
 
 	// Decelerated velocity operation
@@ -184,7 +194,7 @@ void CPlayer::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamer
 {
 	DWORD nCameraMode = (pCamera) ? pCamera->GetMode() : 0x00;
 	//카메라 모드가 3인칭이면 플레이어 객체를 렌더링한다.
-	if (nCameraMode == THIRD_PERSON_CAMERA)
+	if (nCameraMode == THIRD_PERSON_CAMERA || nCameraMode == SHOULDER_HOLD_CAMERA)
 	{
 		if (m_pShader) m_pShader->Render(pd3dCommandList, pCamera);
 		CGameObject::Render(pd3dCommandList, pCamera);
@@ -206,6 +216,9 @@ CCamera* CPlayer::OnChangeCamera(DWORD nNewCameraMode, DWORD nCurrentCameraMode)
 		break;
 	case SPACESHIP_CAMERA:
 		pNewCamera = new CSpaceShipCamera(m_pCamera);
+		break;
+	case SHOULDER_HOLD_CAMERA:
+		pNewCamera = new CShoulderHoldCamera(m_pCamera);
 		break;
 	}
 	if (nCurrentCameraMode == SPACESHIP_CAMERA)

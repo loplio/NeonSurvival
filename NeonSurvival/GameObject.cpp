@@ -237,12 +237,20 @@ void CAnimationController::SetOneOfTrackEnable(int nAnimationTrack)
 {
 	if (m_pAnimationTracks)
 	{
-		for (int i = 0; i < m_nAnimationTracks; ++i)
+		if (m_pAnimationTracks[m_nCurrentTrack].m_bEnable)
 		{
-			m_pAnimationTracks[i].SetEnable(false);
+			m_pAnimationTracks[m_nCurrentTrack].SetEnable(false);
+			m_pAnimationTracks[m_nCurrentTrack].SetHandOverPosition(false);
 		}
 
+		if(m_nCurrentTrack != 0) // Exception Idle Animation.
+			SetTrackPosition(nAnimationTrack, m_pAnimationTracks[m_nCurrentTrack].m_fPosition);
+		else
+			SetTrackPosition(nAnimationTrack, 0);
+
 		m_pAnimationTracks[nAnimationTrack].SetEnable(true);
+		m_pAnimationTracks[nAnimationTrack].SetHandOverPosition(true);
+		m_nCurrentTrack = nAnimationTrack;
 	}
 }
 
@@ -251,20 +259,10 @@ void CAnimationController::SetHandOverPosition(int nAnimationTrack, bool bEnable
 	if (m_pAnimationTracks) m_pAnimationTracks[nAnimationTrack].SetHandOverPosition(bEnable);
 }
 
-void CAnimationController::InitEndAnimPosition()
-{
-	m_fEndAnimPosition = -1.0f;
-}
-
-void CAnimationController::SetEndAnimPosition(float fPosition)
-{
-	if(m_fEndAnimPosition > 0.0f)
-		m_fEndAnimPosition = fPosition;
-}
-
 void CAnimationController::SetTrackPosition(int nAnimationTrack, float fPosition)
 {
 	if (m_pAnimationTracks) m_pAnimationTracks[nAnimationTrack].SetPosition(fPosition);
+	if (m_pAnimationSets) m_pAnimationSets->m_pAnimationSets[nAnimationTrack]->m_fPosition = fPosition * m_pAnimationSets->m_pAnimationSets[nAnimationTrack]->m_fLength;
 }
 
 void CAnimationController::SetTrackSpeed(int nAnimationTrack, float fSpeed)
@@ -295,9 +293,12 @@ void CAnimationController::AdvanceTime(float fTimeElapsed, CGameObject* pRootGam
 		for (int k = 0; k < m_nAnimationTracks; k++)
 		{
 			m_pAnimationSets->m_pAnimationSets[m_pAnimationTracks[k].m_nAnimationSet]->SetPosition(fTimeElapsed * m_pAnimationTracks[k].m_fSpeed);
-			
+
 			if (m_pAnimationTracks[k].m_bHandOverPosition)
-				m_pAnimationSets->m_pAnimationSets[m_pAnimationTracks[k].m_nAnimationSet]->m_fPosition = m_pAnimationTracks[k].m_fPosition;
+			{
+				m_pAnimationTracks[k].m_fPosition = m_pAnimationSets->m_pAnimationSets[m_pAnimationTracks[k].m_nAnimationSet]->m_fPosition / m_pAnimationSets->m_pAnimationSets[m_pAnimationTracks[k].m_nAnimationSet]->m_fLength;
+				//std::cout << "Tracks: " << k << ", " << m_pAnimationTracks[k].m_fPosition << std::endl;
+			}
 		}
 
 		for (int j = 0; j < m_pAnimationSets->m_nAnimatedBoneFrames; j++)
@@ -321,6 +322,34 @@ void CAnimationController::AdvanceTime(float fTimeElapsed, CGameObject* pRootGam
 		{
 			if (m_pAnimationTracks[k].m_bEnable) m_pAnimationSets->m_pAnimationSets[m_pAnimationTracks[k].m_nAnimationSet]->HandleCallback();
 		}
+	}
+}
+
+void CAnimationController::SetAnimationBundle(UINT n)
+{
+	switch (n) {
+	case 0:	// empty.
+		m_nAnimationBundle[IDLE] = 0;				// Idle
+		m_nAnimationBundle[WALK] = 1;				// walk
+		m_nAnimationBundle[BACKWARD_WALK] = 2;		// backward walk
+		m_nAnimationBundle[RUN] = 3;				// slow run
+		break;
+	case 1:	// pick pistol
+		m_nAnimationBundle[IDLE] = 4;				// pistol Idle
+		m_nAnimationBundle[WALK] = 5;				// pistol walk
+		m_nAnimationBundle[BACKWARD_WALK] = 6;		// pistol backward walk
+		break;
+	case 2: // pick rifle
+		m_nAnimationBundle[IDLE] = 7;				// rifle Idle
+		m_nAnimationBundle[WALK] = 9;				// rifle walk
+		m_nAnimationBundle[BACKWARD_WALK] = 10;		// rifle backword walk
+		m_nAnimationBundle[FIRE] = 8;				// rifle fire
+	case 3: // aim rifle
+		m_nAnimationBundle[IDLE] = 7;				// rifle Idle
+		m_nAnimationBundle[WALK] = 11;				// rifle aim walk
+		m_nAnimationBundle[BACKWARD_WALK] = 12;		// rifle aim backward walk
+		m_nAnimationBundle[FIRE] = 8;				// rifle fire
+		break;
 	}
 }
 

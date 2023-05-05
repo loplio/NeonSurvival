@@ -46,8 +46,6 @@ void GameKeyInput_Neon::UpdatePlayer()
 {
 	// 수정필요. (이유 - 임의로 정한 상수값 / 해당 값은 이동거리와 관련이 있음)
 	if (dwDirection) {
-		m_Player.SetFriction(0.0f);
-		m_Player.m_pSkinnedAnimationController->InitEndAnimPosition();
 		if (!dwSpecialKey) {
 			m_Player.SetMaxVelocityXZ(PIXEL_KPH(20));
 			m_Player.Move(dwDirection, PIXEL_KPH(15) * m_GameTimer.GetTimeElapsed(), true);
@@ -60,8 +58,7 @@ void GameKeyInput_Neon::UpdatePlayer()
 		}
 	}
 	else {
-		m_Player.SetFriction(4.0f);
-		m_Player.m_pSkinnedAnimationController->SetEndAnimPosition(m_Player.GetCurrentVelToMaxVel());
+		m_Player.SetMaxVelocityXZ(PIXEL_KPH(0));
 	}
 }
 //-------------------------------------------------------------------------------
@@ -122,10 +119,7 @@ void GameMouseInput_Neon::UpdatePlayer()
 {
 	if (cxDelta || cyDelta)
 	{
-		if (m_KeyBuffer[VK_RBUTTON] & 0xF0)
-			m_Player.Rotate(cyDelta, 0.0f, -cxDelta);
-		else
-			m_Player.Rotate(cyDelta, cxDelta, 0.0f);
+		m_Player.Rotate(cyDelta, cxDelta, 0.0f);
 	}
 }
 //-------------------------------------------------------------------------------

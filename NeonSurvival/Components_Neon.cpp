@@ -12,7 +12,7 @@ Player_Neon::Player_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd
 
 	CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)pContext;
 	float fHeight = pTerrain->GetHeight(pTerrain->GetWidth() * 0.5f, pTerrain->GetLength() * 0.5f);
-	SetPosition(XMFLOAT3(pTerrain->GetWidth() * 0.5f, fHeight + MERTER_PER_PIXEL(20), pTerrain->GetLength() * 0.5f));
+	SetPosition(XMFLOAT3(pTerrain->GetWidth() * 0.5f, fHeight + METER_PER_PIXEL(20), pTerrain->GetLength() * 0.5f));
 
 	SetPlayerUpdatedContext(pTerrain);
 	SetCameraUpdatedContext(pTerrain);
@@ -121,9 +121,9 @@ void Player_Neon::Update(float fTimeElapsed)
 	// Keep out of the ground and align the player and the camera.
 	if (m_pPlayerUpdatedContext) OnPlayerUpdateCallback(fTimeElapsed);
 	DWORD nCameraMode = m_pCamera->GetMode();
-	if (nCameraMode == THIRD_PERSON_CAMERA) m_pCamera->Update(m_xmf3Position, fTimeElapsed);
+	if (nCameraMode == THIRD_PERSON_CAMERA || nCameraMode == SHOULDER_HOLD_CAMERA) m_pCamera->Update(m_xmf3Position, fTimeElapsed);
 	if (m_pCameraUpdatedContext) OnCameraUpdateCallback(fTimeElapsed);
-	if (nCameraMode == THIRD_PERSON_CAMERA) m_pCamera->SetLookAt(m_xmf3Position);
+	if (nCameraMode == THIRD_PERSON_CAMERA || nCameraMode == SHOULDER_HOLD_CAMERA) m_pCamera->SetLookAt(m_xmf3Position);
 	m_pCamera->RegenerateViewMatrix();
 
 	// Decelerated velocity operation
@@ -136,30 +136,27 @@ void Player_Neon::Update(float fTimeElapsed)
 
 	if (m_pSkinnedAnimationController)
 	{
+		int nResultAnimBundle = -1;
+		m_pSkinnedAnimationController->SetAnimationBundle(m_nGunType);
+
 		float fLength = sqrtf(m_xmf3Velocity.x * m_xmf3Velocity.x + m_xmf3Velocity.z * m_xmf3Velocity.z);
 		if (::IsZero(fLength))
 		{
-			m_pSkinnedAnimationController->SetOneOfTrackEnable(0);
+			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->IDLE];
+			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
 			//m_pSkinnedAnimationController->SetTrackPosition(1, 0.0f);
 		}
 		else if (!IsDash)	// walking
 		{
-			m_pSkinnedAnimationController->SetOneOfTrackEnable(1);
-			m_pSkinnedAnimationController->SetTrackSpeed(1, fLength / m_fMaxVelocityXZ);
-			if (m_fFriction > 0.0f)
-			{
-				m_pSkinnedAnimationController->SetTrackPosition(1,fLength / m_fMaxVelocityXZ);
-				m_pSkinnedAnimationController->SetHandOverPosition(1, true);
-			}
-			else
-			{
-				m_pSkinnedAnimationController->SetHandOverPosition(1, false);
-			}
+			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->WALK];
+			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
+			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
 		}
 		else				// slow runing
 		{
-			m_pSkinnedAnimationController->SetOneOfTrackEnable(3);
-			m_pSkinnedAnimationController->SetTrackSpeed(3, fLength / m_fMaxVelocityXZ);
+			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->RUN];
+			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
+			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
 		}
 	}
 }
@@ -200,7 +197,7 @@ void Player_Neon::OnCameraUpdateCallback(float fTimeElapsed)
 	{
 		xmf3CameraPosition.y = fHeight;
 		m_pCamera->SetPosition(xmf3CameraPosition);
-		if (m_pCamera->GetMode() == THIRD_PERSON_CAMERA)
+		if (m_pCamera->GetMode() == THIRD_PERSON_CAMERA || m_pCamera->GetMode() == SHOULDER_HOLD_CAMERA)
 		{
 			CThirdPersonCamera* p3rdPersonCamera = (CThirdPersonCamera*)m_pCamera;
 			p3rdPersonCamera->SetLookAt(GetPosition());
@@ -217,10 +214,10 @@ CCamera* Player_Neon::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 		SetFriction(0.0f);
 		SetGravity(XMFLOAT3(0.0f, PIXEL_MPS(-9.8), 0.0f));
 		SetMaxVelocityXZ(PIXEL_KPH(40));
-		SetMaxVelocityY(PIXEL_MPS(20));
+		SetMaxVelocityY(PIXEL_KPH(200));
 		m_pCamera = OnChangeCamera(FIRST_PERSON_CAMERA, nCurrentCameraMode);
 		m_pCamera->SetTimeLag(0.0f);
-		m_pCamera->SetOffset(XMFLOAT3(0.0f, MERTER_PER_PIXEL(1.6), 0.0f));
+		m_pCamera->SetOffset(XMFLOAT3(0.0f, METER_PER_PIXEL(1.6), 0.0f));
 		m_pCamera->GenerateProjectionMatrix(1.01f, 5000.0f, ASPECT_RATIO, 60.0f);
 		m_pCamera->SetViewport(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT, 0.0f, 1.0f);
 		m_pCamera->SetScissorRect(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT);
@@ -232,7 +229,7 @@ CCamera* Player_Neon::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 		SetMaxVelocityY(4000.0f);
 		m_pCamera = OnChangeCamera(SPACESHIP_CAMERA, nCurrentCameraMode);
 		m_pCamera->SetTimeLag(0.0f);
-		m_pCamera->SetOffset(XMFLOAT3(0.0f, MERTER_PER_PIXEL(1.6), 0.0f));
+		m_pCamera->SetOffset(XMFLOAT3(0.0f, METER_PER_PIXEL(1.6), 0.0f));
 		m_pCamera->GenerateProjectionMatrix(1.01f, 5000.0f, ASPECT_RATIO, 60.0f);
 		m_pCamera->SetViewport(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT, 0.0f, 1.0f);
 		m_pCamera->SetScissorRect(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT);
@@ -241,10 +238,22 @@ CCamera* Player_Neon::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 		SetFriction(0.0f);
 		SetGravity(XMFLOAT3(0.0f, PIXEL_MPS(-9.8), 0.0f));
 		SetMaxVelocityXZ(PIXEL_KPH(40));
-		SetMaxVelocityY(PIXEL_MPS(20));
+		SetMaxVelocityY(PIXEL_KPH(200));
 		m_pCamera = OnChangeCamera(THIRD_PERSON_CAMERA, nCurrentCameraMode);
 		m_pCamera->SetTimeLag(0.25f);
-		m_pCamera->SetOffset(XMFLOAT3(0.0f, MERTER_PER_PIXEL(2), MERTER_PER_PIXEL(-5)));
+		m_pCamera->SetOffset(XMFLOAT3(0.0f, METER_PER_PIXEL(2), METER_PER_PIXEL(-5)));
+		m_pCamera->GenerateProjectionMatrix(1.01f, 5000.0f, ASPECT_RATIO, 60.0f);
+		m_pCamera->SetViewport(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT, 0.0f, 1.0f);
+		m_pCamera->SetScissorRect(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT);
+		break;
+	case SHOULDER_HOLD_CAMERA:
+		SetFriction(0.0f);
+		SetGravity(XMFLOAT3(0.0f, PIXEL_MPS(-9.8), 0.0f));
+		SetMaxVelocityXZ(PIXEL_KPH(40));
+		SetMaxVelocityY(PIXEL_KPH(200));
+		m_pCamera = OnChangeCamera(SHOULDER_HOLD_CAMERA, nCurrentCameraMode);
+		m_pCamera->SetTimeLag(0.05f);
+		m_pCamera->SetOffset(XMFLOAT3(METER_PER_PIXEL(0.8), METER_PER_PIXEL(1.5), METER_PER_PIXEL(-1)));
 		m_pCamera->GenerateProjectionMatrix(1.01f, 5000.0f, ASPECT_RATIO, 60.0f);
 		m_pCamera->SetViewport(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT, 0.0f, 1.0f);
 		m_pCamera->SetScissorRect(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT);
@@ -402,7 +411,7 @@ void Scene_Neon::BuildLightsAndMaterials()
 	float terrainCenterX = m_pTerrain->GetWidth() * 0.5f;
 	float terrainCenterZ = m_pTerrain->GetLength() * 0.5f;
 	SetLight(m_pLights[0], XMFLOAT4(0.5f, 0.0f, 0.5f, 1.0f), XMFLOAT4(0.8f, 0.0f, 0.4f, 1.0f), XMFLOAT4(0.1f, 0.1f, 0.1f, 0.0f),
-		XMFLOAT3(terrainCenterX, m_pTerrain->GetHeight(terrainCenterX, terrainCenterZ) + MERTER_PER_PIXEL(3), terrainCenterZ), XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 0.001f, 0.0001f),
+		XMFLOAT3(terrainCenterX, m_pTerrain->GetHeight(terrainCenterX, terrainCenterZ) + METER_PER_PIXEL(3), terrainCenterZ), XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 0.001f, 0.0001f),
 		0, 0, 0, true, POINT_LIGHT, 200.0f, 0);
 
 	SetLight(m_pLights[1], XMFLOAT4(0.1f, 0.1f, 0.1f, 1.0f), XMFLOAT4(1.0f, 0.5f, 0.5f, 1.0f), XMFLOAT4(0.1f, 0.1f, 0.1f, 0.0f),

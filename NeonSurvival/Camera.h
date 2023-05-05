@@ -3,6 +3,7 @@
 #define FIRST_PERSON_CAMERA 0x01
 #define SPACESHIP_CAMERA 0x02
 #define THIRD_PERSON_CAMERA 0x03
+#define SHOULDER_HOLD_CAMERA 0x04
 
 class CPlayer;
 
@@ -16,6 +17,8 @@ struct CB_CAMERA_INFO
 
 class CCamera {
 protected:
+	XMFLOAT3 m_xfm3ResultLookAtPosition;
+	XMFLOAT3 m_xmf3LookAtPosition;
 	XMFLOAT3 m_xmf3Position;
 	XMFLOAT3 m_xmf3Right;
 	XMFLOAT3 m_xmf3Up;
@@ -69,6 +72,9 @@ public:
 
 	void SetMode(DWORD nMode) { m_nMode = nMode; }
 	DWORD GetMode() { return m_nMode; }
+
+	void SetLookAtCoord(XMFLOAT3 xmf3Position) { m_xmf3LookAtPosition = xmf3Position; }
+	XMFLOAT3& GetLookAtCoord() { return m_xmf3LookAtPosition; }
 
 	void SetPosition(XMFLOAT3 xmf3Position) { m_xmf3Position = xmf3Position; }
 	XMFLOAT3& GetPosition() { return m_xmf3Position; }
@@ -129,6 +135,16 @@ class CThirdPersonCamera : public CCamera {
 public:
 	CThirdPersonCamera(CCamera* pCamera);
 	virtual ~CThirdPersonCamera() {}
+
+	virtual void Update(XMFLOAT3& xmf3LookAt, float fTimeElapsed);
+	virtual void SetLookAt(XMFLOAT3& vLookAt);
+	virtual void SetLookAt(XMFLOAT3&& vLookAt);
+};
+
+class CShoulderHoldCamera : public CCamera {
+public:
+	CShoulderHoldCamera(CCamera* pCamera);
+	virtual ~CShoulderHoldCamera() {}
 
 	virtual void Update(XMFLOAT3& xmf3LookAt, float fTimeElapsed);
 	virtual void SetLookAt(XMFLOAT3& vLookAt);

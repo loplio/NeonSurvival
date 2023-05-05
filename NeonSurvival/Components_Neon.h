@@ -18,6 +18,17 @@ public:
 	void OnPlayerUpdateCallback(float fTimeElapsed) override;
 	void OnCameraUpdateCallback(float fTimeElapsed) override;
 	CCamera* ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed) override;
+
+public:
+	enum GunType {
+		Empty,
+		Pistol,
+		Rifle,
+		Aim_Rifle
+	};
+
+	UINT m_nGunType = Empty;
+	void SetTypeDefine(UINT nType) override { m_nGunType = nType; };
 };
 
 //-------------------------------------------------------------------------------

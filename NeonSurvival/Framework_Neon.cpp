@@ -226,13 +226,25 @@ void CGameFramework_Neon::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, W
 	if (m_pScene) m_pScene->OnProcessingMouseMessage(hWnd, nMessageID, wParam, lParam);
 	switch (nMessageID) {
 	case WM_LBUTTONDOWN:
+		break;
 	case WM_RBUTTONDOWN:
-		m_pSelectedObject = m_pScene->PickObjectPointedByCursor(LOWORD(lParam), HIWORD(lParam), m_pCamera);
-		m_bReleaseCapture = false;
+		if (m_pPlayer && m_pCamera->GetMode() != SHOULDER_HOLD_CAMERA)
+		{
+			m_pCamera = m_pPlayer->ChangeCamera((SHOULDER_HOLD_CAMERA), m_GameTimer.GetTimeElapsed());
+			m_pPlayer->SetTypeDefine(1);	// 1. GunType - Pistol, 2. GunType - Rifle.
+		}
+		//m_pSelectedObject = m_pScene->PickObjectPointedByCursor(LOWORD(lParam), HIWORD(lParam), m_pCamera);
+		//m_bReleaseCapture = false;
 		break;
 	case WM_LBUTTONUP:
+		break;
 	case WM_RBUTTONUP:
-		m_pSelectedObject = NULL;
+		if (m_pPlayer)
+		{
+			m_pCamera = m_pPlayer->ChangeCamera((THIRD_PERSON_CAMERA), m_GameTimer.GetTimeElapsed());
+			m_pPlayer->SetTypeDefine(0);	// Empty.
+		}
+		//m_pSelectedObject = NULL;
 		break;
 	case WM_MOUSEMOVE:
 		if (!m_bReleaseCapture)

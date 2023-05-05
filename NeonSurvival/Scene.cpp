@@ -548,7 +548,7 @@ void CScene::AnimateObjects(float fTimeElapsed)
 	if (m_pLights)
 	{
 		m_pLights[1].m_xmf3Position = m_pPlayer->GetPosition();
-		m_pLights[1].m_xmf3Position.y += MERTER_PER_PIXEL(1.3);
+		m_pLights[1].m_xmf3Position.y += METER_PER_PIXEL(1.3);
 		m_pLights[1].m_xmf3Direction = m_pPlayer->GetCamera()->GetLookVector();
 	}
 }

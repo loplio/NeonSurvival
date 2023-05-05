@@ -149,8 +149,8 @@ public:
 	~CAnimationController();
 
 public:
+	int								m_nCurrentTrack = 0;
 	float 							m_fTime = 0.0f;
-	float							m_fEndAnimPosition = -1.f;
 
 	int 							m_nAnimationTracks = 0;
 	CAnimationTrack*				m_pAnimationTracks = NULL;
@@ -168,8 +168,6 @@ public:
 
 	void SetTrackAnimationSet(int nAnimationTrack, int nAnimationSet);
 
-	void InitEndAnimPosition();
-	void SetEndAnimPosition(float fPosition);
 	void SetOneOfTrackEnable(int nAnimationTrack);
 	void SetHandOverPosition(int nAnimationTrack, bool bEnable);
 	void SetTrackEnable(int nAnimationTrack, bool bEnable);
@@ -182,6 +180,16 @@ public:
 	void SetAnimationCallbackHandler(int nAnimationSet, CAnimationCallbackHandler* pCallbackHandler);
 
 	void AdvanceTime(float fElapsedTime, CGameObject* pRootGameObject);
+
+	enum {
+		IDLE,
+		WALK,
+		BACKWARD_WALK,
+		RUN,
+		FIRE,
+	};
+	int m_nAnimationBundle[6]{ -1, -1, -1, -1, -1, -1 };
+	void SetAnimationBundle(UINT n);
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -51,6 +51,8 @@ public:
 	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL) override;
 
 	// Others
+	virtual void SetTypeDefine(UINT nType) {};
+
 	XMFLOAT3 GetPosition() const { return(m_xmf3Position); }
 	XMFLOAT3 GetLookVector() const { return(m_xmf3Look); }
 	XMFLOAT3 GetUpVector() const { return(m_xmf3Up); }
