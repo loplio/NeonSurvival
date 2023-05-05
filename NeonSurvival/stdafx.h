@@ -72,10 +72,10 @@ using Microsoft::WRL::ComPtr;
 #define RANDOM_COLOR XMFLOAT4(rand() / float(RAND_MAX), rand() / float(RAND_MAX), rand() / float(RAND_MAX), rand() / float(RAND_MAX))
 #define EPSILON 1.0e-10f
 
-#define MERTER_PER_PIXEL(num) num * 10 // 1meter 10pixel~50pixel
-#define KM_PER_PIXEL(num) (MERTER_PER_PIXEL(num)*1000)
+#define METER_PER_PIXEL(num) num * 10 // 1meter 10pixel~50pixel
+#define KM_PER_PIXEL(num) (METER_PER_PIXEL(num)*1000)
 
-#define PIXEL_MPS(num) MERTER_PER_PIXEL(num)
+#define PIXEL_MPS(num) METER_PER_PIXEL(num)
 #define PIXEL_MPM(num) PIXEL_MPS(num) / 60
 #define PIXEL_KPH(num) KM_PER_PIXEL(num) / 3600
 #define PIXEL_TO_KPH(num) num / KM_PER_PIXEL(1.0f) * 3600
@@ -85,8 +85,18 @@ using Microsoft::WRL::ComPtr;
 #define ROOT_PARAMETER_CAMERA			1
 #define ROOT_PARAMETER_OBJECT			2
 #define ROOT_PARAMETER_LIGHT			3
+#define ROOT_PARAMETER_TEXTURE			4
 #define ROOT_PARAMETER_BONE_OFFSET		14
 #define ROOT_PARAMETER_BONE_TRANSFORM	15
+#define ROOT_PARAMETER_PARTICLE_TEXTURE	16
+#define ROOT_PARAMETER_RANDOM_TEXTURE	17
+#define ROOT_PARAMETER_RANDOM_ON_SPHERE_TEXTURE	18
+#define ROOT_PARAMETER_FRAMEWORK_INFO	19
+#define ROOT_PARAMETER_OUTPUT			20
+
+#define CROOT_PARAMETER_TEX2D_INPUT_A	0
+#define CROOT_PARAMETER_RWTEX2D_OUTPUT	1
+#define CROOT_PARAMETER_TEX2D_OUTPUT_A	4
 
 #define MAX_LIGHTS 8
 #define MAX_MATERIALS 8
@@ -121,6 +131,8 @@ inline bool IsEqual(float fA, float fB, float fEpsilon) { return(::IsZero(fA - f
 inline float InverseSqrt(float fValue) { return 1.0f / sqrtf(fValue); }
 inline void Swap(float* pfS, float* pfT) { float fTemp = *pfS; *pfS = *pfT; *pfT = fTemp; }
 
+extern UINT	gnRtvDescriptorIncrementSize;
+extern UINT gnDsvDescriptorIncrementSize;
 extern UINT gnCbvSrvDescriptorIncrementSize;
 
 extern BYTE ReadStringFromFile(FILE* pInFile, char* pstrToken);
@@ -131,15 +143,20 @@ extern void SynchronizeResourceTransition(ID3D12GraphicsCommandList* pd3dCommand
 extern void WaitForGpuComplete(ID3D12CommandQueue* pd3dCommandQueue, ID3D12Fence* pd3dFence, UINT64 nFenceValue, HANDLE hFenceEvent);
 extern void ExecuteCommandList(ID3D12GraphicsCommandList* pd3dCommandList, ID3D12CommandQueue* pd3dCommandQueue, ID3D12Fence* pd3dFence, UINT64 nFenceValue, HANDLE hFenceEvent);
 
+extern void SwapResourcePointer(ID3D12Resource** ppd3dResourceA, ID3D12Resource** ppd3dResourceB);
+
 extern ID3D12Resource* CreateBufferResource(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, void* pData, UINT nBytes,
-	D3D12_HEAP_TYPE d3dHeapType = D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATES d3dResourceStates = D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
+	D3D12_HEAP_TYPE d3dHeapType = D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATES d3dResourceStates = D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER | D3D12_RESOURCE_STATE_GENERIC_READ,
 	ID3D12Resource** ppd3dUploadBuffer = NULL);
+extern ID3D12Resource* CreateTextureResource(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, void* pData, UINT nBytes,
+	D3D12_RESOURCE_DIMENSION d3dResourceDimension, UINT nWidth, UINT nHeight, UINT nDepthOrArraySize, UINT nMipLevels, D3D12_RESOURCE_FLAGS d3dResourceFlags, DXGI_FORMAT dxgiFormat, D3D12_HEAP_TYPE d3dHeapType, D3D12_RESOURCE_STATES d3dResourceStates, ID3D12Resource** ppd3dUploadBuffer);
 extern ID3D12Resource* CreateTextureResourceFromDDSFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, wchar_t* pszFileName,
 	ID3D12Resource** ppd3dUploadBuffer, D3D12_RESOURCE_STATES d3dResourceStates = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 extern ID3D12Resource* CreateTextureResourceFromWICFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, wchar_t* pszFileName,
 	ID3D12Resource** ppd3dUploadBuffer, D3D12_RESOURCE_STATES d3dResourceStates = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 extern ID3D12Resource* CreateTexture2DResource(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, UINT nWidth,
 	UINT nHeight, UINT nElements, UINT nMipLevels, DXGI_FORMAT dxgiFormat, D3D12_RESOURCE_FLAGS d3dResourceFlags, D3D12_RESOURCE_STATES d3dResourceStates, D3D12_CLEAR_VALUE* pd3dClearValue);
+
 
 namespace Vector3
 {

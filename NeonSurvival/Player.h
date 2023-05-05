@@ -51,10 +51,14 @@ public:
 	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL) override;
 
 	// Others
+	virtual void SetTypeDefine(UINT nType) {};
+
 	XMFLOAT3 GetPosition() const { return(m_xmf3Position); }
 	XMFLOAT3 GetLookVector() const { return(m_xmf3Look); }
 	XMFLOAT3 GetUpVector() const { return(m_xmf3Up); }
 	XMFLOAT3 GetRightVector() const { return(m_xmf3Right); }
+
+	float GetCurrentVelToMaxVel() { return  sqrtf(m_xmf3Velocity.x * m_xmf3Velocity.x + m_xmf3Velocity.z * m_xmf3Velocity.z) / m_fMaxVelocityXZ; }
 
 	void SetFriction(float fFriction) { m_fFriction = fFriction; }
 	void SetGravity(XMFLOAT3&& xmf3Gravity) { m_xmf3Gravity = xmf3Gravity; }
@@ -79,4 +83,7 @@ public:
 	void SetPlayerUpdatedContext(LPVOID pContext) { m_pPlayerUpdatedContext = pContext; }
 	virtual void OnCameraUpdateCallback(float fTimeElapsed) {};
 	void SetCameraUpdatedContext(LPVOID pContext) { m_pCameraUpdatedContext = pContext; }
+
+public:
+	bool IsDash = false;
 };

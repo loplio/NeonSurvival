@@ -21,20 +21,17 @@ void CBoundingBoxObjects::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCa
 
 	for (int i = 0; i < m_BBObjects.size(); ++i)
 	{
-		if (m_BBObjects[i])
+		for (int n = 0; n < m_BBObjects[i]->GetBoundingBoxMesh().size(); ++n)
 		{
-			for (int n = 0; n < m_BBObjects[i]->GetBoundingBoxMesh().size(); ++n)
+			if (m_BBObjects[i]->GetBoundingBoxMesh()[n])
 			{
-				if (m_BBObjects[i]->GetBoundingBoxMesh()[n])
-				{
-					XMFLOAT4X4 CenterPosition = Matrix4x4::Identity();
-					CenterPosition._41 += m_BBObjects[i]->GetBoundingBoxMesh()[n]->GetAABBCenter().x;
-					CenterPosition._42 += m_BBObjects[i]->GetBoundingBoxMesh()[n]->GetAABBCenter().y;
-					CenterPosition._43 += m_BBObjects[i]->GetBoundingBoxMesh()[n]->GetAABBCenter().z;
-					CenterPosition = Matrix4x4::Multiply(CenterPosition, m_BBObjects[i]->m_xmf4x4World);
-					m_BBObjects[i]->UpdateShaderVariable(pd3dCommandList, &CenterPosition);
-					m_BBObjects[i]->GetBoundingBoxMesh()[n]->Render(pd3dCommandList, 0);
-				}
+				XMFLOAT4X4 CenterPosition = Matrix4x4::Identity();
+				CenterPosition._41 += m_BBObjects[i]->GetBoundingBoxMesh()[n]->GetAABBCenter().x;
+				CenterPosition._42 += m_BBObjects[i]->GetBoundingBoxMesh()[n]->GetAABBCenter().y;
+				CenterPosition._43 += m_BBObjects[i]->GetBoundingBoxMesh()[n]->GetAABBCenter().z;
+				CenterPosition = Matrix4x4::Multiply(CenterPosition, m_BBObjects[i]->m_xmf4x4World);
+				m_BBObjects[i]->UpdateShaderVariable(pd3dCommandList, &CenterPosition);
+				m_BBObjects[i]->GetBoundingBoxMesh()[n]->Render(pd3dCommandList, 0);
 			}
 		}
 	}
@@ -221,7 +218,7 @@ void TexturedObjects_1::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 	ppTextures[0] = new CTexture(1, RESOURCE_TEXTURE2D, 0, 1);
 	ppTextures[0]->LoadTextureFromFile(pd3dDevice, pd3dCommandList, (wchar_t*)L"Image/Ceiling.dds", 0, true);
 
-	CScene::CreateShaderResourceViews(pd3dDevice, ppTextures[0], 4, true);
+	CScene::CreateSRVUAVs(pd3dDevice, ppTextures[0], 4, true);
 
 	CMaterial* ppMaterials[1];
 	ppMaterials[0] = new CMaterial();
@@ -497,4 +494,556 @@ void BlendTextureObjects_1::BuildObjects(ID3D12Device* pd3dDevice, ID3D12Graphic
 void BlendTextureObjects_1::AnimateObjects(float fTimeElapsed)
 {
 	//if (!m_ppObjects.empty()) m_ppObjects[0]->BatchAnimate(fTimeElapsed);
+}
+
+//-------------------------------------------------------------------------------
+/*	CTextureToScreenShader												       */
+//-------------------------------------------------------------------------------
+CTextureToScreenShader::CTextureToScreenShader(wchar_t* texturePath)
+{
+	pszFileName = texturePath;
+}
+
+CTextureToScreenShader::~CTextureToScreenShader()
+{
+	if (m_RectMesh) delete m_RectMesh;
+	if (m_pTexture) delete m_pTexture;
+}
+
+D3D12_RASTERIZER_DESC CTextureToScreenShader::CreateRasterizerState()
+{
+	D3D12_RASTERIZER_DESC d3dRasterizerDesc;
+	::ZeroMemory(&d3dRasterizerDesc, sizeof(D3D12_RASTERIZER_DESC));
+	d3dRasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
+	d3dRasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
+	d3dRasterizerDesc.FrontCounterClockwise = FALSE;
+	d3dRasterizerDesc.DepthBias = 0;
+	d3dRasterizerDesc.DepthBiasClamp = 0.0f;
+	d3dRasterizerDesc.SlopeScaledDepthBias = 0.0f;
+	d3dRasterizerDesc.DepthClipEnable = TRUE;
+	d3dRasterizerDesc.MultisampleEnable = FALSE;
+	d3dRasterizerDesc.AntialiasedLineEnable = FALSE;
+	d3dRasterizerDesc.ForcedSampleCount = 0;
+	d3dRasterizerDesc.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
+
+	return(d3dRasterizerDesc);
+}
+
+D3D12_BLEND_DESC CTextureToScreenShader::CreateBlendState()
+{
+	D3D12_BLEND_DESC d3dBlendDesc;
+	::ZeroMemory(&d3dBlendDesc, sizeof(D3D12_BLEND_DESC));
+	d3dBlendDesc.AlphaToCoverageEnable = TRUE;
+	d3dBlendDesc.IndependentBlendEnable = FALSE;
+	d3dBlendDesc.RenderTarget[0].BlendEnable = TRUE;
+	d3dBlendDesc.RenderTarget[0].LogicOpEnable = FALSE;
+	d3dBlendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	d3dBlendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	d3dBlendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	d3dBlendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	d3dBlendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+	d3dBlendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	d3dBlendDesc.RenderTarget[0].LogicOp = D3D12_LOGIC_OP_NOOP;
+	d3dBlendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+	return(d3dBlendDesc);
+}
+
+D3D12_DEPTH_STENCIL_DESC CTextureToScreenShader::CreateDepthStencilState()
+{
+	D3D12_DEPTH_STENCIL_DESC d3dDepthStencilDesc;
+	::ZeroMemory(&d3dDepthStencilDesc, sizeof(D3D12_DEPTH_STENCIL_DESC));
+	d3dDepthStencilDesc.DepthEnable = FALSE;
+	d3dDepthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+	d3dDepthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+	d3dDepthStencilDesc.StencilEnable = FALSE;
+	d3dDepthStencilDesc.StencilReadMask = 0x00;
+	d3dDepthStencilDesc.StencilWriteMask = 0x00;
+	d3dDepthStencilDesc.FrontFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
+	d3dDepthStencilDesc.FrontFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+	d3dDepthStencilDesc.FrontFace.StencilPassOp = D3D12_STENCIL_OP_KEEP;
+	d3dDepthStencilDesc.FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_NEVER;
+	d3dDepthStencilDesc.BackFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
+	d3dDepthStencilDesc.BackFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+	d3dDepthStencilDesc.BackFace.StencilPassOp = D3D12_STENCIL_OP_KEEP;
+	d3dDepthStencilDesc.BackFace.StencilFunc = D3D12_COMPARISON_FUNC_NEVER;
+
+	return(d3dDepthStencilDesc);
+}
+
+D3D12_SHADER_BYTECODE CTextureToScreenShader::CreateVertexShader()
+{
+	return(CShader::CompileShaderFromFile((wchar_t*)L"Shaders.hlsl", "VSTextureToScreen", "vs_5_1", &m_pd3dVertexShaderBlob));
+}
+
+D3D12_SHADER_BYTECODE CTextureToScreenShader::CreatePixelShader()
+{
+	return(CShader::CompileShaderFromFile((wchar_t*)L"Shaders.hlsl", "PSTextureToScreen", "ps_5_1", &m_pd3dPixelShaderBlob));
+}
+
+void CTextureToScreenShader::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	m_pTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0, 1);
+	m_pTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, (wchar_t*)pszFileName, 0, true);
+
+	CScene::CreateSRVUAVs(pd3dDevice, m_pTexture, ROOT_PARAMETER_TEXTURE, true);
+}
+
+void CTextureToScreenShader::ReleaseShaderVariables()
+{
+}
+
+void CTextureToScreenShader::ReleaseUploadBuffers()
+{
+	if (m_pTexture) m_pTexture->ReleaseUploadBuffers();
+	if (m_RectMesh) m_RectMesh->ReleaseUploadBuffers();
+}
+
+void CTextureToScreenShader::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	if (m_pTexture) m_pTexture->UpdateGraphicsSrvShaderVariable(pd3dCommandList, 0);
+}
+
+void CTextureToScreenShader::CreateGraphicsPipelineState(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dRootSignature)
+{
+	m_nPipelineStates = 1;
+	m_ppd3dPipelineStates = new ID3D12PipelineState * [m_nPipelineStates];
+
+	SetDSVFormat(DXGI_FORMAT_D32_FLOAT);
+	CShader::CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, pd3dRootSignature);
+
+	CreateShaderVariables(pd3dDevice, pd3dCommandList);
+}
+
+void CTextureToScreenShader::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int nPipelineState)
+{
+	OnPrepareRender(pd3dCommandList);
+	UpdateShaderVariables(pd3dCommandList);
+
+	m_RectMesh->Render(pd3dCommandList, 0);
+}
+
+void CTextureToScreenShader::CreateRectTexture(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float fWidth, float fHeight, float fDepth, float fxPosition, float fyPosition, float fzPosition)
+{
+	m_RectMesh = new CTexturedRectMesh(pd3dDevice, pd3dCommandList, fWidth, fHeight, fDepth, fxPosition, fyPosition, fzPosition);
+}
+
+//-------------------------------------------------------------------------------
+/*	CTextureToFullScreenShader												   */
+//-------------------------------------------------------------------------------
+CTextureToFullScreenShader::CTextureToFullScreenShader(CTexture* pTexture)
+{
+	m_pTexture = pTexture;
+	if (m_pTexture) m_pTexture->AddRef();
+}
+
+CTextureToFullScreenShader::~CTextureToFullScreenShader()
+{
+}
+
+D3D12_DEPTH_STENCIL_DESC CTextureToFullScreenShader::CreateDepthStencilState()
+{
+	D3D12_DEPTH_STENCIL_DESC d3dDepthStencilDesc;
+	::ZeroMemory(&d3dDepthStencilDesc, sizeof(D3D12_DEPTH_STENCIL_DESC));
+	d3dDepthStencilDesc.DepthEnable = FALSE;
+	d3dDepthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+	d3dDepthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+	d3dDepthStencilDesc.StencilEnable = FALSE;
+	d3dDepthStencilDesc.StencilReadMask = 0x00;
+	d3dDepthStencilDesc.StencilWriteMask = 0x00;
+	d3dDepthStencilDesc.FrontFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
+	d3dDepthStencilDesc.FrontFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+	d3dDepthStencilDesc.FrontFace.StencilPassOp = D3D12_STENCIL_OP_KEEP;
+	d3dDepthStencilDesc.FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_NEVER;
+	d3dDepthStencilDesc.BackFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
+	d3dDepthStencilDesc.BackFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+	d3dDepthStencilDesc.BackFace.StencilPassOp = D3D12_STENCIL_OP_KEEP;
+	d3dDepthStencilDesc.BackFace.StencilFunc = D3D12_COMPARISON_FUNC_NEVER;
+
+	return(d3dDepthStencilDesc);
+}
+
+D3D12_SHADER_BYTECODE CTextureToFullScreenShader::CreateVertexShader()
+{
+	return(CShader::CompileShaderFromFile((wchar_t*)L"Shaders.hlsl", "VSTextureToFullScreen", "vs_5_1", &m_pd3dVertexShaderBlob));
+}
+
+D3D12_SHADER_BYTECODE CTextureToFullScreenShader::CreatePixelShader()
+{
+	return(CShader::CompileShaderFromFile((wchar_t*)L"Shaders.hlsl", "PSTextureToFullScreen", "ps_5_1", &m_pd3dPixelShaderBlob));
+}
+
+void CTextureToFullScreenShader::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	//m_pTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0, 1, 1);
+	//m_pTexture->CreateTexture(pd3dDevice, pd3dCommandList, NULL, 0, RESOURCE_TEXTURE2D, 1024, 1024, 1, 1, D3D12_RESOURCE_FLAG_NONE, D3D12_RESOURCE_STATE_COPY_DEST, DXGI_FORMAT_R8G8B8A8_UNORM, 0);
+
+	CScene::CreateSRVUAVs(pd3dDevice, m_pTexture, ROOT_PARAMETER_TEXTURE, true, true, true, 0, 1);
+	CScene::CreateSRVUAVs(pd3dDevice, m_pTexture, ROOT_PARAMETER_OUTPUT, true, true, true, 2, 1, 1);
+}
+
+void CTextureToFullScreenShader::ReleaseShaderVariables()
+{
+}
+
+void CTextureToFullScreenShader::ReleaseUploadBuffers()
+{
+}
+
+void CTextureToFullScreenShader::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	if (m_pTexture) m_pTexture->UpdateGraphicsSrvShaderVariable(pd3dCommandList, 0);
+	if (m_pTexture) m_pTexture->UpdateGraphicsSrvShaderVariable(pd3dCommandList, 1);
+}
+
+void CTextureToFullScreenShader::CreateGraphicsPipelineState(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dRootSignature)
+{
+	m_nPipelineStates = 1;
+	m_ppd3dPipelineStates = new ID3D12PipelineState * [m_nPipelineStates];
+
+	SetDSVFormat(DXGI_FORMAT_D32_FLOAT);
+	CShader::CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, pd3dRootSignature);
+
+	CreateShaderVariables(pd3dDevice, pd3dCommandList);
+}
+
+void CTextureToFullScreenShader::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int nPipelineState)
+{
+	OnPrepareRender(pd3dCommandList);
+	UpdateShaderVariables(pd3dCommandList);
+
+	pd3dCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	pd3dCommandList->DrawInstanced(6, 1, 0, 0);
+}
+
+//-------------------------------------------------------------------------------
+/*	CAddTexturesComputeShader : public CComputeShader						   */
+//-------------------------------------------------------------------------------
+CAddTexturesComputeShader::CAddTexturesComputeShader()
+{
+}
+
+CAddTexturesComputeShader::~CAddTexturesComputeShader()
+{
+}
+
+D3D12_SHADER_BYTECODE CAddTexturesComputeShader::CreateComputeShader()
+{
+	return(CShader::CompileShaderFromFile((wchar_t*)L"Shaders.hlsl", "CSAddTextures", "cs_5_1", &m_pd3dGeometryShaderBlob));
+}
+
+void CAddTexturesComputeShader::CreateComputePipelineState(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dRootSignature, UINT cxThreadGroups, UINT cyThreadGroups, UINT czThreadGroups)
+{
+	m_nPipelineStates = 1;
+	m_ppd3dPipelineStates = new ID3D12PipelineState * [m_nPipelineStates];
+
+	CComputeShader::CreateComputePipelineState(pd3dDevice, pd3dRootSignature, cxThreadGroups, cyThreadGroups, czThreadGroups);
+
+	CreateShaderVariables(pd3dDevice, pd3dCommandList);
+}
+
+void CAddTexturesComputeShader::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	m_pTexture = new CTexture(3, RESOURCE_TEXTURE2D, 0, 1, 0, 2, 1);
+
+	m_pTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, (wchar_t*)L"Image/InputA.dds", 0); //1024x1024
+	m_pTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, (wchar_t*)L"Image/InputC.dds", 1); //1024x1024
+	ID3D12Resource* pd3dResource = m_pTexture->GetTexture(0);
+	D3D12_RESOURCE_DESC d3dResourceDesc = pd3dResource->GetDesc();
+	m_pTexture->CreateTexture(pd3dDevice, pd3dCommandList, NULL, 0, RESOURCE_TEXTURE2D, d3dResourceDesc.Width, d3dResourceDesc.Height, 1, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, DXGI_FORMAT_R8G8B8A8_UNORM, 2);
+
+	CScene::CreateSRVUAVs(pd3dDevice, m_pTexture, CROOT_PARAMETER_TEX2D_INPUT_A, true, false, true, 0, 2);
+	CScene::CreateSRVUAVs(pd3dDevice, m_pTexture, CROOT_PARAMETER_RWTEX2D_OUTPUT, true, false, false, 2, 1);
+
+	m_cxThreadGroups = ceil(d3dResourceDesc.Width / 32.0f);
+	m_cyThreadGroups = ceil(d3dResourceDesc.Height / 32.0f);
+}
+
+void CAddTexturesComputeShader::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	if (m_pTexture) m_pTexture->UpdateComputeSrvShaderVariable(pd3dCommandList, 0);
+	if (m_pTexture) m_pTexture->UpdateComputeUavShaderVariable(pd3dCommandList, 0);
+}
+
+void CAddTexturesComputeShader::ReleaseShaderVariables()
+{
+	if (m_pTexture) m_pTexture->Release();
+}
+
+void CAddTexturesComputeShader::ReleaseUploadBuffers()
+{
+	if (m_pTexture) m_pTexture->ReleaseUploadBuffers();
+}
+
+void CAddTexturesComputeShader::Dispatch(ID3D12GraphicsCommandList* pd3dCommandList, int nPipelineState)
+{
+	OnPrepareRender(pd3dCommandList);
+	UpdateShaderVariables(pd3dCommandList);
+
+	pd3dCommandList->Dispatch(m_cxThreadGroups, m_cyThreadGroups, m_czThreadGroups);
+}
+//-------------------------------------------------------------------------------
+/*	CBrightAreaComputeShader													   */
+//-------------------------------------------------------------------------------
+CBrightAreaComputeShader::CBrightAreaComputeShader()
+{
+}
+CBrightAreaComputeShader::CBrightAreaComputeShader(wchar_t* texturePath)
+{
+	pszFileName = texturePath;
+}
+CBrightAreaComputeShader::~CBrightAreaComputeShader()
+{
+}
+
+D3D12_SHADER_BYTECODE CBrightAreaComputeShader::CreateComputeShader()
+{
+	return(CShader::CompileShaderFromFile((wchar_t*)L"Shaders.hlsl", "CSBrightArea", "cs_5_1", &m_pd3dGeometryShaderBlob));
+}
+
+void CBrightAreaComputeShader::CreateComputePipelineState(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dRootSignature, UINT cxThreadGroups, UINT cyThreadGroups, UINT czThreadGroups)
+{
+	m_nPipelineStates = 1;
+	m_ppd3dPipelineStates = new ID3D12PipelineState * [m_nPipelineStates];
+
+	CComputeShader::CreateComputePipelineState(pd3dDevice, pd3dRootSignature, cxThreadGroups, cyThreadGroups, czThreadGroups);
+
+	CreateShaderVariables(pd3dDevice, pd3dCommandList);
+}
+
+void CBrightAreaComputeShader::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	m_pTexture = new CTexture(2, RESOURCE_TEXTURE2D, 0, 1, 0, 1, 1);
+
+	if(pszFileName)
+		m_pTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, pszFileName, 0, true, D3D12_RESOURCE_STATE_GENERIC_READ);
+	else
+		m_pTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, (wchar_t*)L"Image/Light3.dds", 0, true, D3D12_RESOURCE_STATE_GENERIC_READ);
+	ID3D12Resource* pd3dResource = m_pTexture->GetTexture(0);
+	D3D12_RESOURCE_DESC d3dResourceDesc = pd3dResource->GetDesc();
+	m_pTexture->CreateTexture(pd3dDevice, pd3dCommandList, NULL, 0, RESOURCE_TEXTURE2D, d3dResourceDesc.Width, d3dResourceDesc.Height, 1, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, DXGI_FORMAT_R8G8B8A8_UNORM, 1);
+
+	CScene::CreateSRVUAVs(pd3dDevice, m_pTexture, CROOT_PARAMETER_TEX2D_INPUT_A, true, false, true, 0, 1);
+	CScene::CreateSRVUAVs(pd3dDevice, m_pTexture, CROOT_PARAMETER_RWTEX2D_OUTPUT, true, false, false, 1, 1);
+
+	m_cxThreadGroups = ceil(d3dResourceDesc.Width / 32.0f);
+	m_cyThreadGroups = ceil(d3dResourceDesc.Height / 32.0f);
+}
+
+void CBrightAreaComputeShader::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	if (m_pTexture) m_pTexture->UpdateComputeSrvShaderVariable(pd3dCommandList, 0);
+	if (m_pTexture) m_pTexture->UpdateComputeUavShaderVariable(pd3dCommandList, 0);
+}
+
+void CBrightAreaComputeShader::ReleaseShaderVariables()
+{
+	if (m_pTexture) m_pTexture->Release();
+}
+
+void CBrightAreaComputeShader::ReleaseUploadBuffers()
+{
+	if (m_pTexture) m_pTexture->ReleaseUploadBuffers();
+}
+
+void CBrightAreaComputeShader::Dispatch(ID3D12GraphicsCommandList* pd3dCommandList, int nPipelineState)
+{
+	OnPrepareRender(pd3dCommandList);
+	if (m_ppd3dPipelineStates[nPipelineState]) pd3dCommandList->SetPipelineState(m_ppd3dPipelineStates[nPipelineState]);
+	UpdateShaderVariables(pd3dCommandList);
+
+	pd3dCommandList->Dispatch(m_cxThreadGroups, m_cyThreadGroups, m_czThreadGroups);
+}
+
+//-------------------------------------------------------------------------------
+/*	CGaussian2DBlurComputeShader											   */
+//-------------------------------------------------------------------------------
+CGaussian2DBlurComputeShader::CGaussian2DBlurComputeShader()
+{
+}
+CGaussian2DBlurComputeShader::CGaussian2DBlurComputeShader(wchar_t* texturePath)
+{
+	pszFileName = texturePath;
+}
+CGaussian2DBlurComputeShader::~CGaussian2DBlurComputeShader()
+{
+}
+
+D3D12_SHADER_BYTECODE CGaussian2DBlurComputeShader::CreateComputeShader()
+{
+	return(CShader::CompileShaderFromFile((wchar_t*)L"Shaders.hlsl", "CSGaussian2DBlur", "cs_5_1", &m_pd3dGeometryShaderBlob));
+}
+
+void CGaussian2DBlurComputeShader::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	m_pTexture = new CTexture(3, RESOURCE_TEXTURE2D, 0, 1, 2, 1, 1);
+
+	if (pszFileName)
+		m_pTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, pszFileName, 0, true, D3D12_RESOURCE_STATE_GENERIC_READ);
+	else
+		m_pTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, (wchar_t*)L"Image/Light3.dds", 0, true, D3D12_RESOURCE_STATE_GENERIC_READ);
+	ID3D12Resource* pd3dResource = m_pTexture->GetTexture(0);
+	D3D12_RESOURCE_DESC d3dResourceDesc = pd3dResource->GetDesc();
+	m_pTexture->CreateTexture(pd3dDevice, pd3dCommandList, NULL, 0, RESOURCE_TEXTURE2D, d3dResourceDesc.Width, d3dResourceDesc.Height, 1, 1, D3D12_RESOURCE_FLAG_NONE, D3D12_RESOURCE_STATE_COPY_DEST, DXGI_FORMAT_R8G8B8A8_UNORM, 1);
+	m_pTexture->CreateTexture(pd3dDevice, pd3dCommandList, NULL, 0, RESOURCE_TEXTURE2D, d3dResourceDesc.Width, d3dResourceDesc.Height, 1, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, DXGI_FORMAT_R8G8B8A8_UNORM, 2);
+
+	//ID3D12Resource* pd3dSource = m_pTexture->GetTexture(0);
+	//ID3D12Resource* pd3dSource = m_pSourceResource;
+	//ID3D12Resource* pd3dDestination = m_pTexture->GetTexture(1);
+	//pd3dCommandList->CopyResource(pd3dDestination, pd3dSource);
+
+	CScene::CreateSRVUAVs(pd3dDevice, m_pTexture, CROOT_PARAMETER_TEX2D_INPUT_A, true, false, true, 1, 1);
+	CScene::CreateSRVUAVs(pd3dDevice, m_pTexture, CROOT_PARAMETER_RWTEX2D_OUTPUT, true, false, false, 2, 1);
+
+	m_cxThreadGroups = ceil(d3dResourceDesc.Width / 32.0f);
+	m_cyThreadGroups = ceil(d3dResourceDesc.Height / 32.0f);
+}
+
+void CGaussian2DBlurComputeShader::CreateComputePipelineState(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dRootSignature, UINT cxThreadGroups, UINT cyThreadGroups, UINT czThreadGroups)
+{
+	m_nPipelineStates = 1;
+	m_ppd3dPipelineStates = new ID3D12PipelineState * [m_nPipelineStates];
+
+	CComputeShader::CreateComputePipelineState(pd3dDevice, pd3dRootSignature, cxThreadGroups, cyThreadGroups, czThreadGroups);
+
+	CreateShaderVariables(pd3dDevice, pd3dCommandList);
+}
+
+void CGaussian2DBlurComputeShader::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	if (m_pTexture) m_pTexture->UpdateComputeSrvShaderVariable(pd3dCommandList, 0);
+	if (m_pTexture) m_pTexture->UpdateComputeUavShaderVariable(pd3dCommandList, 0);
+}
+
+void CGaussian2DBlurComputeShader::ReleaseShaderVariables()
+{
+	if (m_pTexture) m_pTexture->Release();
+}
+
+void CGaussian2DBlurComputeShader::ReleaseUploadBuffers()
+{
+	if (m_pTexture) m_pTexture->ReleaseUploadBuffers();
+}
+
+void CGaussian2DBlurComputeShader::Dispatch(ID3D12GraphicsCommandList* pd3dCommandList, int nPipelineState)
+{
+	ID3D12Resource* pd3dSource;
+	ID3D12Resource* pd3dDestination;
+	if (m_pSourceResource)
+	{
+		pd3dSource = m_pSourceResource;
+		::SynchronizeResourceTransition(pd3dCommandList, pd3dSource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
+		pd3dDestination = m_pTexture->GetTexture(1);
+		pd3dCommandList->CopyResource(pd3dDestination, pd3dSource);
+		::SynchronizeResourceTransition(pd3dCommandList, pd3dSource, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	}
+	else
+	{
+		pd3dSource = m_pTexture->GetTexture(0);
+		pd3dDestination = m_pTexture->GetTexture(1);
+		pd3dCommandList->CopyResource(pd3dDestination, pd3dSource);
+	}
+
+	OnPrepareRender(pd3dCommandList);
+	if (m_ppd3dPipelineStates[nPipelineState]) pd3dCommandList->SetPipelineState(m_ppd3dPipelineStates[nPipelineState]);
+	UpdateShaderVariables(pd3dCommandList);
+
+	for (int i = 0; i < 10; i++)
+	{
+		pd3dCommandList->Dispatch(m_cxThreadGroups, m_cyThreadGroups, m_czThreadGroups);
+
+		pd3dSource = m_pTexture->GetTexture(2);
+		::SynchronizeResourceTransition(pd3dCommandList, pd3dSource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
+		pd3dDestination = m_pTexture->GetTexture(1);
+		pd3dCommandList->CopyResource(pd3dDestination, pd3dSource);
+		::SynchronizeResourceTransition(pd3dCommandList, pd3dSource, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+CGaussian1DBlurComputeShader::CGaussian1DBlurComputeShader()
+{
+}
+
+CGaussian1DBlurComputeShader::~CGaussian1DBlurComputeShader()
+{
+}
+
+D3D12_SHADER_BYTECODE CGaussian1DBlurComputeShader::CreateComputeShader(ID3DBlob** ppd3dShaderBlob, int nPipelineState)
+{
+	if (nPipelineState == 0) return(CShader::CompileShaderFromFile((wchar_t*)L"Shaders.hlsl", "CSHorizontalBlur", "cs_5_1", ppd3dShaderBlob));
+	if (nPipelineState == 1) return(CShader::CompileShaderFromFile((wchar_t*)L"Shaders.hlsl", "CSVerticalBlur", "cs_5_1", ppd3dShaderBlob));
+}
+
+void CGaussian1DBlurComputeShader::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	m_pTexture = new CTexture(3, RESOURCE_TEXTURE2D, 0, 1, 2, 1, 1);
+
+	m_pTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, (wchar_t*)L"Image/ImageC.dds", 0);
+	ID3D12Resource* pd3dResource = m_pTexture->GetTexture(0);
+	D3D12_RESOURCE_DESC d3dResourceDesc = pd3dResource->GetDesc();
+	m_pTexture->CreateTexture(pd3dDevice, pd3dCommandList, NULL, 0, RESOURCE_TEXTURE2D, d3dResourceDesc.Width, d3dResourceDesc.Height, 1, 1, D3D12_RESOURCE_FLAG_NONE, D3D12_RESOURCE_STATE_COPY_DEST, DXGI_FORMAT_R8G8B8A8_UNORM, 1);
+	m_pTexture->CreateTexture(pd3dDevice, pd3dCommandList, NULL, 0, RESOURCE_TEXTURE2D, d3dResourceDesc.Width, d3dResourceDesc.Height, 1, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, DXGI_FORMAT_R8G8B8A8_UNORM, 2);
+
+	ID3D12Resource* pd3dSource = m_pTexture->GetTexture(0);
+	ID3D12Resource* pd3dDestination = m_pTexture->GetTexture(1);
+	pd3dCommandList->CopyResource(pd3dDestination, pd3dSource);
+
+	CScene::CreateSRVUAVs(pd3dDevice, m_pTexture, CROOT_PARAMETER_TEX2D_INPUT_A, true, false, true, 1, 1);
+	CScene::CreateSRVUAVs(pd3dDevice, m_pTexture, CROOT_PARAMETER_TEX2D_OUTPUT_A, true, false, false, 2, 1);
+}
+
+void CGaussian1DBlurComputeShader::CreateComputePipelineState(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dRootSignature, UINT cxThreadGroups, UINT cyThreadGroups, UINT czThreadGroups)
+{
+	m_nPipelineStates = 2;
+	m_ppd3dPipelineStates = new ID3D12PipelineState * [m_nPipelineStates];
+
+	CComputeShader::CreateComputePipelineState(pd3dDevice, pd3dRootSignature, cxThreadGroups, cyThreadGroups, czThreadGroups);
+	CComputeShader::CreateComputePipelineState(pd3dDevice, pd3dRootSignature, cxThreadGroups, cyThreadGroups, czThreadGroups);
+
+	CreateShaderVariables(pd3dDevice, pd3dCommandList);
+}
+
+void CGaussian1DBlurComputeShader::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	if (m_pTexture) m_pTexture->UpdateComputeSrvShaderVariable(pd3dCommandList, 0);
+	if (m_pTexture) m_pTexture->UpdateComputeUavShaderVariable(pd3dCommandList, 0);
+}
+
+void CGaussian1DBlurComputeShader::ReleaseShaderVariables()
+{
+	if (m_pTexture) m_pTexture->Release();
+}
+
+void CGaussian1DBlurComputeShader::ReleaseUploadBuffers()
+{
+	if (m_pTexture) m_pTexture->ReleaseUploadBuffers();
+}
+
+void CGaussian1DBlurComputeShader::Dispatch(ID3D12GraphicsCommandList* pd3dCommandList, int nPipelineState)
+{
+	OnPrepareRender(pd3dCommandList);
+	UpdateShaderVariables(pd3dCommandList);
+
+	ID3D12Resource* pd3dResource = m_pTexture->GetTexture(0);
+	D3D12_RESOURCE_DESC d3dResourceDesc = pd3dResource->GetDesc();
+	ID3D12Resource* pd3dSource = m_pTexture->GetTexture(2);
+	ID3D12Resource* pd3dDestination = m_pTexture->GetTexture(1);
+	for (int i = 0; i < 5; i++)
+	{
+		if (m_ppd3dPipelineStates[0]) pd3dCommandList->SetPipelineState(m_ppd3dPipelineStates[0]);
+		pd3dCommandList->Dispatch(ceil(d3dResourceDesc.Width / 256.0f), d3dResourceDesc.Height, 1);
+
+		::SynchronizeResourceTransition(pd3dCommandList, pd3dSource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
+		pd3dCommandList->CopyResource(pd3dDestination, pd3dSource);
+		::SynchronizeResourceTransition(pd3dCommandList, pd3dSource, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+
+		if (m_ppd3dPipelineStates[1]) pd3dCommandList->SetPipelineState(m_ppd3dPipelineStates[1]);
+		pd3dCommandList->Dispatch(d3dResourceDesc.Width, ceil(d3dResourceDesc.Height / 256.0f), 1);
+
+		::SynchronizeResourceTransition(pd3dCommandList, pd3dSource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
+		pd3dCommandList->CopyResource(pd3dDestination, pd3dSource);
+		::SynchronizeResourceTransition(pd3dCommandList, pd3dSource, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	}
 }

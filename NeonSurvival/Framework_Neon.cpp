@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "Framework_Neon.h"
 #include "ProcessTool_Neon.h"
-#include "Server.h"
+
 //-------------------------------------------------------------------------------
 /*	Concrete LobbyFramework_Neon											   */
 //-------------------------------------------------------------------------------
@@ -25,7 +25,7 @@ void CLobbyFramework_Neon::FrameAdvance()
 	m_MouseInput->DataProcessing();
 
 	m_DisplayOutput->Render();
-	m_pUILayer->Render(m_nSwapChainBufferIndex);
+	//m_pUILayer->Render(m_nSwapChainBufferIndex);
 
 	m_pdxgiSwapChain.Present(0, 0);
 
@@ -46,11 +46,19 @@ void CLobbyFramework_Neon::BuildObjects()
 {
 	m_pd3dCommandList.Reset(&m_pd3dCommandAllocator, NULL);
 
+	m_GameSource = new NeonLobbySource(&m_pd3dDevice, &m_pd3dCommandList);
+
+	m_pScene = m_GameSource->GetSharedPtrScene();
+
+	if (m_pScene) m_pScene->BuildObjects(&m_pd3dDevice, &m_pd3dCommandList);
+
 	m_pd3dCommandList.Close();
 	ID3D12CommandList* ppd3dCommandLists[] = { &m_pd3dCommandList };
 	m_pd3dCommandQueue.ExecuteCommandLists(1, ppd3dCommandLists);
 
 	m_Iframe.WaitForGpuComplete();
+
+	if (m_pScene) m_pScene->ReleaseUploadBuffers();
 
 	m_GameTimer.Reset();
 }
@@ -129,8 +137,8 @@ void CGameFramework_Neon::OnCreate(HINSTANCE hInstance, HWND hMainWnd)
 }
 void CGameFramework_Neon::FrameAdvance()
 {
-	m_GameTimer.Tick(0.0f);
-	
+	m_GameTimer.Tick(60.0f);
+
 	m_KeyboardInput->DataProcessing();
 	m_MouseInput->DataProcessing();
 
@@ -139,7 +147,7 @@ void CGameFramework_Neon::FrameAdvance()
 	m_ProcessCompute->Collide();
 
 	m_DisplayOutput->Render();
-	m_pUILayer->Render(m_nSwapChainBufferIndex);
+	//m_pUILayer->Render(m_nSwapChainBufferIndex);
 
 	m_pdxgiSwapChain.Present(0, 0);
 
@@ -147,7 +155,6 @@ void CGameFramework_Neon::FrameAdvance()
 
 	m_GameTimer.GetFrameRate(m_Iframe.m_pszFrameRate + 8, 37);
 	::SetWindowText(m_hWnd, m_Iframe.m_pszFrameRate);
-
 }
 void CGameFramework_Neon::OnDestroy()
 {
@@ -219,17 +226,34 @@ void CGameFramework_Neon::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, W
 	if (m_pScene) m_pScene->OnProcessingMouseMessage(hWnd, nMessageID, wParam, lParam);
 	switch (nMessageID) {
 	case WM_LBUTTONDOWN:
+		break;
 	case WM_RBUTTONDOWN:
-		m_pSelectedObject = m_pScene->PickObjectPointedByCursor(LOWORD(lParam), HIWORD(lParam), m_pCamera);
-		SetCapture(hWnd);
-		GetCursorPos(&m_MouseInput->GetOldCursorPos());
+		if (m_pPlayer && m_pCamera->GetMode() != SHOULDER_HOLD_CAMERA)
+		{
+			m_pCamera = m_pPlayer->ChangeCamera((SHOULDER_HOLD_CAMERA), m_GameTimer.GetTimeElapsed());
+			m_pPlayer->SetTypeDefine(1);	// 1. GunType - Pistol, 2. GunType - Rifle.
+		}
+		//m_pSelectedObject = m_pScene->PickObjectPointedByCursor(LOWORD(lParam), HIWORD(lParam), m_pCamera);
+		//m_bReleaseCapture = false;
 		break;
 	case WM_LBUTTONUP:
+		break;
 	case WM_RBUTTONUP:
-		m_pSelectedObject = NULL;
-		ReleaseCapture();
+		if (m_pPlayer)
+		{
+			m_pCamera = m_pPlayer->ChangeCamera((THIRD_PERSON_CAMERA), m_GameTimer.GetTimeElapsed());
+			m_pPlayer->SetTypeDefine(0);	// Empty.
+		}
+		//m_pSelectedObject = NULL;
 		break;
 	case WM_MOUSEMOVE:
+		if (!m_bReleaseCapture)
+		{
+			RECT rect;
+			GetWindowRect(hWnd, &rect);
+			SetCapture(hWnd);
+			m_MouseInput->SetOldCursorPos(POINT((rect.right + rect.left) / 2, (rect.bottom + rect.top) / 2));
+		}
 		break;
 	default:
 		break;
@@ -255,6 +279,10 @@ void CGameFramework_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID
 			break;
 		case VK_F9:
 			m_Iframe.ChangeSwapChainState();
+			break;
+		case VK_F11:
+			m_bReleaseCapture = true;
+			ReleaseCapture();
 			break;
 		default:
 			break;

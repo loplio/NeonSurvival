@@ -37,10 +37,12 @@ protected:
 	ID3D12Resource*				m_ppd3dRenderTargetBuffers[m_nSwapChainBuffers];	//렌더 타겟 버퍼
 	ID3D12DescriptorHeap*		m_pd3dRtvDescriptorHeap;							//서술자 힙 인터페이스 포인터
 	UINT						m_nRtvDescriptorIncrementSize;						//렌더 타겟 서술자 원소의 크기이다.
+	D3D12_CPU_DESCRIPTOR_HANDLE	m_pd3dSwapChainBackBufferRTVCPUHandles[m_nSwapChainBuffers];
 
 	ID3D12Resource*				m_pd3dDepthStencilBuffer;				//깊이-스텐실 버퍼
 	ID3D12DescriptorHeap*		m_pd3dDsvDescriptorHeap;				//서술자 힙 인터페이스 포인터
 	UINT						m_nDsvDescriptorIncrementSize;			//깊이-스텐실 서술자 원소의 크기이다.
+	D3D12_CPU_DESCRIPTOR_HANDLE	m_d3dDsvDescriptorCPUHandle;
 
 	ID3D12CommandQueue*			m_pd3dCommandQueue;						//명령 큐
 	ID3D12CommandAllocator*		m_pd3dCommandAllocator;					//명령 할당자
@@ -131,6 +133,9 @@ public:
 /*	CLobbyFramework : BaseFramework											   */
 //-------------------------------------------------------------------------------
 class CLobbyFramework : public BaseFramework {
+protected:
+	std::shared_ptr<CScene>		m_pScene = NULL;
+
 public:
 	CLobbyFramework(InterfaceFramework& Iframe);
 	virtual ~CLobbyFramework();

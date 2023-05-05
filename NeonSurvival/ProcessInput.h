@@ -46,5 +46,6 @@ public:
 
 	void DataProcessing() override;
 
+	void SetOldCursorPos(POINT pos);
 	POINT& GetOldCursorPos();
 };

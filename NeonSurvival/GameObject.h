@@ -108,6 +108,7 @@ public:
 
 public:
 	BOOL 							m_bEnable = true;
+	BOOL							m_bHandOverPosition = false;
 	float 							m_fSpeed = 1.0f;
 	float 							m_fPosition = 0.0f;
 	float 							m_fWeight = 1.0f;
@@ -121,6 +122,7 @@ public:
 	void SetSpeed(float fSpeed) { m_fSpeed = fSpeed; }
 	void SetWeight(float fWeight) { m_fWeight = fWeight; }
 	void SetPosition(float fPosition) { m_fPosition = fPosition; }
+	void SetHandOverPosition(bool bEnable) { m_bHandOverPosition = bEnable; }
 };
 
 class CLoadedModelInfo
@@ -147,6 +149,7 @@ public:
 	~CAnimationController();
 
 public:
+	int								m_nCurrentTrack = 0;
 	float 							m_fTime = 0.0f;
 
 	int 							m_nAnimationTracks = 0;
@@ -165,6 +168,8 @@ public:
 
 	void SetTrackAnimationSet(int nAnimationTrack, int nAnimationSet);
 
+	void SetOneOfTrackEnable(int nAnimationTrack);
+	void SetHandOverPosition(int nAnimationTrack, bool bEnable);
 	void SetTrackEnable(int nAnimationTrack, bool bEnable);
 	void SetTrackPosition(int nAnimationTrack, float fPosition);
 	void SetTrackSpeed(int nAnimationTrack, float fSpeed);
@@ -175,33 +180,60 @@ public:
 	void SetAnimationCallbackHandler(int nAnimationSet, CAnimationCallbackHandler* pCallbackHandler);
 
 	void AdvanceTime(float fElapsedTime, CGameObject* pRootGameObject);
+
+	enum {
+		IDLE,
+		WALK,
+		BACKWARD_WALK,
+		RUN,
+		FIRE,
+	};
+	int m_nAnimationBundle[6]{ -1, -1, -1, -1, -1, -1 };
+	void SetAnimationBundle(UINT n);
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#define RESOURCE_TEXTURE2D			0x01
-#define RESOURCE_TEXTURE2D_ARRAY	0x02
-#define RESOURCE_TEXTURE2DARRAY		0x03
-#define RESOURCE_TEXTURE_CUBE		0x04
-#define RESOURCE_BUFFER				0x05
+#define RESOURCE_TEXTURE1D			0x01
+#define RESOURCE_TEXTURE2D			0x02
+#define RESOURCE_TEXTURE2D_ARRAY	0x03	//[]
+#define RESOURCE_TEXTURE2DARRAY		0x04
+#define RESOURCE_TEXTURE_CUBE		0x05
+#define RESOURCE_BUFFER				0x06
+#define RESOURCE_STRUCTURED_BUFFER	0x07
 
 class CGameObject;
 
-struct SRVROOTARGUMENTINFO
+struct GRAPHICS_SRVROOTARGUMENTINFO
 {
 	int								m_nRootParameterIndex = 0;
 	D3D12_GPU_DESCRIPTOR_HANDLE		m_d3dSrvGpuDescriptorHandle;
 };
 
+struct COMPUTE_SRVROOTARGUMENTINFO
+{
+	int								m_nRootParameterIndex = 0;
+	D3D12_GPU_DESCRIPTOR_HANDLE		m_d3dSrvGpuDescriptorHandle;
+};
+
+struct COMPUTE_UAVROOTARGUMENTINFO
+{
+	int								m_nRootParameterIndex = 0;
+	D3D12_GPU_DESCRIPTOR_HANDLE		m_d3dUavGpuDescriptorHandle;
+};
+
 class CTexture {
 public:
-	CTexture(int nTextureResources, UINT nResourceType, int nSamplers, int nRootParameters, int nRows = 1, int nCols = 1);
+	CTexture(int nTextureResources, UINT nResourceType, int nSamplers, int nRootParameters, int nGraphicsSrvGpuHandles = 0, int nComputeSrvGpuHandles = 0, int nComputeUavGpuHandles = 0);
 	virtual ~CTexture();
 
 private:
 	int								m_nReferences = 0;
 
 	UINT							m_nTextureType = RESOURCE_TEXTURE2D;
+	DXGI_FORMAT						m_dxgiBufferFormat = DXGI_FORMAT_UNKNOWN;
+	int								m_nBufferElement = 0;
+	int								m_nBufferStride = 0;
 
 	int								m_nTextures = 0;
 	ID3D12Resource**				m_ppd3dTextures = NULL;
@@ -211,24 +243,39 @@ private:
 	D3D12_GPU_DESCRIPTOR_HANDLE*	m_pd3dSamplerGpuDescriptorHandles = NULL;
 
 public:
-	SRVROOTARGUMENTINFO*			m_pRootArgumentInfos = NULL;
+	GRAPHICS_SRVROOTARGUMENTINFO*			m_pGraphicsSrvRootArgumentInfos = NULL;
+	COMPUTE_SRVROOTARGUMENTINFO*			m_pComputeSrvRootArgumentInfos = NULL;
+	COMPUTE_UAVROOTARGUMENTINFO*			m_pComputeUavRootArgumentInfos = NULL;
+	int										m_nGraphicsSrvGpuHandles = 0;
+	int										m_nComputeSrvGpuHandles = 0;
+	int										m_nComputeUavGpuHandles = 0;
 
 public:
 	void AddRef() { m_nReferences++; }
 	void Release() { if (--m_nReferences <= 0) delete this; }
 
-	void SetRootArgument(int nIndex, UINT nRootParameterIndex, D3D12_GPU_DESCRIPTOR_HANDLE d3dsrvGpuDescriptorHandle);
+	void SetGraphicsSrvRootArgument(int nIndex, UINT nRootParameterIndex, D3D12_GPU_DESCRIPTOR_HANDLE d3dsrvGpuDescriptorHandle);
+	void SetComputeSrvRootArgument(int nIndex, UINT nRootParameterIndex, D3D12_GPU_DESCRIPTOR_HANDLE d3dsrvGpuDescriptorHandle);
+	void SetComputeUavRootArgument(int nIndex, UINT nRootParameterIndex, D3D12_GPU_DESCRIPTOR_HANDLE d3duavGpuDescriptorHandle);
 	void SetSampler(int nIndex, D3D12_GPU_DESCRIPTOR_HANDLE d3dSamplerGpuDescriptorHandle);
 
-	void UpdateShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList, int nIndex);
-	void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
+	void UpdateGraphicsSrvShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList, int nIndex);
+	void UpdateComputeSrvShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList, int nIndex);
+	void UpdateComputeUavShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList, int nIndex);
+	void UpdateGraphicsShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
+	void UpdateComputeShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
 	void ReleaseShaderVariables();
 
-	void LoadTextureFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, wchar_t* pszFileName, UINT nIndex, bool bIsDDSFile = true);
+	void LoadTextureFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, wchar_t* pszFileName, UINT nIndex, bool bIsDDSFile = true, D3D12_RESOURCE_STATES d3dResourceStates = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	void CreateBuffer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, void* pData, UINT nElements, UINT nStride, DXGI_FORMAT dxgiFormat, D3D12_HEAP_TYPE d3dHeapType, D3D12_RESOURCE_STATES d3dResourceStates, UINT nIndex);
+	void CreateTexture(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, void* pData, UINT nBytes, UINT nResourceType, UINT nWidth, UINT nHeight, UINT nDepthOrArraySize, UINT nMipLevels, D3D12_RESOURCE_FLAGS d3dResourceFlags, D3D12_RESOURCE_STATES d3dResourceStates, DXGI_FORMAT dxgiFormat, UINT nIndex);
 
-	int GetTextures() { return(m_nTextures); }
-	ID3D12Resource* GetTexture(int nIndex) { return(m_ppd3dTextures[nIndex]); }
-	UINT GetTextureType() { return(m_nTextureType); }
+	int GetTextures() const { return(m_nTextures); }
+	int GetBufferElement() const { return m_nBufferElement; }
+	int GetBufferStride() const { return m_nBufferStride; }
+	ID3D12Resource* GetTexture(int nIndex) { return m_ppd3dTextures[nIndex]; }
+	UINT GetTextureType() const { return m_nTextureType; }
+	DXGI_FORMAT GetBufferFormat() const { return m_dxgiBufferFormat; }
 
 	void ReleaseUploadBuffers();
 };
@@ -273,8 +320,8 @@ public:
 
 	XMFLOAT4						m_xmf4AlbedoColor = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	XMFLOAT4						m_xmf4EmissiveColor = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
-	XMFLOAT4						m_xmf4SpecularColor = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
-	XMFLOAT4						m_xmf4AmbientColor = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
+	XMFLOAT4						m_xmf4SpecularColor = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
+	XMFLOAT4						m_xmf4AmbientColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 1.0f);
 
 	UINT							m_nReflection = 0;
 	UINT							m_nType = 0x00;
@@ -417,6 +464,20 @@ public:
 
 	static void PrintFrameInfo(CGameObject* pGameObject, CGameObject* pParent);
 	static std::string m_pstrTextureFilePath;
+};
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class CParticleObject : public CGameObject {
+public:
+	CParticleObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, XMFLOAT3 xmf3Position, XMFLOAT3 xmf3Velocity, float fLifetime, XMFLOAT3 xmf3Acceleration, XMFLOAT3 xmf3Color, XMFLOAT2 xmf2Size, UINT nMaxParticles);
+	virtual ~CParticleObject();
+
+	CTexture*					m_pRandowmValueTexture = NULL;
+	CTexture*					m_pRandowmValueOnSphereTexture = NULL;
+
+	void ReleaseUploadBuffers();
+
+	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
+	virtual void OnPostRender();
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CBoundingBox : public CGameObject {
