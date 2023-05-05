@@ -114,36 +114,23 @@ int SERVER::SendMessageType(SOCKET& socket, MESSAGETYPE type)
     return byte;
 }
 
-//void SERVER::UpdatePlayerPosition(const XMFLOAT3 &position)
-//{
-//    P_InGame.id = ClientNumId;
-//    P_InGame.position = position;
-//    //printf("x : %f y : %f z : %f\n", P_InGame.position.x, P_InGame.position.y, P_InGame.position.z);
-//}
-
-void SERVER::UpdatePlayerPosition(const XMFLOAT4X4 &position)
+void SERVER::UpdatePlayerPosition(const XMFLOAT3 &position)
 {
     P_InGame.id = ClientNumId;
     P_InGame.position = position;
     //printf("x : %f y : %f z : %f\n", P_InGame.position.x, P_InGame.position.y, P_InGame.position.z);
 }
 
-//void SERVER::SendPosition(const XMFLOAT3& position)
+//void SERVER::UpdatePlayerPosition(const XMFLOAT4X4 &position)
 //{
-//    //if (IsCount() == false) return;
-//    UpdatePlayerPosition(position);
-//    printf("send position\n");
-//    //len = SendMessageType(clientSocket, MESSAGETYPE::INGAME);
-//
-//    m_Packet.MessageType = MESSAGETYPE::INGAME;
-//    m_Packet.byte = sizeof(PACKET_INGAME);
-//    memcpy(m_Packet.buf, &P_InGame, sizeof(P_InGame));
-//    len = send(clientSocket, (char*)&m_Packet, sizeof(m_Packet), 0);
+//    P_InGame.id = ClientNumId;
+//    P_InGame.position = position;
+//    //printf("x : %f y : %f z : %f\n", P_InGame.position.x, P_InGame.position.y, P_InGame.position.z);
 //}
 
-void SERVER::SendPosition(const XMFLOAT4X4& position)
+void SERVER::SendPosition(const XMFLOAT3& position)
 {
-    if (IsCount() == false) return;
+    //if (IsCount() == false) return;
     UpdatePlayerPosition(position);
     printf("send position\n");
     //len = SendMessageType(clientSocket, MESSAGETYPE::INGAME);
@@ -153,6 +140,19 @@ void SERVER::SendPosition(const XMFLOAT4X4& position)
     memcpy(m_Packet.buf, &P_InGame, sizeof(P_InGame));
     len = send(clientSocket, (char*)&m_Packet, sizeof(m_Packet), 0);
 }
+
+//void SERVER::SendPosition(const XMFLOAT4X4& position)
+//{
+//    if (IsCount() == false) return;
+//    UpdatePlayerPosition(position);
+//    printf("send position\n");
+//    //len = SendMessageType(clientSocket, MESSAGETYPE::INGAME);
+//
+//    m_Packet.MessageType = MESSAGETYPE::INGAME;
+//    m_Packet.byte = sizeof(PACKET_INGAME);
+//    memcpy(m_Packet.buf, &P_InGame, sizeof(P_InGame));
+//    len = send(clientSocket, (char*)&m_Packet, sizeof(m_Packet), 0);
+//}
 
 void SERVER::AddFPSCount()
 {
@@ -235,4 +235,15 @@ void SERVER::printxmfloat4x4(const XMFLOAT4X4& p)
 //        m_OtherPlayers[index]->SetPosition(PlayersPosition[index].position);
 //    }
 //   
+//}
+
+//void SERVER::SetOtherPlayerPosition(std::vector<CGameObject**>& m_OtherPlayers)
+//{
+//    int myid = ClientNumId;
+//    for (int i = 0; i < 2; ++i)
+//    {
+//        if (myid == PlayersPosition[i].id) continue;
+//        int index = PlayersPosition[i].id;
+//        m_OtherPlayers[index]->SetPosition(PlayersPosition[index].position);
+//    }
 //}

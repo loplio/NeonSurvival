@@ -120,8 +120,8 @@ void Player_Neon::Update(float fTimeElapsed)
 		}
 	}
 
-	//SERVER::getInstance().SendPosition(m_xmf3Position);
-	SERVER::getInstance().SendPosition(m_xmf4x4Transform);
+	SERVER::getInstance().SendPosition(m_xmf3Position);
+	//SERVER::getInstance().SendPosition(m_xmf4x4Transform);
 }
 
 void Player_Neon::OnPrepareRender()
@@ -351,7 +351,23 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 {
 	SERVER::getInstance().AddFPSCount();
 
-	m_ppHierarchicalGameObjects[0]->SetPosition(m_pPlayer->GetPosition().x + 10.f, m_pPlayer->GetPosition().y, m_pPlayer->GetPosition().z);
+	//m_ppHierarchicalGameObjects[0]->SetPosition(m_pPlayer->GetPosition().x + 10.f, m_pPlayer->GetPosition().y, m_pPlayer->GetPosition().z);
+	
+	for (int i = 0; i < 2; ++i)
+	{
+		int id = SERVER::getInstance().GetClientNumId();
+		if (id != OtherPlayerPos[i].id && -1 != OtherPlayerPos[i].id)
+		{
+			m_OtherPlayers[i]->SetPosition(OtherPlayerPos[i].position);
+		}
+	}
+
+	/*for (int i = 0; i < 2; ++i)
+	{
+		if (MyId == OtherPlayerPos[i].id) continue;
+		int index = OtherPlayerPos[i].id;
+		m_ppHierarchicalGameObjects[index]->SetPosition(OtherPlayerPos[index].position);
+	}*/
 
 	CScene::AnimateObjects(fTimeElapsed);
 }

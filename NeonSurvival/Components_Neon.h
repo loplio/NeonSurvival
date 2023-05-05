@@ -54,5 +54,6 @@ public:
 public:
 	CGameObject** m_OtherPlayers;
 	PACKET_INGAME* OtherPlayerPos = SERVER::getInstance().GetPlayersPosition();
+	int MyId = SERVER::getInstance().GetClientNumId();
 };
 

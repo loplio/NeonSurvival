@@ -9,6 +9,7 @@
 
 #include <DirectXMath.h>
 #include <vector>
+//#include "GameObject.h"
 
 using namespace DirectX;
 
@@ -22,7 +23,7 @@ enum MESSAGETYPE{
 };
 
 typedef struct{
-	XMFLOAT4X4 position;
+	XMFLOAT3 position;
 	int id;
 } PACKET_INGAME;
 
@@ -60,16 +61,18 @@ public:
 	void init(HWND);
 	void ProcessSocketMessage(HWND, UINT, WPARAM, LPARAM);
 	int SendMessageType(SOCKET& socket, MESSAGETYPE type);
-	//void UpdatePlayerPosition(const XMFLOAT3 &position);
-	void UpdatePlayerPosition(const XMFLOAT4X4 &position);
-	//void SendPosition(const XMFLOAT3& position);
-	void SendPosition(const XMFLOAT4X4& woldpos);
+	void UpdatePlayerPosition(const XMFLOAT3 &position);
+	//void UpdatePlayerPosition(const XMFLOAT4X4 &position);
+	void SendPosition(const XMFLOAT3& position);
+	
+	//void SendPosition(const XMFLOAT4X4& woldpos);
 	void AddFPSCount();
 	bool IsCount();
 
 	int GetClientNumId() { return ClientNumId; }
 	PACKET_INGAME* GetPlayersPosition();
 	//void SetOtherPlayerPosition(std::vector<CGameObject*> &m_OtherPlayers);
+	//void SetOtherPlayerPosition(std::vector<CGameObject**>& m_OtherPlayers);
 
 	void err_quit(const char* msg);
 	void err_display(const char* msg);
