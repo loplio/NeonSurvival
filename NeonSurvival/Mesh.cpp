@@ -1189,8 +1189,6 @@ void CSkinnedMesh::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12Graphic
 {
 }
 
-#include "Server.h"
-
 void CSkinnedMesh::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
 {
 	if (m_pd3dcbBindPoseBoneOffsets)
@@ -1207,10 +1205,6 @@ void CSkinnedMesh::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandL
 		for (int j = 0; j < m_nSkinningBones; j++)
 		{
 			XMStoreFloat4x4(&m_pcbxmf4x4MappedSkinningBoneTransforms[j], XMMatrixTranspose(XMLoadFloat4x4(&m_ppSkinningBoneFrameCaches[j]->m_xmf4x4World)));
-			if (j == 0)
-			{
-				SERVER::getInstance().printxmfloat4x4(m_pcbxmf4x4MappedSkinningBoneTransforms[j]);
-			}
 		}
 	}
 }

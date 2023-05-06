@@ -159,6 +159,9 @@ void Player_Neon::Update(float fTimeElapsed)
 			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
 		}
 	}
+
+	//서버로 위치 전송
+	SERVER::getInstance().SendPosition(GetPosition());
 }
 
 void Player_Neon::OnPrepareRender()
@@ -384,14 +387,14 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
 	if (pNexusModel) delete pNexusModel;
 
-	//CLoadedModelInfo* pOtherModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/DefaultHuman/Walking.bin", NULL);
-	//m_vHierarchicalGameObjects.push_back(new CGameObject());
-	//m_vHierarchicalGameObjects.back()->SetChild(pOtherModel->m_pModelRootObject);
-	//m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 1, pOtherModel);
-	//m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
-	//m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackEnable(0, 0);
-	//m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
-	//if (pOtherModel) delete pOtherModel;
+	CLoadedModelInfo* pOtherModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/NeonHuman/GunAnimation.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new CGameObject());
+	m_vHierarchicalGameObjects.back()->SetChild(pOtherModel->m_pModelRootObject);
+	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 1, pOtherModel);
+	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
+	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackEnable(0, 0);
+	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
+	if (pOtherModel) delete pOtherModel;
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
@@ -463,6 +466,42 @@ bool Scene_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM 
 void Scene_Neon::AnimateObjects(float fTimeElapsed)
 {
 	CScene::AnimateObjects(fTimeElapsed);
+
+	//for (int i = 0; i < m_vOtherPlayer.size(); ++i)
+	//{
+	//	if (m_vOtherPlayer[i]->m_pSkinnedAnimationController) m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetTrackEnable(0, true);
+ //
+	//	//m_vOtherPlayer[i]->SetPosition(m_pPlayer->GetPosition().x + 10, m_pPlayer->GetPosition().y, m_pPlayer->GetPosition().z);
+	//	//m_vOtherPlayer[i]->Animate(fTimeElapsed);
+	//	for (int j = 0; j < 2; ++j)
+	//	{
+	//		int OtherId = m_pOtherPlayerPosition[j].id;
+	//		if (m_MyId != OtherId && -1 != OtherId)
+	//		{
+	//			m_vOtherPlayer[i]->SetPosition(m_pOtherPlayerPosition[OtherId].position);
+	//		}
+	//	}
+	//	m_vOtherPlayer[i]->Animate(fTimeElapsed);
+	//}
+
+	for (int i = 1; i < m_vHierarchicalGameObjects.size(); ++i)
+	{
+		//if (m_vHierarchicalGameObjects[i]->m_pSkinnedAnimationController) m_vHierarchicalGameObjects[i]->m_pSkinnedAnimationController->SetTrackEnable(0, true);
+ 
+		//m_vOtherPlayer[i]->SetPosition(m_pPlayer->GetPosition().x + 10, m_pPlayer->GetPosition().y, m_pPlayer->GetPosition().z);
+		//m_vOtherPlayer[i]->Animate(fTimeElapsed);
+		for (int j = 0; j < 2; ++j)
+		{
+			int OtherId = m_pOtherPlayerPosition[j].id;
+			//int m_MyId = SERVER::getInstance().GetClientNumId(); //싱글톤을 계속 사용하면 안됨
+			int m_MyId = 0;
+			if (m_MyId != OtherId && -1 != OtherId)
+			{
+				m_vHierarchicalGameObjects[i]->SetPosition(m_pOtherPlayerPosition[OtherId].position);
+			}
+		}
+		//m_vHierarchicalGameObjects[i]->Animate(fTimeElapsed);
+	}
 }
 
 //--ProcessOutput : Scene_Neon-------------------------------------------------------
@@ -473,6 +512,11 @@ void Scene_Neon::OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCa
 void Scene_Neon::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
 	CScene::Render(pd3dCommandList, pCamera);
+
+	/*for (int i = 0; i < m_vOtherPlayer.size(); i++)
+	{
+		m_vOtherPlayer[i]->Render(pd3dCommandList, pCamera);
+	}*/
 }
 void Scene_Neon::DrawUI(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {

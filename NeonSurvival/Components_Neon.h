@@ -1,6 +1,7 @@
 #pragma once
 #include "Player.h"
 #include "Scene.h"
+#include "Server.h"
 
 //-------------------------------------------------------------------------------
 /*	Player																	   */
@@ -61,6 +62,11 @@ public:
 	void OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
 	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
 	void DrawUI(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
+
+public:
+	std::vector<CGameObject*> m_vOtherPlayer;
+	PACKET_INGAME* m_pOtherPlayerPosition = SERVER::getInstance().GetPlayersPosition();
+	//int m_MyId = SERVER::getInstance().GetClientNumId();
 };
 
 
