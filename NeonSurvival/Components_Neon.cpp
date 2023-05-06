@@ -356,16 +356,16 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	//---------------------------------------------------------------------------------------------------//
 
 	/// Particle1 ///
-	m_ppComputeShaders.push_back(new CComputeShader);
-	pBrightAreaComputeShader = new CBrightAreaComputeShader((wchar_t*)L"Image/Particle/RoundSoftParticle.dds");
-	pBrightAreaComputeShader->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
-	m_ppComputeShaders.back() = pBrightAreaComputeShader;
-
-	m_ppComputeShaders.push_back(new CComputeShader);
-	CGaussian2DBlurComputeShader* pParticleBlurComputeShader1 = new CGaussian2DBlurComputeShader((wchar_t*)L"Image/Particle/RoundSoftParticle.dds");
-	pParticleBlurComputeShader1->SetSourceResource(pBrightAreaComputeShader->m_pTexture->GetTexture(1));
-	pParticleBlurComputeShader1->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
-	m_ppComputeShaders.back() = pParticleBlurComputeShader1;
+	//m_ppComputeShaders.push_back(new CComputeShader);
+	//pBrightAreaComputeShader = new CBrightAreaComputeShader((wchar_t*)L"Image/Particle/RoundSoftParticle.dds");
+	//pBrightAreaComputeShader->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
+	//m_ppComputeShaders.back() = pBrightAreaComputeShader;
+	//
+	//m_ppComputeShaders.push_back(new CComputeShader);
+	//CGaussian2DBlurComputeShader* pParticleBlurComputeShader1 = new CGaussian2DBlurComputeShader((wchar_t*)L"Image/Particle/RoundSoftParticle.dds");
+	//pParticleBlurComputeShader1->SetSourceResource(pBrightAreaComputeShader->m_pTexture->GetTexture(1));
+	//pParticleBlurComputeShader1->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
+	//m_ppComputeShaders.back() = pParticleBlurComputeShader1;
 
 	// Objects build.
 	m_vParticleObjects.reserve(5);
@@ -373,7 +373,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.reserve(5);
 
 	// ParticleObjects.
-	m_vParticleObjects.push_back(new CParticleObject_Neon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pParticleBlurComputeShader1->m_pTexture, XMFLOAT3(3100.0f, 290.0f, 3100.0f), XMFLOAT3(0.0f, PIXEL_KPH(60), 0.0f), 0.0f, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 0.0f, 0.0f), XMFLOAT2(8.0f, 8.0f), MAX_PARTICLES));
+	//m_vParticleObjects.push_back(new CParticleObject_Neon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pParticleBlurComputeShader1->m_pTexture, XMFLOAT3(3100.0f, 290.0f, 3100.0f), XMFLOAT3(0.0f, PIXEL_KPH(60), 0.0f), 0.0f, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 0.0f, 0.0f), XMFLOAT2(8.0f, 8.0f), MAX_PARTICLES));
 
 	// GameObjects.
 	m_vGameObjects.push_back(new Crosshair(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, 0.0035f, 0.02f, 0.03f, 0.003f, true));
@@ -494,7 +494,11 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 		{
 			int OtherId = m_pOtherPlayerPosition[j].id;
 			//int m_MyId = SERVER::getInstance().GetClientNumId(); //½Ì±ÛÅæÀ» °è¼Ó »ç¿ëÇÏ¸é ¾ÈµÊ
-			int m_MyId = 0;
+			if (m_MyId == -1)
+			{
+				m_MyId = SERVER::getInstance().GetClientNumId();
+			}
+
 			if (m_MyId != OtherId && -1 != OtherId)
 			{
 				m_vHierarchicalGameObjects[i]->SetPosition(m_pOtherPlayerPosition[OtherId].position);

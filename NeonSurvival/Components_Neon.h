@@ -66,7 +66,7 @@ public:
 public:
 	std::vector<CGameObject*> m_vOtherPlayer;
 	PACKET_INGAME* m_pOtherPlayerPosition = SERVER::getInstance().GetPlayersPosition();
-	//int m_MyId = SERVER::getInstance().GetClientNumId();
+	int m_MyId = -1;
 };
 
 
