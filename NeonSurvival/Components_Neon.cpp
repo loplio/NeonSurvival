@@ -118,6 +118,14 @@ void Player_Neon::Update(float fTimeElapsed)
 	XMFLOAT3 timeElapsedDistance = Vector3::ScalarProduct(m_xmf3Velocity, fTimeElapsed, false);
 	CPlayer::Move(timeElapsedDistance, false);
 
+	// RayTracePosition
+	//XMFLOAT3 ClientPosition = XMFLOAT3(0.0f, 0.0f, 1.0f);
+	//float fHitDistance = FLT_MAX;
+	//m_xmf3RayStartPosition = Vector3::Add(m_xmf3Position, XMFLOAT3(0.f, METER_PER_PIXEL(1.5), 0.f));
+	//SetViewMatrix();
+	//PickObjectByRayIntersection(ClientPosition, m_xmf4x4View, &fHitDistance);
+	//m_xmf3RayEndPosition = m_xmf3RayStartPosition;	// Require Ray Algorithm.
+
 	// Keep out of the ground and align the player and the camera.
 	if (m_pPlayerUpdatedContext) OnPlayerUpdateCallback(fTimeElapsed);
 	DWORD nCameraMode = m_pCamera->GetMode();
@@ -302,7 +310,9 @@ void Scene_Neon::ReleaseShaderVariables()
 //--Build : Scene_Neon---------------------------------------------------------------
 void Scene_Neon::CreateBoundingBox(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CBoundingBoxObjects* BBShader)
 {
-	CScene::CreateBoundingBox(pd3dDevice, pd3dCommandList, BBShader);
+	if(m_pTerrain) m_pTerrain->CreateBoundingBoxMesh(pd3dDevice, pd3dCommandList, BBShader);
+
+	//CScene::CreateBoundingBox(pd3dDevice, pd3dCommandList, BBShader);
 }
 void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {

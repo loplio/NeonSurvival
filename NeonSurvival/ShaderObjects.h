@@ -17,6 +17,7 @@ public:
 	virtual void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature) = 0;
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int nPipelineState = 0);
 	void AddBBObject(CGameObject* obj) { m_BBObjects.push_back(obj); }
+	std::vector<CGameObject*>& GetBBObject() { return m_BBObjects; }
 	int IsCollide(CGameObject* obj/*, ObjectType excludetype*/);
 
 	bool m_bCollisionBoxWireFrame = false;
@@ -35,7 +36,7 @@ public:
 	void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature) override {
 		CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
 
-		m_Player.CreateBoundingBoxMesh(pd3dDevice, pd3dCommandList, this);
+		//m_Player.CreateBoundingBoxMesh(pd3dDevice, pd3dCommandList, this);
 		m_Scene.CreateBoundingBox(pd3dDevice, pd3dCommandList, this);		// 종료 시 느려지는 현상.
 	}
 

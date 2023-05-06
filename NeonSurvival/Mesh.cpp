@@ -87,12 +87,13 @@ int CMesh::CheckRayIntersection(XMFLOAT3& xmf3RayOrigin, XMFLOAT3& xmf3RayDirect
 		{
 			if (m_ppnSubSetIndices && m_ppnSubSetIndices[k] && i >= m_pnSubSetIndices[k]) k++;
 			
-			XMVECTOR v0 = XMLoadFloat3((XMFLOAT3*)(pbPositions + ((m_ppnSubSetIndices && m_ppnSubSetIndices[k]) ?
+			XMVECTOR v0 = XMLoadFloat3((XMFLOAT3*)(pbPositions + ((m_ppnSubSetIndices && m_ppnSubSetIndices[k]) ?0
 				(m_ppnSubSetIndices[k][(i * nOffset) + 0]) : ((i * nOffset) + 0)) * sizeof(XMFLOAT3)));
 			XMVECTOR v1 = XMLoadFloat3((XMFLOAT3*)(pbPositions + ((m_ppnSubSetIndices && m_ppnSubSetIndices[k]) ?
 				(m_ppnSubSetIndices[k][(i * nOffset) + 1]) : ((i * nOffset) + 1)) * sizeof(XMFLOAT3)));
 			XMVECTOR v2 = XMLoadFloat3((XMFLOAT3*)(pbPositions + ((m_ppnSubSetIndices && m_ppnSubSetIndices[k]) ?
 				(m_ppnSubSetIndices[k][(i * nOffset) + 2]) : ((i * nOffset) + 2)) * sizeof(XMFLOAT3)));
+
 			float fHitDistance;
 			BOOL bIntersected = TriangleTests::Intersects(xmRayOrigin, xmRayDirection, v0, v1, v2, fHitDistance);
 			if (bIntersected)
@@ -961,11 +962,15 @@ CHeightMapGridMesh::CHeightMapGridMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsC
 			if (fHeight < fMinHeight) fMinHeight = fHeight;
 			if (fHeight > fMaxHeight) fMaxHeight = fHeight;
 		}
+		//std::cout << z << " Position: " << m_pxmf3Positions[i].x << ", " << m_pxmf3Positions[i].y << ", " << m_pxmf3Positions[i].z << std::endl;
 	}
 
-	int fx = std::max_element(m_pxmf3Positions, m_pxmf3Positions + m_nVertices, [](XMFLOAT3& lhs, XMFLOAT3 rhs) {return lhs.x < rhs.x; })->x * 0.5f;
-	int fy = std::max_element(m_pxmf3Positions, m_pxmf3Positions + m_nVertices, [](XMFLOAT3& lhs, XMFLOAT3 rhs) {return lhs.y < rhs.y; })->y * 0.5f;
-	int fz = std::max_element(m_pxmf3Positions, m_pxmf3Positions + m_nVertices, [](XMFLOAT3& lhs, XMFLOAT3 rhs) {return lhs.z < rhs.z; })->z * 0.5f;
+	int fxMax = std::max_element(m_pxmf3Positions, m_pxmf3Positions + m_nVertices, [](XMFLOAT3& lhs, XMFLOAT3 rhs) {return lhs.x < rhs.x; })->x;
+	int fxMin = std::min_element(m_pxmf3Positions, m_pxmf3Positions + m_nVertices, [](XMFLOAT3& lhs, XMFLOAT3 rhs) {return lhs.x < rhs.x; })->x;
+	int fyMax = std::max_element(m_pxmf3Positions, m_pxmf3Positions + m_nVertices, [](XMFLOAT3& lhs, XMFLOAT3 rhs) {return lhs.y < rhs.y; })->y;
+	int fyMin = std::min_element(m_pxmf3Positions, m_pxmf3Positions + m_nVertices, [](XMFLOAT3& lhs, XMFLOAT3 rhs) {return lhs.y < rhs.y; })->y;
+	int fzMax = std::max_element(m_pxmf3Positions, m_pxmf3Positions + m_nVertices, [](XMFLOAT3& lhs, XMFLOAT3 rhs) {return lhs.z < rhs.z; })->z;
+	int fzMin = std::min_element(m_pxmf3Positions, m_pxmf3Positions + m_nVertices, [](XMFLOAT3& lhs, XMFLOAT3 rhs) {return lhs.z < rhs.z; })->z;
 
 	// VertexBuffer setting.
 	m_pd3dPositionBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList, m_pxmf3Positions, sizeof(XMFLOAT3) * m_nVertices, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pd3dPositionUploadBuffer);
@@ -1033,7 +1038,14 @@ CHeightMapGridMesh::CHeightMapGridMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsC
 	m_pd3dSubSetIndexBufferViews[0].SizeInBytes = sizeof(UINT) * m_pnSubSetIndices[0];
 
 	// BoundingOrientedBox setting.
-	m_xmBoundingBox = BoundingOrientedBox(XMFLOAT3(fx, fy, fz), XMFLOAT3(fx, fy, fz), XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
+	float fx = (fxMax - fxMin) * 0.5f, fy = (fyMax - fyMin) * 0.5f, fz = (fzMax - fzMin) * 0.5f;
+	if (fxMax - fxMin < FLT_MIN) fx = 0.1f;
+	if (fyMax - fyMin < FLT_MIN) fy = 0.1f;
+	if (fzMax - fzMin < FLT_MIN) fz = 0.1f;
+
+	m_xmf3AABBCenter = XMFLOAT3(fx, fyMax, fz);
+	m_xmf3AABBExtents = XMFLOAT3(fx, fy, fz);
+	m_xmBoundingBox = BoundingOrientedBox(m_xmf3AABBCenter, m_xmf3AABBExtents, XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
 }
 CHeightMapGridMesh::~CHeightMapGridMesh()
 {
@@ -1369,6 +1381,14 @@ void CParticleMesh::CreateVertexBuffer(ID3D12Device* pd3dDevice, ID3D12GraphicsC
 	m_d3dVertexBufferView.BufferLocation = m_pd3dVertexBuffer->GetGPUVirtualAddress();
 	m_d3dVertexBufferView.StrideInBytes = m_nStride;
 	m_d3dVertexBufferView.SizeInBytes = m_nStride * m_nVertices;
+
+	// BoundingOrientedBox setting.
+	float fx = xmf2Size.x * 0.5f;
+	float fy = xmf2Size.y * 0.5f;
+	float fz = 0.1f;
+	m_xmf3AABBCenter = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	m_xmf3AABBExtents = XMFLOAT3(fx, fy, fz);
+	m_xmBoundingBox = BoundingOrientedBox(m_xmf3AABBCenter, m_xmf3AABBExtents, XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
 }
 
 void CParticleMesh::CreateStreamOutputBuffer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, UINT nMaxParticles)
@@ -1455,11 +1475,6 @@ void CParticleMesh::PreRender(ID3D12GraphicsCommandList* pd3dCommandList, int nP
 	}
 	else if (nPipelineState == 1)
 	{
-		::SynchronizeResourceTransition(pd3dCommandList, m_pd3dStreamOutputBuffer, D3D12_RESOURCE_STATE_STREAM_OUT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
-		::SynchronizeResourceTransition(pd3dCommandList, m_pd3dDrawBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, D3D12_RESOURCE_STATE_STREAM_OUT);
-
-		::SwapResourcePointer(&m_pd3dDrawBuffer, &m_pd3dStreamOutputBuffer);
-
 		m_d3dVertexBufferView.BufferLocation = m_pd3dDrawBuffer->GetGPUVirtualAddress();
 		m_d3dVertexBufferView.StrideInBytes = m_nStride;
 		m_d3dVertexBufferView.SizeInBytes = m_nStride * m_nVertices;
@@ -1511,6 +1526,13 @@ void CParticleMesh::Render(ID3D12GraphicsCommandList* pd3dCommandList, int nPipe
 
 void CParticleMesh::PostRender(ID3D12GraphicsCommandList* pd3dCommandList, int nPipelineState)
 {
+	if (nPipelineState == 1)
+	{
+		::SynchronizeResourceTransition(pd3dCommandList, m_pd3dStreamOutputBuffer, D3D12_RESOURCE_STATE_STREAM_OUT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+		::SynchronizeResourceTransition(pd3dCommandList, m_pd3dDrawBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, D3D12_RESOURCE_STATE_STREAM_OUT);
+
+		::SwapResourcePointer(&m_pd3dDrawBuffer, &m_pd3dStreamOutputBuffer);
+	}
 }
 
 #define _WITH_DEBUG_STREAM_OUTPUT_VERTICES

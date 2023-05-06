@@ -1483,6 +1483,7 @@ void CParticleObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera
 
 	if (m_pMesh) m_pMesh->PreRender(pd3dCommandList, 1); //Draw
 	if (m_pMesh) m_pMesh->Render(pd3dCommandList, 1); //Draw
+	if (m_pMesh) m_pMesh->PostRender(pd3dCommandList, 1); //Draw
 }
 void CParticleObject::OnPostRender()
 {

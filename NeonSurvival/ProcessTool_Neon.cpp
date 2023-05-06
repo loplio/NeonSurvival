@@ -165,6 +165,36 @@ void GameCompute_Neon::Animate() const
 
 void GameCompute_Neon::Collide() const
 {
+	// Ray Trace
+	m_Player.SetViewMatrix();
+	if (m_Player.GetCamera()->GetMode() == FIRST_PERSON_CAMERA)
+	{
+		std::vector<CGameObject*>& BoundingObjects = m_BBObjects.GetBBObject();
+		int nIntersected = 0;
+		float fHitDistance = FLT_MAX, fNearestHitDistance = FLT_MAX;
+		CGameObject* pSelectedObject = NULL;
+		XMFLOAT3 ClientPosition = XMFLOAT3(0.0f, 0.0f, 1.0f);
+		for (int i = 0; i < BoundingObjects.size(); ++i)
+		{
+			XMFLOAT4X4 xmfViewMatrix = m_Player.GetCamera()->GetViewMatrix();
+
+			//std::cout << "Position: " << m_Player.GetPosition().x << ", " << m_Player.GetPosition().y << ", " << m_Player.GetPosition().z << std::endl;
+			//std::cout << "Right: " << m_Player.GetRightVector().x << ", " << m_Player.GetRightVector().y << ", " << m_Player.GetRightVector().z << std::endl;
+			//std::cout << "Look: " << m_Player.GetLookVector().x << ", " << m_Player.GetLookVector().y << ", " << m_Player.GetLookVector().z << std::endl;
+			//std::cout << "Up: " << m_Player.GetUpVector().x << ", " << m_Player.GetUpVector().y << ", " << m_Player.GetUpVector().z << std::endl;
+			nIntersected = BoundingObjects[i]->PickObjectByRayIntersection(ClientPosition, xmfViewMatrix, &fHitDistance);
+			if ((nIntersected > 0) && (fHitDistance < fNearestHitDistance))
+			{
+				fNearestHitDistance = fHitDistance;
+				pSelectedObject = BoundingObjects[i];
+
+				//std::cout << "Intersect Num: " << nIntersected << ", " << "Index - " << i << std::endl;
+			}
+		}
+
+	}
+
+	// Collide
 	m_Player.Collide(m_GameSource, m_BBObjects, NULL);
 }
 

@@ -148,8 +148,16 @@ void CPlayer::Move(const XMFLOAT3& xmf3Shift, bool bUpdateVelocity)
 			m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, xmf3Shift);
 		else
 		{
-			m_xmf3Velocity.x = xmf3Direction.x * (fLength / fLength2 + 1);
-			m_xmf3Velocity.z = xmf3Direction.z * (fLength / fLength2 + 1);
+			if (fLength2 > EPSILON)
+			{
+				m_xmf3Velocity.x = xmf3Direction.x * (fLength / fLength2 + 1);
+				m_xmf3Velocity.z = xmf3Direction.z * (fLength / fLength2 + 1);
+			}
+			else
+			{
+				m_xmf3Velocity.x = xmf3Direction.x;
+				m_xmf3Velocity.z = xmf3Direction.z;
+			}
 		}
 	}
 	else
@@ -169,12 +177,16 @@ void CPlayer::Update(float fTimeElapsed)
 	XMFLOAT3 timeElapsedDistance = Vector3::ScalarProduct(m_xmf3Velocity, fTimeElapsed, false);
 	Move(timeElapsedDistance, false);
 
+	// RayTracePosition
+	m_xmf3RayStartPosition = Vector3::Add(m_xmf3Position, XMFLOAT3(0.f, METER_PER_PIXEL(1.5), 0.f));
+	m_xmf3RayEndPosition = m_xmf3RayStartPosition;	// Require Ray Algorithm.
+
 	// Keep out of the ground and align the player and the camera.
 	if (m_pPlayerUpdatedContext) OnPlayerUpdateCallback(fTimeElapsed);
 	DWORD nCameraMode = m_pCamera->GetMode();
-	if (nCameraMode == THIRD_PERSON_CAMERA || nCameraMode == SHOULDER_HOLD_CAMERA) m_pCamera->Update(m_xmf3Position, fTimeElapsed);
+	if (nCameraMode == THIRD_PERSON_CAMERA || nCameraMode == SHOULDER_HOLD_CAMERA) m_pCamera->Update(m_xmf3RayEndPosition, fTimeElapsed);
 	if (m_pCameraUpdatedContext) OnCameraUpdateCallback(fTimeElapsed);
-	if (nCameraMode == THIRD_PERSON_CAMERA || nCameraMode == SHOULDER_HOLD_CAMERA) m_pCamera->SetLookAt(m_xmf3Position);
+	if (nCameraMode == THIRD_PERSON_CAMERA || nCameraMode == SHOULDER_HOLD_CAMERA) m_pCamera->SetLookAt(m_xmf3RayEndPosition);
 	m_pCamera->RegenerateViewMatrix();
 
 	// Decelerated velocity operation

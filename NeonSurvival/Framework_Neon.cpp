@@ -142,9 +142,9 @@ void CGameFramework_Neon::FrameAdvance()
 	m_KeyboardInput->DataProcessing();
 	m_MouseInput->DataProcessing();
 
+	m_ProcessCompute->Collide();
 	m_ProcessCompute->Update();
 	m_ProcessCompute->Animate();
-	m_ProcessCompute->Collide();
 
 	m_DisplayOutput->Render();
 	//m_pUILayer->Render(m_nSwapChainBufferIndex);
