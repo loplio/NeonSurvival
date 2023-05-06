@@ -1483,13 +1483,16 @@ void CParticleObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera
 
 	if (m_pMesh) m_pMesh->PreRender(pd3dCommandList, 1); //Draw
 	if (m_pMesh) m_pMesh->Render(pd3dCommandList, 1); //Draw
-	if (m_pMesh) m_pMesh->PostRender(pd3dCommandList, 1); //Draw
 }
 void CParticleObject::OnPostRender()
 {
 	if (m_pMesh) m_pMesh->OnPostRender(0); //Read Stream Output Buffer Filled Size
 }
 
+void CParticleObject::PostRender(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	if (m_pMesh) m_pMesh->PostRender(pd3dCommandList, 1);
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 CBoundingBox::CBoundingBox(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature) : CGameObject()
@@ -1568,3 +1571,4 @@ CHeightMapTerrain::~CHeightMapTerrain(void)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+

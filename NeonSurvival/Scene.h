@@ -74,6 +74,7 @@ public:
 	// ProcessOutput.
 	void RenderParticle(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
 	void OnPostRenderParticle();
+	void PostRenderParticle(ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera *pCamera);
 	virtual void DrawUI(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);

@@ -233,6 +233,8 @@ void GameRenderDisplay_Neon::Render()
 
 	// BoundingBox Render
 	m_BoundingBox.Render(&m_pd3dCommandList, Camera);
+	
+	m_Scene.PostRenderParticle(&m_pd3dCommandList);
 
 	m_InterfaceFramework.SynchronizeResourceTransition(D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 	m_InterfaceFramework.ExecuteCommand();
