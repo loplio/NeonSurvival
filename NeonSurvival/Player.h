@@ -10,8 +10,7 @@
 
 class CPlayer : public CGameObject {
 protected:
-	XMFLOAT3 m_xmf3RayStartPosition;
-	XMFLOAT3 m_xmf3RayEndPosition;
+	float m_fRayLength;
 	XMFLOAT4X4 m_xmf4x4View;
 
 	XMFLOAT3 m_xmf3Position;
@@ -83,6 +82,7 @@ public:
 	void SetMaxVelocityXZ(float fMaxVelocity) { m_fMaxVelocityXZ = fMaxVelocity; }
 	void SetMaxVelocityY(float fMaxVelocity) { m_fMaxVelocityY = fMaxVelocity; }
 	void SetVelocity(XMFLOAT3& xmf3Velocity) { m_xmf3Velocity = xmf3Velocity; }
+	void SetRayLength(float length) { m_fRayLength = length; }
 
 	void SetPosition(XMFLOAT3&& xmf3Position) { Move(XMFLOAT3(xmf3Position.x - m_xmf3Position.x, xmf3Position.y - m_xmf3Position.y, xmf3Position.z - m_xmf3Position.z), false); }
 	void SetPosition(XMFLOAT3& xmf3Position) { Move(XMFLOAT3(xmf3Position.x - m_xmf3Position.x, xmf3Position.y - m_xmf3Position.y, xmf3Position.z - m_xmf3Position.z), false); }

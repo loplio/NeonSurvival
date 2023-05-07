@@ -177,16 +177,12 @@ void CPlayer::Update(float fTimeElapsed)
 	XMFLOAT3 timeElapsedDistance = Vector3::ScalarProduct(m_xmf3Velocity, fTimeElapsed, false);
 	Move(timeElapsedDistance, false);
 
-	// RayTracePosition
-	m_xmf3RayStartPosition = Vector3::Add(m_xmf3Position, XMFLOAT3(0.f, METER_PER_PIXEL(1.5), 0.f));
-	m_xmf3RayEndPosition = m_xmf3RayStartPosition;	// Require Ray Algorithm.
-
 	// Keep out of the ground and align the player and the camera.
 	if (m_pPlayerUpdatedContext) OnPlayerUpdateCallback(fTimeElapsed);
 	DWORD nCameraMode = m_pCamera->GetMode();
-	if (nCameraMode == THIRD_PERSON_CAMERA || nCameraMode == SHOULDER_HOLD_CAMERA) m_pCamera->Update(m_xmf3RayEndPosition, fTimeElapsed);
+	if (nCameraMode == THIRD_PERSON_CAMERA || nCameraMode == SHOULDER_HOLD_CAMERA) m_pCamera->Update(m_xmf3Position, fTimeElapsed);
 	if (m_pCameraUpdatedContext) OnCameraUpdateCallback(fTimeElapsed);
-	if (nCameraMode == THIRD_PERSON_CAMERA || nCameraMode == SHOULDER_HOLD_CAMERA) m_pCamera->SetLookAt(m_xmf3RayEndPosition);
+	if (nCameraMode == THIRD_PERSON_CAMERA || nCameraMode == SHOULDER_HOLD_CAMERA) m_pCamera->SetLookAt(m_xmf3Position);
 	m_pCamera->RegenerateViewMatrix();
 
 	// Decelerated velocity operation
@@ -206,7 +202,7 @@ void CPlayer::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamer
 {
 	DWORD nCameraMode = (pCamera) ? pCamera->GetMode() : 0x00;
 	//카메라 모드가 3인칭이면 플레이어 객체를 렌더링한다.
-	if (nCameraMode == THIRD_PERSON_CAMERA || nCameraMode == SHOULDER_HOLD_CAMERA)
+	if (nCameraMode == FIRST_PERSON_CAMERA || nCameraMode == THIRD_PERSON_CAMERA || nCameraMode == SHOULDER_HOLD_CAMERA)
 	{
 		if (m_pShader) m_pShader->Render(pd3dCommandList, pCamera);
 		CGameObject::Render(pd3dCommandList, pCamera);
@@ -218,6 +214,8 @@ void CPlayer::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamer
 CCamera* CPlayer::OnChangeCamera(DWORD nNewCameraMode, DWORD nCurrentCameraMode)
 {
 	CCamera* pNewCamera = NULL;
+	DWORD nPrevMode = 0x00;
+	if(m_pCamera) nPrevMode = m_pCamera->GetMode();
 	switch (nNewCameraMode)
 	{
 	case FIRST_PERSON_CAMERA:
@@ -233,6 +231,7 @@ CCamera* CPlayer::OnChangeCamera(DWORD nNewCameraMode, DWORD nCurrentCameraMode)
 		pNewCamera = new CShoulderHoldCamera(m_pCamera);
 		break;
 	}
+	if (m_pCamera) pNewCamera->SetPrevMode(nPrevMode);
 	if (nCurrentCameraMode == SPACESHIP_CAMERA)
 	{
 		m_xmf3Right = Vector3::Normalize(XMFLOAT3(m_xmf3Right.x, 0.0f, m_xmf3Right.z));

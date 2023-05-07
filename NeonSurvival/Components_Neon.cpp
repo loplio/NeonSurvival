@@ -119,17 +119,12 @@ void Player_Neon::Update(float fTimeElapsed)
 	CPlayer::Move(timeElapsedDistance, false);
 
 	// RayTracePosition
-	//XMFLOAT3 ClientPosition = XMFLOAT3(0.0f, 0.0f, 1.0f);
-	//float fHitDistance = FLT_MAX;
-	//m_xmf3RayStartPosition = Vector3::Add(m_xmf3Position, XMFLOAT3(0.f, METER_PER_PIXEL(1.5), 0.f));
-	//SetViewMatrix();
-	//PickObjectByRayIntersection(ClientPosition, m_xmf4x4View, &fHitDistance);
-	//m_xmf3RayEndPosition = m_xmf3RayStartPosition;	// Require Ray Algorithm.
+	m_pCamera->SetRayLength(m_fRayLength);
 
 	// Keep out of the ground and align the player and the camera.
 	if (m_pPlayerUpdatedContext) OnPlayerUpdateCallback(fTimeElapsed);
 	DWORD nCameraMode = m_pCamera->GetMode();
-	if (nCameraMode == THIRD_PERSON_CAMERA || nCameraMode == SHOULDER_HOLD_CAMERA) m_pCamera->Update(m_xmf3Position, fTimeElapsed);
+	if (nCameraMode == FIRST_PERSON_CAMERA || nCameraMode == THIRD_PERSON_CAMERA || nCameraMode == SHOULDER_HOLD_CAMERA) m_pCamera->Update(m_xmf3Position, fTimeElapsed);
 	if (m_pCameraUpdatedContext) OnCameraUpdateCallback(fTimeElapsed);
 	if (nCameraMode == THIRD_PERSON_CAMERA || nCameraMode == SHOULDER_HOLD_CAMERA) m_pCamera->SetLookAt(m_xmf3Position);
 	m_pCamera->RegenerateViewMatrix();
@@ -225,7 +220,7 @@ CCamera* Player_Neon::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 		SetMaxVelocityY(PIXEL_KPH(200));
 		m_pCamera = OnChangeCamera(FIRST_PERSON_CAMERA, nCurrentCameraMode);
 		m_pCamera->SetTimeLag(0.0f);
-		m_pCamera->SetOffset(XMFLOAT3(0.0f, METER_PER_PIXEL(1.6), 0.0f));
+		m_pCamera->SetOffset(XMFLOAT3(0.0f, METER_PER_PIXEL(1.55), METER_PER_PIXEL(0.3)));
 		m_pCamera->GenerateProjectionMatrix(1.01f, 5000.0f, ASPECT_RATIO, 60.0f);
 		m_pCamera->SetViewport(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT, 0.0f, 1.0f);
 		m_pCamera->SetScissorRect(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT);
@@ -237,7 +232,7 @@ CCamera* Player_Neon::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 		SetMaxVelocityY(4000.0f);
 		m_pCamera = OnChangeCamera(SPACESHIP_CAMERA, nCurrentCameraMode);
 		m_pCamera->SetTimeLag(0.0f);
-		m_pCamera->SetOffset(XMFLOAT3(0.0f, METER_PER_PIXEL(1.6), 0.0f));
+		m_pCamera->SetOffset(XMFLOAT3(0.0f, METER_PER_PIXEL(1.5), 0.0f));
 		m_pCamera->GenerateProjectionMatrix(1.01f, 5000.0f, ASPECT_RATIO, 60.0f);
 		m_pCamera->SetViewport(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT, 0.0f, 1.0f);
 		m_pCamera->SetScissorRect(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT);
@@ -261,7 +256,7 @@ CCamera* Player_Neon::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 		SetMaxVelocityY(PIXEL_KPH(200));
 		m_pCamera = OnChangeCamera(SHOULDER_HOLD_CAMERA, nCurrentCameraMode);
 		m_pCamera->SetTimeLag(0.05f);
-		m_pCamera->SetOffset(XMFLOAT3(METER_PER_PIXEL(0.8), METER_PER_PIXEL(1.5), METER_PER_PIXEL(-1)));
+		m_pCamera->SetOffset(XMFLOAT3(METER_PER_PIXEL(0.8), METER_PER_PIXEL(1.55), METER_PER_PIXEL(-1)));
 		m_pCamera->GenerateProjectionMatrix(1.01f, 5000.0f, ASPECT_RATIO, 60.0f);
 		m_pCamera->SetViewport(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT, 0.0f, 1.0f);
 		m_pCamera->SetScissorRect(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT);
@@ -312,7 +307,7 @@ void Scene_Neon::CreateBoundingBox(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 {
 	if(m_pTerrain) m_pTerrain->CreateBoundingBoxMesh(pd3dDevice, pd3dCommandList, BBShader);
 
-	//CScene::CreateBoundingBox(pd3dDevice, pd3dCommandList, BBShader);
+	CScene::CreateBoundingBox(pd3dDevice, pd3dCommandList, BBShader);
 }
 void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {

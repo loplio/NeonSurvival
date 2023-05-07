@@ -415,6 +415,8 @@ public:
 	XMFLOAT3 GetUp();
 	XMFLOAT3 GetRight();
 
+	CGameObject* GetRootParentObject();
+
 	void UpdateTransform(XMFLOAT4X4* pxmf4x4Parent = NULL);
 	
 	void MoveStrafe(float fDistance = 1.0f);
@@ -439,7 +441,6 @@ public:
 public:
 	std::vector<CBoundingBoxMesh*>& GetBoundingBoxMesh() { return m_ppBBMeshes; }
 	void CreateBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader);
-	void AppendBoundingBoxMesh(CBoundingBoxMesh* pBBMesh) { m_ppBBMeshes.push_back(pBBMesh); }
 
 	UINT GetMeshType() { return((m_pMesh) ? m_pMesh->GetType() : 0x00); }
 	CGameObject* GetParent() { return(m_pParent); }

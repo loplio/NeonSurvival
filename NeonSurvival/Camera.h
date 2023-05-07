@@ -17,6 +17,7 @@ struct CB_CAMERA_INFO
 
 class CCamera {
 protected:
+	float m_fRayLength;
 	XMFLOAT3 m_xfm3ResultLookAtPosition;
 	XMFLOAT3 m_xmf3LookAtPosition;
 	XMFLOAT3 m_xmf3Position;
@@ -29,6 +30,7 @@ protected:
 	float m_fYaw;
 
 	DWORD m_nMode;
+	DWORD m_nPrevMode;
 
 	XMFLOAT3 m_xmf3LookAtWorld;
 	XMFLOAT3 m_xmf3Offset;
@@ -72,6 +74,8 @@ public:
 
 	void SetMode(DWORD nMode) { m_nMode = nMode; }
 	DWORD GetMode() { return m_nMode; }
+	void SetPrevMode(DWORD nMode) { m_nPrevMode = nMode; }
+	DWORD GetPrevMode() { return m_nPrevMode; }
 
 	void SetLookAtCoord(XMFLOAT3 xmf3Position) { m_xmf3LookAtPosition = xmf3Position; }
 	XMFLOAT3& GetLookAtCoord() { return m_xmf3LookAtPosition; }
@@ -89,6 +93,8 @@ public:
 	float& GetPitch() { return m_fPitch; }
 	float& GetRoll() { return m_fRoll; }
 	float& GetYaw() { return m_fYaw; }
+
+	void SetRayLength(float fLength) { m_fRayLength = fLength; }
 
 	void SetOffset(XMFLOAT3 xmf3Offset) { m_xmf3Offset = xmf3Offset; }
 	XMFLOAT3& GetOffset() { return m_xmf3Offset; }
@@ -129,6 +135,7 @@ public:
 	virtual ~CFirstPersonCamera() {};
 	
 	virtual void Rotate(float fPitch = 0.0f, float fYaw = 0.0f, float fRoll = 0.0f);
+	virtual void Update(XMFLOAT3& xmf3LookAt, float fTimeElapsed);
 };
 
 class CThirdPersonCamera : public CCamera {
@@ -148,5 +155,4 @@ public:
 
 	virtual void Update(XMFLOAT3& xmf3LookAt, float fTimeElapsed);
 	virtual void SetLookAt(XMFLOAT3& vLookAt);
-	virtual void SetLookAt(XMFLOAT3&& vLookAt);
 };

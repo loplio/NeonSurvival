@@ -64,14 +64,14 @@ void CMesh::Render(ID3D12GraphicsCommandList* pd3dCommandList, int nSubSet)
 	}
 }
 
-int CMesh::CheckRayIntersection(XMFLOAT3& xmf3RayOrigin, XMFLOAT3& xmf3RayDirection, float* pfNearHitDistance)
+int CMesh::CheckRayIntersection(XMFLOAT3& xmf3RayOrigin, XMFLOAT3& xmf3RayDirection, float* pfNearHitDistance, XMFLOAT4X4& xmf4x4World)
 {
 	int nIntersections = 0;
 	BYTE* pbPositions = (BYTE*)m_pxmf3Positions;
 
 	int nOffset = (m_d3dPrimitiveTopology == D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST) ? 3 : 1;
 	int nPrimitives = (m_d3dPrimitiveTopology == D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST) ? (m_nVertices / 3) : (m_nVertices - 2);
-	if (m_nIndices > 0) {
+	if (m_nSubMeshes > 0) {
 		nPrimitives = 0;
 		for (int i = 0; i < m_nSubMeshes; ++i) nPrimitives += (m_d3dPrimitiveTopology == D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST) ? (m_pnSubSetIndices[i] / 3) : (m_pnSubSetIndices[i] - 2);
 	}
@@ -82,29 +82,34 @@ int CMesh::CheckRayIntersection(XMFLOAT3& xmf3RayOrigin, XMFLOAT3& xmf3RayDirect
 	bool bIntersected = m_xmBoundingBox.Intersects(xmRayOrigin, xmRayDirection, *pfNearHitDistance);
 	if (bIntersected)
 	{
-		float fNearHitDistance = FLT_MAX;
-		for (int i = 0, k = 0; i < nPrimitives; i++)
-		{
-			if (m_ppnSubSetIndices && m_ppnSubSetIndices[k] && i >= m_pnSubSetIndices[k]) k++;
-			
-			XMVECTOR v0 = XMLoadFloat3((XMFLOAT3*)(pbPositions + ((m_ppnSubSetIndices && m_ppnSubSetIndices[k]) ?0
-				(m_ppnSubSetIndices[k][(i * nOffset) + 0]) : ((i * nOffset) + 0)) * sizeof(XMFLOAT3)));
-			XMVECTOR v1 = XMLoadFloat3((XMFLOAT3*)(pbPositions + ((m_ppnSubSetIndices && m_ppnSubSetIndices[k]) ?
-				(m_ppnSubSetIndices[k][(i * nOffset) + 1]) : ((i * nOffset) + 1)) * sizeof(XMFLOAT3)));
-			XMVECTOR v2 = XMLoadFloat3((XMFLOAT3*)(pbPositions + ((m_ppnSubSetIndices && m_ppnSubSetIndices[k]) ?
-				(m_ppnSubSetIndices[k][(i * nOffset) + 2]) : ((i * nOffset) + 2)) * sizeof(XMFLOAT3)));
+		*pfNearHitDistance = *pfNearHitDistance / sqrt(xmRayDirection.m128_f32[0] * xmRayDirection.m128_f32[0] / pow(xmf4x4World._11, 2) + xmRayDirection.m128_f32[1] * xmRayDirection.m128_f32[1] / pow(xmf4x4World._22, 2) + xmRayDirection.m128_f32[2] * xmRayDirection.m128_f32[2] / pow(xmf4x4World._33, 2));
+		return bIntersected;
 
-			float fHitDistance;
-			BOOL bIntersected = TriangleTests::Intersects(xmRayOrigin, xmRayDirection, v0, v1, v2, fHitDistance);
-			if (bIntersected)
-			{
-				if (fHitDistance < fNearHitDistance)
-				{
-					*pfNearHitDistance = fNearHitDistance = fHitDistance;
-				}
-				nIntersections++;
-			}
-		}
+		// primitive's collide test. (a lot of overload!!)
+		
+		//float fNearHitDistance = FLT_MAX;
+		//for (int i = 0, k = 0; i < nPrimitives; i++)
+		//{
+		//	if (m_ppnSubSetIndices && m_ppnSubSetIndices[k] && i >= m_pnSubSetIndices[k]) k++;
+		//	
+		//	XMVECTOR v0 = XMLoadFloat3((XMFLOAT3*)(pbPositions + ((m_ppnSubSetIndices && m_ppnSubSetIndices[k]) ?
+		//		(m_ppnSubSetIndices[k][(i * nOffset) + 0]) : ((i * nOffset) + 0)) * sizeof(XMFLOAT3)));
+		//	XMVECTOR v1 = XMLoadFloat3((XMFLOAT3*)(pbPositions + ((m_ppnSubSetIndices && m_ppnSubSetIndices[k]) ?
+		//		(m_ppnSubSetIndices[k][(i * nOffset) + 1]) : ((i * nOffset) + 1)) * sizeof(XMFLOAT3)));
+		//	XMVECTOR v2 = XMLoadFloat3((XMFLOAT3*)(pbPositions + ((m_ppnSubSetIndices && m_ppnSubSetIndices[k]) ?
+		//		(m_ppnSubSetIndices[k][(i * nOffset) + 2]) : ((i * nOffset) + 2)) * sizeof(XMFLOAT3)));
+
+		//	float fHitDistance;
+		//	BOOL bIntersected = TriangleTests::Intersects(xmRayOrigin, xmRayDirection, v0, v1, v2, fHitDistance);
+		//	if (bIntersected)
+		//	{
+		//		if (fHitDistance < fNearHitDistance)
+		//		{
+		//			*pfNearHitDistance = fNearHitDistance = fHitDistance;
+		//		}
+		//		nIntersections++;
+		//	}
+		//}
 	}
 
 	return nIntersections;
@@ -341,7 +346,7 @@ void CStandardMesh::LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 //-------------------------------------------------------------------------------
 /*	CBoundingBoxMesh : public CMesh											   */
 //-------------------------------------------------------------------------------
-CBoundingBoxMesh::CBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const XMFLOAT3& Extents, const XMFLOAT3& Center, CMesh* pMesh) : CMesh(pd3dDevice, pd3dCommandList)
+CBoundingBoxMesh::CBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const XMFLOAT3& Extents, const XMFLOAT3& Center, XMFLOAT4X4& WorldTransform, CMesh* pMesh) : CMesh(pd3dDevice, pd3dCommandList)
 {
 	// default setting.
 	m_nVertices = 8;
@@ -414,6 +419,13 @@ CBoundingBoxMesh::CBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 	m_pd3dSubSetIndexBufferViews[0].BufferLocation = m_ppd3dSubSetIndexBuffers[0]->GetGPUVirtualAddress();
 	m_pd3dSubSetIndexBufferViews[0].Format = DXGI_FORMAT_R32_UINT;
 	m_pd3dSubSetIndexBufferViews[0].SizeInBytes = sizeof(UINT) * m_pnSubSetIndices[0];
+
+	// Apply WorldTransform to BoundingBox 
+	CenterTransform = Matrix4x4::Identity();
+	CenterTransform._41 += Center.x;
+	CenterTransform._42 += Center.y;
+	CenterTransform._43 += Center.z;
+	CenterTransform = Matrix4x4::Multiply(CenterTransform, WorldTransform);
 }
 CBoundingBoxMesh::~CBoundingBoxMesh()
 {
@@ -962,7 +974,6 @@ CHeightMapGridMesh::CHeightMapGridMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsC
 			if (fHeight < fMinHeight) fMinHeight = fHeight;
 			if (fHeight > fMaxHeight) fMaxHeight = fHeight;
 		}
-		//std::cout << z << " Position: " << m_pxmf3Positions[i].x << ", " << m_pxmf3Positions[i].y << ", " << m_pxmf3Positions[i].z << std::endl;
 	}
 
 	int fxMax = std::max_element(m_pxmf3Positions, m_pxmf3Positions + m_nVertices, [](XMFLOAT3& lhs, XMFLOAT3 rhs) {return lhs.x < rhs.x; })->x;

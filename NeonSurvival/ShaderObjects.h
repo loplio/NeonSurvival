@@ -36,7 +36,7 @@ public:
 	void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature) override {
 		CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
 
-		//m_Player.CreateBoundingBoxMesh(pd3dDevice, pd3dCommandList, this);
+		m_Player.CreateBoundingBoxMesh(pd3dDevice, pd3dCommandList, this);
 		m_Scene.CreateBoundingBox(pd3dDevice, pd3dCommandList, this);		// 종료 시 느려지는 현상.
 	}
 
