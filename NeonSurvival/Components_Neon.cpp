@@ -531,7 +531,10 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 
 			if (m_MyId != OtherId && -1 != OtherId)
 			{
-				m_aOtherPlayer[j] = OtherId;
+				if (m_MyId == 2)
+				{
+					OtherId = m_pOtherPlayerData2[i].id;
+				}
 				//애니메이션
 				if (m_vOtherPlayer[i]->m_pSkinnedAnimationController)
 				{
