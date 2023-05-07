@@ -516,80 +516,51 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 {
 	CScene::AnimateObjects(fTimeElapsed);
 
-	for (int j = 0; j < MAX_PLAYER; ++j)
-	{
-		int OtherId = m_pOtherPlayerData2[j].id;
-		if (m_MyId == -1)
-		{
-			m_MyId = SERVER::getInstance().GetClientNumId();
-			printf("m_MyId : %d\n", m_MyId);
-		}
-
-		if (m_MyId != OtherId && -1 != OtherId)
-		{
-			//m_vOtherPlayer[i]->m_xmf4x4World = m_pOtherPlayerData2[OtherId].xmf4x4World;
-			//m_vOtherPlayer[i]->m_xmf4x4Transform = m_pOtherPlayerData2[OtherId].xmf4x4Transform;
-			//float Pitch =	m_pOtherPlayerData2[OtherId].pitch;
-			//float Yaw =		m_pOtherPlayerData2[OtherId].yaw;
-			//float Roll =	m_pOtherPlayerData2[OtherId].roll;
-			//m_vOtherPlayer[i]->Rotate(m_pOtherPlayerData2[OtherId].pitch, m_pOtherPlayerData2[OtherId].yaw, m_pOtherPlayerData2[OtherId].roll);
-			//OnPrepareRenderTransform(m_vOtherPlayer[i]);
-			//애니메이션
-			if (m_vOtherPlayer[OtherId]->m_pSkinnedAnimationController)
-			{
-				//m_vOtherPlayer[i]->m_pSkinnedAnimationController->m_pAnimationTracks[m_pOtherPlayerData2[OtherId].AnicurrentTrack].m_fPosition = m_pOtherPlayerData2[OtherId].AniKeyFrame;
-				//int nResultAnimBundle = -1;
-				//m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetTrackPosition(m_pOtherPlayerData2[OtherId].AnicurrentTrack, m_pOtherPlayerData2[OtherId].AniKeyFrame);
-
-				//if (m_vOtherPlayer[i]->m_pSkinnedAnimationController->m_nCurrentTrack !=
-				//	m_pOtherPlayerData2[OtherId].AnicurrentTrack)
-				//{
-				//	m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetAnimationBundle(m_pOtherPlayerData2[OtherId].GunType);
-				//	m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetOneOfTrackEnable(m_pOtherPlayerData2[OtherId].AnicurrentTrack);
-				//	m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetTrackSpeed(m_pOtherPlayerData2[OtherId].InnResultAnimBundle, m_pOtherPlayerData2[OtherId].fLength);
-				//}
-
-				//XMFLOAT3 m_xmf3Velocity = m_pOtherPlayerData2[OtherId].velocity;
-
-				//float fLength = sqrtf(m_xmf3Velocity.x * m_xmf3Velocity.x + m_xmf3Velocity.z * m_xmf3Velocity.z);
-				if (::IsZero(m_pOtherPlayerData2[OtherId].fLength))
-				{
-					//nResultAnimBundle = m_vOtherPlayer[i]->m_pSkinnedAnimationController->m_nAnimationBundle[m_vOtherPlayer[i]->m_pSkinnedAnimationController->IDLE];
-					m_vOtherPlayer[OtherId]->m_pSkinnedAnimationController->SetOneOfTrackEnable(m_pOtherPlayerData2[OtherId].InnResultAnimBundle);
-					//m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
-					//m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetTrackSpeed(m_pOtherPlayerData2[OtherId].InnResultAnimBundle, m_pOtherPlayerData2[OtherId].fLength);
-					//m_pSkinnedAnimationController->SetTrackPosition(1, 0.0f);
-					//printf("other idle\n");
-				}
-				else if (!m_pOtherPlayerData2[OtherId].IsDash)	// walking
-				{
-					//nResultAnimBundle = m_vOtherPlayer[i]->m_pSkinnedAnimationController->m_nAnimationBundle[m_vOtherPlayer[i]->m_pSkinnedAnimationController->WALK];
-					m_vOtherPlayer[OtherId]->m_pSkinnedAnimationController->SetOneOfTrackEnable(m_pOtherPlayerData2[OtherId].InnResultAnimBundle);
-					m_vOtherPlayer[OtherId]->m_pSkinnedAnimationController->SetTrackSpeed(m_pOtherPlayerData2[OtherId].InnResultAnimBundle, m_pOtherPlayerData2[OtherId].fLength);
-					//printf("other walk\n");
-				}
-				else				// slow runing
-				{
-					//m_vOtherPlayer[i]->m_pSkinnedAnimationController->m_nAnimationBundle[m_vOtherPlayer[i]->m_pSkinnedAnimationController->RUN];
-					m_vOtherPlayer[OtherId]->m_pSkinnedAnimationController->SetOneOfTrackEnable(m_pOtherPlayerData2[OtherId].InnResultAnimBundle);
-					m_vOtherPlayer[OtherId]->m_pSkinnedAnimationController->SetTrackSpeed(m_pOtherPlayerData2[OtherId].InnResultAnimBundle, m_pOtherPlayerData2[OtherId].fLength);
-					//printf("other run\n");
-				}
-			}
-			m_vOtherPlayer[OtherId]->SetPosition(m_pOtherPlayerData2[OtherId].position);
-			m_vOtherPlayer[OtherId]->SetUpVector(m_pOtherPlayerData2[OtherId].UpVector);
-			m_vOtherPlayer[OtherId]->SetRightVector(m_pOtherPlayerData2[OtherId].RightVector);
-			m_vOtherPlayer[OtherId]->SetLookVector(m_pOtherPlayerData2[OtherId].LookVector);
-			m_vOtherPlayer[OtherId]->SetVelocity(m_pOtherPlayerData2[OtherId].velocity);
-		}
-		m_vOtherPlayer[OtherId]->Animate(fTimeElapsed);
-	}
-
-	for (int i = 0; i < m_vOtherPlayer.size(); ++i)
-	{
 		//if (m_vOtherPlayer[i]->m_pSkinnedAnimationController) m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetTrackEnable(0, true);
 		//m_vOtherPlayer[i]->SetPosition(m_pPlayer->GetPosition());
+	for (int i = 0; i < m_vOtherPlayer.size(); ++i)
+	{
+		for (int j = 0; j < MAX_PLAYER; ++j)
+		{
+			int OtherId = m_pOtherPlayerData2[j].id;
+			if (m_MyId == -1)
+			{
+				m_MyId = SERVER::getInstance().GetClientNumId();
+				printf("m_MyId : %d\n", m_MyId);
+			}
+			if (m_aOtherPlayer[i] == -1)
+			{
+				m_aOtherPlayer[i] = OtherId;
+			}
 		
+			if (m_MyId != OtherId && -1 != OtherId)
+			{
+				//애니메이션
+				if (m_vOtherPlayer[i]->m_pSkinnedAnimationController)
+				{
+					if (::IsZero(m_pOtherPlayerData2[OtherId].fLength))
+					{
+						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetOneOfTrackEnable(m_pOtherPlayerData2[OtherId].InnResultAnimBundle);
+					}
+					else if (!m_pOtherPlayerData2[OtherId].IsDash)	// walking
+					{
+						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetOneOfTrackEnable(m_pOtherPlayerData2[OtherId].InnResultAnimBundle);
+						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetTrackSpeed(m_pOtherPlayerData2[OtherId].InnResultAnimBundle, m_pOtherPlayerData2[OtherId].fLength);
+					}
+					else				// slow runing
+					{
+						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetOneOfTrackEnable(m_pOtherPlayerData2[OtherId].InnResultAnimBundle);
+						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetTrackSpeed(m_pOtherPlayerData2[OtherId].InnResultAnimBundle, m_pOtherPlayerData2[OtherId].fLength);
+					}
+				}
+				m_vOtherPlayer[i]->SetPosition(m_pOtherPlayerData2[OtherId].position);
+				m_vOtherPlayer[i]->SetUpVector(m_pOtherPlayerData2[OtherId].UpVector);
+				m_vOtherPlayer[i]->SetRightVector(m_pOtherPlayerData2[OtherId].RightVector);
+				m_vOtherPlayer[i]->SetLookVector(m_pOtherPlayerData2[OtherId].LookVector);
+				m_vOtherPlayer[i]->SetVelocity(m_pOtherPlayerData2[OtherId].velocity);
+			}
+		}
+		m_vOtherPlayer[i]->Animate(fTimeElapsed);
 	}
 }
 
