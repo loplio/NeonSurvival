@@ -37,19 +37,8 @@ void CBoundingBoxObjects::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCa
 	}
 }
 
-int CBoundingBoxObjects::IsCollide(CGameObject* obj/*, ObjectType excludetype*/)
+int CBoundingBoxObjects::IsCollide(CGameObject* obj)
 {
-	//for (int index = 0; index < m_BBObjects.size(); ++index)
-	//{
-	//	if (obj->GetObjectType() == m_BBObjects[index]->GetObjectType() ||
-	//		excludetype == m_BBObjects[index]->GetObjectType()) continue;
-
-	//	BoundingOrientedBox obb = m_BBObjects[index]->m_pMesh->GetBoundingBox();
-	//	obb.Transform(obb, XMLoadFloat4x4(&m_BBObjects[index]->m_xmf4x4World));
-	//	if (obj->IsCollide(obb)) {
-	//		return index;
-	//	}
-	//}
 	return -1;
 }
 

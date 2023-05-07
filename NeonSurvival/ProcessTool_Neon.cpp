@@ -165,6 +165,34 @@ void GameCompute_Neon::Animate() const
 
 void GameCompute_Neon::Collide() const
 {
+	// Crosshair's Ray Trace.
+	m_Player.SetViewMatrix();
+	std::vector<CGameObject*>& BoundingObjects = m_BBObjects.GetBBObject();
+	int nIntersected = 0;
+	float fHitDistance = FLT_MAX, fNearestHitDistance = FLT_MAX;
+	CGameObject* pSelectedObject = NULL;
+	XMFLOAT3 ClientPosition = XMFLOAT3(0.0f, 0.0f, 1.0f);
+	for (int i = 0; i < BoundingObjects.size(); ++i)
+	{
+		if (BoundingObjects[i]->GetRootParentObject() == &m_Player) continue;
+
+		XMFLOAT4X4 xmfViewMatrix = m_Player.GetCamera()->GetViewMatrix();
+
+		nIntersected = BoundingObjects[i]->PickObjectByRayIntersection(ClientPosition, xmfViewMatrix, &fHitDistance);
+		if ((nIntersected > 0) && (fHitDistance < fNearestHitDistance))
+		{
+			fNearestHitDistance = fHitDistance;
+			pSelectedObject = BoundingObjects[i];
+			//std::cout << "" << "Index - " << i << ", Intersect Num: " << nIntersected << ", Length: " << fHitDistance << std::endl;
+			if (m_Player.GetCamera()->GetMode() == FIRST_PERSON_CAMERA || m_Player.GetCamera()->GetMode() == SHOULDER_HOLD_CAMERA)
+			{
+				m_Player.SetRayLength(fNearestHitDistance);
+			}
+		}
+	}
+
+
+	// Collide
 	m_Player.Collide(m_GameSource, m_BBObjects, NULL);
 }
 
@@ -203,6 +231,8 @@ void GameRenderDisplay_Neon::Render()
 
 	// BoundingBox Render
 	m_BoundingBox.Render(&m_pd3dCommandList, Camera);
+	
+	m_Scene.PostRenderParticle(&m_pd3dCommandList);
 
 	m_InterfaceFramework.SynchronizeResourceTransition(D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 	m_InterfaceFramework.ExecuteCommand();

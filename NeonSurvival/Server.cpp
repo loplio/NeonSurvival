@@ -239,10 +239,10 @@ void SERVER::SendPlayerData(CPlayer& player)
 
 void SERVER::printxmfloat4x4(const XMFLOAT4X4& p)
 {
-    std::cout << p._11 << p._12 << p._13 << p._14 << std::endl <<
-        p._21 << p._22 << p._23 << p._24 << std::endl <<
-        p._31 << p._32 << p._33 << p._34 << std::endl <<
-        p._41 << p._42 << p._43 << p._44 << std::endl << std::endl;
+    //std::cout << p._11 << p._12 << p._13 << p._14 << std::endl <<
+    //    p._21 << p._22 << p._23 << p._24 << std::endl <<
+    //    p._31 << p._32 << p._33 << p._34 << std::endl <<
+    //    p._41 << p._42 << p._43 << p._44 << std::endl << std::endl;
 }
 
 //void SERVER::SetOtherPlayerPosition(std::vector<CGameObject*> &m_OtherPlayers)

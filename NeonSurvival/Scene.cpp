@@ -570,6 +570,10 @@ void CScene::OnPostRenderParticle()
 {
 	for (int i = 0; i < m_vParticleObjects.size(); i++) m_vParticleObjects[i]->OnPostRender();
 }
+void CScene::PostRenderParticle(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	for (int i = 0; i < m_vParticleObjects.size(); i++) m_vParticleObjects[i]->PostRender(pd3dCommandList);
+}
 void CScene::OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
 	if (m_pd3dGraphicsRootSignature) pd3dCommandList->SetGraphicsRootSignature(m_pd3dGraphicsRootSignature);

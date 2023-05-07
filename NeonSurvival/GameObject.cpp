@@ -868,6 +868,13 @@ XMFLOAT3 CGameObject::GetRight()
 	return Vector3::Normalize(XMFLOAT3(m_xmf4x4World._11, m_xmf4x4World._12, m_xmf4x4World._13));
 }
 
+CGameObject* CGameObject::GetRootParentObject()
+{
+	if (!m_pParent) return this;
+
+	return m_pParent->GetRootParentObject();
+}
+
 void CGameObject::MoveStrafe(float fDistance)
 {
 	XMFLOAT3 xmf3Position = GetPosition();
@@ -999,7 +1006,7 @@ int CGameObject::PickObjectByRayIntersection(XMFLOAT3& xmf3PickPosition, XMFLOAT
 	{
 		XMFLOAT3 xmf3PickRayOrigin, xmf3PickRayDirection;
 		GenerateRayForPicking(xmf3PickPosition, xmf4x4View, &xmf3PickRayOrigin, &xmf3PickRayDirection);
-		nIntersected += m_pMesh->CheckRayIntersection(xmf3PickRayOrigin, xmf3PickRayDirection, pfHitDistance);
+		nIntersected += m_pMesh->CheckRayIntersection(xmf3PickRayOrigin, xmf3PickRayDirection, pfHitDistance, m_xmf4x4World);
 	}
 	return nIntersected;
 }
@@ -1014,8 +1021,8 @@ void CGameObject::CreateBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12Graphics
 		EPSILON < m_pMesh->GetAABBExtents().z) {
 		XMFLOAT3 Extents = m_pMesh->GetAABBExtents();
 		XMFLOAT3 center = m_pMesh->GetAABBCenter();
-		CBoundingBoxMesh* BBMesh = new CBoundingBoxMesh(pd3dDevice, pd3dCommandList, Extents, center, m_pMesh);
-		AppendBoundingBoxMesh(BBMesh);
+		CBoundingBoxMesh* BBMesh = new CBoundingBoxMesh(pd3dDevice, pd3dCommandList, Extents, center, m_xmf4x4World, m_pMesh);
+		m_ppBBMeshes.push_back(BBMesh);
 		if (!IsAdd) {
 			((CBoundingBoxObjects*)BBShader)->AddBBObject(this);
 			IsAdd = true;
@@ -1489,6 +1496,10 @@ void CParticleObject::OnPostRender()
 	if (m_pMesh) m_pMesh->OnPostRender(0); //Read Stream Output Buffer Filled Size
 }
 
+void CParticleObject::PostRender(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	if (m_pMesh) m_pMesh->PostRender(pd3dCommandList, 1);
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 CBoundingBox::CBoundingBox(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature) : CGameObject()
@@ -1567,3 +1578,4 @@ CHeightMapTerrain::~CHeightMapTerrain(void)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+

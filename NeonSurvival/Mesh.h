@@ -125,7 +125,7 @@ public:
 
 	virtual bool IsSkinnedMesh() const { return false; }
 
-	int CheckRayIntersection(XMFLOAT3& xmRayPosition, XMFLOAT3& xmRayDirection, float* pfNearHitDistance);
+	int CheckRayIntersection(XMFLOAT3& xmRayPosition, XMFLOAT3& xmRayDirection, float* pfNearHitDistance, XMFLOAT4X4& xmf4x4World);
 
 	UINT GetType() { return(m_nType); }
 	XMFLOAT3& GetAABBExtents() { return m_xmf3AABBExtents; }
@@ -184,7 +184,10 @@ public:
 
 class CBoundingBoxMesh : public CMesh {
 public:
-	CBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const XMFLOAT3& Extents, const XMFLOAT3& Center, CMesh* pMesh);
+	XMFLOAT4X4 CenterTransform;
+
+public:
+	CBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const XMFLOAT3& Extents, const XMFLOAT3& Center, XMFLOAT4X4& WorldTransform, CMesh* pMesh);
 	virtual ~CBoundingBoxMesh();
 };
 

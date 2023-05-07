@@ -148,8 +148,16 @@ void CPlayer::Move(const XMFLOAT3& xmf3Shift, bool bUpdateVelocity)
 			m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, xmf3Shift);
 		else
 		{
-			m_xmf3Velocity.x = xmf3Direction.x * (fLength / fLength2 + 1);
-			m_xmf3Velocity.z = xmf3Direction.z * (fLength / fLength2 + 1);
+			if (fLength2 > EPSILON)
+			{
+				m_xmf3Velocity.x = xmf3Direction.x * (fLength / fLength2 + 1);
+				m_xmf3Velocity.z = xmf3Direction.z * (fLength / fLength2 + 1);
+			}
+			else
+			{
+				m_xmf3Velocity.x = xmf3Direction.x;
+				m_xmf3Velocity.z = xmf3Direction.z;
+			}
 		}
 	}
 	else
@@ -194,7 +202,7 @@ void CPlayer::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamer
 {
 	DWORD nCameraMode = (pCamera) ? pCamera->GetMode() : 0x00;
 	//카메라 모드가 3인칭이면 플레이어 객체를 렌더링한다.
-	if (nCameraMode == THIRD_PERSON_CAMERA || nCameraMode == SHOULDER_HOLD_CAMERA)
+	if (nCameraMode == FIRST_PERSON_CAMERA || nCameraMode == THIRD_PERSON_CAMERA || nCameraMode == SHOULDER_HOLD_CAMERA)
 	{
 		if (m_pShader) m_pShader->Render(pd3dCommandList, pCamera);
 		CGameObject::Render(pd3dCommandList, pCamera);
@@ -206,6 +214,8 @@ void CPlayer::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamer
 CCamera* CPlayer::OnChangeCamera(DWORD nNewCameraMode, DWORD nCurrentCameraMode)
 {
 	CCamera* pNewCamera = NULL;
+	DWORD nPrevMode = 0x00;
+	if(m_pCamera) nPrevMode = m_pCamera->GetMode();
 	switch (nNewCameraMode)
 	{
 	case FIRST_PERSON_CAMERA:
@@ -221,6 +231,7 @@ CCamera* CPlayer::OnChangeCamera(DWORD nNewCameraMode, DWORD nCurrentCameraMode)
 		pNewCamera = new CShoulderHoldCamera(m_pCamera);
 		break;
 	}
+	if (m_pCamera) pNewCamera->SetPrevMode(nPrevMode);
 	if (nCurrentCameraMode == SPACESHIP_CAMERA)
 	{
 		m_xmf3Right = Vector3::Normalize(XMFLOAT3(m_xmf3Right.x, 0.0f, m_xmf3Right.z));
