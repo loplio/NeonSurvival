@@ -17,7 +17,7 @@ using namespace DirectX;
 #define SERVERPORT	9000
 #define BUFSIZE		512
 #define WM_SOCKET	(WM_USER+1)
-
+#define MAX_PLAYER	3
 enum MESSAGETYPE{
 	LOGIN = 100,
 	INGAME,
@@ -72,10 +72,10 @@ private:
 	bool RecvDelayed = false;
 	SOCKET clientSocket;
 	PACKET_INGAME P_InGame;
-	PACKET_INGAME PlayersPosition[2];
+	PACKET_INGAME PlayersPosition[MAX_PLAYER];
 
 	PACKET_INGAME2 P_InGame2;
-	PACKET_INGAME2 PlayersPosition2[2];
+	PACKET_INGAME2 PlayersPosition2[MAX_PLAYER];
 	
 public:
 	static SERVER& getInstance() {
