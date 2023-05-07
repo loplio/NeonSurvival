@@ -15,7 +15,7 @@
 using namespace DirectX;
 
 #define SERVERPORT	9000
-#define BUFSIZE		512
+#define BUFSIZE		700
 #define WM_SOCKET	(WM_USER+1)
 #define MAX_PLAYER	3
 enum MESSAGETYPE{
@@ -62,7 +62,7 @@ private:
 	~SERVER() {}
 
 	PACKET m_Packet;
-	int ClientNumId = 0;
+	int ClientNumId = -1;
 	int MessageType = 0;
 	int SendByte = 0;
 	int RecvByte = 0;

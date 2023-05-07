@@ -403,9 +403,9 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
 	if (pNexusModel) delete pNexusModel;
 
-	CLoadedModelInfo* pOtherModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/NeonHuman/GunAnimation.bin", NULL);
 	for (int i = 0; i < MAX_PLAYER - 1; ++i)
 	{
+		CLoadedModelInfo* pOtherModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/NeonHuman/GunAnimation.bin", NULL);
 		m_vOtherPlayer.push_back(new CPlayer());
 		m_vOtherPlayer.back()->SetChild(pOtherModel->m_pModelRootObject, true);
 		//m_vOtherPlayer.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 1, pOtherModel);
@@ -442,8 +442,8 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 		//m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
 		//m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(0, 0);
 		//m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
+		if (pOtherModel) delete pOtherModel;
 	}
-	if (pOtherModel) delete pOtherModel;
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
@@ -529,9 +529,8 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 				printf("m_MyId : %d\n", m_MyId);
 			}
 		
-			if (m_MyId != OtherId && -1 != OtherId)
+			if (m_MyId != OtherId && -1 != OtherId && m_aOtherPlayer[i] != m_MyId)
 			{
-				
 				//m_vOtherPlayer[i]->m_xmf4x4World = m_pOtherPlayerData2[OtherId].xmf4x4World;
 				//m_vOtherPlayer[i]->m_xmf4x4Transform = m_pOtherPlayerData2[OtherId].xmf4x4Transform;
 				//float Pitch =	m_pOtherPlayerData2[OtherId].pitch;
@@ -539,6 +538,7 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 				//float Roll =	m_pOtherPlayerData2[OtherId].roll;
 				//m_vOtherPlayer[i]->Rotate(m_pOtherPlayerData2[OtherId].pitch, m_pOtherPlayerData2[OtherId].yaw, m_pOtherPlayerData2[OtherId].roll);
 				//OnPrepareRenderTransform(m_vOtherPlayer[i]);
+				m_aOtherPlayer[i] = OtherId;
 				//애니메이션
 				if (m_vOtherPlayer[i]->m_pSkinnedAnimationController)
 				{
