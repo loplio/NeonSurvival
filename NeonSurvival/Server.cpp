@@ -70,7 +70,7 @@ void SERVER::ProcessSocketMessage(HWND hWnd, UINT unit, WPARAM wParam, LPARAM lP
             return;
         }
         //m_Packet = (PACKET)m_Packet;
-        printf("read\n");
+        //printf("read\n");
         switch (m_Packet.MessageType)
         {
         case MESSAGETYPE::LOGIN:
@@ -220,7 +220,7 @@ PACKET_INGAME* SERVER::GetPlayersPosition()
     return PlayersPosition;
 }
 
-void SERVER::SendPlayerData(CPlayer& player)
+void SERVER::SendPlayerData(CPlayer& player,int GunType, float flength, int anibundle)
 {
     P_InGame2.id = ClientNumId;
     P_InGame2.position = player.GetPosition();
@@ -229,6 +229,16 @@ void SERVER::SendPlayerData(CPlayer& player)
     P_InGame2.yaw = player.GetYaw();
     P_InGame2.roll = player.GetRoll();
     P_InGame2.xmf4x4World = player.m_xmf4x4World;
+    P_InGame2.GunType = GunType;
+    P_InGame2.IsDash = player.IsDash;
+    P_InGame2.fLength = flength;
+    P_InGame2.InnResultAnimBundle = anibundle;
+    P_InGame2.UpVector = player.GetUpVector();
+    P_InGame2.RightVector = player.GetRightVector();
+    P_InGame2.LookVector = player.GetLookVector();
+    P_InGame2.AnicurrentTrack = player.m_pSkinnedAnimationController->m_nCurrentTrack;
+    P_InGame2.AniKeyFrame = player.m_pSkinnedAnimationController->m_pAnimationTracks[P_InGame2.AnicurrentTrack].m_fPosition;
+    P_InGame2.xmf4x4Transform = player.m_xmf4x4Transform;
     //P_InGame2.player = player;
 
     m_Packet.MessageType = MESSAGETYPE::INGAME;

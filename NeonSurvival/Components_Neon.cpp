@@ -137,6 +137,8 @@ void Player_Neon::Update(float fTimeElapsed)
 	fDeceleration.x *= -m_xmf3Velocity.x; fDeceleration.y *= -m_xmf3Velocity.y; fDeceleration.z *= -m_xmf3Velocity.z;
 	m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, fDeceleration);
 
+	int ServerInnResultAnimBundle = -1;
+	float ServerfLength = 0;
 	if (m_pSkinnedAnimationController)
 	{
 		int nResultAnimBundle = -1;
@@ -147,25 +149,32 @@ void Player_Neon::Update(float fTimeElapsed)
 		{
 			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->IDLE];
 			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
+			ServerfLength = 0;
 			//m_pSkinnedAnimationController->SetTrackPosition(1, 0.0f);
+			//printf("idle\n");
 		}
 		else if (!IsDash)	// walking
 		{
 			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->WALK];
 			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
 			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
+			ServerfLength = fLength / m_fMaxVelocityXZ;
+			//printf("Walk\n");
 		}
 		else				// slow runing
 		{
 			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->RUN];
 			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
 			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
+			ServerfLength = fLength / m_fMaxVelocityXZ;
+			//printf("run\n");
 		}
+		ServerInnResultAnimBundle = nResultAnimBundle;
 	}
 
 	//서버로 위치 전송
 	//SERVER::getInstance().SendPosition(GetPosition());
-	SERVER::getInstance().SendPlayerData(*this);
+	SERVER::getInstance().SendPlayerData(*this, m_nGunType, ServerfLength, ServerInnResultAnimBundle);
 	
 }
 
@@ -396,7 +405,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 
 	CLoadedModelInfo* pOtherModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/NeonHuman/GunAnimation.bin", NULL);
 	m_vOtherPlayer.push_back(new CPlayer());
-	m_vOtherPlayer.back()->SetChild(pOtherModel->m_pModelRootObject);
+	m_vOtherPlayer.back()->SetChild(pOtherModel->m_pModelRootObject,true);
 	//m_vOtherPlayer.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 1, pOtherModel);
 	m_vOtherPlayer.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 14, pOtherModel);
 	m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
@@ -506,7 +515,7 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 
 	for (int i = 0; i < m_vOtherPlayer.size(); ++i)
 	{
-		if (m_vOtherPlayer[i]->m_pSkinnedAnimationController) m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetTrackEnable(0, true);
+		//if (m_vOtherPlayer[i]->m_pSkinnedAnimationController) m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetTrackEnable(0, true);
 		//m_vOtherPlayer[i]->SetPosition(m_pPlayer->GetPosition());
 		for (int j = 0; j < 2; ++j)
 		{
@@ -519,17 +528,76 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 		
 			if (m_MyId != OtherId && -1 != OtherId)
 			{
-				m_vOtherPlayer[i]->SetPosition(m_pOtherPlayerData2[OtherId].position);
-				//m_vOtherPlayer[i]->SetVelocity(m_pOtherPlayerData2[OtherId].velocity);
+				
 				//m_vOtherPlayer[i]->m_xmf4x4World = m_pOtherPlayerData2[OtherId].xmf4x4World;
+				//m_vOtherPlayer[i]->m_xmf4x4Transform = m_pOtherPlayerData2[OtherId].xmf4x4Transform;
 				//float Pitch =	m_pOtherPlayerData2[OtherId].pitch;
 				//float Yaw =		m_pOtherPlayerData2[OtherId].yaw;
 				//float Roll =	m_pOtherPlayerData2[OtherId].roll;
 				//m_vOtherPlayer[i]->Rotate(m_pOtherPlayerData2[OtherId].pitch, m_pOtherPlayerData2[OtherId].yaw, m_pOtherPlayerData2[OtherId].roll);
+				//OnPrepareRenderTransform(m_vOtherPlayer[i]);
+				//애니메이션
+				if (m_vOtherPlayer[i]->m_pSkinnedAnimationController)
+				{
+					//m_vOtherPlayer[i]->m_pSkinnedAnimationController->m_pAnimationTracks[m_pOtherPlayerData2[OtherId].AnicurrentTrack].m_fPosition = m_pOtherPlayerData2[OtherId].AniKeyFrame;
+					//int nResultAnimBundle = -1;
+					//m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetTrackPosition(m_pOtherPlayerData2[OtherId].AnicurrentTrack, m_pOtherPlayerData2[OtherId].AniKeyFrame);
+					
+					//if (m_vOtherPlayer[i]->m_pSkinnedAnimationController->m_nCurrentTrack !=
+					//	m_pOtherPlayerData2[OtherId].AnicurrentTrack)
+					//{
+					//	m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetAnimationBundle(m_pOtherPlayerData2[OtherId].GunType);
+					//	m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetOneOfTrackEnable(m_pOtherPlayerData2[OtherId].AnicurrentTrack);
+					//	m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetTrackSpeed(m_pOtherPlayerData2[OtherId].InnResultAnimBundle, m_pOtherPlayerData2[OtherId].fLength);
+					//}
+					
+					//XMFLOAT3 m_xmf3Velocity = m_pOtherPlayerData2[OtherId].velocity;
+
+					//float fLength = sqrtf(m_xmf3Velocity.x * m_xmf3Velocity.x + m_xmf3Velocity.z * m_xmf3Velocity.z);
+					if (::IsZero(m_pOtherPlayerData2[OtherId].fLength))
+					{
+						//nResultAnimBundle = m_vOtherPlayer[i]->m_pSkinnedAnimationController->m_nAnimationBundle[m_vOtherPlayer[i]->m_pSkinnedAnimationController->IDLE];
+						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetOneOfTrackEnable(m_pOtherPlayerData2[OtherId].InnResultAnimBundle);
+						//m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
+						//m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetTrackSpeed(m_pOtherPlayerData2[OtherId].InnResultAnimBundle, m_pOtherPlayerData2[OtherId].fLength);
+						//m_pSkinnedAnimationController->SetTrackPosition(1, 0.0f);
+						//printf("other idle\n");
+					}
+					else if (!m_pOtherPlayerData2[OtherId].IsDash)	// walking
+					{
+						//nResultAnimBundle = m_vOtherPlayer[i]->m_pSkinnedAnimationController->m_nAnimationBundle[m_vOtherPlayer[i]->m_pSkinnedAnimationController->WALK];
+						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetOneOfTrackEnable(m_pOtherPlayerData2[OtherId].InnResultAnimBundle);
+						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetTrackSpeed(m_pOtherPlayerData2[OtherId].InnResultAnimBundle, m_pOtherPlayerData2[OtherId].fLength);
+						//printf("other walk\n");
+					}
+					else				// slow runing
+					{
+						//m_vOtherPlayer[i]->m_pSkinnedAnimationController->m_nAnimationBundle[m_vOtherPlayer[i]->m_pSkinnedAnimationController->RUN];
+						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetOneOfTrackEnable(m_pOtherPlayerData2[OtherId].InnResultAnimBundle);
+						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetTrackSpeed(m_pOtherPlayerData2[OtherId].InnResultAnimBundle, m_pOtherPlayerData2[OtherId].fLength);
+						//printf("other run\n");
+					}
+				}
+				m_vOtherPlayer[i]->SetPosition(m_pOtherPlayerData2[OtherId].position);
+				m_vOtherPlayer[i]->SetUpVector(m_pOtherPlayerData2[OtherId].UpVector);
+				m_vOtherPlayer[i]->SetRightVector(m_pOtherPlayerData2[OtherId].RightVector);
+				m_vOtherPlayer[i]->SetLookVector(m_pOtherPlayerData2[OtherId].LookVector);
+				m_vOtherPlayer[i]->SetVelocity(m_pOtherPlayerData2[OtherId].velocity);
 			}
 		}
 		m_vOtherPlayer[i]->Animate(fTimeElapsed);
 	}
+}
+
+void Scene_Neon::OnPrepareRenderTransform(CPlayer* player)
+{
+	player->m_xmf4x4Transform._11 = player->GetRightVector().x;		player->m_xmf4x4Transform._12 = player->GetRightVector().y;		player->m_xmf4x4Transform._13 = player->GetRightVector().z;
+	player->m_xmf4x4Transform._21 = player->GetUpVector().x;			player->m_xmf4x4Transform._22 = player->GetUpVector().y;			player->m_xmf4x4Transform._23 = player->GetUpVector().z;
+	player->m_xmf4x4Transform._31 = player->GetLookVector().x;		player->m_xmf4x4Transform._32 = player->GetLookVector().y;		player->m_xmf4x4Transform._33 = player->GetLookVector().z;
+	player->m_xmf4x4Transform._41 = player->GetPosition().x;	player->m_xmf4x4Transform._42 = player->GetPosition().y;	player->m_xmf4x4Transform._43 = player->GetPosition().z;
+
+	player->SetScale(XMFLOAT3(1.f, 1.f, 1.f));
+	player->m_xmf4x4Transform = Matrix4x4::Multiply(XMMatrixScaling(player->m_xmf3Scale.x, player->m_xmf3Scale.y, player->m_xmf3Scale.z), player->m_xmf4x4Transform);
 }
 
 //--ProcessOutput : Scene_Neon-------------------------------------------------------

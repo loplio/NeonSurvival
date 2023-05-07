@@ -62,7 +62,7 @@ public:
 	void OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
 	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
 	void DrawUI(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
-
+	void OnPrepareRenderTransform(CPlayer* player);
 public:
 	//std::vector<CGameObject*> m_vOtherPlayer;
 	PACKET_INGAME* m_pOtherPlayerData = SERVER::getInstance().GetPlayersPosition();

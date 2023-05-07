@@ -75,6 +75,10 @@ public:
 	XMFLOAT3 GetUpVector() const { return(m_xmf3Up); }
 	XMFLOAT3 GetRightVector() const { return(m_xmf3Right); }
 
+	void SetLookVector(XMFLOAT3& LookVector) { m_xmf3Look = LookVector; }
+	void SetUpVector(XMFLOAT3& UpVector) { m_xmf3Up = UpVector; }
+	void SetRightVector(XMFLOAT3& RightVector) { m_xmf3Right = RightVector; }
+
 	float GetCurrentVelToMaxVel() { return  sqrtf(m_xmf3Velocity.x * m_xmf3Velocity.x + m_xmf3Velocity.z * m_xmf3Velocity.z) / m_fMaxVelocityXZ; }
 
 	void SetFriction(float fFriction) { m_fFriction = fFriction; }

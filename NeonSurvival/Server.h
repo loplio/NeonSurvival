@@ -29,12 +29,22 @@ typedef struct{
 } PACKET_INGAME;
 
 typedef struct {
-	XMFLOAT3 position;
-	float pitch;
-	float yaw;
-	float roll;
-	XMFLOAT3 velocity;
-	XMFLOAT4X4 xmf4x4World;
+	XMFLOAT3	position;
+	float		pitch;
+	float		yaw;
+	float		roll;
+	XMFLOAT3	velocity;
+	XMFLOAT4X4	xmf4x4World;
+	XMFLOAT4X4	xmf4x4Transform;
+	bool		IsDash;
+	int			GunType;
+	float		AniKeyFrame;
+	float		fLength;
+	int			InnResultAnimBundle;
+	XMFLOAT3	UpVector;
+	XMFLOAT3	RightVector;
+	XMFLOAT3	LookVector;
+	int			AnicurrentTrack;
 	int id;
 } PACKET_INGAME2;
 
@@ -78,7 +88,7 @@ public:
 	void UpdatePlayerPosition(const XMFLOAT3 &position);
 	//void UpdatePlayerPosition(const XMFLOAT4X4 &position);
 	void SendPosition(const XMFLOAT3& position);
-	void SendPlayerData(CPlayer& player);
+	void SendPlayerData(CPlayer& player,int GunType,float flength,int anibundle);
 
 	//void SendPosition(const XMFLOAT4X4& woldpos);
 	void AddFPSCount();

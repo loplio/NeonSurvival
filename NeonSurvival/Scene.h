@@ -148,5 +148,5 @@ public:
 	std::vector<CParticleObject*>			m_vParticleObjects;
 	std::vector<CGameObject*>				m_vGameObjects;
 	std::vector<CGameObject*>				m_vHierarchicalGameObjects;
-	std::vector<CPlayer*>					m_vOtherPlayer;
+	std::vector<CPlayer*>				m_vOtherPlayer;
 };
