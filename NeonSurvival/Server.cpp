@@ -1,4 +1,6 @@
-﻿#include "Server.h"
+﻿#include "stdafx.h"
+#include "Server.h"
+#include "Player.h"
 
 void SERVER::init(HWND hWnd)
 {
@@ -85,7 +87,8 @@ void SERVER::ProcessSocketMessage(HWND hWnd, UINT unit, WPARAM wParam, LPARAM lP
         case MESSAGETYPE::INGAME:
         {
             //len = recv(wParam, (char*)&PlayersPosition, sizeof(PlayersPosition), 0);
-            memcpy(PlayersPosition, m_Packet.buf, sizeof(PlayersPosition));
+            //memcpy(PlayersPosition, m_Packet.buf, sizeof(PlayersPosition));
+            memcpy(PlayersPosition2, m_Packet.buf, sizeof(PlayersPosition2));
             if (len == SOCKET_ERROR) {
                 printf("inGame error : %d\n", WSAGetLastError());
                 return;
@@ -215,6 +218,23 @@ void SERVER::err_display(int errcode)
 PACKET_INGAME* SERVER::GetPlayersPosition()
 {
     return PlayersPosition;
+}
+
+void SERVER::SendPlayerData(CPlayer& player)
+{
+    P_InGame2.id = ClientNumId;
+    P_InGame2.position = player.GetPosition();
+    P_InGame2.velocity = player.GetVelocity();
+    P_InGame2.pitch = player.GetPitch();
+    P_InGame2.yaw = player.GetYaw();
+    P_InGame2.roll = player.GetRoll();
+    P_InGame2.xmf4x4World = player.m_xmf4x4World;
+    //P_InGame2.player = player;
+
+    m_Packet.MessageType = MESSAGETYPE::INGAME;
+    m_Packet.byte = sizeof(PACKET_INGAME2);
+    memcpy(m_Packet.buf, &P_InGame2, sizeof(P_InGame2));
+    len = send(clientSocket, (char*)&m_Packet, sizeof(m_Packet), 0);
 }
 
 void SERVER::printxmfloat4x4(const XMFLOAT4X4& p)

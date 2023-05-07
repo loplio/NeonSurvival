@@ -161,7 +161,9 @@ void Player_Neon::Update(float fTimeElapsed)
 	}
 
 	//서버로 위치 전송
-	SERVER::getInstance().SendPosition(GetPosition());
+	//SERVER::getInstance().SendPosition(GetPosition());
+	SERVER::getInstance().SendPlayerData(*this);
+	
 }
 
 void Player_Neon::OnPrepareRender()
@@ -388,12 +390,42 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	if (pNexusModel) delete pNexusModel;
 
 	CLoadedModelInfo* pOtherModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/NeonHuman/GunAnimation.bin", NULL);
-	m_vHierarchicalGameObjects.push_back(new CGameObject());
-	m_vHierarchicalGameObjects.back()->SetChild(pOtherModel->m_pModelRootObject);
-	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 1, pOtherModel);
-	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
-	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackEnable(0, 0);
-	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
+	m_vOtherPlayer.push_back(new CPlayer());
+	m_vOtherPlayer.back()->SetChild(pOtherModel->m_pModelRootObject);
+	//m_vOtherPlayer.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 1, pOtherModel);
+	m_vOtherPlayer.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 14, pOtherModel);
+	m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
+	m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(1, 1);
+	m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(2, 2);
+	m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(3, 3);
+	m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(4, 4);
+	m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(5, 5);
+	m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(6, 6);
+	m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(7, 7);
+	m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(8, 8);
+	m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(9, 9);
+	m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(10, 10);
+	m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(11, 11);
+	m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(12, 12);
+	m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(13, 13);
+	m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(0, false);
+	m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(1, false);
+	m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(2, false);
+	m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(3, false);
+	m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(4, false);
+	m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(5, false);
+	m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(6, false);
+	m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(7, false);
+	m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(8, false);
+	m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(9, false);
+	m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(10, false);
+	m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(11, false);
+	m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(12, false);
+	m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(13, false);
+
+	//m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
+	//m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(0, 0);
+	//m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
 	if (pOtherModel) delete pOtherModel;
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
@@ -467,44 +499,31 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 {
 	CScene::AnimateObjects(fTimeElapsed);
 
-	//for (int i = 0; i < m_vOtherPlayer.size(); ++i)
-	//{
-	//	if (m_vOtherPlayer[i]->m_pSkinnedAnimationController) m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetTrackEnable(0, true);
- //
-	//	//m_vOtherPlayer[i]->SetPosition(m_pPlayer->GetPosition().x + 10, m_pPlayer->GetPosition().y, m_pPlayer->GetPosition().z);
-	//	//m_vOtherPlayer[i]->Animate(fTimeElapsed);
-	//	for (int j = 0; j < 2; ++j)
-	//	{
-	//		int OtherId = m_pOtherPlayerPosition[j].id;
-	//		if (m_MyId != OtherId && -1 != OtherId)
-	//		{
-	//			m_vOtherPlayer[i]->SetPosition(m_pOtherPlayerPosition[OtherId].position);
-	//		}
-	//	}
-	//	m_vOtherPlayer[i]->Animate(fTimeElapsed);
-	//}
-
-	for (int i = 1; i < m_vHierarchicalGameObjects.size(); ++i)
+	for (int i = 0; i < m_vOtherPlayer.size(); ++i)
 	{
-		//if (m_vHierarchicalGameObjects[i]->m_pSkinnedAnimationController) m_vHierarchicalGameObjects[i]->m_pSkinnedAnimationController->SetTrackEnable(0, true);
- 
-		//m_vOtherPlayer[i]->SetPosition(m_pPlayer->GetPosition().x + 10, m_pPlayer->GetPosition().y, m_pPlayer->GetPosition().z);
-		//m_vOtherPlayer[i]->Animate(fTimeElapsed);
+		if (m_vOtherPlayer[i]->m_pSkinnedAnimationController) m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetTrackEnable(0, true);
+		//m_vOtherPlayer[i]->SetPosition(m_pPlayer->GetPosition());
 		for (int j = 0; j < 2; ++j)
 		{
-			int OtherId = m_pOtherPlayerPosition[j].id;
-			//int m_MyId = SERVER::getInstance().GetClientNumId(); //싱글톤을 계속 사용하면 안됨
+			int OtherId = m_pOtherPlayerData2[j].id;
 			if (m_MyId == -1)
 			{
 				m_MyId = SERVER::getInstance().GetClientNumId();
+				printf("m_MyId : %d\n", m_MyId);
 			}
-
+		
 			if (m_MyId != OtherId && -1 != OtherId)
 			{
-				m_vHierarchicalGameObjects[i]->SetPosition(m_pOtherPlayerPosition[OtherId].position);
+				m_vOtherPlayer[i]->SetPosition(m_pOtherPlayerData2[OtherId].position);
+				//m_vOtherPlayer[i]->SetVelocity(m_pOtherPlayerData2[OtherId].velocity);
+				//m_vOtherPlayer[i]->m_xmf4x4World = m_pOtherPlayerData2[OtherId].xmf4x4World;
+				//float Pitch =	m_pOtherPlayerData2[OtherId].pitch;
+				//float Yaw =		m_pOtherPlayerData2[OtherId].yaw;
+				//float Roll =	m_pOtherPlayerData2[OtherId].roll;
+				//m_vOtherPlayer[i]->Rotate(m_pOtherPlayerData2[OtherId].pitch, m_pOtherPlayerData2[OtherId].yaw, m_pOtherPlayerData2[OtherId].roll);
 			}
 		}
-		//m_vHierarchicalGameObjects[i]->Animate(fTimeElapsed);
+		m_vOtherPlayer[i]->Animate(fTimeElapsed);
 	}
 }
 
@@ -517,10 +536,10 @@ void Scene_Neon::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCa
 {
 	CScene::Render(pd3dCommandList, pCamera);
 
-	/*for (int i = 0; i < m_vOtherPlayer.size(); i++)
-	{
-		m_vOtherPlayer[i]->Render(pd3dCommandList, pCamera);
-	}*/
+	//for (int i = 0; i < m_vOtherPlayer.size(); i++)
+	//{
+	//	m_vOtherPlayer[i]->Render(pd3dCommandList, pCamera);
+	//}
 }
 void Scene_Neon::DrawUI(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {

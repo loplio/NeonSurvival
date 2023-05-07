@@ -9,7 +9,8 @@
 
 #include <DirectXMath.h>
 #include <vector>
-//#include "GameObject.h"
+
+#include "Player.h"
 
 using namespace DirectX;
 
@@ -26,6 +27,16 @@ typedef struct{
 	XMFLOAT3 position;
 	int id;
 } PACKET_INGAME;
+
+typedef struct {
+	XMFLOAT3 position;
+	float pitch;
+	float yaw;
+	float roll;
+	XMFLOAT3 velocity;
+	XMFLOAT4X4 xmf4x4World;
+	int id;
+} PACKET_INGAME2;
 
 typedef struct {
 	int MessageType;
@@ -52,6 +63,9 @@ private:
 	SOCKET clientSocket;
 	PACKET_INGAME P_InGame;
 	PACKET_INGAME PlayersPosition[2];
+
+	PACKET_INGAME2 P_InGame2;
+	PACKET_INGAME2 PlayersPosition2[2];
 	
 public:
 	static SERVER& getInstance() {
@@ -64,13 +78,15 @@ public:
 	void UpdatePlayerPosition(const XMFLOAT3 &position);
 	//void UpdatePlayerPosition(const XMFLOAT4X4 &position);
 	void SendPosition(const XMFLOAT3& position);
-	
+	void SendPlayerData(CPlayer& player);
+
 	//void SendPosition(const XMFLOAT4X4& woldpos);
 	void AddFPSCount();
 	bool IsCount();
 
 	int GetClientNumId() { return ClientNumId; }
 	PACKET_INGAME* GetPlayersPosition();
+	PACKET_INGAME2* GetPlayersPosition2() { return PlayersPosition2; }
 	//void SetOtherPlayerPosition(std::vector<CGameObject*> &m_OtherPlayers);
 	//void SetOtherPlayerPosition(std::vector<CGameObject**>& m_OtherPlayers);
 

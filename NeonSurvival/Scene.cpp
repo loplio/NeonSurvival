@@ -416,6 +416,7 @@ void CScene::ReleaseUploadBuffers()
 	for (int i = 0; i < m_vHierarchicalGameObjects.size(); i++) m_vHierarchicalGameObjects[i]->ReleaseUploadBuffers();
 	for (int i = 0; i < m_vGameObjects.size(); i++) m_vGameObjects[i]->ReleaseUploadBuffers();
 	for (int i = 0; i < m_vParticleObjects.size(); i++) m_vParticleObjects[i]->ReleaseUploadBuffers();
+	for (int i = 0; i < m_vOtherPlayer.size(); i++) m_vOtherPlayer[i]->ReleaseUploadBuffers();
 }
 void CScene::ReleaseObjects()
 {
@@ -545,6 +546,12 @@ void CScene::AnimateObjects(float fTimeElapsed)
 		m_vParticleObjects[i]->Animate(fTimeElapsed);
 	}
 
+	//for (int i = 0; i < m_vOtherPlayer.size(); ++i)
+	//{
+	//	if (m_vOtherPlayer[i]->m_pSkinnedAnimationController) m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetTrackEnable(0, true);
+	//	m_vOtherPlayer[i]->Animate(fTimeElapsed);
+	//}
+
 	if (m_pLights)
 	{
 		m_pLights[1].m_xmf3Position = m_pPlayer->GetPosition();
@@ -603,6 +610,11 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 	for (int i = 0; i < m_vParticleObjects.size(); i++)
 	{
 		m_vParticleObjects[i]->Render(pd3dCommandList, pCamera);
+	}
+
+	for (int i = 0; i < m_vOtherPlayer.size(); ++i)
+	{
+		m_vOtherPlayer[i]->Render(pd3dCommandList, pCamera);
 	}
 }
 

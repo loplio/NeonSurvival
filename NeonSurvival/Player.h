@@ -74,6 +74,10 @@ public:
 	float GetPitch() const { return(m_fPitch); }
 	float GetRoll() const { return(m_fRoll); }
 
+	void SetYaw(float Yaw) { m_fYaw = Yaw; }
+	void SetPitch(float Pitch) { m_fPitch = Pitch; }
+	void SetRoll(float Roll) { m_fRoll = Roll; }
+
 	CCamera* GetCamera() const { return(m_pCamera); }
 	void SetCamera(CCamera* pCamera) { m_pCamera = pCamera; }
 	CCamera* OnChangeCamera(DWORD nNewCameraMode, DWORD nCurrentCameraMode);

@@ -64,8 +64,9 @@ public:
 	void DrawUI(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
 
 public:
-	std::vector<CGameObject*> m_vOtherPlayer;
-	PACKET_INGAME* m_pOtherPlayerPosition = SERVER::getInstance().GetPlayersPosition();
+	//std::vector<CGameObject*> m_vOtherPlayer;
+	PACKET_INGAME* m_pOtherPlayerData = SERVER::getInstance().GetPlayersPosition();
+	PACKET_INGAME2* m_pOtherPlayerData2 = SERVER::getInstance().GetPlayersPosition2();
 	int m_MyId = -1;
 };
 
