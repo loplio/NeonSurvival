@@ -399,6 +399,9 @@ void CScene::CreateBoundingBox(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 		m_vHierarchicalGameObjects[i]->CreateBoundingBoxMesh(pd3dDevice, pd3dCommandList, BBShader);
 	}
 }
+void CScene::RunTimeBuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+{
+}
 void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
 }
@@ -528,6 +531,9 @@ void CScene::Update(float fTotalTime, float fTimeElapsed)
 	m_fElapsedTime = fTimeElapsed;
 	m_fCurrentTime = fTotalTime;
 }
+void CScene::Update(float fTimeElapsed)
+{
+}
 void CScene::AnimateObjects(float fTimeElapsed)
 {
 	for (int i = 0; i < m_ppShaders.size(); ++i)
@@ -563,6 +569,14 @@ void CScene::OnPostRenderParticle()
 {
 	for (int i = 0; i < m_vParticleObjects.size(); i++) m_vParticleObjects[i]->OnPostRender();
 }
+void CScene::OnPostReleaseUploadBuffers()
+{
+	for (int i = 0; i < m_ppShaders.size(); ++i) m_ppShaders[i]->OnPostReleaseUploadBuffers();
+}
+void CScene::PostRenderParticle(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	for (int i = 0; i < m_vParticleObjects.size(); i++) m_vParticleObjects[i]->PostRender(pd3dCommandList);
+}
 void CScene::OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
 	if (m_pd3dGraphicsRootSignature) pd3dCommandList->SetGraphicsRootSignature(m_pd3dGraphicsRootSignature);
@@ -587,11 +601,6 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 	if (m_pSkyBox) m_pSkyBox->Render(pd3dCommandList, pCamera);
 	if (m_pTerrain) m_pTerrain->Render(pd3dCommandList, pCamera);
 
-	for (int i = 0; i < m_ppShaders.size(); ++i)
-	{
-		m_ppShaders[i]->Render(pd3dCommandList, pCamera);
-	}
-
 	for (int i = 0; i < m_vHierarchicalGameObjects.size(); i++)
 	{
 		m_vHierarchicalGameObjects[i]->Render(pd3dCommandList, pCamera);
@@ -599,6 +608,10 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 	for (int i = 0; i < m_vGameObjects.size(); i++)
 	{
 		m_vGameObjects[i]->Render(pd3dCommandList, pCamera);
+	}
+	for (int i = 0; i < m_ppShaders.size(); ++i)
+	{
+		m_ppShaders[i]->Render(pd3dCommandList, pCamera);
 	}
 	for (int i = 0; i < m_vParticleObjects.size(); i++)
 	{

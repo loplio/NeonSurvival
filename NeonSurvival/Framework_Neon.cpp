@@ -142,9 +142,9 @@ void CGameFramework_Neon::FrameAdvance()
 	m_KeyboardInput->DataProcessing();
 	m_MouseInput->DataProcessing();
 
+	m_ProcessCompute->Collide();
 	m_ProcessCompute->Update();
 	m_ProcessCompute->Animate();
-	m_ProcessCompute->Collide();
 
 	m_DisplayOutput->Render();
 	//m_pUILayer->Render(m_nSwapChainBufferIndex);
@@ -241,7 +241,7 @@ void CGameFramework_Neon::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, W
 	case WM_RBUTTONUP:
 		if (m_pPlayer)
 		{
-			m_pCamera = m_pPlayer->ChangeCamera((THIRD_PERSON_CAMERA), m_GameTimer.GetTimeElapsed());
+			m_pCamera = m_pPlayer->ChangeCamera((m_pCamera->GetPrevMode()), m_GameTimer.GetTimeElapsed());
 			m_pPlayer->SetTypeDefine(0);	// Empty.
 		}
 		//m_pSelectedObject = NULL;
@@ -265,10 +265,14 @@ void CGameFramework_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID
 	switch (nMessageID) {
 	case WM_KEYUP:
 		switch (wParam) {
-		case VK_F1:
-		case VK_F2:
-		case VK_F3:
-			if (m_pPlayer) m_pCamera = m_pPlayer->ChangeCamera((wParam - VK_F1 + 1), m_GameTimer.GetTimeElapsed());
+		case 0x56:
+			if (m_pPlayer) 
+			{
+				if(m_pCamera->GetMode() == FIRST_PERSON_CAMERA)
+					m_pCamera = m_pPlayer->ChangeCamera(THIRD_PERSON_CAMERA, m_GameTimer.GetTimeElapsed());
+				else if(m_pCamera->GetMode() == THIRD_PERSON_CAMERA)
+					m_pCamera = m_pPlayer->ChangeCamera(FIRST_PERSON_CAMERA, m_GameTimer.GetTimeElapsed());
+			}
 			break;
 		case VK_ESCAPE:
 			::PostQuitMessage(0);

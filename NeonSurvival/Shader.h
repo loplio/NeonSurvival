@@ -47,10 +47,19 @@ public:
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int nPipelineState = 0);
 
 	virtual void CreateBoundingBox(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader) { }
+	virtual void Update(float fTimeElapsed) { }
+	virtual void RunTimeBuild(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) { }
 	virtual void AnimateObjects(float fTimeElapsed) { }
 	virtual void ReleaseObjects() { }
 	virtual void ReleaseUploadBuffers() { }
+	virtual void OnPostReleaseUploadBuffers() { }
 	virtual CGameObject* PickObjectByRayIntersection(XMFLOAT3& xmf3PickPosition, XMFLOAT4X4& xmf4x4View, float* pfNearHitDistance) { return NULL; }
+
+	enum ReafShaderType {
+		Shader,
+		PistolBulletShader
+	};
+	virtual ReafShaderType GetReafShaderType() { return Shader; }
 
 	UINT			m_nRenderTargets = 1;
 	DXGI_FORMAT		m_dxgiRtvFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -247,6 +256,22 @@ public:
 
 	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
 	virtual D3D12_STREAM_OUTPUT_DESC CreateStreamOuputState();
+	virtual D3D12_BLEND_DESC CreateBlendState();
+	virtual D3D12_DEPTH_STENCIL_DESC CreateDepthStencilState();
+
+	virtual void CreateGraphicsPipelineState(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature);
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+
+class CBulletShader : public CBillboardShader {
+public:
+	CBulletShader();
+	virtual ~CBulletShader();
+
+	virtual D3D12_SHADER_BYTECODE CreateVertexShader();
+	virtual D3D12_SHADER_BYTECODE CreatePixelShader();
 	virtual D3D12_BLEND_DESC CreateBlendState();
 	virtual D3D12_DEPTH_STENCIL_DESC CreateDepthStencilState();
 

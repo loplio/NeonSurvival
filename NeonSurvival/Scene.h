@@ -57,6 +57,7 @@ public:
 
 	// Build.
 	virtual void CreateBoundingBox(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CBoundingBoxObjects* BBShader);
+	virtual void RunTimeBuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void BuildLightsAndMaterials();
 	virtual void ReleaseUploadBuffers();
@@ -69,11 +70,14 @@ public:
 
 	// ProcessCompute.
 	void Update(float fTimeElapsed, float fTotalTime);
+	virtual void Update(float fTimeElapsed);
 	virtual void AnimateObjects(float fTimeElapsed);
 
 	// ProcessOutput.
 	void RenderParticle(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
 	void OnPostRenderParticle();
+	void OnPostReleaseUploadBuffers();
+	void PostRenderParticle(ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera *pCamera);
 	virtual void DrawUI(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
