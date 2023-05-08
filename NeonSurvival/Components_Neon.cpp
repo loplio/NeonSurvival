@@ -393,11 +393,11 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	//---------------------------------------------------------------------------------------------------//
 
 	/// Particle1 ///
-	//m_ppComputeShaders.push_back(new CComputeShader);
-	//pBrightAreaComputeShader = new CBrightAreaComputeShader((wchar_t*)L"Image/Particle/RoundSoftParticle.dds");
-	//pBrightAreaComputeShader->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
-	//m_ppComputeShaders.back() = pBrightAreaComputeShader;
-	//
+	m_ppComputeShaders.push_back(new CComputeShader);
+	pBrightAreaComputeShader = new CBrightAreaComputeShader((wchar_t*)L"Image/Particle/RoundSoftParticle.dds");
+	pBrightAreaComputeShader->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
+	m_ppComputeShaders.back() = pBrightAreaComputeShader;
+	
 	//m_ppComputeShaders.push_back(new CComputeShader);
 	//CGaussian2DBlurComputeShader* pParticleBlurComputeShader1 = new CGaussian2DBlurComputeShader((wchar_t*)L"Image/Particle/RoundSoftParticle.dds");
 	//pParticleBlurComputeShader1->SetSourceResource(pBrightAreaComputeShader->m_pTexture->GetTexture(1));
