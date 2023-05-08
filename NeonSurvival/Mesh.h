@@ -443,3 +443,12 @@ public:
 
 	void OnPostRender(int nPipelineState) override;
 };
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class CPistolBulletMesh : public CStandardMesh {
+public:
+	CPistolBulletMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, XMFLOAT2 xmf2Size);
+	virtual ~CPistolBulletMesh();
+
+	void Render(ID3D12GraphicsCommandList* pd3dCommandList, int nPipelineState) override;
+};

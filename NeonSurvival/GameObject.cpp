@@ -567,7 +567,8 @@ void CMaterial::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList
 	{
 		if (m_ppTextures[i])
 		{
-			if (m_ppTextures[i]->m_nGraphicsSrvGpuHandles) m_ppTextures[i]->UpdateGraphicsSrvShaderVariable(pd3dCommandList, 0);
+			for (int k = 0; k < m_ppTextures[i]->m_nGraphicsSrvGpuHandles; ++k)
+				m_ppTextures[i]->UpdateGraphicsSrvShaderVariable(pd3dCommandList, k);
 		}
 	}
 }
@@ -806,6 +807,9 @@ void CGameObject::Collide(const CGameSource& GameSource, CBoundingBoxObjects& Bo
 void CGameObject::OnPrepareAnimate()
 {
 }
+void CGameObject::Update(float fTimeElapsed)
+{
+}
 void CGameObject::Animate(float fTimeElapsed, XMFLOAT4X4* pxmf4x4Parent)
 {
 	OnPrepareRender();
@@ -849,6 +853,9 @@ void CGameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pC
 
 	if (m_pSibling) m_pSibling->Render(pd3dCommandList, pCamera);
 	if (m_pChild) m_pChild->Render(pd3dCommandList, pCamera);
+}
+void CGameObject::RunTimeBuild(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+{
 }
 
 XMFLOAT3 CGameObject::GetPosition()

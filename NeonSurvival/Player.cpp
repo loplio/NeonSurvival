@@ -232,6 +232,13 @@ CCamera* CPlayer::OnChangeCamera(DWORD nNewCameraMode, DWORD nCurrentCameraMode)
 		break;
 	}
 	if (m_pCamera) pNewCamera->SetPrevMode(nPrevMode);
+	if (nCurrentCameraMode == SHOULDER_HOLD_CAMERA)
+	{
+		if (m_pCamera->GetPrevMode() == FIRST_PERSON_CAMERA)
+		{
+			m_fPitch = m_fPitch * 0.2f;
+		}
+	}
 	if (nCurrentCameraMode == SPACESHIP_CAMERA)
 	{
 		m_xmf3Right = Vector3::Normalize(XMFLOAT3(m_xmf3Right.x, 0.0f, m_xmf3Right.z));

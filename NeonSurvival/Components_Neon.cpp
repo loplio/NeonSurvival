@@ -323,6 +323,14 @@ void Scene_Neon::CreateBoundingBox(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 
 	CScene::CreateBoundingBox(pd3dDevice, pd3dCommandList, BBShader);
 }
+void Scene_Neon::RunTimeBuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	for (int i = 0; i < m_ppShaders.size(); ++i)
+	{
+		m_ppShaders[i]->RunTimeBuild(pd3dDevice, pd3dCommandList);
+	}
+	CScene::RunTimeBuildObjects(pd3dDevice, pd3dCommandList);
+}
 void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
 	BuildLightsAndMaterials();
@@ -332,7 +340,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 
 	// ShaderObjects Build.
 	m_ppShaders.reserve(5);
-	m_ppComputeShaders.reserve(5);
+	m_ppComputeShaders.reserve(10);
 
 	/// UI ///
 	m_UIShaders.push_back(new CShader);
@@ -395,6 +403,21 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	//pParticleBlurComputeShader1->SetSourceResource(pBrightAreaComputeShader->m_pTexture->GetTexture(1));
 	//pParticleBlurComputeShader1->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
 	//m_ppComputeShaders.back() = pParticleBlurComputeShader1;
+
+	/// Bullet1 ///
+	m_ppComputeShaders.push_back(new CComputeShader);
+	CGaussian2DBlurComputeShader* pBulletBlurComputeShader1 = new CGaussian2DBlurComputeShader((wchar_t*)L"Image/Particle/RoundSoftParticle.dds");
+	pBulletBlurComputeShader1->SetSourceResource(pBrightAreaComputeShader->m_pTexture->GetTexture(1));
+	pBulletBlurComputeShader1->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
+	m_ppComputeShaders.back() = pBulletBlurComputeShader1;
+
+	/// PistolBullet ///
+	m_ppShaders.push_back(new CShader);
+	PistolBulletTexturedObjects* pPistolBulletShader = new PistolBulletTexturedObjects();
+	pPistolBulletShader->BuildComponents(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pBulletBlurComputeShader1->m_pTexture);
+	pPistolBulletShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_ppShaders.back() = pPistolBulletShader;
+	//---------------------------------------------------------------------------------------------------//
 
 	// Objects build.
 	m_vParticleObjects.reserve(5);
@@ -499,7 +522,30 @@ void Scene_Neon::ReleaseObjects()
 //--ProcessInput : Scene_Neon--------------------------------------------------------
 bool Scene_Neon::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
 {
-	return false;
+	switch (nMessageID) {
+	case WM_LBUTTONDOWN:
+		for (int i = 0; i < m_ppShaders.size(); ++i)
+		{
+			if (m_ppShaders[i]->GetReafShaderType() == CShader::ReafShaderType::PistolBulletShader)
+			{
+				PistolBulletTexturedObjects* pObjectsShader = (PistolBulletTexturedObjects*)m_ppShaders[i];
+				XMFLOAT3 startLocation = m_pPlayer.get()->GetPosition();
+				XMFLOAT3 rayDirection = m_pPlayer.get()->GetCamera()->GetPlayerToRayPoint();
+				startLocation.y += METER_PER_PIXEL(1.5);
+				pObjectsShader->AppendBullet(startLocation, rayDirection);
+			}
+		}
+		break;
+	case WM_RBUTTONDOWN:
+		break;
+	case WM_LBUTTONUP:
+		break;
+	case WM_RBUTTONUP:
+		break;
+	default:
+		break;
+	}
+	return(false);
 }
 bool Scene_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
 {
@@ -525,6 +571,14 @@ bool Scene_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM 
 }
 
 //--ProcessAnimation : Scene_Neon----------------------------------------------------
+void Scene_Neon::Update(float fTimeElapsed)
+{
+	for (int i = 0; i < m_ppShaders.size(); ++i)
+	{
+		m_ppShaders[i]->Update(fTimeElapsed);
+	}
+	CScene::Update(fTimeElapsed);
+}
 void Scene_Neon::AnimateObjects(float fTimeElapsed)
 {
 	CScene::AnimateObjects(fTimeElapsed);
@@ -653,6 +707,32 @@ CParticleObject_Neon::CParticleObject_Neon(ID3D12Device* pd3dDevice, ID3D12Graph
 }
 CParticleObject_Neon::~CParticleObject_Neon()
 {
+}
+//-------------------------------------------------------------------------------
+CPistolBulletObject::CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection) : CGameObject()
+{
+	SetMaterial(0, pMaterial);
+	SetPosition(startLocation);
+	m_fRayDriection = Vector3::Normalize(rayDirection);
+}
+CPistolBulletObject::~CPistolBulletObject()
+{
+	//if (m_pRandowmValueTexture) m_pRandowmValueTexture->Release();
+}
+void CPistolBulletObject::RunTimeBuild(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	m_pMesh = new CPistolBulletMesh(pd3dDevice, pd3dCommandList, XMFLOAT2(8.0f, 8.0f));
+}
+void CPistolBulletObject::Update(float fTimeElapsed)
+{
+	SetPosition(Vector3::Add(GetPosition(), Vector3::ScalarProduct(m_fRayDriection, m_fSpeed * fTimeElapsed, false)));
+	m_fLifeTime += fTimeElapsed;
+}
+void CPistolBulletObject::ReleaseUploadBuffers()
+{
+	//if (m_pRandowmValueTexture) m_pRandowmValueTexture->ReleaseUploadBuffers();
+
+	CGameObject::ReleaseUploadBuffers();
 }
 //-------------------------------------------------------------------------------
 NexusObject::NexusObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks)

@@ -57,6 +57,7 @@ using Microsoft::WRL::ComPtr;
 #pragma comment(lib, "dwrite.lib")
 
 #include <vector>
+#include <list>
 #include <iostream>
 #ifdef _DEBUG
 //#pragma comment(linker,"/entry:wWinMainCRTStartup /subsystem:console")

@@ -86,7 +86,7 @@ public:
 	CTexturedObjects();
 	virtual ~CTexturedObjects();
 
-	virtual void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext = NULL) = 0;
+	virtual void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext = NULL);
 
 	void CreateBoundingBox(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader) override;
 	void AnimateObjects(float fTimeElapsed) override;
@@ -109,13 +109,46 @@ public:
 	void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext = NULL) override;
 };
 
-//--Concrete_2-------------------------------------------------------------------
-class TexturedObjects_2 : public CTexturedObjects {
+//-------------------------------------------------------------------------------
+/*	CBulletObjects															   */
+//-------------------------------------------------------------------------------
+class CBulletObjects : public CBulletShader {
 public:
-	TexturedObjects_2() {}
-	virtual ~TexturedObjects_2() {}
+	CBulletObjects();
+	virtual ~CBulletObjects();
+	virtual void BuildComponents(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CTexture* pTexture = NULL) {};
 
-	void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext = NULL) override;
+	void Update(float fTimeElapsed) override;
+	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int nPipelineState = 0) override;
+	void RunTimeBuild(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandLis) override;
+
+	void ReleaseObjects() override;
+	void ReleaseUploadBuffers() override;
+
+protected:
+	int m_nBuildIndex = 0;
+	std::list<CGameObject*> m_ppObjects;
+	//std::vector<CGameObject*> m_ppObjects;
+};
+
+class PistolBulletTexturedObjects : public CBulletObjects {
+public:
+	PistolBulletTexturedObjects();
+	virtual ~PistolBulletTexturedObjects();
+
+	void BuildComponents(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CTexture* pTexture = NULL) override;
+	void Update(float fTimeElapsed) override;
+	void AppendBullet(XMFLOAT3& startLocation, XMFLOAT3& rayDirection);
+	void EventRemove();
+	void ReleaseUploadBuffers() override;
+	void OnPostReleaseUploadBuffers() override;
+	
+	ReafShaderType GetReafShaderType() override { return PistolBulletShader; }
+
+public:
+	const int nMaxBullet = 100;
+
+	CMaterial* m_pMaterial = NULL;
 };
 
 //-------------------------------------------------------------------------------

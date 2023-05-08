@@ -47,6 +47,7 @@ public:
 
 	// Build..
 	void CreateBoundingBox(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CBoundingBoxObjects* BBShader) override;
+	void RunTimeBuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) override;
 	void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) override;
 	void BuildLightsAndMaterials() override;
 	void ReleaseUploadBuffers() override;
@@ -57,6 +58,7 @@ public:
 	bool OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam) override;
 
 	// ProcessAnimaiton..
+	void Update(float fTimeElapsed) override;
 	void AnimateObjects(float fTimeElapsed) override;
 
 	// ProcessOutput..
@@ -78,6 +80,22 @@ class CParticleObject_Neon : public CParticleObject {
 public:
 	CParticleObject_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CTexture* pTexture, XMFLOAT3 xmf3Position, XMFLOAT3 xmf3Velocity, float fLifetime, XMFLOAT3 xmf3Acceleration, XMFLOAT3 xmf3Color, XMFLOAT2 xmf2Size, UINT nMaxParticles);
 	virtual ~CParticleObject_Neon();
+};
+
+class CPistolBulletObject : public CGameObject {
+public:
+	CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection);
+	virtual ~CPistolBulletObject();
+
+	void RunTimeBuild(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) override;
+	void Update(float fTimeElapsed) override;
+	void ReleaseUploadBuffers();
+
+public:
+	const float m_fSpeed = PIXEL_MPS(350);
+	float m_fLifeTime = 0.0f;
+	XMFLOAT3 m_fRayDriection;
+	//CTexture* m_pRandowmValueTexture = NULL;
 };
 
 class NexusObject : public CGameObject {
