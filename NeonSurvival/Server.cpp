@@ -22,7 +22,8 @@ void SERVER::init(HWND hWnd)
     ZeroMemory(&serverAddr, sizeof(serverAddr));
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(SERVERPORT);
-    serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    //serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    serverAddr.sin_addr.s_addr = inet_addr("125.180.24.40");
 
     //네이클 알고리즘 OFF
     int DelayZeroOpt = 1;
