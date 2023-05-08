@@ -110,6 +110,16 @@ void CCamera::RegenerateViewMatrix()
 	GenerateFrustum();
 }
 
+XMFLOAT3 CCamera::GetPlayerToRayPoint()
+{
+	XMFLOAT3 RayPoint = Vector3::Add(Vector3::ScalarProduct(m_xmf3Look, m_fRayLength, false), m_xmf3Position);
+	XMFLOAT3 LaunchLocation = m_pPlayer->GetPosition();
+	LaunchLocation.y += METER_PER_PIXEL(1.5);
+	XMFLOAT3 xmf3PlayerToRayPoint = Vector3::Subtract(RayPoint, LaunchLocation);
+
+	return xmf3PlayerToRayPoint;
+}
+
 void CCamera::CreateShaderVariables(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList)
 {
 	UINT ncbElementBytes = ((sizeof(CB_CAMERA_INFO) + 255) & ~255); //256ÀÇ ¹è¼ö

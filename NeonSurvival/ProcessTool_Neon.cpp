@@ -149,6 +149,7 @@ void GameCompute_Neon::Update() const
 {
 	// Scene Update
 	m_Scene.Update(m_GameTimer.GetTotalTime(), m_GameTimer.GetTimeElapsed());
+	m_Scene.Update(m_GameTimer.GetTimeElapsed());
 
 	// Player Update
 	m_Player.Update(m_GameTimer.GetTimeElapsed());
@@ -177,16 +178,15 @@ void GameCompute_Neon::Collide() const
 		if (BoundingObjects[i]->GetRootParentObject() == &m_Player) continue;
 
 		XMFLOAT4X4 xmfViewMatrix = m_Player.GetCamera()->GetViewMatrix();
-
 		nIntersected = BoundingObjects[i]->PickObjectByRayIntersection(ClientPosition, xmfViewMatrix, &fHitDistance);
 		if ((nIntersected > 0) && (fHitDistance < fNearestHitDistance))
 		{
 			fNearestHitDistance = fHitDistance;
 			pSelectedObject = BoundingObjects[i];
-			//std::cout << "" << "Index - " << i << ", Intersect Num: " << nIntersected << ", Length: " << fHitDistance << std::endl;
 			if (m_Player.GetCamera()->GetMode() == FIRST_PERSON_CAMERA || m_Player.GetCamera()->GetMode() == SHOULDER_HOLD_CAMERA)
 			{
 				m_Player.SetRayLength(fNearestHitDistance);
+				//std::cout << "" << "Index - " << i << ", Intersect Num: " << nIntersected << ", Length: " << fHitDistance << std::endl;
 			}
 		}
 	}
@@ -216,6 +216,9 @@ void GameRenderDisplay_Neon::Render()
 
 	m_InterfaceFramework.ClearDisplay();
 
+	// Runtime Build.
+	m_Scene.RunTimeBuildObjects(&m_pd3dDevice, &m_pd3dCommandList);
+
 	// Update
 	((CGameFramework_Neon*)&gBaseFramework)->UpdateUI();
 
@@ -238,6 +241,7 @@ void GameRenderDisplay_Neon::Render()
 	m_InterfaceFramework.ExecuteCommand();
 
 	m_Scene.OnPostRenderParticle();
+	m_Scene.OnPostReleaseUploadBuffers();
 }
 //-------------------------------------------------------------------------------
 LobbyRenderDisplay_Neon::LobbyRenderDisplay_Neon(CLobbyFramework& LobbyFramework) : 

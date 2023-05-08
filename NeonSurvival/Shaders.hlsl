@@ -696,13 +696,30 @@ float4 PSParticleDraw(GS_PARTICLE_DRAW_OUTPUT input) : SV_TARGET
 {
 	float4 cColor = gtxtParticleTexture.Sample(gssWrap, input.uv);
 	cColor *= input.color;
-	//float2 center = float2(0.5f, 0.5f);
-	//float2 offset = input.uv - center;
-	//float distance = length(offset);
-	//cColor.rgb += pow(1.0f - distance, 8.0f);
-	//return(cColor);
+
 	return GlowEffect(input.uv, cColor);
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//// Bullet System
+VS_TEXTURED_OUTPUT VSBullet(VS_TEXTURED_INPUT input)
+{
+	VS_TEXTURED_OUTPUT output;
+
+	float3 positionW = mul(float4(input.position, 1.0f), (float3x3)gmtxInverseView) + gmtxGameObject[3].xyz;
+	output.position = mul(mul(float4(positionW, 1.0f), gmtxView), gmtxProjection);
+	output.uv = input.uv;
+
+	return(output);
+}
+
+float4 PSBullet(VS_TEXTURED_OUTPUT input) : SV_TARGET
+{
+	float4 cColor = gtxtTexture.Sample(gssWrap, input.uv);
+	cColor *= float4(0.1f, 0.0f, 1.0f, 1.0f);
+	return GlowEffect(input.uv, cColor);
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 RWTexture2D<float4> gtxtRWOutput : register(u0);

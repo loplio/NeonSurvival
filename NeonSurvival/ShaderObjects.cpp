@@ -249,9 +249,150 @@ void TexturedObjects_1::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 	}
 }
 
-//--Concrete_2-------------------------------------------------------------------
-void TexturedObjects_2::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext)
+//-------------------------------------------------------------------------------
+/*	CBulletObjects															   */
+//-------------------------------------------------------------------------------
+CBulletObjects::CBulletObjects()
 {
+}
+CBulletObjects::~CBulletObjects()
+{
+}
+
+void CBulletObjects::Update(float fTimeElapsed)
+{
+	for (CGameObject* bullet : m_ppObjects) 
+	{
+		if (bullet) bullet->Update(fTimeElapsed);
+	}
+}
+
+void CBulletObjects::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int nPipelineState)
+{
+	CShader::Render(pd3dCommandList, pCamera);
+
+	for (CGameObject* bullet : m_ppObjects)
+	{
+		if (bullet) bullet->Render(pd3dCommandList, pCamera);
+	}
+}
+
+void CBulletObjects::RunTimeBuild(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandLis)
+{
+	for (int i = 0; i < m_nBuildIndex; ++i)
+	{
+		auto bullet = m_ppObjects.rbegin();
+		std::advance(bullet, i);
+		if (*bullet)
+		{
+			(*bullet)->RunTimeBuild(pd3dDevice, pd3dCommandLis);
+		}
+	}
+
+	m_nBuildIndex = 0;
+}
+
+void CBulletObjects::ReleaseObjects()
+{
+	if (!m_ppObjects.empty()) {
+		for (CGameObject* bullet : m_ppObjects)
+		{
+			if (bullet) bullet->Release();
+		}
+	}
+}
+void CBulletObjects::ReleaseUploadBuffers()
+{
+	if (!m_ppObjects.empty()) {
+		for (CGameObject* bullet : m_ppObjects)
+		{
+			if (bullet) bullet->ReleaseUploadBuffers();
+		}
+	}
+}
+
+//--Concrete_1-------------------------------------------------------------------
+PistolBulletTexturedObjects::PistolBulletTexturedObjects()
+{
+}
+PistolBulletTexturedObjects::~PistolBulletTexturedObjects()
+{
+	if (m_pMaterial) delete m_pMaterial;
+}
+
+void PistolBulletTexturedObjects::ReleaseUploadBuffers()
+{
+	if(m_pMaterial) m_pMaterial->ReleaseUploadBuffers();
+}
+
+void PistolBulletTexturedObjects::OnPostReleaseUploadBuffers()
+{
+	CBulletObjects::ReleaseUploadBuffers();
+}
+
+void PistolBulletTexturedObjects::BuildComponents(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CTexture* pTexture)
+{
+	m_pMaterial = new CMaterial();
+	m_pMaterial->AddRef();
+	if (pTexture)
+	{
+		m_pMaterial->SetTexture(pTexture);
+		pTexture->AddRef();
+
+		CScene::CreateSRVUAVs(pd3dDevice, m_pMaterial->m_ppTextures[0], ROOT_PARAMETER_TEXTURE, true, true, true, 0, 1);
+		CScene::CreateSRVUAVs(pd3dDevice, m_pMaterial->m_ppTextures[0], ROOT_PARAMETER_OUTPUT, true, true, true, 2, 1, 1);
+	}
+	else
+	{
+		CTexture* pBulletTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0, 1);
+		pBulletTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, (wchar_t*)L"Image/Particle/RoundSoftParticle.dds", 0);
+
+		m_pMaterial->SetTexture(pBulletTexture);
+
+		CScene::CreateSRVUAVs(pd3dDevice, pBulletTexture, ROOT_PARAMETER_TEXTURE, true);
+	}
+
+	//srand((unsigned)time(NULL));
+
+	//XMFLOAT4* pxmf4RandomValues = new XMFLOAT4[1024];
+	//for (int i = 0; i < 1024; i++) { pxmf4RandomValues[i].x = float((rand() % 10000) - 5000) / 5000.0f; pxmf4RandomValues[i].y = float((rand() % 10000) - 5000) / 5000.0f; pxmf4RandomValues[i].z = float((rand() % 10000) - 5000) / 5000.0f; pxmf4RandomValues[i].w = float((rand() % 10000) - 5000) / 5000.0f; }
+
+	//m_pRandowmValueTexture = new CTexture(1, RESOURCE_BUFFER, 0, 1);
+	//m_pRandowmValueTexture->CreateBuffer(pd3dDevice, pd3dCommandList, pxmf4RandomValues, 1024, sizeof(XMFLOAT4), DXGI_FORMAT_R32G32B32A32_FLOAT, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_GENERIC_READ, 0);
+
+	//CScene::CreateSRVUAVs(pd3dDevice, m_pRandowmValueTexture, ROOT_PARAMETER_RANDOM_TEXTURE, true);
+}
+
+void PistolBulletTexturedObjects::Update(float fTimeElapsed)
+{
+	CBulletObjects::Update(fTimeElapsed);
+
+	EventRemove();
+}
+
+void PistolBulletTexturedObjects::AppendBullet(XMFLOAT3& startLocation, XMFLOAT3& rayDirection)
+{
+	m_nBuildIndex++;
+	m_ppObjects.push_back(new CPistolBulletObject(m_pMaterial, startLocation, rayDirection));
+}
+
+void PistolBulletTexturedObjects::EventRemove()
+{
+	for (std::list<CGameObject*>::iterator bullet = m_ppObjects.begin(); bullet != m_ppObjects.end(); ++bullet)
+	{
+		if (((CPistolBulletObject*)(*bullet))->m_fLifeTime > 1.5f)
+		{
+			(*bullet)->Release();
+			std::list<CGameObject*>::iterator iter = m_ppObjects.erase(bullet);
+			if (iter != m_ppObjects.end())
+			{
+				bullet = iter;
+				continue;
+			}
+			else
+				break;
+		}
+	}
 }
 
 //-------------------------------------------------------------------------------
@@ -871,6 +1012,7 @@ void CGaussian2DBlurComputeShader::CreateShaderVariables(ID3D12Device* pd3dDevic
 		m_pTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, pszFileName, 0, true, D3D12_RESOURCE_STATE_GENERIC_READ);
 	else
 		m_pTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, (wchar_t*)L"Image/Light3.dds", 0, true, D3D12_RESOURCE_STATE_GENERIC_READ);
+
 	ID3D12Resource* pd3dResource = m_pTexture->GetTexture(0);
 	D3D12_RESOURCE_DESC d3dResourceDesc = pd3dResource->GetDesc();
 	m_pTexture->CreateTexture(pd3dDevice, pd3dCommandList, NULL, 0, RESOURCE_TEXTURE2D, d3dResourceDesc.Width, d3dResourceDesc.Height, 1, 1, D3D12_RESOURCE_FLAG_NONE, D3D12_RESOURCE_STATE_COPY_DEST, DXGI_FORMAT_R8G8B8A8_UNORM, 1);

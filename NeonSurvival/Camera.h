@@ -95,6 +95,7 @@ public:
 	float& GetYaw() { return m_fYaw; }
 
 	void SetRayLength(float fLength) { m_fRayLength = fLength; }
+	XMFLOAT3 GetPlayerToRayPoint();
 
 	void SetOffset(XMFLOAT3 xmf3Offset) { m_xmf3Offset = xmf3Offset; }
 	XMFLOAT3& GetOffset() { return m_xmf3Offset; }
