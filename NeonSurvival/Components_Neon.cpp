@@ -577,18 +577,6 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 		}
 	}
 }
-
-void Scene_Neon::OnPrepareRenderTransform(CPlayer* player)
-{
-	player->m_xmf4x4Transform._11 = player->GetRightVector().x;		player->m_xmf4x4Transform._12 = player->GetRightVector().y;		player->m_xmf4x4Transform._13 = player->GetRightVector().z;
-	player->m_xmf4x4Transform._21 = player->GetUpVector().x;			player->m_xmf4x4Transform._22 = player->GetUpVector().y;			player->m_xmf4x4Transform._23 = player->GetUpVector().z;
-	player->m_xmf4x4Transform._31 = player->GetLookVector().x;		player->m_xmf4x4Transform._32 = player->GetLookVector().y;		player->m_xmf4x4Transform._33 = player->GetLookVector().z;
-	player->m_xmf4x4Transform._41 = player->GetPosition().x;	player->m_xmf4x4Transform._42 = player->GetPosition().y;	player->m_xmf4x4Transform._43 = player->GetPosition().z;
-
-	player->SetScale(XMFLOAT3(1.f, 1.f, 1.f));
-	player->m_xmf4x4Transform = Matrix4x4::Multiply(XMMatrixScaling(player->m_xmf3Scale.x, player->m_xmf3Scale.y, player->m_xmf3Scale.z), player->m_xmf4x4Transform);
-}
-
 //--ProcessOutput : Scene_Neon-------------------------------------------------------
 void Scene_Neon::OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
