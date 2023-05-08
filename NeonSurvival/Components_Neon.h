@@ -1,8 +1,7 @@
 #pragma once
 #include "Player.h"
 #include "Scene.h"
-#include "Server.h"
-
+#include "UILayer.h"
 //-------------------------------------------------------------------------------
 /*	Player																	   */
 //-------------------------------------------------------------------------------
@@ -62,12 +61,6 @@ public:
 	void OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
 	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
 	void DrawUI(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
-	void OnPrepareRenderTransform(CPlayer* player);
-public:
-	int m_aOtherPlayer[MAX_PLAYER] = {-10,-10,-10};
-	PACKET_INGAME* m_pOtherPlayerData = SERVER::getInstance().GetPlayersPosition();
-	PACKET_INGAME2* m_pOtherPlayerData2 = SERVER::getInstance().GetPlayersPosition2();
-	int m_MyId = -1;
 };
 
 

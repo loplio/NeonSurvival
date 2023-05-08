@@ -336,22 +336,35 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 
 	/// UI ///
 	m_UIShaders.push_back(new CShader);
-	CTextureToScreenShader* pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/ex.dds");
+	CTextureToScreenShader* pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/exp_line.dds");
 	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, FRAME_BUFFER_WIDTH, 10, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT - 5, 0);
 	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 	m_UIShaders.back() = pUITexture;
 
-	//m_UIShaders.push_back(new CShader);
-	//pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/hpbg.dds");
-	//pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 220, 24, 0, 90, FRAME_BUFFER_HEIGHT - 50, 0);
-	//pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	//m_UIShaders.back() = pUITexture;
 
-	//m_UIShaders.push_back(new CShader);
-	//pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/hp.dds");
-	//pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 200, 18, 0, 100, FRAME_BUFFER_HEIGHT - 50, 0);
-	//pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	//m_UIShaders.back() = pUITexture;
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/Icon_fr_5.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 150, 150, 0, 75, 75, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/HP_line.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 200, 20, 0, 250, 35, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/Energy_line.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 200, 5, 0, 250, 25, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/map_frame.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 200, 200, 0, FRAME_BUFFER_WIDTH-95, 100, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
 
 	/// background ///
 	m_ppComputeShaders.push_back(new CComputeShader);
@@ -705,10 +718,12 @@ void SceneLobby_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 
 	/// UI ///
 	m_UIShaders.push_back(new CShader);
-	CTextureToScreenShader* pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/Lobby.dds");
+	CTextureToScreenShader* pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/main_bg.dds");
 	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT / 2, 0);
 	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 	m_UIShaders.back() = pUITexture;
+
+
 
 	m_UIShaders.push_back(new CShader);
 	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/title.dds");
@@ -716,13 +731,40 @@ void SceneLobby_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 	m_UIShaders.back() = pUITexture;
 
+	
+
+	/*m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/chip_b.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 200, 200, 0, FRAME_BUFFER_WIDTH / 3, FRAME_BUFFER_HEIGHT/2.0, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;*/
+
 	m_UIShaders.push_back(new CShader);
-	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/bar1on.dds");
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/line_r.dds");
 	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 35, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 1.2 / 2, 0);
 	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 	m_UIShaders.back() = pUITexture;
 
 	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/line_r.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 35, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 1.4 / 2, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/line_r.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 35, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 1.6 / 2, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/line_r.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 35, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 1.8 / 2, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+
+
+	/*m_UIShaders.push_back(new CShader);
 	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/bar2on.dds");
 	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 35, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 1.4 / 2, 0);
 	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
@@ -738,7 +780,7 @@ void SceneLobby_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/bar4on.dds");
 	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 35, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 1.8 / 2, 0);
 	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	m_UIShaders.back() = pUITexture;
+	m_UIShaders.back() = pUITexture;*/
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }
