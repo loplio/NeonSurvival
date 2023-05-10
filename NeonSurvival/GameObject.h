@@ -375,6 +375,7 @@ public:
 	XMFLOAT4X4					m_xmf4x4World;
 	XMFLOAT4X4					m_xmf4x4Transform;
 	XMFLOAT3					m_xmf3Scale;
+	XMFLOAT3					m_xmf3PrevScale;
 	float						m_Mass;
 
 	CGameObject*				m_pParent = NULL;
@@ -420,6 +421,7 @@ public:
 	CGameObject* GetRootParentObject();
 
 	void UpdateTransform(XMFLOAT4X4* pxmf4x4Parent = NULL);
+	void SetPrevScale(XMFLOAT4X4* pxmf4x4Parent = NULL);
 	
 	void MoveStrafe(float fDistance = 1.0f);
 	void MoveUp(float fDistance = 1.0f);

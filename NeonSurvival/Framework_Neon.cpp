@@ -142,8 +142,9 @@ void CGameFramework_Neon::FrameAdvance()
 	m_KeyboardInput->DataProcessing();
 	m_MouseInput->DataProcessing();
 
-	m_ProcessCompute->Collide();
+	m_ProcessCompute->RayTrace();
 	m_ProcessCompute->Update();
+	m_ProcessCompute->Collide();
 	m_ProcessCompute->Animate();
 
 	m_DisplayOutput->Render();

@@ -150,6 +150,10 @@ void GameCompute_Test::Collide() const
 	m_Player.Collide(m_GameSource, m_BBObjects, NULL);
 }
 
+void GameCompute_Test::RayTrace() const
+{
+}
+
 //-------------------------------------------------------------------------------
 /*	GameRenderDisplay_Test : public DisplayOutput								   */
 //-------------------------------------------------------------------------------

@@ -164,34 +164,50 @@ void GameCompute_Neon::Animate() const
 	m_Player.Animate(m_GameTimer.GetTimeElapsed(), NULL);
 }
 
-void GameCompute_Neon::Collide() const
+void GameCompute_Neon::RayTrace() const
 {
-	// Crosshair's Ray Trace.
 	m_Player.SetViewMatrix();
-	std::vector<CGameObject*>& BoundingObjects = m_BBObjects.GetBBObject();
-	int nIntersected = 0;
+
+	// Crosshair's Ray Trace.
+	int nIntersected = 0, accumulate = 0;
 	float fHitDistance = FLT_MAX, fNearestHitDistance = FLT_MAX;
 	CGameObject* pSelectedObject = NULL;
 	XMFLOAT3 ClientPosition = XMFLOAT3(0.0f, 0.0f, 1.0f);
+
+	XMFLOAT4X4 xmfCameraViewMatrix = m_Player.GetCamera()->GetViewMatrix();
+	std::vector<CGameObject*>& BoundingObjects = m_BBObjects.GetBBObject();
 	for (int i = 0; i < BoundingObjects.size(); ++i)
 	{
 		if (BoundingObjects[i]->GetRootParentObject() == &m_Player) continue;
 
-		XMFLOAT4X4 xmfViewMatrix = m_Player.GetCamera()->GetViewMatrix();
-		nIntersected = BoundingObjects[i]->PickObjectByRayIntersection(ClientPosition, xmfViewMatrix, &fHitDistance);
+		nIntersected = BoundingObjects[i]->PickObjectByRayIntersection(ClientPosition, xmfCameraViewMatrix, &fHitDistance);
+		accumulate += nIntersected;
 		if ((nIntersected > 0) && (fHitDistance < fNearestHitDistance))
 		{
 			fNearestHitDistance = fHitDistance;
 			pSelectedObject = BoundingObjects[i];
 			if (m_Player.GetCamera()->GetMode() == FIRST_PERSON_CAMERA || m_Player.GetCamera()->GetMode() == SHOULDER_HOLD_CAMERA)
 			{
-				m_Player.SetRayLength(fNearestHitDistance);
-				//std::cout << "" << "Index - " << i << ", Intersect Num: " << nIntersected << ", Length: " << fHitDistance << std::endl;
+				if (fNearestHitDistance > METER_PER_PIXEL(0))
+				{
+					m_Player.SetRayDirection(Vector3::Subtract(Vector3::Add(Vector3::ScalarProduct(m_Player.GetCamera()->GetLookVector(), fNearestHitDistance), m_Player.GetCamera()->GetPosition()), Vector3::Add(m_Player.GetPosition(), m_Player.GetOffset())));
+					m_Player.GetCamera()->SetRayDirection(Vector3::ScalarProduct(m_Player.GetCamera()->GetLookVector(), fNearestHitDistance));
+					m_Player.GetCamera()->SetRayLength(fNearestHitDistance);
+					//std::cout << "" << "Index - " << i << ", Intersect Num: " << nIntersected << ", Length: " << float(fHitDistance) << std::endl;
+				}
 			}
 		}
 	}
+	if (accumulate == 0)
+	{
+		m_Player.SetRayDirection(m_Player.GetCamera()->GetLookVector());
+		m_Player.GetCamera()->SetRayDirection(m_Player.GetCamera()->GetLookVector());
+	}
+}
 
 
+void GameCompute_Neon::Collide() const
+{
 	// Collide
 	m_Player.Collide(m_GameSource, m_BBObjects, NULL);
 }
