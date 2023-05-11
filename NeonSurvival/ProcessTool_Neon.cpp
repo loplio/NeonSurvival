@@ -44,17 +44,62 @@ void GameKeyInput_Neon::UpdateKeyboardState()
 
 void GameKeyInput_Neon::UpdatePlayer()
 {
-	// 수정필요. (이유 - 임의로 정한 상수값 / 해당 값은 이동거리와 관련이 있음)
+	if (dwDirection & DIR_FORWARD && dwDirection & DIR_BACKWARD)
+	{
+		dwDirection -= DIR_FORWARD;
+		dwDirection -= DIR_BACKWARD;
+	}
+	if (dwDirection & DIR_LEFT && dwDirection & DIR_RIGHT)
+	{
+		dwDirection -= DIR_LEFT;
+		dwDirection -= DIR_RIGHT;
+	}
+	
+	m_Player.m_dwDirection = dwDirection;
 	if (dwDirection) {
-		if (!dwSpecialKey) {
-			m_Player.SetMaxVelocityXZ(PIXEL_KPH(20));
-			m_Player.Move(dwDirection, PIXEL_KPH(15) * m_GameTimer.GetTimeElapsed(), true);
-			m_Player.IsDash = false;
+		m_Player.IsDash = false;
+
+		if (dwDirection == DIR_FORWARD)	// foward walk
+		{
+			if (!dwSpecialKey) {
+				m_Player.SetMaxVelocityXZ(PIXEL_KPH(18));
+				m_Player.Move(dwDirection, PIXEL_KPH(15) * m_GameTimer.GetTimeElapsed(), true);
+			}
+			else {
+				m_Player.SetMaxVelocityXZ(PIXEL_KPH(40));
+				m_Player.Move(dwDirection, PIXEL_KPH(30) * m_GameTimer.GetTimeElapsed(), true);
+				m_Player.IsDash = true;
+			}
+		}
+		else if (dwDirection == DIR_BACKWARD)	// backward walk
+		{
+			m_Player.SetMaxVelocityXZ(PIXEL_KPH(7));
+			m_Player.Move(dwDirection, PIXEL_KPH(7) * m_GameTimer.GetTimeElapsed(), true);
+		}
+		else if (dwDirection == DIR_LEFT || dwDirection == DIR_RIGHT)	// left/right walk
+		{
+			m_Player.SetMaxVelocityXZ(PIXEL_KPH(10));
+			m_Player.Move(dwDirection, PIXEL_KPH(10) * m_GameTimer.GetTimeElapsed(), true);
+		}
+		else if ((dwDirection & DIR_LEFT && dwDirection & DIR_BACKWARD) || (dwDirection & DIR_RIGHT && dwDirection & DIR_BACKWARD))	// left/right backward
+		{
+			m_Player.SetMaxVelocityXZ(PIXEL_KPH(10));
+			m_Player.Move(dwDirection, PIXEL_KPH(10) * m_GameTimer.GetTimeElapsed(), true);
+		}
+		else if ((dwDirection & DIR_LEFT && dwDirection & DIR_FORWARD) || (dwDirection & DIR_RIGHT && dwDirection & DIR_FORWARD))	// left/right forward
+		{
+			if (!dwSpecialKey) {
+				m_Player.SetMaxVelocityXZ(PIXEL_KPH(15));
+				m_Player.Move(dwDirection, PIXEL_KPH(15) * m_GameTimer.GetTimeElapsed(), true);
+			}
+			else {
+				m_Player.SetMaxVelocityXZ(PIXEL_KPH(30));
+				m_Player.Move(dwDirection, PIXEL_KPH(20) * m_GameTimer.GetTimeElapsed(), true);
+				m_Player.IsDash = true;
+			}
 		}
 		else {
-			m_Player.SetMaxVelocityXZ(PIXEL_KPH(40));
-			m_Player.Move(dwDirection, PIXEL_KPH(30) * m_GameTimer.GetTimeElapsed(), true);
-			m_Player.IsDash = true;
+			m_Player.SetMaxVelocityXZ(PIXEL_KPH(0));
 		}
 	}
 	else {

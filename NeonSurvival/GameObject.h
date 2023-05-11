@@ -187,8 +187,14 @@ public:
 		BACKWARD_WALK,
 		RUN,
 		FIRE,
+		LEFT_BACKWARD,
+		RIGHT_BACKWARD,
+		LEFT_FORWARD,
+		RIGHT_FORWARD,
+		LEFT_WALK,
+		RIGHT_WALK
 	};
-	int m_nAnimationBundle[6]{ -1, -1, -1, -1, -1, -1 };
+	int m_nAnimationBundle[11]{ -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
 	void SetAnimationBundle(UINT n);
 };
 

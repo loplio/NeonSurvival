@@ -104,4 +104,5 @@ public:
 public:
 	const float fPitchThickness = 0.2f;
 	bool IsDash = false;
+	DWORD m_dwDirection = 0;
 };

@@ -333,22 +333,47 @@ void CAnimationController::SetAnimationBundle(UINT n)
 		m_nAnimationBundle[WALK] = 1;				// walk
 		m_nAnimationBundle[BACKWARD_WALK] = 2;		// backward walk
 		m_nAnimationBundle[RUN] = 3;				// slow run
+		m_nAnimationBundle[LEFT_BACKWARD] = 14;
+		m_nAnimationBundle[RIGHT_BACKWARD] = 15;
+		m_nAnimationBundle[LEFT_FORWARD] = 16;
+		m_nAnimationBundle[RIGHT_FORWARD] = 17;
+		m_nAnimationBundle[LEFT_WALK] = 18;
+		m_nAnimationBundle[RIGHT_WALK] = 19;
 		break;
 	case 1:	// pick pistol
 		m_nAnimationBundle[IDLE] = 4;				// pistol Idle
 		m_nAnimationBundle[WALK] = 5;				// pistol walk
 		m_nAnimationBundle[BACKWARD_WALK] = 6;		// pistol backward walk
+		m_nAnimationBundle[LEFT_BACKWARD] = 14;
+		m_nAnimationBundle[RIGHT_BACKWARD] = 15;
+		m_nAnimationBundle[LEFT_FORWARD] = 16;
+		m_nAnimationBundle[RIGHT_FORWARD] = 17;
+		m_nAnimationBundle[LEFT_WALK] = 18;
+		m_nAnimationBundle[RIGHT_WALK] = 19;
 		break;
 	case 2: // pick rifle
 		m_nAnimationBundle[IDLE] = 7;				// rifle Idle
 		m_nAnimationBundle[WALK] = 9;				// rifle walk
 		m_nAnimationBundle[BACKWARD_WALK] = 10;		// rifle backword walk
 		m_nAnimationBundle[FIRE] = 8;				// rifle fire
+		m_nAnimationBundle[LEFT_BACKWARD] = 20;
+		m_nAnimationBundle[RIGHT_BACKWARD] = 21;
+		m_nAnimationBundle[LEFT_FORWARD] = 22;
+		m_nAnimationBundle[RIGHT_FORWARD] = 23;
+		m_nAnimationBundle[LEFT_WALK] = 24;
+		m_nAnimationBundle[RIGHT_WALK] = 25;
+		break;
 	case 3: // aim rifle
 		m_nAnimationBundle[IDLE] = 7;				// rifle Idle
 		m_nAnimationBundle[WALK] = 11;				// rifle aim walk
 		m_nAnimationBundle[BACKWARD_WALK] = 12;		// rifle aim backward walk
 		m_nAnimationBundle[FIRE] = 8;				// rifle fire
+		m_nAnimationBundle[LEFT_BACKWARD] = 20;
+		m_nAnimationBundle[RIGHT_BACKWARD] = 21;
+		m_nAnimationBundle[LEFT_FORWARD] = 22;
+		m_nAnimationBundle[RIGHT_FORWARD] = 23;
+		m_nAnimationBundle[LEFT_WALK] = 24;
+		m_nAnimationBundle[RIGHT_WALK] = 25;
 		break;
 	}
 }
