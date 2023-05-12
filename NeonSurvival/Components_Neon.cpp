@@ -589,19 +589,18 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 	{
 		m_MyId = SERVER::getInstance().GetClientNumId();
 		printf("m_MyId : %d\n", m_MyId);
+		printf("C0_Id : %d\n", m_pOtherPlayerData2[0].id);
+		printf("C1_Id : %d\n", m_pOtherPlayerData2[1].id);
+		printf("C2_Id : %d\n", m_pOtherPlayerData2[2].id);
+
 	}
-	for (int j = 0; j < MAX_PLAYER;)
+	for (int i = 0; i < m_vOtherPlayer.size(); ++i)
 	{
-		for (int i = 0; i < m_vOtherPlayer.size(); ++i)
+		for (int j = 0; j < MAX_PLAYER;++j)
 		{
 			int OtherId = m_pOtherPlayerData2[j].id;
-
 			if (m_MyId != OtherId && -1 != OtherId)
 			{
-				if (m_MyId == 2)
-				{
-					OtherId = m_pOtherPlayerData2[i].id;
-				}
 				//애니메이션
 				if (m_vOtherPlayer[i]->m_pSkinnedAnimationController)
 				{
@@ -625,9 +624,9 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 				m_vOtherPlayer[i]->SetRightVector(m_pOtherPlayerData2[OtherId].RightVector);
 				m_vOtherPlayer[i]->SetLookVector(m_pOtherPlayerData2[OtherId].LookVector);
 				m_vOtherPlayer[i]->SetVelocity(m_pOtherPlayerData2[OtherId].velocity);
+				m_vOtherPlayer[i]->Animate(fTimeElapsed);
+				++i;
 			}
-			++j;
-			m_vOtherPlayer[i]->Animate(fTimeElapsed);
 		}
 	}
 }

@@ -48,6 +48,7 @@ void SERVER::init(HWND hWnd)
     for (int i = 0; i < 2; ++i)
     {
         PlayersPosition[i].id = -1;
+        PlayersPosition2[i].id = -1;
     }
 }
 
