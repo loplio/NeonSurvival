@@ -142,8 +142,9 @@ void CGameFramework_Neon::FrameAdvance()
 	m_KeyboardInput->DataProcessing();
 	m_MouseInput->DataProcessing();
 
-	m_ProcessCompute->Collide();
+	m_ProcessCompute->RayTrace();
 	m_ProcessCompute->Update();
+	m_ProcessCompute->Collide();
 	m_ProcessCompute->Animate();
 
 	m_DisplayOutput->Render();
@@ -278,6 +279,12 @@ void CGameFramework_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID
 			::PostQuitMessage(0);
 			break;
 		case VK_RETURN:
+			break;
+		case VK_F1:
+		case VK_F2:
+		case VK_F3:
+		case VK_F4:
+			m_pPlayer->SetTypeDefine(wParam - VK_F1);	// 1. GunType - Pistol, 2. GunType - Rifle.
 			break;
 		case VK_F8:
 			break;

@@ -7,6 +7,8 @@
 CPlayer::CPlayer() : CGameObject()
 {
 	m_pCamera = NULL;
+	m_xmf3RayDirection = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	m_xmf3Offset = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	m_xmf3Position = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	m_xmf3Right = XMFLOAT3(1.0f, 0.0f, 0.0f);
 	m_xmf3Up = XMFLOAT3(0.0f, 1.0f, 0.0f);
@@ -48,7 +50,7 @@ void CPlayer::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
 void CPlayer::Rotate(float x, float y, float z)
 {
 	DWORD nCameraMode = m_pCamera->GetMode();
-	if ((nCameraMode == FIRST_PERSON_CAMERA) || (nCameraMode == THIRD_PERSON_CAMERA) || (nCameraMode == SHOULDER_HOLD_CAMERA))
+	if ((nCameraMode == FIRST_PERSON_CAMERA) || (nCameraMode == SHOULDER_HOLD_CAMERA))
 	{
 		if (x != 0.0f)
 		{
@@ -69,6 +71,22 @@ void CPlayer::Rotate(float x, float y, float z)
 			if (m_fRoll < -20.0f) { z -= (m_fRoll + 20.0f); m_fRoll = -20.0f; }
 		}
 		m_pCamera->Rotate(x, y, z);
+		if (y != 0.0f)
+		{
+			XMMATRIX xmmtxRotate = XMMatrixRotationAxis(XMLoadFloat3(&m_xmf3Up),
+				XMConvertToRadians(y));
+			m_xmf3Look = Vector3::TransformNormal(m_xmf3Look, xmmtxRotate);
+			m_xmf3Right = Vector3::TransformNormal(m_xmf3Right, xmmtxRotate);
+		}
+	}
+	else if (nCameraMode == THIRD_PERSON_CAMERA)
+	{
+		if (y != 0.0f)
+		{
+			m_fYaw += y;
+			if (m_fYaw > 360.0f) m_fYaw -= 360.0f;
+			if (m_fYaw < 0.0f) m_fYaw += 360.0f;
+		}
 		if (y != 0.0f)
 		{
 			XMMATRIX xmmtxRotate = XMMatrixRotationAxis(XMLoadFloat3(&m_xmf3Up),
@@ -210,6 +228,38 @@ void CPlayer::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamer
 	}
 }
 
+void CPlayer::SetViewMatrix()
+{
+	m_xmf3Look = Vector3::Normalize(m_xmf3Look);
+	m_xmf3Right = Vector3::CrossProduct(m_xmf3Up, m_xmf3Look, true);
+	m_xmf3Up = Vector3::CrossProduct(m_xmf3Look, m_xmf3Right, true);
+
+	m_xmf4x4View._11 = m_xmf3Right.x; m_xmf4x4View._12 = m_xmf3Up.x; m_xmf4x4View._13 = m_xmf3Look.x;
+	m_xmf4x4View._21 = m_xmf3Right.y; m_xmf4x4View._22 = m_xmf3Up.y; m_xmf4x4View._23 = m_xmf3Look.y;
+	m_xmf4x4View._31 = m_xmf3Right.z; m_xmf4x4View._32 = m_xmf3Up.z; m_xmf4x4View._33 = m_xmf3Look.z;
+	m_xmf4x4View._41 = -Vector3::DotProduct(m_xmf3Position, m_xmf3Right);
+	m_xmf4x4View._42 = -Vector3::DotProduct(m_xmf3Position, m_xmf3Up);
+	m_xmf4x4View._43 = -Vector3::DotProduct(m_xmf3Position, m_xmf3Look);
+}
+
+XMFLOAT4X4 CPlayer::GetViewMatrix(XMFLOAT3 xmfLook, XMFLOAT3 xmfRight)
+{
+	XMFLOAT3 xmf3Look = Vector3::Normalize(xmfLook);
+	XMFLOAT3 xmf3Right = Vector3::Normalize(xmfRight);
+	XMFLOAT3 xmf3Up = Vector3::CrossProduct(xmf3Look, xmf3Right, true);
+	XMFLOAT3 xmf3Position = Vector3::Add(m_xmf3Position, m_xmf3Offset);
+
+	XMFLOAT4X4 xmf4x4View = Matrix4x4::Identity();
+	xmf4x4View._11 = xmf3Right.x; xmf4x4View._12 = xmf3Up.x; xmf4x4View._13 = xmf3Look.x;
+	xmf4x4View._21 = xmf3Right.y; xmf4x4View._22 = xmf3Up.y; xmf4x4View._23 = xmf3Look.y;
+	xmf4x4View._31 = xmf3Right.z; xmf4x4View._32 = xmf3Up.z; xmf4x4View._33 = xmf3Look.z;
+	xmf4x4View._41 = -Vector3::DotProduct(xmf3Position, xmf3Right);
+	xmf4x4View._42 = -Vector3::DotProduct(xmf3Position, xmf3Up);
+	xmf4x4View._43 = -Vector3::DotProduct(xmf3Position, xmf3Look);
+
+	return xmf4x4View;
+}
+
 //--Common : CPlayer-------------------------------------------------------------
 CCamera* CPlayer::OnChangeCamera(DWORD nNewCameraMode, DWORD nCurrentCameraMode)
 {
@@ -234,10 +284,37 @@ CCamera* CPlayer::OnChangeCamera(DWORD nNewCameraMode, DWORD nCurrentCameraMode)
 	if (m_pCamera) pNewCamera->SetPrevMode(nPrevMode);
 	if (nCurrentCameraMode == SHOULDER_HOLD_CAMERA)
 	{
-		if (m_pCamera->GetPrevMode() == FIRST_PERSON_CAMERA)
+		if (nNewCameraMode == FIRST_PERSON_CAMERA)
 		{
-			m_fPitch = m_fPitch * 0.2f;
+			m_fPitch = m_fPitch * fPitchThickness;
 		}
+	}
+	if (nCurrentCameraMode == FIRST_PERSON_CAMERA)
+	{
+		if (nNewCameraMode == SHOULDER_HOLD_CAMERA)
+		{
+			const float maxAngle = 89.0f * fPitchThickness;
+			const float minAngle = -89.0f * fPitchThickness;
+			float modifyAngle = 0.0f;
+
+
+			if (maxAngle < m_fPitch) {
+				modifyAngle = maxAngle - m_fPitch;
+				m_fPitch = 89.0f;
+			}
+			else if (minAngle > m_fPitch) {
+				modifyAngle = minAngle - m_fPitch;
+				m_fPitch = -89.0f;
+			}
+			else m_fPitch /= fPitchThickness;
+
+			pNewCamera->ModifyPitchAngle(modifyAngle);
+		}
+	}
+	if (nCurrentCameraMode == THIRD_PERSON_CAMERA)
+	{
+		pNewCamera->OnPrepareChangeCamera();
+		m_fPitch = 0.0f;
 	}
 	if (nCurrentCameraMode == SPACESHIP_CAMERA)
 	{
@@ -262,4 +339,10 @@ CCamera* CPlayer::OnChangeCamera(DWORD nNewCameraMode, DWORD nCurrentCameraMode)
 	}
 	if (m_pCamera) delete m_pCamera;
 	return(pNewCamera);
+}
+
+float CPlayer::GetCameraPitch()
+{
+	if (m_pCamera->GetMode() == SHOULDER_HOLD_CAMERA) return fPitchThickness * m_fPitch;
+	return m_fPitch;
 }

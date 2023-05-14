@@ -105,6 +105,24 @@ public:
 	virtual ~NexusObject();
 };
 
+class StaticObject : public CGameObject {
+public:
+	StaticObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel);
+	virtual ~StaticObject();
+};
+
+class MapObject : public CGameObject {
+public:
+	MapObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel);
+	virtual ~MapObject();
+};
+
+class LevelUpTableObject : public CGameObject {
+public:
+	LevelUpTableObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel);
+	virtual ~LevelUpTableObject();
+};
+
 class Crosshair : public CGameObject {
 public:
 	Crosshair(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, float thickness = 0.005f, float length = 0.0125f, float interval = 0.025f, float radDot = 0.0025f, bool bDot = true);

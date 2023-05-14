@@ -109,6 +109,48 @@ float4 PSBlend(VS_TEXTURED_OUTPUT input) : SV_TARGET
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+float GGX(float NoH, float roughness)
+{
+	float pi = 3.14159265358979323846;
+	float roughnessSq = roughness * roughness;
+	float f = (NoH * roughnessSq - NoH) * NoH + 1.0;
+	return roughnessSq / (pi * f * f);
+}
+
+float3 CookTorranceBRDF(float3 L, float3 V, float3 N, float3 albedo, float3 specular, float metallic, float roughness, float3 ambient)
+{
+	float pi = 3.14159265358979323846;
+	// Half vector
+	float3 H = normalize(L + V);
+
+	// Geometry term (GGX approximation)
+	float alpha = roughness * roughness;
+	float NoV = saturate(dot(N, V));
+	float NoL = saturate(dot(N, L));
+	float NoH = saturate(dot(N, H));
+	float VoH = saturate(dot(V, H));
+	//float geometric = 2.0 * NoH / VoH;
+	//geometric = min(1.0, min(geometric * NoV, geometric * NoL));
+	//geometric = (2.0 / (1.0 + sqrt(1.0 + a2 * tan))) * (2.0 / (1.0 + sqrt(1.0 + a2 * tan2)));
+	float geometric = GGX(NoV, roughness) * GGX(NoL, roughness);
+
+	// Normal distribution term (GGX/Trowbridge-Reitz)
+	float a2 = alpha * alpha;
+	float distribution = a2 / (pi * pow(NoH * NoH * (a2 - 1.0) + 1.0, 2.0));
+	float denom = max(NoH * NoH * (a2 - 1.0) + 1.0, 0.00001);
+	distribution = a2 / pi * denom * denom;
+
+	// Schlick Approximation Fresnel
+	float3 F0 = lerp(float3(0.04, 0.04, 0.04), albedo, metallic);
+	float3 fresnel = F0 + (1.0 - F0) * pow(1.0 - VoH, 5.0);
+
+	float3 kD = (1.0 - metallic) * (1.0 - fresnel);
+	float3 diffuse = kD * albedo / pi;
+	float3 brdf = (fresnel * distribution * geometric) / (4 * NoL * NoV + 0.004);
+	float3 finalColor = (diffuse + brdf) * float3(0.9f, 0.4f, 0.6f) * NoL + ambient;
+
+	return finalColor;
+}
 
 #define _WITH_VERTEX_LIGHTING
 
@@ -169,10 +211,10 @@ VS_STANDARD_OUTPUT VSStandard(VS_STANDARD_INPUT input)
 
 float4 PSStandard(VS_STANDARD_OUTPUT input) : SV_TARGET
 {
-	float4 cAlbedoColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
-	float4 cSpecularColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
-	float4 cNormalColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
-	float4 cMetallicColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
+	float4 cAlbedoColor = float4(1.0f, 1.0f, 1.0f, 1.0f);
+	float4 cSpecularColor = float4(0.5f, 0.5f, 0.5f, 1.0f);
+	float4 cNormalColor = float4(0.5f, 0.5f, 1.0f, 1.0f);
+	float4 cMetallicColor = float4(0.0f, 0.0f, 0.0f, 0.5f);
 	float4 cEmissionColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
 
 #ifdef _WITH_STANDARD_TEXTURE_MULTIPLE_DESCRIPTORS
@@ -190,19 +232,47 @@ float4 PSStandard(VS_STANDARD_OUTPUT input) : SV_TARGET
 #endif
 
 	float4 cIllumination = float4(1.0f, 1.0f, 1.0f, 1.0f);
-	float4 SpecularRatio = float4(0.1f, 0.1f, 0.1f, 1.0f);
-	float4 cColor = cAlbedoColor + /*cSpecularColor * SpecularRatio +*/ cEmissionColor;
-	if (gnTexturesMask & MATERIAL_NORMAL_MAP)
-	{
-		float3 normalW = input.normalW;
-		float3x3 TBN = float3x3(normalize(input.tangentW), normalize(input.bitangentW), normalize(input.normalW));
-		float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] ¡æ [-1, 1]
-		normalW = normalize(mul(vNormal, TBN));
-		cIllumination = Lighting(input.positionW, normalW);
-		cColor = lerp(cColor, cIllumination, 0.5f);
-	}
-	//cColor = gtxtTexture.Sample(gssWrap, input.uv);
-	return(cColor);
+	//float4 SpecularRatio = float4(0.1f, 0.1f, 0.1f, 1.0f);
+	//float4 cColor = cAlbedoColor + /*cSpecularColor * SpecularRatio +*/ cEmissionColor;
+	//if (gnTexturesMask & MATERIAL_NORMAL_MAP)
+	//{
+		//float3 normalW = input.normalW;
+		//float3x3 TBN = float3x3(normalize(input.tangentW), normalize(input.bitangentW), normalize(input.normalW));
+		//float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] ¡æ [-1, 1]
+		//normalW = normalize(mul(vNormal, TBN));
+		//cIllumination = Lighting(input.positionW, normalW);
+		//cColor = lerp(cColor, cIllumination, 0.5f);
+	//}
+
+	// materials
+	float3 albedo = cAlbedoColor.rgb;
+	float3 normal = normalize(cNormalColor.rgb * 2.0 - 1.0);
+	float metallic = cMetallicColor.r;
+	float roughness = cMetallicColor.a;
+	float3 specular = cSpecularColor.rgb;
+	float3 emission = cEmissionColor.rgb;
+
+	// set ambient
+	float3 ambient = float3(0.01f, 0.01f, 0.01f);
+	float ambientIntensity = 5.f;
+	ambient = albedo * ambient * ambientIntensity;
+
+	// Compute the lighting
+	float3 normalW = input.normalW;
+	float3x3 TBN = float3x3(normalize(input.tangentW), normalize(input.bitangentW), normalize(input.normalW));
+	normalW = normalize(mul(normal, TBN));
+	//cIllumination = Lighting(input.positionW, normalW);
+	//cColor = lerp(cColor, cIllumination, 0.5f);
+
+	//float3 L = GetLightDirection(2, input.positionW, normalW);
+	float3 L = -normalize(float3(5.0f, -3.0f, 0.0f));
+	float3 V = normalize(gvCameraPosition - input.positionW);
+	float3 reflected = CookTorranceBRDF(L, V, normalW, albedo, specular, metallic, roughness, ambient);
+
+	// Gamma correction
+	float3 result = pow(reflected, 1.0 / 2.2) + emission;
+
+	return float4(result, 1.0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
