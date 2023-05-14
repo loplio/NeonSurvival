@@ -125,7 +125,7 @@ public:
 
 	virtual bool IsSkinnedMesh() const { return false; }
 
-	int CheckRayIntersection(XMFLOAT3& xmRayPosition, XMFLOAT3& xmRayDirection, float* pfNearHitDistance, XMFLOAT4X4& xmf4x4World, float ReduceScale);
+	int CheckRayIntersection(XMFLOAT3& xmRayPosition, XMFLOAT3& xmRayDirection, float* pfNearHitDistance, XMFLOAT4X4& xmf4x4World);
 
 	UINT GetType() { return(m_nType); }
 	XMFLOAT3& GetAABBExtents() { return m_xmf3AABBExtents; }

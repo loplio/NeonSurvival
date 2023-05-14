@@ -15,5 +15,4 @@ public:
 	virtual void Update() const = 0;
 	virtual void Animate() const = 0;
 	virtual void Collide() const = 0;
-	virtual void RayTrace() const = 0;
 };

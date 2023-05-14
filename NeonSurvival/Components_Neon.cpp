@@ -13,21 +13,41 @@ Player_Neon::Player_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd
 	CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)pContext;
 	float fHeight = pTerrain->GetHeight(pTerrain->GetWidth() * 0.5f, pTerrain->GetLength() * 0.5f);
 	SetPosition(XMFLOAT3(pTerrain->GetWidth() * 0.5f, fHeight + METER_PER_PIXEL(20), pTerrain->GetLength() * 0.5f));
-	SetOffset(XMFLOAT3(0.0f, METER_PER_PIXEL(1.5), 0.0f));	// fire offset.
 
 	SetPlayerUpdatedContext(pTerrain);
 	SetCameraUpdatedContext(pTerrain);
 
-	CLoadedModelInfo* pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/NeonHuman/NeonHuman.bin", NULL);
+	CLoadedModelInfo* pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/NeonHuman/GunAnimation.bin", NULL);
 	SetChild(pPlayerModel->m_pModelRootObject, true);
-
-	const int nAnimation = 26;
-	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimation, pPlayerModel);
-	for (int i = 0; i < nAnimation; ++i)
-	{
-		m_pSkinnedAnimationController->SetTrackAnimationSet(i, i);
-		m_pSkinnedAnimationController->SetTrackEnable(i, false);
-	}
+	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 14, pPlayerModel);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(1, 1);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(2, 2);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(3, 3);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(4, 4);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(5, 5);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(6, 6);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(7, 7);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(8, 8);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(9, 9);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(10, 10);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(11, 11);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(12, 12);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(13, 13);
+	m_pSkinnedAnimationController->SetTrackEnable(0, false);
+	m_pSkinnedAnimationController->SetTrackEnable(1, false);
+	m_pSkinnedAnimationController->SetTrackEnable(2, false);
+	m_pSkinnedAnimationController->SetTrackEnable(3, false);
+	m_pSkinnedAnimationController->SetTrackEnable(4, false);
+	m_pSkinnedAnimationController->SetTrackEnable(5, false);
+	m_pSkinnedAnimationController->SetTrackEnable(6, false);
+	m_pSkinnedAnimationController->SetTrackEnable(7, false);
+	m_pSkinnedAnimationController->SetTrackEnable(8, false);
+	m_pSkinnedAnimationController->SetTrackEnable(9, false);
+	m_pSkinnedAnimationController->SetTrackEnable(10, false);
+	m_pSkinnedAnimationController->SetTrackEnable(11, false);
+	m_pSkinnedAnimationController->SetTrackEnable(12, false);
+	m_pSkinnedAnimationController->SetTrackEnable(13, false);
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
@@ -98,14 +118,15 @@ void Player_Neon::Update(float fTimeElapsed)
 	XMFLOAT3 timeElapsedDistance = Vector3::ScalarProduct(m_xmf3Velocity, fTimeElapsed, false);
 	CPlayer::Move(timeElapsedDistance, false);
 
+	// RayTracePosition
+	m_pCamera->SetRayLength(m_fRayLength);
+
 	// Keep out of the ground and align the player and the camera.
 	if (m_pPlayerUpdatedContext) OnPlayerUpdateCallback(fTimeElapsed);
 	DWORD nCameraMode = m_pCamera->GetMode();
 	if (nCameraMode == FIRST_PERSON_CAMERA || nCameraMode == THIRD_PERSON_CAMERA || nCameraMode == SHOULDER_HOLD_CAMERA) m_pCamera->Update(m_xmf3Position, fTimeElapsed);
 	if (m_pCameraUpdatedContext) OnCameraUpdateCallback(fTimeElapsed);
-	if (nCameraMode == THIRD_PERSON_CAMERA) m_pCamera->SetLookAt(m_xmf3Position);
-
-	// Reset ViewMatrix
+	if (nCameraMode == THIRD_PERSON_CAMERA || nCameraMode == SHOULDER_HOLD_CAMERA) m_pCamera->SetLookAt(m_xmf3Position);
 	m_pCamera->RegenerateViewMatrix();
 
 	// Decelerated velocity operation
@@ -116,6 +137,8 @@ void Player_Neon::Update(float fTimeElapsed)
 	fDeceleration.x *= -m_xmf3Velocity.x; fDeceleration.y *= -m_xmf3Velocity.y; fDeceleration.z *= -m_xmf3Velocity.z;
 	m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, fDeceleration);
 
+	int ServerInnResultAnimBundle = -1;
+	float ServerfLength = 0;
 	if (m_pSkinnedAnimationController)
 	{
 		int nResultAnimBundle = -1;
@@ -126,63 +149,33 @@ void Player_Neon::Update(float fTimeElapsed)
 		{
 			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->IDLE];
 			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
+			ServerfLength = 0;
 			//m_pSkinnedAnimationController->SetTrackPosition(1, 0.0f);
+			//printf("idle\n");
 		}
-		else if (!IsDash && m_dwDirection == DIR_FORWARD)	// walking
+		else if (!IsDash)	// walking
 		{
 			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->WALK];
 			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
 			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
-		}
-		else if (m_dwDirection == DIR_BACKWARD)	// backward walking
-		{
-			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->BACKWARD_WALK];
-			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
-			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
-		}
-		else if (m_dwDirection == DIR_LEFT)	// left walking
-		{
-			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->LEFT_WALK];
-			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
-			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
-		}
-		else if (m_dwDirection == DIR_RIGHT)	// right walking
-		{
-			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->RIGHT_WALK];
-			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
-			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
-		}
-		else if (m_dwDirection & DIR_LEFT && m_dwDirection & DIR_BACKWARD)	// left backward
-		{
-			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->LEFT_BACKWARD];
-			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
-			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
-		}
-		else if (m_dwDirection & DIR_RIGHT && m_dwDirection & DIR_BACKWARD)	// right backward
-		{
-			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->RIGHT_BACKWARD];
-			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
-			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
-		}
-		else if (m_dwDirection & DIR_LEFT && m_dwDirection & DIR_FORWARD)	// left forward
-		{
-			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->LEFT_FORWARD];
-			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
-			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
-		}
-		else if (m_dwDirection & DIR_RIGHT && m_dwDirection & DIR_FORWARD)	// right forward
-		{
-			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->RIGHT_FORWARD];
-			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
-			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
+			ServerfLength = fLength / m_fMaxVelocityXZ;
+			//printf("Walk\n");
 		}
 		else				// slow runing
 		{
 			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->RUN];
 			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
 			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
+			ServerfLength = fLength / m_fMaxVelocityXZ;
+			//printf("run\n");
 		}
+		ServerInnResultAnimBundle = nResultAnimBundle;
 	}
+
+	//서버로 위치 전송
+	//SERVER::getInstance().SendPosition(GetPosition());
+	SERVER::getInstance().SendPlayerData(*this, m_nGunType, ServerfLength, ServerInnResultAnimBundle);
+	
 }
 
 void Player_Neon::OnPrepareRender()
@@ -264,7 +257,7 @@ CCamera* Player_Neon::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 		SetMaxVelocityXZ(PIXEL_KPH(40));
 		SetMaxVelocityY(PIXEL_KPH(200));
 		m_pCamera = OnChangeCamera(THIRD_PERSON_CAMERA, nCurrentCameraMode);
-		m_pCamera->SetTimeLag(0.15f);
+		m_pCamera->SetTimeLag(0.25f);
 		m_pCamera->SetOffset(XMFLOAT3(0.0f, METER_PER_PIXEL(2), METER_PER_PIXEL(-5)));
 		m_pCamera->GenerateProjectionMatrix(1.01f, 5000.0f, ASPECT_RATIO, 60.0f);
 		m_pCamera->SetViewport(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT, 0.0f, 1.0f);
@@ -404,7 +397,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	pBrightAreaComputeShader = new CBrightAreaComputeShader((wchar_t*)L"Image/Particle/RoundSoftParticle.dds");
 	pBrightAreaComputeShader->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
 	m_ppComputeShaders.back() = pBrightAreaComputeShader;
-
+	
 	//m_ppComputeShaders.push_back(new CComputeShader);
 	//CGaussian2DBlurComputeShader* pParticleBlurComputeShader1 = new CGaussian2DBlurComputeShader((wchar_t*)L"Image/Particle/RoundSoftParticle.dds");
 	//pParticleBlurComputeShader1->SetSourceResource(pBrightAreaComputeShader->m_pTexture->GetTexture(1));
@@ -446,14 +439,47 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
 	if (pNexusModel) delete pNexusModel;
 
-	//CLoadedModelInfo* pOtherModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/DefaultHuman/Walking.bin", NULL);
-	//m_vHierarchicalGameObjects.push_back(new CGameObject());
-	//m_vHierarchicalGameObjects.back()->SetChild(pOtherModel->m_pModelRootObject);
-	//m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 1, pOtherModel);
-	//m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
-	//m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackEnable(0, 0);
-	//m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
-	//if (pOtherModel) delete pOtherModel;
+	for (int i = 0; i < MAX_PLAYER - 1; ++i)
+	{
+		CLoadedModelInfo* pOtherModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/NeonHuman/GunAnimation.bin", NULL);
+		m_vOtherPlayer.push_back(new CPlayer());
+		m_vOtherPlayer.back()->SetChild(pOtherModel->m_pModelRootObject, true);
+		//m_vOtherPlayer.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 1, pOtherModel);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 14, pOtherModel);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(1, 1);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(2, 2);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(3, 3);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(4, 4);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(5, 5);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(6, 6);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(7, 7);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(8, 8);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(9, 9);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(10, 10);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(11, 11);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(12, 12);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(13, 13);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(0, false);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(1, false);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(2, false);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(3, false);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(4, false);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(5, false);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(6, false);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(7, false);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(8, false);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(9, false);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(10, false);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(11, false);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(12, false);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(13, false);
+
+		//m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
+		//m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(0, 0);
+		//m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
+		if (pOtherModel) delete pOtherModel;
+	}
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
@@ -498,13 +524,15 @@ bool Scene_Neon::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wPa
 {
 	switch (nMessageID) {
 	case WM_LBUTTONDOWN:
+		m_pPlayer->SetFire(true);
 		for (int i = 0; i < m_ppShaders.size(); ++i)
 		{
 			if (m_ppShaders[i]->GetReafShaderType() == CShader::ReafShaderType::PistolBulletShader)
 			{
 				PistolBulletTexturedObjects* pObjectsShader = (PistolBulletTexturedObjects*)m_ppShaders[i];
-				XMFLOAT3 startLocation = Vector3::Add(m_pPlayer.get()->GetPosition(), m_pPlayer.get()->GetOffset());
-				XMFLOAT3 rayDirection = m_pPlayer.get()->GetRayDirection();
+				XMFLOAT3 startLocation = m_pPlayer.get()->GetPosition();
+				XMFLOAT3 rayDirection = m_pPlayer.get()->GetCamera()->GetPlayerToRayPoint();
+				startLocation.y += METER_PER_PIXEL(1.5);
 				pObjectsShader->AppendBullet(startLocation, rayDirection);
 			}
 		}
@@ -512,6 +540,7 @@ bool Scene_Neon::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wPa
 	case WM_RBUTTONDOWN:
 		break;
 	case WM_LBUTTONUP:
+		m_pPlayer->SetFire(false);
 		break;
 	case WM_RBUTTONUP:
 		break;
@@ -555,8 +584,71 @@ void Scene_Neon::Update(float fTimeElapsed)
 void Scene_Neon::AnimateObjects(float fTimeElapsed)
 {
 	CScene::AnimateObjects(fTimeElapsed);
-}
 
+		//if (m_vOtherPlayer[i]->m_pSkinnedAnimationController) m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetTrackEnable(0, true);
+		//m_vOtherPlayer[i]->SetPosition(m_pPlayer->GetPosition());
+	if (m_MyId == -1)
+	{
+		m_MyId = SERVER::getInstance().GetClientNumId();
+		printf("%d\n", m_MyId);
+	}
+	for (int i = 0; i < m_vOtherPlayer.size();++i)
+	{
+		for (int j = 0; j < MAX_PLAYER;++j)
+		{
+			int OtherId = m_pOtherPlayerData2[j].id;
+			if (m_MyId != OtherId && -1 != OtherId)
+			{
+				//애니메이션
+				if (m_vOtherPlayer[i]->m_pSkinnedAnimationController)
+				{
+					if (::IsZero(m_pOtherPlayerData2[OtherId].fLength))
+					{
+						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetOneOfTrackEnable(m_pOtherPlayerData2[OtherId].InnResultAnimBundle);
+					}
+					else if (!m_pOtherPlayerData2[OtherId].IsDash)	// walking
+					{
+						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetOneOfTrackEnable(m_pOtherPlayerData2[OtherId].InnResultAnimBundle);
+						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetTrackSpeed(m_pOtherPlayerData2[OtherId].InnResultAnimBundle, m_pOtherPlayerData2[OtherId].fLength);
+					}
+					else				// slow runing
+					{
+						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetOneOfTrackEnable(m_pOtherPlayerData2[OtherId].InnResultAnimBundle);
+						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetTrackSpeed(m_pOtherPlayerData2[OtherId].InnResultAnimBundle, m_pOtherPlayerData2[OtherId].fLength);
+					}
+				}
+				//방향 및 이동
+				m_vOtherPlayer[i]->SetPosition(m_pOtherPlayerData2[OtherId].position);
+				m_vOtherPlayer[i]->SetUpVector(m_pOtherPlayerData2[OtherId].UpVector);
+				m_vOtherPlayer[i]->SetRightVector(m_pOtherPlayerData2[OtherId].RightVector);
+				m_vOtherPlayer[i]->SetLookVector(m_pOtherPlayerData2[OtherId].LookVector);
+				m_vOtherPlayer[i]->SetVelocity(m_pOtherPlayerData2[OtherId].velocity);
+				m_vOtherPlayer[i]->Animate(fTimeElapsed);
+				++i;
+
+				//총알 발사
+				bool currfire = m_pOtherPlayerData2[OtherId].Fire;
+				if (currfire && m_OtherPlayerPrevFire[OtherId] == false)
+				{
+					printf("id : %d Fire\n", m_pOtherPlayerData2[OtherId].Fire);
+					for (int k = 0; k < m_ppShaders.size(); ++k)
+					{
+						if (m_ppShaders[k]->GetReafShaderType() == CShader::ReafShaderType::PistolBulletShader)
+						{
+							PistolBulletTexturedObjects* pObjectsShader = (PistolBulletTexturedObjects*)m_ppShaders[k];
+							XMFLOAT3 startLocation = m_pOtherPlayerData2[OtherId].position;
+							XMFLOAT3 rayDirection = m_pOtherPlayerData2[OtherId].RayDirection;
+							startLocation.y += METER_PER_PIXEL(1.5);
+							pObjectsShader->AppendBullet(startLocation, rayDirection);
+						}
+					}
+				}
+				m_OtherPlayerPrevFire[OtherId] = currfire;
+				
+			}
+		}
+	}
+}
 //--ProcessOutput : Scene_Neon-------------------------------------------------------
 void Scene_Neon::OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
@@ -565,6 +657,11 @@ void Scene_Neon::OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCa
 void Scene_Neon::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
 	CScene::Render(pd3dCommandList, pCamera);
+
+	//for (int i = 0; i < m_vOtherPlayer.size(); i++)
+	//{
+	//	m_vOtherPlayer[i]->Render(pd3dCommandList, pCamera);
+	//}
 }
 void Scene_Neon::DrawUI(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
@@ -752,6 +849,25 @@ void SceneLobby_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 	m_UIShaders.back() = pUITexture;
 
+
+	/*m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/bar2on.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 35, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 1.4 / 2, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/bar3on.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 35, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 1.6 / 2, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/bar4on.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 35, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 1.8 / 2, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;*/
+
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }
 
@@ -824,7 +940,4 @@ void SceneLobby_Neon::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera
 void SceneLobby_Neon::DrawUI(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
 	CScene::DrawUI(pd3dCommandList, pCamera);
-
-
 }
-
