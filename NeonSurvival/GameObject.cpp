@@ -612,7 +612,7 @@ void CMaterial::PrepareShaders(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 
 void CMaterial::LoadTextureFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, UINT nType, UINT nRootParameter, _TCHAR* pwstrTextureName, CTexture** ppTexture, CGameObject* pParent, FILE* pInFile, CShader* pShader)
 {
-	char pstrTextureName[64] = { '\0' };
+	char pstrTextureName[128] = { '\0' };
 
 	BYTE nStrLength = ::ReadStringFromFile(pInFile, pstrTextureName);
 
@@ -621,16 +621,16 @@ void CMaterial::LoadTextureFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsComm
 	{
 		SetMaterialType(nType);
 
-		char pstrFilePath[64] = { '\0' };
-		strcpy_s(pstrFilePath, 64, CGameObject::m_pstrTextureFilePath.c_str());
+		char pstrFilePath[128] = { '\0' };
+		strcpy_s(pstrFilePath, 128, CGameObject::m_pstrTextureFilePath.c_str());
 		int PathLength = CGameObject::m_pstrTextureFilePath.size();
 
 		bDuplicated = (pstrTextureName[0] == '@');
-		strcpy_s(pstrFilePath + PathLength, 64 - PathLength, (bDuplicated) ? (pstrTextureName + 1) : pstrTextureName);
-		strcpy_s(pstrFilePath + PathLength + ((bDuplicated) ? (nStrLength - 1) : nStrLength), 64 - PathLength - ((bDuplicated) ? (nStrLength - 1) : nStrLength), ".dds");
+		strcpy_s(pstrFilePath + PathLength, 128 - PathLength, (bDuplicated) ? (pstrTextureName + 1) : pstrTextureName);
+		strcpy_s(pstrFilePath + PathLength + ((bDuplicated) ? (nStrLength - 1) : nStrLength), 128 - PathLength - ((bDuplicated) ? (nStrLength - 1) : nStrLength), ".dds");
 
 		size_t nConverted = 0;
-		mbstowcs_s(&nConverted, pwstrTextureName, 64, pstrFilePath, _TRUNCATE);
+		mbstowcs_s(&nConverted, pwstrTextureName, 128, pstrFilePath, _TRUNCATE);
 
 		//#define _WITH_DISPLAY_TEXTURE_NAME
 

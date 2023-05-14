@@ -310,6 +310,11 @@ void CStandardMesh::LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 				m_ppd3dSubSetIndexBuffers = new ID3D12Resource * [m_nSubMeshes];
 				m_ppd3dSubSetIndexUploadBuffers = new ID3D12Resource * [m_nSubMeshes];
 				m_pd3dSubSetIndexBufferViews = new D3D12_INDEX_BUFFER_VIEW[m_nSubMeshes];
+				for (int i = 0; i < m_nSubMeshes; ++i)
+				{
+					m_ppd3dSubSetIndexBuffers[i] = NULL;
+					m_ppd3dSubSetIndexUploadBuffers[i] = NULL;
+				}
 
 				for (int i = 0; i < m_nSubMeshes; i++)
 				{

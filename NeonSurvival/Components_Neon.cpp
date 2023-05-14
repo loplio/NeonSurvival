@@ -17,37 +17,16 @@ Player_Neon::Player_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd
 	SetPlayerUpdatedContext(pTerrain);
 	SetCameraUpdatedContext(pTerrain);
 
-	CLoadedModelInfo* pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/NeonHuman/GunAnimation.bin", NULL);
+	CLoadedModelInfo* pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/NeonHuman/NeonHuman.bin", NULL);
 	SetChild(pPlayerModel->m_pModelRootObject, true);
-	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 14, pPlayerModel);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(1, 1);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(2, 2);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(3, 3);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(4, 4);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(5, 5);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(6, 6);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(7, 7);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(8, 8);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(9, 9);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(10, 10);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(11, 11);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(12, 12);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(13, 13);
-	m_pSkinnedAnimationController->SetTrackEnable(0, false);
-	m_pSkinnedAnimationController->SetTrackEnable(1, false);
-	m_pSkinnedAnimationController->SetTrackEnable(2, false);
-	m_pSkinnedAnimationController->SetTrackEnable(3, false);
-	m_pSkinnedAnimationController->SetTrackEnable(4, false);
-	m_pSkinnedAnimationController->SetTrackEnable(5, false);
-	m_pSkinnedAnimationController->SetTrackEnable(6, false);
-	m_pSkinnedAnimationController->SetTrackEnable(7, false);
-	m_pSkinnedAnimationController->SetTrackEnable(8, false);
-	m_pSkinnedAnimationController->SetTrackEnable(9, false);
-	m_pSkinnedAnimationController->SetTrackEnable(10, false);
-	m_pSkinnedAnimationController->SetTrackEnable(11, false);
-	m_pSkinnedAnimationController->SetTrackEnable(12, false);
-	m_pSkinnedAnimationController->SetTrackEnable(13, false);
+
+	const int nAnimation = 26;
+	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimation, pPlayerModel);
+	for (int i = 0; i < nAnimation; ++i)
+	{
+		m_pSkinnedAnimationController->SetTrackAnimationSet(i, i);
+		m_pSkinnedAnimationController->SetTrackEnable(i, false);
+	}
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
@@ -118,15 +97,14 @@ void Player_Neon::Update(float fTimeElapsed)
 	XMFLOAT3 timeElapsedDistance = Vector3::ScalarProduct(m_xmf3Velocity, fTimeElapsed, false);
 	CPlayer::Move(timeElapsedDistance, false);
 
-	// RayTracePosition
-	m_pCamera->SetRayLength(m_fRayLength);
-
 	// Keep out of the ground and align the player and the camera.
 	if (m_pPlayerUpdatedContext) OnPlayerUpdateCallback(fTimeElapsed);
 	DWORD nCameraMode = m_pCamera->GetMode();
 	if (nCameraMode == FIRST_PERSON_CAMERA || nCameraMode == THIRD_PERSON_CAMERA || nCameraMode == SHOULDER_HOLD_CAMERA) m_pCamera->Update(m_xmf3Position, fTimeElapsed);
 	if (m_pCameraUpdatedContext) OnCameraUpdateCallback(fTimeElapsed);
-	if (nCameraMode == THIRD_PERSON_CAMERA || nCameraMode == SHOULDER_HOLD_CAMERA) m_pCamera->SetLookAt(m_xmf3Position);
+	if (nCameraMode == THIRD_PERSON_CAMERA) m_pCamera->SetLookAt(m_xmf3Position);
+
+	// Reset ViewMatrix
 	m_pCamera->RegenerateViewMatrix();
 
 	// Decelerated velocity operation
@@ -151,15 +129,54 @@ void Player_Neon::Update(float fTimeElapsed)
 			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
 			ServerfLength = 0;
 			//m_pSkinnedAnimationController->SetTrackPosition(1, 0.0f);
-			//printf("idle\n");
 		}
-		else if (!IsDash)	// walking
+		else if (!IsDash && m_dwDirection == DIR_FORWARD)	// walking
 		{
 			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->WALK];
 			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
 			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
-			ServerfLength = fLength / m_fMaxVelocityXZ;
-			//printf("Walk\n");
+		}
+		else if (m_dwDirection == DIR_BACKWARD)	// backward walking
+		{
+			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->BACKWARD_WALK];
+			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
+			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
+		}
+		else if (m_dwDirection == DIR_LEFT)	// left walking
+		{
+			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->LEFT_WALK];
+			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
+			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
+		}
+		else if (m_dwDirection == DIR_RIGHT)	// right walking
+		{
+			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->RIGHT_WALK];
+			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
+			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
+		}
+		else if (m_dwDirection & DIR_LEFT && m_dwDirection & DIR_BACKWARD)	// left backward
+		{
+			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->LEFT_BACKWARD];
+			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
+			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
+		}
+		else if (m_dwDirection & DIR_RIGHT && m_dwDirection & DIR_BACKWARD)	// right backward
+		{
+			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->RIGHT_BACKWARD];
+			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
+			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
+		}
+		else if (m_dwDirection & DIR_LEFT && m_dwDirection & DIR_FORWARD)	// left forward
+		{
+			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->LEFT_FORWARD];
+			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
+			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
+		}
+		else if (m_dwDirection & DIR_RIGHT && m_dwDirection & DIR_FORWARD)	// right forward
+		{
+			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->RIGHT_FORWARD];
+			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
+			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
 		}
 		else				// slow runing
 		{
@@ -257,7 +274,7 @@ CCamera* Player_Neon::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 		SetMaxVelocityXZ(PIXEL_KPH(40));
 		SetMaxVelocityY(PIXEL_KPH(200));
 		m_pCamera = OnChangeCamera(THIRD_PERSON_CAMERA, nCurrentCameraMode);
-		m_pCamera->SetTimeLag(0.25f);
+		m_pCamera->SetTimeLag(0.15f);
 		m_pCamera->SetOffset(XMFLOAT3(0.0f, METER_PER_PIXEL(2), METER_PER_PIXEL(-5)));
 		m_pCamera->GenerateProjectionMatrix(1.01f, 5000.0f, ASPECT_RATIO, 60.0f);
 		m_pCamera->SetViewport(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT, 0.0f, 1.0f);
@@ -288,7 +305,7 @@ CCamera* Player_Neon::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 //-------------------------------------------------------------------------------
 Scene_Neon::Scene_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) : CScene(pd3dDevice, pd3dCommandList)
 {
-	CreateCbvSrvDescriptorHeaps(pd3dDevice, 10, 100, 10);
+	CreateCbvSrvDescriptorHeaps(pd3dDevice, 10, 300, 10);
 
 	// Terrain Build.
 	XMFLOAT3 xmf3Scale(12.0f, 1.0f, 12.0f);
@@ -397,7 +414,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	pBrightAreaComputeShader = new CBrightAreaComputeShader((wchar_t*)L"Image/Particle/RoundSoftParticle.dds");
 	pBrightAreaComputeShader->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
 	m_ppComputeShaders.back() = pBrightAreaComputeShader;
-	
+
 	//m_ppComputeShaders.push_back(new CComputeShader);
 	//CGaussian2DBlurComputeShader* pParticleBlurComputeShader1 = new CGaussian2DBlurComputeShader((wchar_t*)L"Image/Particle/RoundSoftParticle.dds");
 	//pParticleBlurComputeShader1->SetSourceResource(pBrightAreaComputeShader->m_pTexture->GetTexture(1));
@@ -436,9 +453,165 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
 	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackEnable(0, 0);
 	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackSpeed(0, 4.0f);
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, 17.0f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
 	if (pNexusModel) delete pNexusModel;
 
+	//CLoadedModelInfo* pMapModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Map/For_Sketchfab.bin", NULL);
+	//m_vHierarchicalGameObjects.push_back(new MapObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pMapModel));
+	//m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, 2.0f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
+	//if (pMapModel) delete pMapModel;
+
+	CLoadedModelInfo* pGroundModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Ground/Ground.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pGroundModel));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, 10.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
+	if (pGroundModel) delete pGroundModel;
+
+	CLoadedModelInfo* pBaseModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Mana/Base.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pBaseModel));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, 10.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
+	if (pBaseModel) delete pBaseModel;
+
+	CLoadedModelInfo* pGroundBrickModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/BrickForGround/BricksForGround.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pGroundBrickModel));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + 14.0f, 11.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
+	if (pGroundBrickModel) delete pGroundBrickModel;
+
+	CLoadedModelInfo* pStoneGardians1Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StoneGardians/StoneGardians.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pStoneGardians1Model));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + 20.0f, 9.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, 110.0f + m_pTerrain->GetLength() * 0.5f);
+	if (pStoneGardians1Model) delete pStoneGardians1Model;
+
+	CLoadedModelInfo* pStoneGardians2Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StoneGardians/StoneGardians.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pStoneGardians2Model));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - 35.0f, 9.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, 107.0f + m_pTerrain->GetLength() * 0.5f);
+	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 180.0f, 0.0f);
+	if (pStoneGardians2Model) delete pStoneGardians2Model;
+
+	CLoadedModelInfo* pTreeModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Tree/Tree.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pTreeModel));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + 55.0f, 15.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, 95.0f + m_pTerrain->GetLength() * 0.5f);
+	m_vHierarchicalGameObjects.back()->Rotate(0.0f, -90.0f, 0.0f);
+	if (pTreeModel) delete pTreeModel;
+
+	CLoadedModelInfo* pTree2Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Tree/Tree.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pTree2Model));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + 70.0f, 13.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, -73.0f + m_pTerrain->GetLength() * 0.5f);
+	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 90.0f, 0.0f);
+	if (pTree2Model) delete pTree2Model;
+
+	CLoadedModelInfo* pTree3Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Tree/Tree.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pTree3Model));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - 75.0f, 15.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, -35.0f + m_pTerrain->GetLength() * 0.5f);
+	if (pTree3Model) delete pTree3Model;
+
+	CLoadedModelInfo* pLowerWallModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Wall/LowerWall.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLowerWallModel));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - 81.0f, 9.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, 20.0f + m_pTerrain->GetLength() * 0.5f);
+	if (pLowerWallModel) delete pLowerWallModel;
+
+	CLoadedModelInfo* pLowerWall2Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Wall/LowerWall.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLowerWall2Model));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + 73.0f, 8.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, 30.0f + m_pTerrain->GetLength() * 0.5f);
+	if (pLowerWall2Model) delete pLowerWall2Model;
+
+	CLoadedModelInfo* pUpperWallModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Wall/UpperWall.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pUpperWallModel));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + 73.0f, 8.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, -32.0f + m_pTerrain->GetLength() * 0.5f);
+	if (pUpperWallModel) delete pUpperWallModel;
+
+	CLoadedModelInfo* pUpperWall2Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Wall/UpperWall.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pUpperWall2Model));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - 45.0f, 9.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, 104.0f + m_pTerrain->GetLength() * 0.5f);
+	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 90.0f, 0.0f);
+	if (pUpperWall2Model) delete pUpperWall2Model;
+
+	CLoadedModelInfo* pUpperWall3Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Wall/UpperWall.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pUpperWall3Model));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + 30.0f, 9.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, 106.0f + m_pTerrain->GetLength() * 0.5f);
+	m_vHierarchicalGameObjects.back()->Rotate(0.0f, -90.0f, 0.0f);
+	if (pUpperWall3Model) delete pUpperWall3Model;
+
+	CLoadedModelInfo* pCylinder1PillarModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/CylinderPillar/CylinderBase1.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pCylinder1PillarModel));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + 33.0f, 12.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, -210.f + m_pTerrain->GetLength() * 0.5f);
+	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 0.0f, -15.0f);
+	if (pCylinder1PillarModel) delete pCylinder1PillarModel;
+
+	CLoadedModelInfo* pCylinder1Pillar2Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/CylinderPillar/CylinderBase1.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pCylinder1Pillar2Model));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - 15.0f, 12.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, -172.f + m_pTerrain->GetLength() * 0.5f);
+	m_vHierarchicalGameObjects.back()->Rotate(-19.0f, 0.0f, 10.0f);
+	if (pCylinder1Pillar2Model) delete pCylinder1Pillar2Model;
+
+	CLoadedModelInfo* pCylinder3PillarModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/CylinderPillar/CylinderBase3.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pCylinder3PillarModel));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + 40.0f, 10.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, -210.f + m_pTerrain->GetLength() * 0.5f);
+	if (pCylinder3PillarModel) delete pCylinder3PillarModel;
+
+	CLoadedModelInfo* pCylinder4PillarModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/CylinderPillar/CylinderBase4.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pCylinder4PillarModel));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + 73.5f, 8.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, -15.f + m_pTerrain->GetLength() * 0.5f);
+	if (pCylinder4PillarModel) delete pCylinder4PillarModel;
+
+	CLoadedModelInfo* pCylinder4Pillar2Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/CylinderPillar/CylinderBase4.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pCylinder4Pillar2Model));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - 20.0f, 10.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, -177.f + m_pTerrain->GetLength() * 0.5f);
+	if (pCylinder4Pillar2Model) delete pCylinder4Pillar2Model;
+
+	CLoadedModelInfo* pCylinder5PillarModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/CylinderPillar/CylinderBase5.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pCylinder5PillarModel));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + 25.0f, 10.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, -177.f + m_pTerrain->GetLength() * 0.5f);
+	if (pCylinder5PillarModel) delete pCylinder5PillarModel;
+
+	CLoadedModelInfo* pCylinder5Pillar2Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/CylinderPillar/CylinderBase5.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pCylinder5Pillar2Model));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - 34.0f, 10.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, -210.f + m_pTerrain->GetLength() * 0.5f);
+	if (pCylinder5Pillar2Model) delete pCylinder5Pillar2Model;
+
+	CLoadedModelInfo* pCylinder6PillarModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/CylinderPillar/CylinderBase6.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pCylinder6PillarModel));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - 20.0f, 10.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, -243.f + m_pTerrain->GetLength() * 0.5f);
+	if (pCylinder6PillarModel) delete pCylinder6PillarModel;
+
+	CLoadedModelInfo* pCylinder6Pillar2Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/CylinderPillar/CylinderBase6.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pCylinder6Pillar2Model));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + 25.0f, 10.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, -243.f + m_pTerrain->GetLength() * 0.5f);
+	if (pCylinder6Pillar2Model) delete pCylinder6Pillar2Model;
+
+	CLoadedModelInfo* pSpawnObjectModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Mana/Spawn.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pSpawnObjectModel));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + 2.0f, 13.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, -220.f + m_pTerrain->GetLength() * 0.5f);
+	if (pSpawnObjectModel) delete pSpawnObjectModel;
+
+	CLoadedModelInfo* pPortalModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Portal/Portal.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pPortalModel));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(300), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
+	m_vHierarchicalGameObjects.back()->Rotate(0.0f, -90.0f, 0.0f);
+	if (pPortalModel) delete pPortalModel;
+
+	CLoadedModelInfo* pPortal2Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Portal/Portal.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pPortal2Model));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - METER_PER_PIXEL(300), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
+	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 90.0f, 0.0f);
+	if (pPortal2Model) delete pPortal2Model;
+
+	CLoadedModelInfo* pPortal3Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Portal/Portal.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pPortal3Model));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, METER_PER_PIXEL(300) + m_pTerrain->GetLength() * 0.5f);
+	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 180.0f, 0.0f);
+	if (pPortal3Model) delete pPortal3Model;
+
+	CLoadedModelInfo* pPortal4Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Portal/Portal.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pPortal4Model));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, METER_PER_PIXEL(-300) + m_pTerrain->GetLength() * 0.5f);
+	if (pPortal4Model) delete pPortal4Model;
+
+
+	CLoadedModelInfo* pLevelUpTableModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/LevelUpTable/Stylized_Table2.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new LevelUpTableObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLevelUpTableModel));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + 63.f, 10.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
+	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 90.0f, 0.0f);
+	if (pLevelUpTableModel) delete pLevelUpTableModel;
 	for (int i = 0; i < MAX_PLAYER - 1; ++i)
 	{
 		CLoadedModelInfo* pOtherModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/NeonHuman/GunAnimation.bin", NULL);
@@ -507,7 +680,7 @@ void Scene_Neon::BuildLightsAndMaterials()
 		6.0f, (float)cos(XMConvertToRadians(20.0f)), (float)cos(XMConvertToRadians(40.0f)), true, SPOT_LIGHT, 150.0f, 0);
 
 	SetLight(m_pLights[2], XMFLOAT4(0.8f, 0.6f, 0.6f, 1.0f), XMFLOAT4(0.035f, 0.05f, 0.13f, 1.0f), XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f),
-		XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, 0.0f),
+		XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, -1.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, 0.0f),
 		0, 0, 0, true, DIRECTIONAL_LIGHT, 0.0f, 0);
 }
 void Scene_Neon::ReleaseUploadBuffers()
@@ -530,9 +703,8 @@ bool Scene_Neon::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wPa
 			if (m_ppShaders[i]->GetReafShaderType() == CShader::ReafShaderType::PistolBulletShader)
 			{
 				PistolBulletTexturedObjects* pObjectsShader = (PistolBulletTexturedObjects*)m_ppShaders[i];
-				XMFLOAT3 startLocation = m_pPlayer.get()->GetPosition();
-				XMFLOAT3 rayDirection = m_pPlayer.get()->GetCamera()->GetPlayerToRayPoint();
-				startLocation.y += METER_PER_PIXEL(1.5);
+				XMFLOAT3 startLocation = Vector3::Add(m_pPlayer.get()->GetPosition(), m_pPlayer.get()->GetOffset());
+				XMFLOAT3 rayDirection = m_pPlayer.get()->GetRayDirection();
 				pObjectsShader->AppendBullet(startLocation, rayDirection);
 			}
 		}
@@ -657,11 +829,6 @@ void Scene_Neon::OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCa
 void Scene_Neon::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
 	CScene::Render(pd3dCommandList, pCamera);
-
-	//for (int i = 0; i < m_vOtherPlayer.size(); i++)
-	//{
-	//	m_vOtherPlayer[i]->Render(pd3dCommandList, pCamera);
-	//}
 }
 void Scene_Neon::DrawUI(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
@@ -765,6 +932,37 @@ NexusObject::~NexusObject()
 {
 }
 //-------------------------------------------------------------------------------
+StaticObject::StaticObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel)
+{
+	CLoadedModelInfo* pMapModel = pModel;
+	SetChild(pMapModel->m_pModelRootObject, true);
+}
+StaticObject::~StaticObject()
+{
+}
+//-------------------------------------------------------------------------------
+MapObject::MapObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel)
+{
+	CLoadedModelInfo* pMapModel = pModel;
+	if (!pMapModel) pMapModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Map1/Map.bin", NULL);
+
+	SetChild(pMapModel->m_pModelRootObject, true);
+}
+MapObject::~MapObject()
+{
+}
+//-------------------------------------------------------------------------------
+LevelUpTableObject::LevelUpTableObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel)
+{
+	CLoadedModelInfo* pTableModel = pModel;
+	if (!pTableModel) pTableModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/LevelUpTable/Stylized_Table.bin", NULL);
+
+	SetChild(pTableModel->m_pModelRootObject, true);
+}
+LevelUpTableObject::~LevelUpTableObject()
+{
+}
+//-------------------------------------------------------------------------------
 Crosshair::Crosshair(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, float fthickness, float flength, float interval, float radDot, bool bDot)
 {
 	SetMesh(new CCrosshairMesh(pd3dDevice, pd3dCommandList, fthickness, flength, interval, radDot, bDot));
@@ -848,25 +1046,6 @@ void SceneLobby_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 35, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 1.8 / 2, 0);
 	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 	m_UIShaders.back() = pUITexture;
-
-
-	/*m_UIShaders.push_back(new CShader);
-	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/bar2on.dds");
-	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 35, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 1.4 / 2, 0);
-	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	m_UIShaders.back() = pUITexture;
-
-	m_UIShaders.push_back(new CShader);
-	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/bar3on.dds");
-	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 35, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 1.6 / 2, 0);
-	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	m_UIShaders.back() = pUITexture;
-
-	m_UIShaders.push_back(new CShader);
-	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/bar4on.dds");
-	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 35, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 1.8 / 2, 0);
-	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	m_UIShaders.back() = pUITexture;*/
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }

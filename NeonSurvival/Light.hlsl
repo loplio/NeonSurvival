@@ -164,3 +164,16 @@ float4 Lighting(float3 vPosition, float3 vNormal)
 	cColor.a = gMaterial/*s[gnMaterial]*/.m_cDiffuse.a;
 	return(cColor);
 }
+
+float3 GetLightDirection(int nIndex, float3 vPosition, float3 vNormal)
+{
+	float3 vCameraPosition = float3(gvCameraPosition.x, gvCameraPosition.y, gvCameraPosition.z);
+	float3 vToCamera = normalize(vCameraPosition - vPosition);
+
+	if (gLights[nIndex].m_nType == DIRECTIONAL_LIGHT)
+	{
+		return DirectionalLight(nIndex, vNormal, vToCamera);
+		//return (-gLights[nIndex].m_vDirection);
+	}
+	return (gLights[nIndex].m_vPosition - vPosition);
+}
