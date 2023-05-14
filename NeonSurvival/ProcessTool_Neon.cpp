@@ -218,7 +218,6 @@ void GameCompute_Neon::RayTrace() const
 	float fHitDistance = FLT_MAX, fNearestHitDistance = FLT_MAX;
 	CGameObject* pSelectedObject = NULL;
 	XMFLOAT3 ClientPosition = XMFLOAT3(0.0f, 0.0f, 1.0f);
-
 	XMFLOAT4X4 xmfCameraViewMatrix = m_Player.GetCamera()->GetViewMatrix();
 	std::vector<CGameObject*>& BoundingObjects = m_BBObjects.GetBBObject();
 	for (int i = 0; i < BoundingObjects.size(); ++i)
