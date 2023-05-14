@@ -64,7 +64,7 @@ void CMesh::Render(ID3D12GraphicsCommandList* pd3dCommandList, int nSubSet)
 	}
 }
 
-int CMesh::CheckRayIntersection(XMFLOAT3& xmf3RayOrigin, XMFLOAT3& xmf3RayDirection, float* pfNearHitDistance, XMFLOAT4X4& xmf4x4World)
+int CMesh::CheckRayIntersection(XMFLOAT3& xmf3RayOrigin, XMFLOAT3& xmf3RayDirection, float* pfNearHitDistance, XMFLOAT4X4& xmf4x4World, float ReduceScale)
 {
 	int nIntersections = 0;
 	BYTE* pbPositions = (BYTE*)m_pxmf3Positions;
@@ -82,7 +82,7 @@ int CMesh::CheckRayIntersection(XMFLOAT3& xmf3RayOrigin, XMFLOAT3& xmf3RayDirect
 	bool bIntersected = m_xmBoundingBox.Intersects(xmRayOrigin, xmRayDirection, *pfNearHitDistance);
 	if (bIntersected)
 	{
-		*pfNearHitDistance = *pfNearHitDistance * sqrt(xmRayDirection.m128_f32[0] * xmRayDirection.m128_f32[0] * pow(xmf4x4World._11, 2) + xmRayDirection.m128_f32[1] * xmRayDirection.m128_f32[1] * pow(xmf4x4World._22, 2) + xmRayDirection.m128_f32[2] * xmRayDirection.m128_f32[2] * pow(xmf4x4World._33, 2));
+		*pfNearHitDistance = *pfNearHitDistance * ReduceScale * sqrt(xmRayDirection.m128_f32[0] * xmRayDirection.m128_f32[0] + xmRayDirection.m128_f32[1] * xmRayDirection.m128_f32[1] + xmRayDirection.m128_f32[2] * xmRayDirection.m128_f32[2]);
 		return bIntersected;
 
 		// primitive's collide test. (a lot of overload!!)
