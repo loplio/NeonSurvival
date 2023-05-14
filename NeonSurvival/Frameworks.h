@@ -152,7 +152,29 @@ private:
 	void OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam) override {};
 	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam) override {};
 };
+//-------------------------------------------------------------------------------
+/*	CServerFramework : BaseFramework											   */
+//-------------------------------------------------------------------------------
+class CServerFramework : public BaseFramework {
+protected:
+	std::shared_ptr<CScene>		m_pScene = NULL;
 
+public:
+	CServerFramework(InterfaceFramework& Iframe);
+	virtual ~CServerFramework();
+
+private:
+	void OnCreate(HINSTANCE hInstance, HWND hMainWnd) override {};
+	void FrameAdvance() override {};
+	void OnDestroy() override {};
+
+	void BuildObjects() override {};
+	void BuildToolCreator() override {};
+	void ReleaseObjects() override {};
+
+	void OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam) override {};
+	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam) override {};
+};
 //-------------------------------------------------------------------------------
 /*	CGameFramework : BaseFramework											   */
 //-------------------------------------------------------------------------------
