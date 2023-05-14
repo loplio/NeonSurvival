@@ -439,9 +439,9 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
 	if (pNexusModel) delete pNexusModel;
 
+	CLoadedModelInfo* pOtherModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/NeonHuman/GunAnimation.bin", NULL);
 	for (int i = 0; i < MAX_PLAYER - 1; ++i)
 	{
-		CLoadedModelInfo* pOtherModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/NeonHuman/GunAnimation.bin", NULL);
 		m_vOtherPlayer.push_back(new CPlayer());
 		m_vOtherPlayer.back()->SetChild(pOtherModel->m_pModelRootObject, true);
 		//m_vOtherPlayer.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 1, pOtherModel);
@@ -478,8 +478,8 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 		//m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
 		//m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(0, 0);
 		//m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
-		if (pOtherModel) delete pOtherModel;
 	}
+	if (pOtherModel) delete pOtherModel;
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
@@ -516,6 +516,10 @@ void Scene_Neon::ReleaseUploadBuffers()
 }
 void Scene_Neon::ReleaseObjects()
 {
+	for (int i = 0; i < m_vOtherPlayer.size(); ++i)
+	{
+		m_vOtherPlayer[i]->Release();
+	}
 	CScene::ReleaseObjects();
 }
 
@@ -524,6 +528,8 @@ bool Scene_Neon::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wPa
 {
 	switch (nMessageID) {
 	case WM_LBUTTONDOWN:
+		//printf("fire\n");
+		m_pPlayer->SetFire(true);
 		for (int i = 0; i < m_ppShaders.size(); ++i)
 		{
 			if (m_ppShaders[i]->GetReafShaderType() == CShader::ReafShaderType::PistolBulletShader)
@@ -539,6 +545,8 @@ bool Scene_Neon::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wPa
 	case WM_RBUTTONDOWN:
 		break;
 	case WM_LBUTTONUP:
+		//printf("NoneFire\n");
+		m_pPlayer->SetFire(false);
 		break;
 	case WM_RBUTTONUP:
 		break;
@@ -588,11 +596,7 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 	if (m_MyId == -1)
 	{
 		m_MyId = SERVER::getInstance().GetClientNumId();
-		printf("m_MyId : %d\n", m_MyId);
-		printf("C0_Id : %d\n", m_pOtherPlayerData2[0].id);
-		printf("C1_Id : %d\n", m_pOtherPlayerData2[1].id);
-		printf("C2_Id : %d\n", m_pOtherPlayerData2[2].id);
-
+		//printf("m_MyId : %d\n", m_MyId);
 	}
 	for (int i = 0; i < m_vOtherPlayer.size(); ++i)
 	{
@@ -619,6 +623,7 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetTrackSpeed(m_pOtherPlayerData2[OtherId].InnResultAnimBundle, m_pOtherPlayerData2[OtherId].fLength);
 					}
 				}
+				//방향 및 이동
 				m_vOtherPlayer[i]->SetPosition(m_pOtherPlayerData2[OtherId].position);
 				m_vOtherPlayer[i]->SetUpVector(m_pOtherPlayerData2[OtherId].UpVector);
 				m_vOtherPlayer[i]->SetRightVector(m_pOtherPlayerData2[OtherId].RightVector);
@@ -626,6 +631,25 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 				m_vOtherPlayer[i]->SetVelocity(m_pOtherPlayerData2[OtherId].velocity);
 				m_vOtherPlayer[i]->Animate(fTimeElapsed);
 				++i;
+
+				//총알 발사
+				bool currfire = m_pOtherPlayerData2[OtherId].Fire;
+				if (currfire && m_OtherPlayerPrevFire[OtherId] == false)
+				{
+					printf("id : %d Fire\n", m_pOtherPlayerData2[OtherId].Fire);
+					for (int k = 0; k < m_ppShaders.size(); ++k)
+					{
+						if (m_ppShaders[k]->GetReafShaderType() == CShader::ReafShaderType::PistolBulletShader)
+						{
+							PistolBulletTexturedObjects* pObjectsShader = (PistolBulletTexturedObjects*)m_ppShaders[k];
+							XMFLOAT3 startLocation = m_pOtherPlayerData2[OtherId].position;
+							XMFLOAT3 rayDirection = m_pOtherPlayerData2[OtherId].RayDirection;
+							startLocation.y += METER_PER_PIXEL(1.5);
+							pObjectsShader->AppendBullet(startLocation, rayDirection);
+						}
+					}
+				}
+				m_OtherPlayerPrevFire[OtherId] = currfire;
 			}
 		}
 	}

@@ -125,7 +125,7 @@ public:
 	void ReleaseObjects() override;
 	void ReleaseUploadBuffers() override;
 
-protected:
+public:
 	int m_nBuildIndex = 0;
 	std::list<CGameObject*> m_ppObjects;
 	//std::vector<CGameObject*> m_ppObjects;

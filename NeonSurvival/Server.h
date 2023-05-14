@@ -15,7 +15,7 @@
 using namespace DirectX;
 
 #define SERVERPORT	9000
-#define BUFSIZE		700
+#define BUFSIZE		1024
 #define WM_SOCKET	(WM_USER+1)
 #define MAX_PLAYER	3
 enum MESSAGETYPE{
@@ -45,6 +45,8 @@ typedef struct {
 	XMFLOAT3	RightVector;
 	XMFLOAT3	LookVector;
 	int			AnicurrentTrack;
+	bool		Fire;
+	XMFLOAT3	RayDirection;
 	int id;
 } PACKET_INGAME2;
 

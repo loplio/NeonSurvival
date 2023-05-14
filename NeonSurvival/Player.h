@@ -34,6 +34,7 @@ protected:
 	CCamera* m_pCamera = NULL;
 	CShader* m_pShader = NULL;
 
+	bool IsFire = false;
 public:
 	CPlayer();
 	virtual ~CPlayer();
@@ -95,10 +96,12 @@ public:
 	float GetYaw() const { return(m_fYaw); }
 	float GetPitch() const { return(m_fPitch); }
 	float GetRoll() const { return(m_fRoll); }
+	bool GetFire() const { return IsFire; }
 
 	void SetYaw(float Yaw) { m_fYaw = Yaw; }
 	void SetPitch(float Pitch) { m_fPitch = Pitch; }
 	void SetRoll(float Roll) { m_fRoll = Roll; }
+	void SetFire(bool fire) { IsFire = fire; }
 
 	CCamera* GetCamera() const { return(m_pCamera); }
 	void SetCamera(CCamera* pCamera) { m_pCamera = pCamera; }
@@ -112,4 +115,5 @@ public:
 
 public:
 	bool IsDash = false;
+
 };

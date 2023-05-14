@@ -69,6 +69,7 @@ public:
 public:
 	PACKET_INGAME2* m_pOtherPlayerData2 = SERVER::getInstance().GetPlayersPosition2();
 	int m_MyId = -1;
+	bool m_OtherPlayerPrevFire[3] = { false,false,false };
 };
 
 
