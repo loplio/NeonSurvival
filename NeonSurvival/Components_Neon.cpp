@@ -752,7 +752,7 @@ void SceneLobby_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 	m_UIShaders.back() = pUITexture;
 
-
+	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }
 
 void SceneLobby_Neon::BuildLightsAndMaterials()
@@ -824,4 +824,7 @@ void SceneLobby_Neon::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera
 void SceneLobby_Neon::DrawUI(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
 	CScene::DrawUI(pd3dCommandList, pCamera);
+
+
 }
+

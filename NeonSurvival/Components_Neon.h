@@ -134,5 +134,3 @@ public:
 	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
 	void DrawUI(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
 };
-
-
