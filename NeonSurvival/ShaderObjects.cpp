@@ -380,7 +380,7 @@ void PistolBulletTexturedObjects::EventRemove()
 {
 	for (std::list<CGameObject*>::iterator bullet = m_ppObjects.begin(); bullet != m_ppObjects.end(); ++bullet)
 	{
-		if (((CPistolBulletObject*)(*bullet))->m_fLifeTime > 1.5f)
+		if (((CPistolBulletObject*)(*bullet))->m_fLifeTime > 5.0f)
 		{
 			(*bullet)->Release();
 			std::list<CGameObject*>::iterator iter = m_ppObjects.erase(bullet);

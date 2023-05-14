@@ -93,7 +93,7 @@ public:
 	void ReleaseUploadBuffers();
 
 public:
-	const float m_fSpeed = PIXEL_MPS(350);
+	const float m_fSpeed = PIXEL_MPS(35);
 	float m_fLifeTime = 0.0f;
 	XMFLOAT3 m_fRayDriection;
 	//CTexture* m_pRandowmValueTexture = NULL;
