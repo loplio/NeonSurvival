@@ -17,8 +17,10 @@ struct CB_CAMERA_INFO
 
 class CCamera {
 protected:
+	bool m_bRayIntersected;
 	float m_fRayLength;
-	XMFLOAT3 m_xfm3ResultLookAtPosition;
+	XMFLOAT3 m_xmf3TargetPosition;
+	XMFLOAT3 m_xmf3RayDirection;
 	XMFLOAT3 m_xmf3LookAtPosition;
 	XMFLOAT3 m_xmf3Position;
 	XMFLOAT3 m_xmf3Right;
@@ -94,8 +96,11 @@ public:
 	float& GetRoll() { return m_fRoll; }
 	float& GetYaw() { return m_fYaw; }
 
+	XMFLOAT3& GetTargetPosition() { return m_xmf3TargetPosition; }
+	void ModifyPitchAngle(float angle);
 	void SetRayLength(float fLength) { m_fRayLength = fLength; }
-	XMFLOAT3 GetPlayerToRayPoint();
+	void SetRayDirection(XMFLOAT3 xmf3Direction) { m_xmf3RayDirection = xmf3Direction; }
+	void SetRayIntersected() { m_bRayIntersected = true; }
 
 	void SetOffset(XMFLOAT3 xmf3Offset) { m_xmf3Offset = xmf3Offset; }
 	XMFLOAT3& GetOffset() { return m_xmf3Offset; }
@@ -104,6 +109,7 @@ public:
 	float GetTimeLag() { return m_fTimeLag; }
 
 	XMFLOAT4X4 GetViewMatrix() { return m_xmf4x4View; }
+	XMFLOAT4X4 GetViewMatrix(XMFLOAT3 xmf3Look, XMFLOAT3 xmf3Right);
 	XMFLOAT4X4 GetProjectionMatrix() { return m_xmf4x4Projection; }
 	D3D12_VIEWPORT GetViewport() { return m_d3dViewport; }
 	D3D12_RECT GetScissorRect() { return m_d3dScissorRect; }
@@ -117,6 +123,7 @@ public:
 	virtual void Rotate(float fPitch = 0.0f, float fYaw = 0.0f, float fRoll = 0.0f) {}
 	virtual void Update(XMFLOAT3& xmf3LookAt, float fTimeElapsed) {}
 	virtual void SetLookAt(XMFLOAT3& xmf3LookAt) {}
+	virtual void OnPrepareChangeCamera() {}
 
 	void GenerateFrustum();
 	bool IsInFrustum(BoundingOrientedBox& xmBoundingBox);
@@ -137,6 +144,7 @@ public:
 	
 	virtual void Rotate(float fPitch = 0.0f, float fYaw = 0.0f, float fRoll = 0.0f);
 	virtual void Update(XMFLOAT3& xmf3LookAt, float fTimeElapsed);
+	virtual void OnPrepareChangeCamera();
 };
 
 class CThirdPersonCamera : public CCamera {
@@ -154,6 +162,8 @@ public:
 	CShoulderHoldCamera(CCamera* pCamera);
 	virtual ~CShoulderHoldCamera() {}
 
+	virtual void Rotate(float fPitch = 0.0f, float fYaw = 0.0f, float fRoll = 0.0f);
 	virtual void Update(XMFLOAT3& xmf3LookAt, float fTimeElapsed);
 	virtual void SetLookAt(XMFLOAT3& vLookAt);
+	virtual void OnPrepareChangeCamera();
 };
