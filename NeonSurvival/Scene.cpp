@@ -468,6 +468,10 @@ void CScene::ReleaseObjects()
 	{
 		for (int i = 0; i < m_vParticleObjects.size(); ++i) m_vParticleObjects[i]->Release();
 	}
+	if (!m_vOtherPlayer.empty())
+	{
+		for (int i = 0; i < m_vOtherPlayer.size(); ++i) m_vOtherPlayer[i]->Release();
+	}
 
 	if (m_pTerrain) delete m_pTerrain;
 	if (m_pSkyBox) delete m_pSkyBox;
