@@ -220,13 +220,9 @@ void GameCompute_Neon::RayTrace() const
 	XMFLOAT3 ClientPosition = XMFLOAT3(0.0f, 0.0f, 1.0f);
 	XMFLOAT4X4 xmfCameraViewMatrix = m_Player.GetCamera()->GetViewMatrix();
 	std::vector<CGameObject*>& BoundingObjects = m_BBObjects.GetBBObject();
-	std::vector<CGameObject*>& BoundingObjects = m_BBObjects.GetBBObject();
-	std::vector<CGameObject*>& BoundingObjects = m_BBObjects.GetBBObject();
-	std::vector<CGameObject*>& BoundingObjects = m_BBObjects.GetBBObject();
-	std::vector<CGameObject*>& BoundingObjects = m_BBObjects.GetBBObject();
 	for (int i = 0; i < BoundingObjects.size(); ++i)
-		nIntersected = BoundingObjects[i]->PickObjectByRayIntersection(ClientPosition, xmfCameraViewMatrix, &fHitDistance);
-		accumulate += nIntersected;
+	{
+		if (BoundingObjects[i]->GetRootParentObject() == &m_Player) continue;
 
 		nIntersected = BoundingObjects[i]->PickObjectByRayIntersection(ClientPosition, xmfCameraViewMatrix, &fHitDistance);
 		accumulate += nIntersected;
@@ -253,9 +249,9 @@ void GameCompute_Neon::RayTrace() const
 	}
 }
 
+
 void GameCompute_Neon::Collide() const
 {
-
 	// Collide
 	m_Player.Collide(m_GameSource, m_BBObjects, NULL);
 }

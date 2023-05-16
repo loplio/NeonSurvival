@@ -333,22 +333,47 @@ void CAnimationController::SetAnimationBundle(UINT n)
 		m_nAnimationBundle[WALK] = 1;				// walk
 		m_nAnimationBundle[BACKWARD_WALK] = 2;		// backward walk
 		m_nAnimationBundle[RUN] = 3;				// slow run
+		m_nAnimationBundle[LEFT_BACKWARD] = 14;
+		m_nAnimationBundle[RIGHT_BACKWARD] = 15;
+		m_nAnimationBundle[LEFT_FORWARD] = 16;
+		m_nAnimationBundle[RIGHT_FORWARD] = 17;
+		m_nAnimationBundle[LEFT_WALK] = 18;
+		m_nAnimationBundle[RIGHT_WALK] = 19;
 		break;
 	case 1:	// pick pistol
 		m_nAnimationBundle[IDLE] = 4;				// pistol Idle
 		m_nAnimationBundle[WALK] = 5;				// pistol walk
 		m_nAnimationBundle[BACKWARD_WALK] = 6;		// pistol backward walk
+		m_nAnimationBundle[LEFT_BACKWARD] = 14;
+		m_nAnimationBundle[RIGHT_BACKWARD] = 15;
+		m_nAnimationBundle[LEFT_FORWARD] = 16;
+		m_nAnimationBundle[RIGHT_FORWARD] = 17;
+		m_nAnimationBundle[LEFT_WALK] = 18;
+		m_nAnimationBundle[RIGHT_WALK] = 19;
 		break;
 	case 2: // pick rifle
 		m_nAnimationBundle[IDLE] = 7;				// rifle Idle
 		m_nAnimationBundle[WALK] = 9;				// rifle walk
 		m_nAnimationBundle[BACKWARD_WALK] = 10;		// rifle backword walk
 		m_nAnimationBundle[FIRE] = 8;				// rifle fire
+		m_nAnimationBundle[LEFT_BACKWARD] = 20;
+		m_nAnimationBundle[RIGHT_BACKWARD] = 21;
+		m_nAnimationBundle[LEFT_FORWARD] = 22;
+		m_nAnimationBundle[RIGHT_FORWARD] = 23;
+		m_nAnimationBundle[LEFT_WALK] = 24;
+		m_nAnimationBundle[RIGHT_WALK] = 25;
+		break;
 	case 3: // aim rifle
 		m_nAnimationBundle[IDLE] = 7;				// rifle Idle
 		m_nAnimationBundle[WALK] = 11;				// rifle aim walk
 		m_nAnimationBundle[BACKWARD_WALK] = 12;		// rifle aim backward walk
 		m_nAnimationBundle[FIRE] = 8;				// rifle fire
+		m_nAnimationBundle[LEFT_BACKWARD] = 20;
+		m_nAnimationBundle[RIGHT_BACKWARD] = 21;
+		m_nAnimationBundle[LEFT_FORWARD] = 22;
+		m_nAnimationBundle[RIGHT_FORWARD] = 23;
+		m_nAnimationBundle[LEFT_WALK] = 24;
+		m_nAnimationBundle[RIGHT_WALK] = 25;
 		break;
 	}
 }
@@ -671,6 +696,7 @@ CGameObject::CGameObject(int nMaterials)
 	m_xmf4x4World = Matrix4x4::Identity();
 	m_xmf4x4Transform = Matrix4x4::Identity();
 	m_xmf3Scale = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	m_xmf3PrevScale = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	m_Mass = 0;
 
 	m_pMesh = NULL;
@@ -912,6 +938,16 @@ void CGameObject::UpdateTransform(XMFLOAT4X4* pxmf4x4Parent)
 	if (m_pChild) m_pChild->UpdateTransform(&m_xmf4x4World);
 }
 
+void CGameObject::SetPrevScale(XMFLOAT4X4* pxmf4x4Parent)
+{
+	m_xmf3PrevScale.x = m_xmf4x4World._11;
+	m_xmf3PrevScale.y = m_xmf4x4World._22;
+	m_xmf3PrevScale.z = m_xmf4x4World._33;
+
+	if (m_pSibling) m_pSibling->SetPrevScale(pxmf4x4Parent);
+	if (m_pChild) m_pChild->SetPrevScale(&m_xmf4x4World);
+}
+
 void CGameObject::Rotate(XMFLOAT3* pxmf3Axis, float fAngle)
 {
 	XMMATRIX mtxRotate = XMMatrixRotationAxis(XMLoadFloat3(pxmf3Axis), XMConvertToRadians(fAngle));
@@ -1013,7 +1049,8 @@ int CGameObject::PickObjectByRayIntersection(XMFLOAT3& xmf3PickPosition, XMFLOAT
 	{
 		XMFLOAT3 xmf3PickRayOrigin, xmf3PickRayDirection;
 		GenerateRayForPicking(xmf3PickPosition, xmf4x4View, &xmf3PickRayOrigin, &xmf3PickRayDirection);
-		nIntersected += m_pMesh->CheckRayIntersection(xmf3PickRayOrigin, xmf3PickRayDirection, pfHitDistance, m_xmf4x4World);
+
+		nIntersected += m_pMesh->CheckRayIntersection(xmf3PickRayOrigin, xmf3PickRayDirection, pfHitDistance, m_xmf4x4World, Vector3::Length(m_xmf3PrevScale) * sqrt(3) / 3);
 	}
 	return nIntersected;
 }
@@ -1419,7 +1456,8 @@ CLoadedModelInfo* CGameObject::LoadGeometryAndAnimationFromFile(ID3D12Device* pd
 				::ReadStringFromFile(pInFile, pstrToken); //"</Hierarchy>"
 
 				// Update the world matrix of bone.
-				pLoadedModel->m_pModelRootObject->m_pChild->UpdateTransform();
+				pLoadedModel->m_pModelRootObject->UpdateTransform();
+				pLoadedModel->m_pModelRootObject->SetPrevScale();
 			}
 			else if (!strcmp(pstrToken, "<Animation>:"))
 			{

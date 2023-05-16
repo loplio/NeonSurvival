@@ -79,6 +79,7 @@ public:
 	void Update() const override;
 	void Animate() const override;
 	void Collide() const override;
+	void RayTrace() const override;
 };
 
 //-------------------------------------------------------------------------------
