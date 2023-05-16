@@ -242,7 +242,7 @@ void SERVER::SendPlayerData(CPlayer& player,int GunType, float flength, int anib
     P_InGame2.AniKeyFrame = player.m_pSkinnedAnimationController->m_pAnimationTracks[P_InGame2.AnicurrentTrack].m_fPosition;
     P_InGame2.xmf4x4Transform = player.m_xmf4x4Transform;
     P_InGame2.Fire = player.GetFire();
-    P_InGame2.RayDirection = player.GetCamera()->GetPlayerToRayPoint();
+    P_InGame2.RayDirection = player.GetRayDirection();
     //P_InGame2.player = player;
 
     m_Packet.MessageType = MESSAGETYPE::INGAME;
