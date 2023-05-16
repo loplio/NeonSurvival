@@ -71,7 +71,7 @@ class GameCompute_Neon : public ProcessCompute {
 protected:
 	CScene& m_Scene;
 	CPlayer& m_Player;
-	CBoundingBoxObjects& m_BBObjects;
+	CBoundingBoxObjects& m_BoundingObjects;
 
 public:
 	GameCompute_Neon(const CGameTimer& GameTimer, const CGameSource& GameSource);

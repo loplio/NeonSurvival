@@ -715,15 +715,15 @@ CGameObject::~CGameObject()
 
 	if (m_pMesh) m_pMesh->Release();
 
-	if (!m_ppBBMeshes.empty())
+	if (!m_ppBoundingMeshes.empty())
 	{
-		for (int i = 0; i < m_ppBBMeshes.size(); ++i)
+		for (int i = 0; i < m_ppBoundingMeshes.size(); ++i)
 		{
-			if (m_ppBBMeshes[i]) {
-				m_ppBBMeshes[i]->Release();
-				//m_ppBBMeshes[i]->ReleaseUploadBuffers();
+			if (m_ppBoundingMeshes[i]) {
+				m_ppBoundingMeshes[i]->Release();
+				//m_ppBoundingMeshes[i]->ReleaseUploadBuffers();
 			}
-			m_ppBBMeshes[i] = NULL;
+			m_ppBoundingMeshes[i] = NULL;
 		}
 	}
 	if (m_nMaterials > 0)
@@ -937,7 +937,13 @@ void CGameObject::UpdateTransform(XMFLOAT4X4* pxmf4x4Parent)
 	if (m_pSibling) m_pSibling->UpdateTransform(pxmf4x4Parent);
 	if (m_pChild) m_pChild->UpdateTransform(&m_xmf4x4World);
 }
+void CGameObject::UpdateMobility(Mobility mobility)
+{
+	m_Mobility = mobility;
 
+	if (m_pSibling) m_pSibling->UpdateMobility(mobility);
+	if (m_pChild) m_pChild->UpdateMobility(mobility);
+}
 void CGameObject::SetPrevScale(XMFLOAT4X4* pxmf4x4Parent)
 {
 	m_xmf3PrevScale.x = m_xmf4x4World._11;
@@ -1066,9 +1072,9 @@ void CGameObject::CreateBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12Graphics
 		XMFLOAT3 Extents = m_pMesh->GetAABBExtents();
 		XMFLOAT3 center = m_pMesh->GetAABBCenter();
 		CBoundingBoxMesh* BBMesh = new CBoundingBoxMesh(pd3dDevice, pd3dCommandList, Extents, center, m_xmf4x4World, m_pMesh);
-		m_ppBBMeshes.push_back(BBMesh);
+		m_ppBoundingMeshes.push_back(BBMesh);
 		if (!IsAdd) {
-			((CBoundingBoxObjects*)BBShader)->AddBBObject(this);
+			((CBoundingBoxObjects*)BBShader)->AppendBoundingObject(this);
 			IsAdd = true;
 		}
 	}
@@ -1111,7 +1117,7 @@ void CGameObject::FindAndSetSkinnedMesh(CSkinnedMesh** ppSkinnedMeshes, int* pnS
 CGameObject* CGameObject::FindFrame(const char* pstrFrameName)
 {
 	CGameObject* pFrameObject = NULL;
-	if (!strncmp(m_pstrFrameName, pstrFrameName, strlen(pstrFrameName))) return(this);
+	if (strlen(m_pstrFrameName) == strlen(pstrFrameName) && !strncmp(m_pstrFrameName, pstrFrameName, strlen(pstrFrameName))) return(this);
 
 	if (m_pSibling) if (pFrameObject = m_pSibling->FindFrame(pstrFrameName)) return(pFrameObject);
 	if (m_pChild) if (pFrameObject = m_pChild->FindFrame(pstrFrameName)) return(pFrameObject);

@@ -182,18 +182,9 @@ void CStandardMesh::LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 
 		if (!strcmp(pstrToken, "<Bounds>:"))
 		{
-			if (m_bUpdateBounds)
-			{
-				XMFLOAT3 Data;
-				nReads = (UINT)::fread(&Data, sizeof(XMFLOAT3), 1, pInFile);
-				nReads = (UINT)::fread(&Data, sizeof(XMFLOAT3), 1, pInFile);
-			}
-			else
-			{
-				nReads = (UINT)::fread(&m_xmf3AABBCenter, sizeof(XMFLOAT3), 1, pInFile);
-				nReads = (UINT)::fread(&m_xmf3AABBExtents, sizeof(XMFLOAT3), 1, pInFile);
-				m_xmBoundingBox = BoundingOrientedBox(m_xmf3AABBCenter, m_xmf3AABBExtents, XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
-			}
+			nReads = (UINT)::fread(&m_xmf3AABBCenter, sizeof(XMFLOAT3), 1, pInFile);
+			nReads = (UINT)::fread(&m_xmf3AABBExtents, sizeof(XMFLOAT3), 1, pInFile);
+			m_xmBoundingBox = BoundingOrientedBox(m_xmf3AABBCenter, m_xmf3AABBExtents, XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
 		}
 		else if (!strcmp(pstrToken, "<Positions>:"))
 		{
@@ -364,29 +355,14 @@ CBoundingBoxMesh::CBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 	// Position setting.
 	float fx = Extents.x, fy = Extents.y, fz = Extents.z;
 	m_pxmf3Positions = new XMFLOAT3[m_nVertices];
-	if (pMesh->IsSkinnedMesh())
-	{
-		XMFLOAT4X4 RootBone = ((CSkinnedMesh*)pMesh)->GetSkinningBoneFrameCache()->m_xmf4x4World;
-		m_pxmf3Positions[0] = Vector3::TransformCoord(XMFLOAT3(-fx, +fy, -fz), RootBone);
-		m_pxmf3Positions[1] = Vector3::TransformCoord(XMFLOAT3(+fx, +fy, -fz), RootBone);
-		m_pxmf3Positions[2] = Vector3::TransformCoord(XMFLOAT3(+fx, +fy, +fz), RootBone);
-		m_pxmf3Positions[3] = Vector3::TransformCoord(XMFLOAT3(-fx, +fy, +fz), RootBone);
-		m_pxmf3Positions[4] = Vector3::TransformCoord(XMFLOAT3(-fx, -fy, -fz), RootBone);
-		m_pxmf3Positions[5] = Vector3::TransformCoord(XMFLOAT3(+fx, -fy, -fz), RootBone);
-		m_pxmf3Positions[6] = Vector3::TransformCoord(XMFLOAT3(+fx, -fy, +fz), RootBone);
-		m_pxmf3Positions[7] = Vector3::TransformCoord(XMFLOAT3(-fx, -fy, +fz), RootBone);
-	}
-	else
-	{
-		m_pxmf3Positions[0] = XMFLOAT3(-fx, +fy, -fz);
-		m_pxmf3Positions[1] = XMFLOAT3(+fx, +fy, -fz);
-		m_pxmf3Positions[2] = XMFLOAT3(+fx, +fy, +fz);
-		m_pxmf3Positions[3] = XMFLOAT3(-fx, +fy, +fz);
-		m_pxmf3Positions[4] = XMFLOAT3(-fx, -fy, -fz);
-		m_pxmf3Positions[5] = XMFLOAT3(+fx, -fy, -fz);
-		m_pxmf3Positions[6] = XMFLOAT3(+fx, -fy, +fz);
-		m_pxmf3Positions[7] = XMFLOAT3(-fx, -fy, +fz);
-	}
+	m_pxmf3Positions[0] = XMFLOAT3(-fx, +fy, -fz);
+	m_pxmf3Positions[1] = XMFLOAT3(+fx, +fy, -fz);
+	m_pxmf3Positions[2] = XMFLOAT3(+fx, +fy, +fz);
+	m_pxmf3Positions[3] = XMFLOAT3(-fx, +fy, +fz);
+	m_pxmf3Positions[4] = XMFLOAT3(-fx, -fy, -fz);
+	m_pxmf3Positions[5] = XMFLOAT3(+fx, -fy, -fz);
+	m_pxmf3Positions[6] = XMFLOAT3(+fx, -fy, +fz);
+	m_pxmf3Positions[7] = XMFLOAT3(-fx, -fy, +fz);
 
 	// PositionBuffer setting.
 	m_pd3dPositionBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList, m_pxmf3Positions, sizeof(XMFLOAT3) * m_nVertices, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pd3dPositionUploadBuffer);
@@ -426,10 +402,11 @@ CBoundingBoxMesh::CBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 	m_pd3dSubSetIndexBufferViews[0].SizeInBytes = sizeof(UINT) * m_pnSubSetIndices[0];
 
 	// Apply WorldTransform to BoundingBox 
+	XMFLOAT4X4 world = WorldTransform;
 	CenterTransform = Matrix4x4::Identity();
-	CenterTransform._41 += Center.x;
-	CenterTransform._42 += Center.y;
-	CenterTransform._43 += Center.z;
+	CenterTransform._41 = Center.x;
+	CenterTransform._42 = Center.y;
+	CenterTransform._43 = Center.z ;
 	CenterTransform = Matrix4x4::Multiply(CenterTransform, WorldTransform);
 }
 CBoundingBoxMesh::~CBoundingBoxMesh()
@@ -1279,7 +1256,6 @@ void CSkinnedMesh::LoadSkinInfoFromFile(ID3D12Device* pd3dDevice, ID3D12Graphics
 			nReads = (UINT)::fread(&m_xmf3AABBCenter, sizeof(XMFLOAT3), 1, pInFile);
 			nReads = (UINT)::fread(&m_xmf3AABBExtents, sizeof(XMFLOAT3), 1, pInFile);
 			m_xmBoundingBox = BoundingOrientedBox(m_xmf3AABBCenter, m_xmf3AABBExtents, XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
-			m_bUpdateBounds = true;
 		}
 		else if (!strcmp(pstrToken, "<BoneNames>:"))
 		{

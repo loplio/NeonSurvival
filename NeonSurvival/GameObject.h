@@ -373,7 +373,7 @@ public:
 	bool IsCollide(BoundingOrientedBox& box);
 
 protected:
-	std::vector<CBoundingBoxMesh*> m_ppBBMeshes;
+	std::vector<CBoundingBoxMesh*> m_ppBoundingMeshes;
 
 public:
 	char						m_pstrFrameName[64];
@@ -391,6 +391,9 @@ public:
 	int							m_nMaterials;
 	CMaterial**					m_ppMaterials;
 	CMesh*						m_pMesh;
+
+	enum Mobility				{ Static, Moveable };
+	UINT						m_Mobility = Static;
 
 public:
 	// ShaderVariable.
@@ -427,6 +430,7 @@ public:
 	CGameObject* GetRootParentObject();
 
 	void UpdateTransform(XMFLOAT4X4* pxmf4x4Parent = NULL);
+	void UpdateMobility(Mobility mobility);
 	void SetPrevScale(XMFLOAT4X4* pxmf4x4Parent = NULL);
 	
 	void MoveStrafe(float fDistance = 1.0f);
@@ -449,7 +453,7 @@ public:
 	int PickObjectByRayIntersection(XMFLOAT3& xmf3PickPosition, XMFLOAT4X4& xmf4x4View, float* pfHitDistance);
 
 public:
-	std::vector<CBoundingBoxMesh*>& GetBoundingBoxMesh() { return m_ppBBMeshes; }
+	std::vector<CBoundingBoxMesh*>& GetMesh() { return m_ppBoundingMeshes; }
 	void CreateBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader);
 
 	UINT GetMeshType() { return((m_pMesh) ? m_pMesh->GetType() : 0x00); }
@@ -476,8 +480,24 @@ public:
 	static void PrintFrameInfo(CGameObject* pGameObject, CGameObject* pParent);
 	static std::string m_pstrTextureFilePath;
 };
+//-------------------------------------------------------------------------------
+/*	Object Type																   */
+//-------------------------------------------------------------------------------
+class StaticObject : public CGameObject {
+public:
+	StaticObject();
+	StaticObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel);
+	virtual ~StaticObject();
+};
+
+class DynamicObject : public CGameObject {
+public:
+	DynamicObject();
+	DynamicObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel);
+	virtual ~DynamicObject();
+};
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class CParticleObject : public CGameObject {
+class CParticleObject : public DynamicObject {
 public:
 	CParticleObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, XMFLOAT3 xmf3Position, XMFLOAT3 xmf3Velocity, float fLifetime, XMFLOAT3 xmf3Acceleration, XMFLOAT3 xmf3Color, XMFLOAT2 xmf2Size, UINT nMaxParticles);
 	virtual ~CParticleObject();

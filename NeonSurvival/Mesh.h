@@ -110,8 +110,6 @@ protected:
 	UINT m_nOffset = 0;
 	UINT m_nStride = sizeof(XMFLOAT3);
 
-	BOOL m_bUpdateBounds = false;
-
 public:
 	virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) { }
 	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList) { }
@@ -122,8 +120,6 @@ public:
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, int nSubSet);
 	virtual void PostRender(ID3D12GraphicsCommandList* pd3dCommandList, int nPipelineState) { };
 	virtual void OnPostRender(int nPipelineState) { };
-
-	virtual bool IsSkinnedMesh() const { return false; }
 
 	int CheckRayIntersection(XMFLOAT3& xmRayPosition, XMFLOAT3& xmRayDirection, float* pfNearHitDistance, XMFLOAT4X4& xmf4x4World, float ReduceScale);
 
@@ -382,8 +378,6 @@ public:
 	virtual void ReleaseUploadBuffers();
 
 	virtual void OnPreRender(ID3D12GraphicsCommandList* pd3dCommandList, void* pContext);
-
-	virtual bool IsSkinnedMesh() const { return true; }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

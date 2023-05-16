@@ -10,7 +10,7 @@ class CGameSource {
 protected:
 	std::shared_ptr<CScene> m_pScene = NULL;
 	std::shared_ptr<CPlayer> m_pPlayer = NULL;
-	std::shared_ptr<CBoundingBoxObjects> m_pBBObjects = NULL;
+	std::shared_ptr<CBoundingBoxObjects> m_pBoundingObjects = NULL;
 	CCamera* m_pCamera = NULL;
 
 public:
@@ -23,8 +23,8 @@ public:
 	std::shared_ptr<CPlayer> GetSharedPtrPlayer() const { return m_pPlayer; }
 	CPlayer& GetRefPlayer() const { return *m_pPlayer; }
 
-	std::shared_ptr<CBoundingBoxObjects> GetSharedPtrBBShader() const { return m_pBBObjects; }
-	CBoundingBoxObjects& GetRefBBShader() const { return *m_pBBObjects; }
+	std::shared_ptr<CBoundingBoxObjects> GetSharedPtrBBShader() const { return m_pBoundingObjects; }
+	CBoundingBoxObjects& GetRefBBShader() const { return *m_pBoundingObjects; }
 
 	CCamera& GetRefCamera() const { return *m_pCamera; }
 };
@@ -34,7 +34,7 @@ public:
 	TestGameSource(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) : CGameSource(pd3dDevice, pd3dCommandList) {
 		m_pScene = std::make_shared<Scene_Test>(pd3dDevice, pd3dCommandList);
 		m_pPlayer = m_pScene->m_pPlayer = std::make_shared<Player_Test>(pd3dDevice, pd3dCommandList, m_pScene->GetGraphicsRootSignature(), m_pScene->m_pTerrain, 1);
-		m_pBBObjects = m_pScene->m_pBBObjects = std::make_shared<BoundingBoxObjects_1>(*m_pScene, *m_pPlayer);
+		m_pBoundingObjects = m_pScene->m_pBoundingObjects = std::make_shared<BoundingBoxObjects_1>(*m_pScene, *m_pPlayer);
 	}
 };
 
@@ -43,7 +43,7 @@ public:
 	NeonGameSource(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) : CGameSource(pd3dDevice, pd3dCommandList) {
 		m_pScene = std::make_shared<Scene_Neon>(pd3dDevice, pd3dCommandList);
 		m_pPlayer = m_pScene->m_pPlayer = std::make_shared<Player_Neon>(pd3dDevice, pd3dCommandList, m_pScene->GetGraphicsRootSignature(), m_pScene->m_pTerrain, 1);
-		m_pBBObjects = m_pScene->m_pBBObjects = std::make_shared<BoundingBoxObjects_1>(*m_pScene, *m_pPlayer);
+		m_pBoundingObjects = m_pScene->m_pBoundingObjects = std::make_shared<BoundingBoxObjects_1>(*m_pScene, *m_pPlayer);
 	}
 };
 

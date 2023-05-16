@@ -7,10 +7,28 @@
 //-------------------------------------------------------------------------------
 CBoundingBoxObjects::CBoundingBoxObjects()
 {
-	m_BBObjects.reserve(64);
+	m_BoundingObjects.reserve(64);
 }
 CBoundingBoxObjects::~CBoundingBoxObjects()
 {
+}
+
+void CBoundingBoxObjects::Update(float fTimeElapsed)
+{
+	for (int i = 0; i < m_BoundingObjects.size(); ++i)
+	{
+		if (m_BoundingObjects[i]->m_Mobility == CGameObject::Static) continue;
+
+		std::vector<CBoundingBoxMesh*>& boundingMeshes = m_BoundingObjects[i]->GetMesh();
+		for (int n = 0; n < boundingMeshes.size(); ++n)
+		{
+			XMFLOAT4X4 CenterPosition = Matrix4x4::Identity();
+			CenterPosition._41 = boundingMeshes[n]->GetAABBCenter().x;
+			CenterPosition._42 = boundingMeshes[n]->GetAABBCenter().y;
+			CenterPosition._43 = boundingMeshes[n]->GetAABBCenter().z;
+			boundingMeshes[n]->CenterTransform = Matrix4x4::Multiply(CenterPosition, m_BoundingObjects[i]->m_xmf4x4World);
+		}
+	}
 }
 
 void CBoundingBoxObjects::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int nPipelineState)
@@ -19,22 +37,24 @@ void CBoundingBoxObjects::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCa
 
 	CShader::Render(pd3dCommandList, pCamera);
 
-	for (int i = 0; i < m_BBObjects.size(); ++i)
+	for (int i = 0; i < m_BoundingObjects.size(); ++i)
 	{
-		for (int n = 0; n < m_BBObjects[i]->GetBoundingBoxMesh().size(); ++n)
+		std::vector<CBoundingBoxMesh*>& boundingMeshes = m_BoundingObjects[i]->GetMesh();
+		for (int n = 0; n < boundingMeshes.size(); ++n)
 		{
-			if (m_BBObjects[i]->GetBoundingBoxMesh()[n])
+			if (boundingMeshes[n])
 			{
-				XMFLOAT4X4 CenterPosition = Matrix4x4::Identity();
-				CenterPosition._41 += m_BBObjects[i]->GetBoundingBoxMesh()[n]->GetAABBCenter().x;
-				CenterPosition._42 += m_BBObjects[i]->GetBoundingBoxMesh()[n]->GetAABBCenter().y;
-				CenterPosition._43 += m_BBObjects[i]->GetBoundingBoxMesh()[n]->GetAABBCenter().z;
-				CenterPosition = Matrix4x4::Multiply(CenterPosition, m_BBObjects[i]->m_xmf4x4World);
-				m_BBObjects[i]->UpdateShaderVariable(pd3dCommandList, &CenterPosition);
-				m_BBObjects[i]->GetBoundingBoxMesh()[n]->Render(pd3dCommandList, 0);
+				m_BoundingObjects[i]->UpdateShaderVariable(pd3dCommandList, &boundingMeshes[n]->CenterTransform);
+				boundingMeshes[n]->Render(pd3dCommandList, 0);
 			}
 		}
 	}
+}
+
+void CBoundingBoxObjects::AppendBoundingObject(CGameObject* obj)
+{
+	m_BoundingObjects.push_back(obj);
+	m_BoundingObjects.back()->m_Mobility = obj->m_Mobility;
 }
 
 int CBoundingBoxObjects::IsCollide(CGameObject* obj)

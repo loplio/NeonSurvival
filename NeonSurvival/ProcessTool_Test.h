@@ -71,7 +71,7 @@ class GameCompute_Test : public ProcessCompute {
 protected:
 	CScene& m_Scene;
 	CPlayer& m_Player;
-	CBoundingBoxObjects& m_BBObjects;
+	CBoundingBoxObjects& m_BoundingObjects;
 
 public:
 	GameCompute_Test(const CGameTimer& GameTimer, const CGameSource& GameSource);

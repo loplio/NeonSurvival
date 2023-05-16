@@ -72,8 +72,6 @@ public:
 	bool m_OtherPlayerPrevFire[3] = { false,false,false };
 };
 
-
-
 //-------------------------------------------------------------------------------
 /*	Other Object															   */
 //-------------------------------------------------------------------------------
@@ -83,7 +81,7 @@ public:
 	virtual ~CParticleObject_Neon();
 };
 
-class CPistolBulletObject : public CGameObject {
+class CPistolBulletObject : public DynamicObject {
 public:
 	CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection);
 	virtual ~CPistolBulletObject();
@@ -99,28 +97,10 @@ public:
 	//CTexture* m_pRandowmValueTexture = NULL;
 };
 
-class NexusObject : public CGameObject {
+class NexusObject : public DynamicObject {
 public:
 	NexusObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks);
 	virtual ~NexusObject();
-};
-
-class StaticObject : public CGameObject {
-public:
-	StaticObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel);
-	virtual ~StaticObject();
-};
-
-class MapObject : public CGameObject {
-public:
-	MapObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel);
-	virtual ~MapObject();
-};
-
-class LevelUpTableObject : public CGameObject {
-public:
-	LevelUpTableObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel);
-	virtual ~LevelUpTableObject();
 };
 
 class Crosshair : public CGameObject {

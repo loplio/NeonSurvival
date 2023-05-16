@@ -185,13 +185,16 @@ void LobbyMouseInput_Neon::DataProcessing()
 /*	GameCompute_Neon														   */
 //-------------------------------------------------------------------------------
 GameCompute_Neon::GameCompute_Neon(const CGameTimer& GameTimer, const CGameSource& GameSource) :
-	m_Scene(GameSource.GetRefScene()), m_Player(GameSource.GetRefPlayer()), m_BBObjects(GameSource.GetRefBBShader()),
+	m_Scene(GameSource.GetRefScene()), m_Player(GameSource.GetRefPlayer()), m_BoundingObjects(GameSource.GetRefBBShader()),
 	ProcessCompute(GameTimer, GameSource)
 {
 }
 
 void GameCompute_Neon::Update() const
 {
+	// BoundingBox Update
+	m_BoundingObjects.Update(m_GameTimer.GetTimeElapsed());
+
 	// Scene Update
 	m_Scene.Update(m_GameTimer.GetTotalTime(), m_GameTimer.GetTimeElapsed());
 	m_Scene.Update(m_GameTimer.GetTimeElapsed());
@@ -219,7 +222,7 @@ void GameCompute_Neon::RayTrace() const
 	CGameObject* pSelectedObject = NULL;
 	XMFLOAT3 ClientPosition = XMFLOAT3(0.0f, 0.0f, 1.0f);
 	XMFLOAT4X4 xmfCameraViewMatrix = m_Player.GetCamera()->GetViewMatrix();
-	std::vector<CGameObject*>& BoundingObjects = m_BBObjects.GetBBObject();
+	std::vector<CGameObject*>& BoundingObjects = m_BoundingObjects.GetBBObject();
 	for (int i = 0; i < BoundingObjects.size(); ++i)
 	{
 		if (BoundingObjects[i]->GetRootParentObject() == &m_Player) continue;
@@ -253,7 +256,7 @@ void GameCompute_Neon::RayTrace() const
 void GameCompute_Neon::Collide() const
 {
 	// Collide
-	m_Player.Collide(m_GameSource, m_BBObjects, NULL);
+	m_Player.Collide(m_GameSource, m_BoundingObjects, NULL);
 }
 
 //-------------------------------------------------------------------------------

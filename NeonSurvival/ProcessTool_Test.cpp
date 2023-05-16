@@ -125,7 +125,7 @@ void LobbyMouseInput_Test::DataProcessing()
 /*	GameCompute_Test														   */
 //-------------------------------------------------------------------------------
 GameCompute_Test::GameCompute_Test(const CGameTimer& GameTimer, const CGameSource& GameSource) :
-	m_Scene(GameSource.GetRefScene()), m_Player(GameSource.GetRefPlayer()), m_BBObjects(GameSource.GetRefBBShader()),
+	m_Scene(GameSource.GetRefScene()), m_Player(GameSource.GetRefPlayer()), m_BoundingObjects(GameSource.GetRefBBShader()),
 	ProcessCompute(GameTimer, GameSource)
 {
 }
@@ -147,7 +147,7 @@ void GameCompute_Test::Animate() const
 
 void GameCompute_Test::Collide() const
 {
-	m_Player.Collide(m_GameSource, m_BBObjects, NULL);
+	m_Player.Collide(m_GameSource, m_BoundingObjects, NULL);
 }
 
 void GameCompute_Test::RayTrace() const

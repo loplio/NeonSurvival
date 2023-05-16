@@ -260,7 +260,7 @@ void Scene_Test::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
 	// BoundingBoxObjects Build.
-	m_pBBObjects->BuildObjects(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_pBoundingObjects->BuildObjects(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 }
 void Scene_Test::BuildLightsAndMaterials()
 {
@@ -313,8 +313,8 @@ bool Scene_Test::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM 
 		case 'F':
 			break;
 		case 'C':
-			if (m_pBBObjects && !m_pBBObjects->m_bCollisionBoxWireFrame) m_pBBObjects->m_bCollisionBoxWireFrame = true;
-			else if (m_pBBObjects && m_pBBObjects->m_bCollisionBoxWireFrame) m_pBBObjects->m_bCollisionBoxWireFrame = false;
+			if (m_pBoundingObjects && !m_pBoundingObjects->m_bCollisionBoxWireFrame) m_pBoundingObjects->m_bCollisionBoxWireFrame = true;
+			else if (m_pBoundingObjects && m_pBoundingObjects->m_bCollisionBoxWireFrame) m_pBoundingObjects->m_bCollisionBoxWireFrame = false;
 			break;
 		default:
 			break;

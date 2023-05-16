@@ -15,15 +15,16 @@ public:
 	virtual ~CBoundingBoxObjects();
 
 	virtual void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature) = 0;
+	virtual void Update(float fTimeElapsed);
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int nPipelineState = 0);
-	void AddBBObject(CGameObject* obj) { m_BBObjects.push_back(obj); }
-	std::vector<CGameObject*>& GetBBObject() { return m_BBObjects; }
+	void AppendBoundingObject(CGameObject* obj);
+	std::vector<CGameObject*>& GetBBObject() { return m_BoundingObjects; }
 	int IsCollide(CGameObject* obj/*, ObjectType excludetype*/);
 
 	bool m_bCollisionBoxWireFrame = false;
 
 protected:
-	std::vector<CGameObject*> m_BBObjects;
+	std::vector<CGameObject*> m_BoundingObjects;
 };
 
 //--Concrete_1-------------------------------------------------------------------
