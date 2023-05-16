@@ -11,10 +11,8 @@
 class CPlayer : public CGameObject {
 protected:
 	float m_fRayLength;
-	XMFLOAT3 m_xmf3RayDirection;
 	XMFLOAT4X4 m_xmf4x4View;
 
-	XMFLOAT3 m_xmf3Offset;
 	XMFLOAT3 m_xmf3Position;
 	XMFLOAT3 m_xmf3Right;
 	XMFLOAT3 m_xmf3Up;
@@ -59,11 +57,20 @@ public:
 	// Others
 	virtual void SetTypeDefine(UINT nType) {};
 
-	void SetViewMatrix();
-	XMFLOAT4X4 GetViewMatrix(XMFLOAT3 xmfLook, XMFLOAT3 xmfRight);
+	void SetViewMatrix() {
+		m_xmf3Look = Vector3::Normalize(m_xmf3Look);
+		m_xmf3Right = Vector3::CrossProduct(m_xmf3Up, m_xmf3Look, true);
+		m_xmf3Up = Vector3::CrossProduct(m_xmf3Look, m_xmf3Right, true);
+
+		m_xmf4x4View._11 = m_xmf3Right.x; m_xmf4x4View._12 = m_xmf3Up.x; m_xmf4x4View._13 = m_xmf3Look.x;
+		m_xmf4x4View._21 = m_xmf3Right.y; m_xmf4x4View._22 = m_xmf3Up.y; m_xmf4x4View._23 = m_xmf3Look.y;
+		m_xmf4x4View._31 = m_xmf3Right.z; m_xmf4x4View._32 = m_xmf3Up.z; m_xmf4x4View._33 = m_xmf3Look.z;
+		m_xmf4x4View._41 = -Vector3::DotProduct(m_xmf3Position, m_xmf3Right);
+		m_xmf4x4View._42 = -Vector3::DotProduct(m_xmf3Position, m_xmf3Up);
+		m_xmf4x4View._43 = -Vector3::DotProduct(m_xmf3Position, m_xmf3Look);
+	}
 	XMFLOAT4X4& GetViewMatrix() { return m_xmf4x4View; }
 
-	XMFLOAT3 GetOffset() const { return m_xmf3Offset; }
 	XMFLOAT3 GetPosition() const { return(m_xmf3Position); }
 	XMFLOAT3 GetLookVector() const { return(m_xmf3Look); }
 	XMFLOAT3 GetUpVector() const { return(m_xmf3Up); }
@@ -80,10 +87,8 @@ public:
 	void SetMaxVelocityXZ(float fMaxVelocity) { m_fMaxVelocityXZ = fMaxVelocity; }
 	void SetMaxVelocityY(float fMaxVelocity) { m_fMaxVelocityY = fMaxVelocity; }
 	void SetVelocity(XMFLOAT3& xmf3Velocity) { m_xmf3Velocity = xmf3Velocity; }
-	void SetRayLength(float fLength) { m_fRayLength = fLength; }
-	void SetRayDirection(XMFLOAT3 xmf3RayDirection) { m_xmf3RayDirection = xmf3RayDirection; }
+	void SetRayLength(float length) { m_fRayLength = length; }
 
-	void SetOffset(XMFLOAT3&& xmf3Offset) { m_xmf3Offset = xmf3Offset; }
 	void SetPosition(XMFLOAT3&& xmf3Position) { Move(XMFLOAT3(xmf3Position.x - m_xmf3Position.x, xmf3Position.y - m_xmf3Position.y, xmf3Position.z - m_xmf3Position.z), false); }
 	void SetPosition(XMFLOAT3& xmf3Position) { Move(XMFLOAT3(xmf3Position.x - m_xmf3Position.x, xmf3Position.y - m_xmf3Position.y, xmf3Position.z - m_xmf3Position.z), false); }
 	XMFLOAT3& GetVelocity() { return(m_xmf3Velocity); }
@@ -91,8 +96,6 @@ public:
 	float GetYaw() const { return(m_fYaw); }
 	float GetPitch() const { return(m_fPitch); }
 	float GetRoll() const { return(m_fRoll); }
-	float GetRayLength() { return m_fRayLength; }
-	XMFLOAT3 GetRayDirection() { return m_xmf3RayDirection; }
 	bool GetFire() const { return IsFire; }
 
 	void SetYaw(float Yaw) { m_fYaw = Yaw; }
@@ -110,10 +113,7 @@ public:
 	virtual void OnCameraUpdateCallback(float fTimeElapsed) {};
 	void SetCameraUpdatedContext(LPVOID pContext) { m_pCameraUpdatedContext = pContext; }
 
-	float GetCameraPitch();
-
 public:
-	const float fPitchThickness = 0.2f;
 	bool IsDash = false;
-	DWORD m_dwDirection = 0;
+
 };

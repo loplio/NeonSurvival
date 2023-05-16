@@ -150,10 +150,6 @@ void GameCompute_Test::Collide() const
 	m_Player.Collide(m_GameSource, m_BBObjects, NULL);
 }
 
-void GameCompute_Test::RayTrace() const
-{
-}
-
 //-------------------------------------------------------------------------------
 /*	GameRenderDisplay_Test : public DisplayOutput								   */
 //-------------------------------------------------------------------------------
@@ -259,7 +255,7 @@ void UILayerGame_Test::BuildUI()
 	D2D1_RECT_F d2dRect;
 	WCHAR pstrOutputText[256];
 
-	wcscpy_s(pstrOutputText, 256, L"미사일 1개수\n");
+	wcscpy_s(pstrOutputText, 256, L"미사일 개수\n");
 	pd2dBrush = CreateBrush(D2D1::ColorF(D2D1::ColorF::BlanchedAlmond, 1.0f));
 	pdwTextFormat = CreateTextFormat((wchar_t*)L"Arial", m_fHeight / 20.0f);
 	d2dRect = D2D1::RectF(0.0f, m_fHeight - 90.0f, m_fWidth, m_fHeight);

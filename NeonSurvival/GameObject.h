@@ -187,14 +187,8 @@ public:
 		BACKWARD_WALK,
 		RUN,
 		FIRE,
-		LEFT_BACKWARD,
-		RIGHT_BACKWARD,
-		LEFT_FORWARD,
-		RIGHT_FORWARD,
-		LEFT_WALK,
-		RIGHT_WALK
 	};
-	int m_nAnimationBundle[11]{ -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+	int m_nAnimationBundle[6]{ -1, -1, -1, -1, -1, -1 };
 	void SetAnimationBundle(UINT n);
 };
 
@@ -381,7 +375,6 @@ public:
 	XMFLOAT4X4					m_xmf4x4World;
 	XMFLOAT4X4					m_xmf4x4Transform;
 	XMFLOAT3					m_xmf3Scale;
-	XMFLOAT3					m_xmf3PrevScale;
 	float						m_Mass;
 
 	CGameObject*				m_pParent = NULL;
@@ -427,7 +420,6 @@ public:
 	CGameObject* GetRootParentObject();
 
 	void UpdateTransform(XMFLOAT4X4* pxmf4x4Parent = NULL);
-	void SetPrevScale(XMFLOAT4X4* pxmf4x4Parent = NULL);
 	
 	void MoveStrafe(float fDistance = 1.0f);
 	void MoveUp(float fDistance = 1.0f);

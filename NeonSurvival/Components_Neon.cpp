@@ -13,7 +13,6 @@ Player_Neon::Player_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd
 	CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)pContext;
 	float fHeight = pTerrain->GetHeight(pTerrain->GetWidth() * 0.5f, pTerrain->GetLength() * 0.5f);
 	SetPosition(XMFLOAT3(pTerrain->GetWidth() * 0.5f, fHeight + METER_PER_PIXEL(20), pTerrain->GetLength() * 0.5f));
-	SetOffset(XMFLOAT3(0.0f, METER_PER_PIXEL(1.5), 0.0f));	// fire offset.
 
 	SetPlayerUpdatedContext(pTerrain);
 	SetCameraUpdatedContext(pTerrain);
@@ -136,8 +135,6 @@ void Player_Neon::Update(float fTimeElapsed)
 			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->WALK];
 			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
 			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
-			ServerfLength = fLength / m_fMaxVelocityXZ;
-			//printf("Walk\n");
 		}
 		else if (m_dwDirection == DIR_BACKWARD)	// backward walking
 		{
@@ -459,47 +456,6 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, 17.0f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
 	if (pNexusModel) delete pNexusModel;
 
-	for (int i = 0; i < MAX_PLAYER - 1; ++i)
-	{
-		CLoadedModelInfo* pOtherModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/NeonHuman/NeonHuman.bin", NULL);
-		m_vOtherPlayer.push_back(new CPlayer());
-		m_vOtherPlayer.back()->SetChild(pOtherModel->m_pModelRootObject, true);
-		//m_vOtherPlayer.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 1, pOtherModel);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 14, pOtherModel);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(1, 1);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(2, 2);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(3, 3);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(4, 4);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(5, 5);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(6, 6);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(7, 7);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(8, 8);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(9, 9);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(10, 10);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(11, 11);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(12, 12);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(13, 13);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(0, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(1, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(2, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(3, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(4, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(5, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(6, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(7, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(8, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(9, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(10, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(11, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(12, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(13, false);
-
-		//m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
-		//m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(0, 0);
-		//m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
-		if (pOtherModel) delete pOtherModel;
-	}
 	//CLoadedModelInfo* pMapModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Map/For_Sketchfab.bin", NULL);
 	//m_vHierarchicalGameObjects.push_back(new MapObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pMapModel));
 	//m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, 2.0f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
@@ -656,6 +612,47 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + 63.f, 10.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 90.0f, 0.0f);
 	if (pLevelUpTableModel) delete pLevelUpTableModel;
+	for (int i = 0; i < MAX_PLAYER - 1; ++i)
+	{
+		CLoadedModelInfo* pOtherModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/NeonHuman/GunAnimation.bin", NULL);
+		m_vOtherPlayer.push_back(new CPlayer());
+		m_vOtherPlayer.back()->SetChild(pOtherModel->m_pModelRootObject, true);
+		//m_vOtherPlayer.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 1, pOtherModel);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 14, pOtherModel);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(1, 1);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(2, 2);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(3, 3);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(4, 4);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(5, 5);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(6, 6);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(7, 7);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(8, 8);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(9, 9);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(10, 10);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(11, 11);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(12, 12);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(13, 13);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(0, false);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(1, false);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(2, false);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(3, false);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(4, false);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(5, false);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(6, false);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(7, false);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(8, false);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(9, false);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(10, false);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(11, false);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(12, false);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(13, false);
+
+		//m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
+		//m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(0, 0);
+		//m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
+		if (pOtherModel) delete pOtherModel;
+	}
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
