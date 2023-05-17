@@ -39,6 +39,7 @@
 
 #include <dxgidebug.h>
 
+//#include <dsound.h>
 using namespace DirectX;
 using namespace DirectX::PackedVector;
 
