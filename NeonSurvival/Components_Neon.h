@@ -68,8 +68,15 @@ public:
 
 public:
 	PACKET_INGAME2* m_pOtherPlayerData2 = SERVER::getInstance().GetPlayersPosition2();
+	PACKET_MONSTER_DATA* m_pMonsterData = SERVER::getInstance().GetMonsterData();
 	int m_MyId = -1;
 	bool m_OtherPlayerPrevFire[3] = { false,false,false };
+	float prevangle = 0;
+	XMFLOAT3 m_NexusModelPos;
+	XMFLOAT3 m_Potal1_Pos;
+	XMFLOAT3 m_Potal2_Pos;
+	XMFLOAT3 m_Potal3_Pos;
+	XMFLOAT3 m_Potal4_Pos;
 };
 
 //-------------------------------------------------------------------------------

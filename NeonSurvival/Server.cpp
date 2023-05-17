@@ -50,6 +50,11 @@ void SERVER::init(HWND hWnd)
         PlayersPosition[i].id = -1;
         PlayersPosition2[i].id = -1;
     }
+
+    for (int i = 0; i < MAX_MONSTER; ++i)
+    {
+        MonsterData[i].Id = -1;
+    }
 }
 
 void SERVER::ProcessSocketMessage(HWND hWnd, UINT unit, WPARAM wParam, LPARAM lParam)
@@ -99,6 +104,15 @@ void SERVER::ProcessSocketMessage(HWND hWnd, UINT unit, WPARAM wParam, LPARAM lP
             //printxmfloat4x4(PlayersPosition[1].position);
             //printf("id : %d - x : %f y : %f z : %f\n", PlayersPosition[0].id, PlayersPosition[0].position.x, PlayersPosition[0].position.y, PlayersPosition[0].position.z);
             //printf("id : %d - x : %f y : %f z : %f\n", PlayersPosition[1].id, PlayersPosition[1].position.x, PlayersPosition[1].position.y, PlayersPosition[1].position.z);
+            break;
+        }
+        case MESSAGETYPE::MONSTER_DATA:
+        {
+            memcpy(MonsterData, m_Packet.buf, sizeof(MonsterData));
+            if (len == SOCKET_ERROR) {
+                printf("MONSTER_DATA error : %d\n", WSAGetLastError());
+                return;
+            }
             break;
         }
         default:

@@ -129,7 +129,6 @@ void Player_Neon::Update(float fTimeElapsed)
 		{
 			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->IDLE];
 			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
-			ServerfLength = 0;
 			//m_pSkinnedAnimationController->SetTrackPosition(1, 0.0f);
 		}
 		else if (!IsDash && m_dwDirection == DIR_FORWARD)	// walking
@@ -189,6 +188,10 @@ void Player_Neon::Update(float fTimeElapsed)
 			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
 			ServerfLength = fLength / m_fMaxVelocityXZ;
 			//printf("run\n");
+		}
+		if (ServerfLength != 0)
+		{
+			ServerfLength = fLength / m_fMaxVelocityXZ;
 		}
 		ServerInnResultAnimBundle = nResultAnimBundle;
 	}
@@ -458,6 +461,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackEnable(0, 0);
 	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackSpeed(0, 4.0f);
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, 17.0f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
+	m_NexusModelPos = m_vHierarchicalGameObjects.back()->GetPosition();
 	if (pNexusModel) delete pNexusModel;
 
 	CLoadedModelInfo* pGroundModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Ground/Ground.bin", NULL);
@@ -586,23 +590,27 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pPortalModel));
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(300), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, -90.0f, 0.0f);
+	m_Potal1_Pos = m_vHierarchicalGameObjects.back()->GetPosition();
 	if (pPortalModel) delete pPortalModel;
 
 	CLoadedModelInfo* pPortal2Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Portal/Portal.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pPortal2Model));
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - METER_PER_PIXEL(300), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 90.0f, 0.0f);
+	m_Potal2_Pos = m_vHierarchicalGameObjects.back()->GetPosition();
 	if (pPortal2Model) delete pPortal2Model;
 
 	CLoadedModelInfo* pPortal3Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Portal/Portal.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pPortal3Model));
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, METER_PER_PIXEL(300) + m_pTerrain->GetLength() * 0.5f);
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 180.0f, 0.0f);
+	m_Potal3_Pos = m_vHierarchicalGameObjects.back()->GetPosition();
 	if (pPortal3Model) delete pPortal3Model;
 
 	CLoadedModelInfo* pPortal4Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Portal/Portal.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pPortal4Model));
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, METER_PER_PIXEL(-300) + m_pTerrain->GetLength() * 0.5f);
+	m_Potal4_Pos = m_vHierarchicalGameObjects.back()->GetPosition();
 	if (pPortal4Model) delete pPortal4Model;
 
 	CLoadedModelInfo* pLevelUpTableModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/LevelUpTable/Stylized_Table2.bin", NULL);
@@ -621,46 +629,33 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - 200.f, 10.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
 	if (pMonsterModel) delete pMonsterModel;
+	
+	// 몬스터들
+	for (int i = 0; i < MAX_MONSTER; ++i)
+	{
+		CLoadedModelInfo* pMonsterModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Monster/Metalon/Green_Metalon.bin", NULL);
+		m_vMonsters.push_back(new DynamicObject());
+		m_vMonsters.back()->SetChild(pMonsterModel->m_pModelRootObject);
+		m_vMonsters.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 1, pMonsterModel);
+		m_vMonsters.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
+		m_vMonsters.back()->m_pSkinnedAnimationController->SetTrackEnable(0, true);
+		m_vMonsters.back()->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
+		m_vMonsters.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - 150.f + i * 10, 10.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
+		if (pMonsterModel) delete pMonsterModel;
+	}
 
+	// 다른 플레이어
 	for (int i = 0; i < MAX_PLAYER - 1; ++i)
 	{
 		CLoadedModelInfo* pOtherModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/NeonHuman/NeonHuman.bin", NULL);
 		m_vOtherPlayer.push_back(new CPlayer());
 		m_vOtherPlayer.back()->SetChild(pOtherModel->m_pModelRootObject, true);
-		//m_vOtherPlayer.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 1, pOtherModel);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 14, pOtherModel);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(1, 1);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(2, 2);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(3, 3);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(4, 4);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(5, 5);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(6, 6);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(7, 7);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(8, 8);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(9, 9);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(10, 10);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(11, 11);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(12, 12);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(13, 13);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(0, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(1, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(2, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(3, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(4, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(5, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(6, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(7, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(8, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(9, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(10, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(11, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(12, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(13, false);
-
-		//m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
-		//m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(0, 0);
-		//m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 26, pOtherModel);
+		for (int j = 0; j < 26; ++j)
+		{
+			m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(j, j);
+			m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(j, false);
+		}
 		if (pOtherModel) delete pOtherModel;
 	}
 
@@ -772,7 +767,7 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 	if (m_MyId == -1)
 	{
 		m_MyId = SERVER::getInstance().GetClientNumId();
-		printf("%d\n", m_MyId);
+		//printf("%d\n", m_MyId);
 	}
 	for (int i = 0; i < m_vOtherPlayer.size();++i)
 	{
@@ -784,16 +779,11 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 				//애니메이션
 				if (m_vOtherPlayer[i]->m_pSkinnedAnimationController)
 				{
-					if (::IsZero(m_pOtherPlayerData2[OtherId].fLength))
+					if (m_pOtherPlayerData2[OtherId].fLength == 0)
 					{
 						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetOneOfTrackEnable(m_pOtherPlayerData2[OtherId].InnResultAnimBundle);
 					}
-					else if (!m_pOtherPlayerData2[OtherId].IsDash)	// walking
-					{
-						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetOneOfTrackEnable(m_pOtherPlayerData2[OtherId].InnResultAnimBundle);
-						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetTrackSpeed(m_pOtherPlayerData2[OtherId].InnResultAnimBundle, m_pOtherPlayerData2[OtherId].fLength);
-					}
-					else				// slow runing
+					else
 					{
 						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetOneOfTrackEnable(m_pOtherPlayerData2[OtherId].InnResultAnimBundle);
 						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetTrackSpeed(m_pOtherPlayerData2[OtherId].InnResultAnimBundle, m_pOtherPlayerData2[OtherId].fLength);
@@ -826,9 +816,16 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 					}
 				}
 				m_OtherPlayerPrevFire[OtherId] = currfire;
-				
 			}
 		}
+	}
+
+	for (int i = 0; i < m_vMonsters.size(); ++i)
+	{
+		XMFLOAT3 pPos = m_pPlayer->GetPosition();
+		m_vMonsters[i]->SetLookAt(pPos);
+		m_vMonsters[i]->MoveForward(METER_PER_PIXEL(0.5) * fTimeElapsed);
+		m_vMonsters[i]->Animate(fTimeElapsed);
 	}
 }
 //--ProcessOutput : Scene_Neon-------------------------------------------------------

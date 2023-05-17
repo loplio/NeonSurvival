@@ -15,12 +15,22 @@
 using namespace DirectX;
 
 #define SERVERPORT	9000
-#define BUFSIZE		1024
+#define BUFSIZE		2048
 #define WM_SOCKET	(WM_USER+1)
 #define MAX_PLAYER	3
+#define MAX_MONSTER 10
+
 enum MESSAGETYPE{
 	LOGIN = 100,
-	INGAME,
+	INGAME = 101,
+	MONSTER_DATA,
+};
+
+enum MONSTER_STATE {
+	SPWAN = 200,
+	MOVE = 201,
+	ATTACK = 202,
+	DIE,
 };
 
 typedef struct{
@@ -51,6 +61,17 @@ typedef struct {
 } PACKET_INGAME2;
 
 typedef struct {
+	XMFLOAT3	Pos;
+	XMFLOAT3	TargetPos;
+	int			HP;
+	int			MAXHP;
+	int			Id;
+	int			State;
+	int			SpawnPotalNum;
+	float		Speed;
+}PACKET_MONSTER_DATA;
+
+typedef struct {
 	int MessageType;
 	int byte;
 	char buf[BUFSIZE];
@@ -79,6 +100,7 @@ private:
 	PACKET_INGAME2 P_InGame2;
 	PACKET_INGAME2 PlayersPosition2[MAX_PLAYER];
 	
+	PACKET_MONSTER_DATA MonsterData[MAX_MONSTER];
 public:
 	static SERVER& getInstance() {
 		static SERVER s;
@@ -99,6 +121,7 @@ public:
 	int GetClientNumId() { return ClientNumId; }
 	PACKET_INGAME* GetPlayersPosition();
 	PACKET_INGAME2* GetPlayersPosition2() { return PlayersPosition2; }
+	PACKET_MONSTER_DATA* GetMonsterData() { return MonsterData; }
 	//void SetOtherPlayerPosition(std::vector<CGameObject*> &m_OtherPlayers);
 	//void SetOtherPlayerPosition(std::vector<CGameObject**>& m_OtherPlayers);
 

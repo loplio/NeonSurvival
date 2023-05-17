@@ -152,4 +152,6 @@ public:
 	std::vector<CGameObject*>				m_vGameObjects;
 	std::vector<CGameObject*>				m_vHierarchicalGameObjects;
 	std::vector<CPlayer*>					m_vOtherPlayer;
+	std::vector<DynamicObject*>				m_vMonsters;
+
 };
