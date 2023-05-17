@@ -458,6 +458,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackEnable(0, 0);
 	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackSpeed(0, 4.0f);
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, 17.0f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
+	m_NexusModelPos = m_vHierarchicalGameObjects.back()->GetPosition();
 	if (pNexusModel) delete pNexusModel;
 
 	CLoadedModelInfo* pGroundModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Ground/Ground.bin", NULL);
@@ -586,23 +587,27 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pPortalModel));
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(300), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, -90.0f, 0.0f);
+	m_Potal1_Pos = m_vHierarchicalGameObjects.back()->GetPosition();
 	if (pPortalModel) delete pPortalModel;
 
 	CLoadedModelInfo* pPortal2Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Portal/Portal.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pPortal2Model));
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - METER_PER_PIXEL(300), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 90.0f, 0.0f);
+	m_Potal2_Pos = m_vHierarchicalGameObjects.back()->GetPosition();
 	if (pPortal2Model) delete pPortal2Model;
 
 	CLoadedModelInfo* pPortal3Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Portal/Portal.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pPortal3Model));
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, METER_PER_PIXEL(300) + m_pTerrain->GetLength() * 0.5f);
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 180.0f, 0.0f);
+	m_Potal3_Pos = m_vHierarchicalGameObjects.back()->GetPosition();
 	if (pPortal3Model) delete pPortal3Model;
 
 	CLoadedModelInfo* pPortal4Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Portal/Portal.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pPortal4Model));
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, METER_PER_PIXEL(-300) + m_pTerrain->GetLength() * 0.5f);
+	m_Potal4_Pos = m_vHierarchicalGameObjects.back()->GetPosition();
 	if (pPortal4Model) delete pPortal4Model;
 
 	CLoadedModelInfo* pLevelUpTableModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/LevelUpTable/Stylized_Table2.bin", NULL);
@@ -621,7 +626,22 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - 200.f, 10.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
 	if (pMonsterModel) delete pMonsterModel;
+	
+	// 몬스터들
+	for (int i = 0; i < MAX_MONSTER; ++i)
+	{
+		CLoadedModelInfo* pMonsterModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Monster/Metalon/Green_Metalon.bin", NULL);
+		m_vMonsters.push_back(new DynamicObject());
+		m_vMonsters.back()->SetChild(pMonsterModel->m_pModelRootObject);
+		m_vMonsters.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 1, pMonsterModel);
+		m_vMonsters.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
+		m_vMonsters.back()->m_pSkinnedAnimationController->SetTrackEnable(0, true);
+		m_vMonsters.back()->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
+		m_vMonsters.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - 150.f + i * 10, 10.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
+		if (pMonsterModel) delete pMonsterModel;
+	}
 
+	// 다른 플레이어
 	for (int i = 0; i < MAX_PLAYER - 1; ++i)
 	{
 		CLoadedModelInfo* pOtherModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/NeonHuman/NeonHuman.bin", NULL);
@@ -772,7 +792,7 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 	if (m_MyId == -1)
 	{
 		m_MyId = SERVER::getInstance().GetClientNumId();
-		printf("%d\n", m_MyId);
+		//printf("%d\n", m_MyId);
 	}
 	for (int i = 0; i < m_vOtherPlayer.size();++i)
 	{
@@ -826,9 +846,23 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 					}
 				}
 				m_OtherPlayerPrevFire[OtherId] = currfire;
-				
 			}
 		}
+	}
+
+	for (int i = 0; i < m_vMonsters.size(); ++i)
+	{
+		//if (m_vMonsters[i]->m_pSkinnedAnimationController) m_vMonsters[i]->m_pSkinnedAnimationController->SetTrackEnable(0, true);
+
+		//m_vMonsters[i]->SetLookAt(m_NexusModelPos);
+		XMFLOAT3 pPos = m_pPlayer->GetPosition();
+		XMFLOAT3 mPos = m_vMonsters[i]->GetPosition();
+
+		float angle = Vector3::Angle(mPos,pPos);
+;
+		m_vMonsters[i]->SetLookAt(pPos);
+		m_vMonsters[i]->MoveForward(METER_PER_PIXEL(0.5) * fTimeElapsed);
+		m_vMonsters[i]->Animate(fTimeElapsed);
 	}
 }
 //--ProcessOutput : Scene_Neon-------------------------------------------------------
