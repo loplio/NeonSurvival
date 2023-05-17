@@ -360,6 +360,7 @@ public:
 class CGameObject {
 public:
 	CGameObject(int nMaterials = 1);
+	CGameObject(const CGameObject& pChild);
 	virtual ~CGameObject();
 
 private:
@@ -421,6 +422,7 @@ public:
 	// processoutput..
 	virtual void OnPrepareRender();
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
+	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, UINT nInstances, D3D12_VERTEX_BUFFER_VIEW d3dInstancingBufferView);
 
 	XMFLOAT3 GetPosition();
 	XMFLOAT3 GetLook();
@@ -455,6 +457,7 @@ public:
 public:
 	std::vector<CBoundingBoxMesh*>& GetMesh() { return m_ppBoundingMeshes; }
 	void CreateBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader);
+	void CreateBoundingBoxInst(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGameObject* pGameObject, LPVOID BBShader);
 
 	UINT GetMeshType() { return((m_pMesh) ? m_pMesh->GetType() : 0x00); }
 	CGameObject* GetParent() { return(m_pParent); }

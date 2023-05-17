@@ -435,12 +435,32 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	pBulletBlurComputeShader1->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
 	m_ppComputeShaders.back() = pBulletBlurComputeShader1;
 
+	/// Monster ///
+	m_ppShaders.push_back(new CShader);
+	MonsterMetalonObjects* pMetalonShader = new MonsterMetalonObjects();
+	pMetalonShader->BuildComponents(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL);
+	pMetalonShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	// Monster Object의 (MST_INSTANCE m_InstInfo)만 수정 가능.
+	for (int i = 0; i < 30; ++i) pMetalonShader->AppendMonster(pd3dDevice, pd3dCommandList, XMFLOAT3(3000.f + 20.f * i, 260.f, 3000.f));
+	m_ppShaders.back() = pMetalonShader;
+
 	/// PistolBullet ///
 	m_ppShaders.push_back(new CShader);
 	PistolBulletTexturedObjects* pPistolBulletShader = new PistolBulletTexturedObjects();
 	pPistolBulletShader->BuildComponents(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pBulletBlurComputeShader1->m_pTexture);
 	pPistolBulletShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 	m_ppShaders.back() = pPistolBulletShader;
+
+	// Monster.
+	//CLoadedModelInfo* pMonsterModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Monster/Metalon/Green_Metalon.bin", NULL);
+	//m_vHierarchicalGameObjects.push_back(new DynamicObject());
+	//m_vHierarchicalGameObjects.back()->SetChild(pMonsterModel->m_pModelRootObject);
+	//m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 1, pMonsterModel);
+	//m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
+	//m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackEnable(0, 0);
+	//m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
+	//m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - 200.f, 10.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
+	//if (pMonsterModel) delete pMonsterModel;
 	//---------------------------------------------------------------------------------------------------//
 
 	// Objects build.
@@ -619,32 +639,6 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 90.0f, 0.0f);
 	if (pLevelUpTableModel) delete pLevelUpTableModel;
 
-	// Monster.
-	CLoadedModelInfo* pMonsterModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Monster/Metalon/Green_Metalon.bin", NULL);
-	m_vHierarchicalGameObjects.push_back(new DynamicObject());
-	m_vHierarchicalGameObjects.back()->SetChild(pMonsterModel->m_pModelRootObject);
-	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 1, pMonsterModel);
-	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
-	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackEnable(0, 0);
-	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - 200.f, 10.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
-	if (pMonsterModel) delete pMonsterModel;
-	
-	// 몬스터들
-	for (int i = 0; i < MAX_MONSTER; ++i)
-	{
-		CLoadedModelInfo* pMonsterModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Monster/Metalon/Green_Metalon.bin", NULL);
-		m_vMonsters.push_back(new DynamicObject());
-		m_vMonsters.back()->SetChild(pMonsterModel->m_pModelRootObject);
-		m_vMonsters.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 1, pMonsterModel);
-		m_vMonsters.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
-		m_vMonsters.back()->m_pSkinnedAnimationController->SetTrackEnable(0, true);
-		m_vMonsters.back()->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
-		m_vMonsters.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - 150.f + i * 10, 10.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
-		if (pMonsterModel) delete pMonsterModel;
-	}
-
-	// 다른 플레이어
 	for (int i = 0; i < MAX_PLAYER - 1; ++i)
 	{
 		CLoadedModelInfo* pOtherModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/NeonHuman/NeonHuman.bin", NULL);
@@ -816,16 +810,9 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 					}
 				}
 				m_OtherPlayerPrevFire[OtherId] = currfire;
+				
 			}
 		}
-	}
-
-	for (int i = 0; i < m_vMonsters.size(); ++i)
-	{
-		XMFLOAT3 pPos = m_pPlayer->GetPosition();
-		m_vMonsters[i]->SetLookAt(pPos);
-		m_vMonsters[i]->MoveForward(METER_PER_PIXEL(0.5) * fTimeElapsed);
-		m_vMonsters[i]->Animate(fTimeElapsed);
 	}
 }
 //--ProcessOutput : Scene_Neon-------------------------------------------------------
@@ -843,32 +830,45 @@ void Scene_Neon::DrawUI(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCa
 }
 
 //-------------------------------------------------------------------------------
-/*	Object Type  															   */
+/*	Monster Object															   */
 //-------------------------------------------------------------------------------
-StaticObject::StaticObject()
-{
-	m_Mobility = Static;
-}
-StaticObject::StaticObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel) : StaticObject()
-{
-	CLoadedModelInfo* pMapModel = pModel;
-	SetChild(pMapModel->m_pModelRootObject, true);
-}
-StaticObject::~StaticObject()
+CMonsterMetalon::CMonsterMetalon()
 {
 }
-//-------------------------------------------------------------------------------
-DynamicObject::DynamicObject()
+CMonsterMetalon::CMonsterMetalon(const CGameObject& pGameObject)
 {
-	m_Mobility = Moveable;
+	strcpy(m_pstrFrameName, pGameObject.m_pstrFrameName);
+
+	m_xmf4x4World = pGameObject.m_xmf4x4World;
+	m_xmf4x4Transform = pGameObject.m_xmf4x4Transform;
+	m_xmf3Scale = pGameObject.m_xmf3Scale;
+	m_xmf3PrevScale = pGameObject.m_xmf3PrevScale;
+	m_Mass = pGameObject.m_Mass;
+
+	m_nMaterials = 0;
+	m_ppMaterials = NULL;
+	m_pMesh = NULL;
+
+	m_Mobility = pGameObject.m_Mobility;
+
+	if (pGameObject.m_pChild) m_pChild = new CGameObject(*pGameObject.m_pChild);
+	if (pGameObject.m_pSibling) m_pSibling = new CGameObject(*pGameObject.m_pSibling);
 }
-DynamicObject::DynamicObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel) : DynamicObject()
+CMonsterMetalon::~CMonsterMetalon()
 {
-	CLoadedModelInfo* pMapModel = pModel;
-	SetChild(pMapModel->m_pModelRootObject, true);
 }
-DynamicObject::~DynamicObject()
+
+void CMonsterMetalon::RunTimeBuild(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
+}
+void CMonsterMetalon::Update(float fTimeElapsed)
+{
+	m_fDriection = Vector3::Normalize(m_fDriection);
+	SetPosition(Vector3::Add(GetPosition(), Vector3::ScalarProduct(m_fDriection, m_fMaxVelocityXZ * fTimeElapsed, false)));
+}
+void CMonsterMetalon::ReleaseUploadBuffers()
+{
+	CGameObject::ReleaseUploadBuffers();
 }
 
 //-------------------------------------------------------------------------------

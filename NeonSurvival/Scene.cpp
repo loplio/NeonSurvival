@@ -420,7 +420,6 @@ void CScene::ReleaseUploadBuffers()
 	for (int i = 0; i < m_vGameObjects.size(); i++) m_vGameObjects[i]->ReleaseUploadBuffers();
 	for (int i = 0; i < m_vParticleObjects.size(); i++) m_vParticleObjects[i]->ReleaseUploadBuffers();
 	for (int i = 0; i < m_vOtherPlayer.size(); i++) m_vOtherPlayer[i]->ReleaseUploadBuffers();
-	for (int i = 0; i < m_vMonsters.size(); ++i) m_vMonsters[i]->ReleaseUploadBuffers();
 }
 void CScene::ReleaseObjects()
 {
@@ -472,10 +471,6 @@ void CScene::ReleaseObjects()
 	if (!m_vOtherPlayer.empty())
 	{
 		for (int i = 0; i < m_vOtherPlayer.size(); ++i) m_vOtherPlayer[i]->Release();
-	}
-	if (!m_vMonsters.empty())
-	{
-		for (int i = 0; i < m_vMonsters.size(); ++i) m_vMonsters[i]->Release();
 	}
 
 	if (m_pTerrain) delete m_pTerrain;
@@ -637,11 +632,6 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 	for (int i = 0; i < m_vOtherPlayer.size(); ++i)
 	{
 		m_vOtherPlayer[i]->Render(pd3dCommandList, pCamera);
-	}
-
-	for (int i = 0; i < m_vMonsters.size(); ++i)
-	{
-		m_vMonsters[i]->Render(pd3dCommandList, pCamera);
 	}
 }
 

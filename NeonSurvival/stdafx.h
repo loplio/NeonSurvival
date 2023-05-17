@@ -20,6 +20,7 @@
 #include <vector>
 #include <array>
 #include <string>
+#include <random>
 #include <wrl.h>
 #include <shellapi.h>
 

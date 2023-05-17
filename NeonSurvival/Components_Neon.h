@@ -3,6 +3,7 @@
 #include "Scene.h"
 #include "UILayer.h"
 #include "Server.h"
+#include "ShaderObjects.h"
 
 //-------------------------------------------------------------------------------
 /*	Player																	   */
@@ -77,6 +78,25 @@ public:
 	XMFLOAT3 m_Potal2_Pos;
 	XMFLOAT3 m_Potal3_Pos;
 	XMFLOAT3 m_Potal4_Pos;
+};
+
+//-------------------------------------------------------------------------------
+/*	Monster Object															   */
+//-------------------------------------------------------------------------------
+class CMonsterMetalon : public DynamicObject {
+public:
+	CMonsterMetalon();
+	CMonsterMetalon(const CGameObject& pGameObject);
+	virtual ~CMonsterMetalon();
+
+	void RunTimeBuild(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) override;
+	void Update(float fTimeElapsed) override;
+	void ReleaseUploadBuffers();
+
+public:
+	float m_fLife = 100.0f;
+	float m_fMaxVelocityXZ = PIXEL_KPH(12);
+	XMFLOAT3 m_fDriection = XMFLOAT3(0.0f, 0.0f, 0.0f);
 };
 
 //-------------------------------------------------------------------------------
