@@ -18,12 +18,19 @@ using namespace DirectX;
 #define BUFSIZE		2048
 #define WM_SOCKET	(WM_USER+1)
 #define MAX_PLAYER	3
-#define MAX_MONSTER 1
+#define MAX_MONSTER 10
 
 enum MESSAGETYPE{
 	LOGIN = 100,
 	INGAME = 101,
 	MONSTER_DATA,
+};
+
+enum MONSTER_STATE {
+	SPWAN = 200,
+	MOVE = 201,
+	ATTACK = 202,
+	DIE,
 };
 
 typedef struct{
@@ -60,6 +67,7 @@ typedef struct {
 	int			MAXHP;
 	int			Id;
 	int			State;
+	int			SpawnPotalNum;
 	float		Speed;
 }PACKET_MONSTER_DATA;
 

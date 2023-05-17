@@ -129,7 +129,6 @@ void Player_Neon::Update(float fTimeElapsed)
 		{
 			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->IDLE];
 			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
-			ServerfLength = 0;
 			//m_pSkinnedAnimationController->SetTrackPosition(1, 0.0f);
 		}
 		else if (!IsDash && m_dwDirection == DIR_FORWARD)	// walking
@@ -189,6 +188,10 @@ void Player_Neon::Update(float fTimeElapsed)
 			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
 			ServerfLength = fLength / m_fMaxVelocityXZ;
 			//printf("run\n");
+		}
+		if (ServerfLength != 0)
+		{
+			ServerfLength = fLength / m_fMaxVelocityXZ;
 		}
 		ServerInnResultAnimBundle = nResultAnimBundle;
 	}
@@ -647,40 +650,12 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 		CLoadedModelInfo* pOtherModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/NeonHuman/NeonHuman.bin", NULL);
 		m_vOtherPlayer.push_back(new CPlayer());
 		m_vOtherPlayer.back()->SetChild(pOtherModel->m_pModelRootObject, true);
-		//m_vOtherPlayer.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 1, pOtherModel);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 14, pOtherModel);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(1, 1);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(2, 2);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(3, 3);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(4, 4);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(5, 5);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(6, 6);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(7, 7);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(8, 8);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(9, 9);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(10, 10);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(11, 11);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(12, 12);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(13, 13);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(0, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(1, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(2, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(3, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(4, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(5, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(6, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(7, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(8, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(9, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(10, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(11, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(12, false);
-		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(13, false);
-
-		//m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
-		//m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(0, 0);
-		//m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 26, pOtherModel);
+		for (int j = 0; j < 26; ++j)
+		{
+			m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(j, j);
+			m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(j, false);
+		}
 		if (pOtherModel) delete pOtherModel;
 	}
 
@@ -804,16 +779,11 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 				//애니메이션
 				if (m_vOtherPlayer[i]->m_pSkinnedAnimationController)
 				{
-					if (::IsZero(m_pOtherPlayerData2[OtherId].fLength))
+					if (m_pOtherPlayerData2[OtherId].fLength == 0)
 					{
 						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetOneOfTrackEnable(m_pOtherPlayerData2[OtherId].InnResultAnimBundle);
 					}
-					else if (!m_pOtherPlayerData2[OtherId].IsDash)	// walking
-					{
-						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetOneOfTrackEnable(m_pOtherPlayerData2[OtherId].InnResultAnimBundle);
-						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetTrackSpeed(m_pOtherPlayerData2[OtherId].InnResultAnimBundle, m_pOtherPlayerData2[OtherId].fLength);
-					}
-					else				// slow runing
+					else
 					{
 						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetOneOfTrackEnable(m_pOtherPlayerData2[OtherId].InnResultAnimBundle);
 						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetTrackSpeed(m_pOtherPlayerData2[OtherId].InnResultAnimBundle, m_pOtherPlayerData2[OtherId].fLength);
@@ -852,14 +822,7 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 
 	for (int i = 0; i < m_vMonsters.size(); ++i)
 	{
-		//if (m_vMonsters[i]->m_pSkinnedAnimationController) m_vMonsters[i]->m_pSkinnedAnimationController->SetTrackEnable(0, true);
-
-		//m_vMonsters[i]->SetLookAt(m_NexusModelPos);
 		XMFLOAT3 pPos = m_pPlayer->GetPosition();
-		XMFLOAT3 mPos = m_vMonsters[i]->GetPosition();
-
-		float angle = Vector3::Angle(mPos,pPos);
-;
 		m_vMonsters[i]->SetLookAt(pPos);
 		m_vMonsters[i]->MoveForward(METER_PER_PIXEL(0.5) * fTimeElapsed);
 		m_vMonsters[i]->Animate(fTimeElapsed);
