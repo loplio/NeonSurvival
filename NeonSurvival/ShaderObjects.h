@@ -121,9 +121,8 @@ class CMonsterObjects : public CSkinnedAnimationObjectsShader {
 public:
 	CMonsterObjects();
 	virtual ~CMonsterObjects();
-
+	
 	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
-	virtual D3D12_SHADER_BYTECODE CreateVertexShader();
 
 	virtual void BuildComponents(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CTexture* pTexture = NULL) {};
 	void Update(float fTimeElapsed) override;
@@ -145,13 +144,21 @@ public:
 	int m_nMaxObjects = 0;
 	std::list<CGameObject*> m_ppObjects;
 
-	CLoadedModelInfo* m_pMetalonModel = NULL;
+	CLoadedModelInfo* m_pMonsterModel = NULL;
+
+	CGameObject* m_pHPObject = NULL;
+	CMaterial* m_pHPMaterial = NULL;
 };
 
 class MonsterMetalonObjects : public CMonsterObjects {
 public:
 	MonsterMetalonObjects();
 	virtual ~MonsterMetalonObjects();
+
+	virtual void CreateGraphicsPipelineState(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature);
+	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
+	virtual D3D12_SHADER_BYTECODE CreateVertexShader();
+	virtual D3D12_SHADER_BYTECODE CreatePixelShader();
 
 	void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) override;
 	void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList) override;
@@ -167,7 +174,6 @@ public:
 
 public:
 	const int nMaxMetalon = 20;
-
 };
 
 //-------------------------------------------------------------------------------

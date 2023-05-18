@@ -470,6 +470,32 @@ float4 PSTextureToScreen(VS_TEXTURED_OUTPUT input) : SV_TARGET
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//// Billboard
+struct VS_BILLBOARD_INPUT
+{
+	float3 position : POSITION;
+	float2 uv : TEXCOORD;
+	matrix transform : WORLDMATRIX;
+};
+VS_TEXTURED_OUTPUT VSBillboard(VS_BILLBOARD_INPUT input)
+{
+	VS_TEXTURED_OUTPUT output;
+
+	float3 positionW = mul(float4(input.position, 1.0f), (float3x3)gmtxInverseView) + input.transform[3].xyz;
+	output.position = mul(mul(float4(positionW, 1.0f), gmtxView), gmtxProjection);
+	output.uv = input.uv;
+
+	return(output);
+}
+
+float4 PSBillboard(VS_TEXTURED_OUTPUT input) : SV_TARGET
+{
+	float4 cColor = gtxtTexture.Sample(gssClamp, input.uv);
+
+	return(cColor);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //// Terrain
 Texture2D gtxtTerrainTexture : register(t14);
 Texture2D gtxtDetailTexture : register(t15);

@@ -124,6 +124,14 @@ public:
 	//CTexture* m_pRandowmValueTexture = NULL;
 };
 
+class CRectTextureObject : public StaticObject {
+public:
+	CRectTextureObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CMaterial* pMaterial);
+	virtual ~CRectTextureObject();
+
+	void Update(float fTimeElapsed) override;
+};
+
 class NexusObject : public DynamicObject {
 public:
 	NexusObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks);

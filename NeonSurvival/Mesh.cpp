@@ -1141,6 +1141,39 @@ XMFLOAT4 CHeightMapGridMesh::OnGetColor(int x, int z, void* pContext)
 //-------------------------------------------------------------------------------
 /*	CTexturedRectMesh : public CStandardMesh								   */
 //-------------------------------------------------------------------------------
+CTexturedRectMesh::CTexturedRectMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, XMFLOAT3 offset, float fWidth, float fHeight, float fDepth) : CStandardMesh(pd3dDevice, pd3dCommandList)
+{
+	// default setting.
+	m_nVertices = 6;
+	m_d3dPrimitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+	// Position setting.
+	m_pxmf3Positions = new XMFLOAT3[m_nVertices];
+	m_pxmf2TextureCoords0 = new XMFLOAT2[m_nVertices];
+
+	float fx = fWidth * 0.5f, fy = fHeight * 0.5f, fz = fDepth * 0.5f;
+
+	m_pxmf3Positions[0] = XMFLOAT3(+fx + offset.x, +fy + offset.y, fz + offset.z), m_pxmf2TextureCoords0[0] = XMFLOAT2(1.0f, 0.0f);
+	m_pxmf3Positions[1] = XMFLOAT3(+fx + offset.x, -fy + offset.y, fz + offset.z), m_pxmf2TextureCoords0[1] = XMFLOAT2(1.0f, 1.0f);
+	m_pxmf3Positions[2] = XMFLOAT3(-fx + offset.x, -fy + offset.y, fz + offset.z), m_pxmf2TextureCoords0[2] = XMFLOAT2(0.0f, 1.0f);
+	m_pxmf3Positions[3] = XMFLOAT3(-fx + offset.x, -fy + offset.y, fz + offset.z), m_pxmf2TextureCoords0[3] = XMFLOAT2(0.0f, 1.0f);
+	m_pxmf3Positions[4] = XMFLOAT3(-fx + offset.x, +fy + offset.y, fz + offset.z), m_pxmf2TextureCoords0[4] = XMFLOAT2(0.0f, 0.0f);
+	m_pxmf3Positions[5] = XMFLOAT3(+fx + offset.x, +fy + offset.y, fz + offset.z), m_pxmf2TextureCoords0[5] = XMFLOAT2(1.0f, 0.0f);
+
+	// VertexBuffer setting.
+	m_pd3dPositionBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList, m_pxmf3Positions, sizeof(XMFLOAT3) * m_nVertices, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pd3dPositionUploadBuffer);
+	m_d3dPositionBufferView.BufferLocation = m_pd3dPositionBuffer->GetGPUVirtualAddress();
+	m_d3dPositionBufferView.StrideInBytes = sizeof(XMFLOAT3);
+	m_d3dPositionBufferView.SizeInBytes = sizeof(XMFLOAT3) * m_nVertices;
+
+	m_pd3dTextureCoord0Buffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList, m_pxmf2TextureCoords0, sizeof(XMFLOAT2) * m_nVertices, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pd3dTextureCoord0UploadBuffer);
+	m_d3dTextureCoord0BufferView.BufferLocation = m_pd3dTextureCoord0Buffer->GetGPUVirtualAddress();
+	m_d3dTextureCoord0BufferView.StrideInBytes = sizeof(XMFLOAT2);
+	m_d3dTextureCoord0BufferView.SizeInBytes = sizeof(XMFLOAT2) * m_nVertices;
+
+	// BoundingOrientedBox setting.
+	m_xmBoundingBox = BoundingOrientedBox(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(fx, fy, fz), XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
+}
 CTexturedRectMesh::CTexturedRectMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float fWidth, float fHeight, float fDepth, float fxPosition, float fyPosition, float fzPosition) : CStandardMesh(pd3dDevice, pd3dCommandList)
 {
 	// default setting.
@@ -1188,6 +1221,16 @@ void CTexturedRectMesh::Render(ID3D12GraphicsCommandList* pd3dCommandList, int n
 	pd3dCommandList->IASetVertexBuffers(m_nSlot, 2, pVertexBufferViews);
 
 	pd3dCommandList->DrawInstanced(m_nVertices, 1, m_nOffset, 0);
+}
+
+void CTexturedRectMesh::Render(ID3D12GraphicsCommandList* pd3dCommandList, int nSubSet, UINT nInstances, D3D12_VERTEX_BUFFER_VIEW d3dInstancingBufferView)
+{
+	pd3dCommandList->IASetPrimitiveTopology(m_d3dPrimitiveTopology);
+
+	D3D12_VERTEX_BUFFER_VIEW pVertexBufferViews[3] = { m_d3dPositionBufferView, m_d3dTextureCoord0BufferView, d3dInstancingBufferView };
+	pd3dCommandList->IASetVertexBuffers(m_nSlot, 3, pVertexBufferViews);
+
+	pd3dCommandList->DrawInstanced(m_nVertices, nInstances, m_nOffset, 0);
 }
 
 //-------------------------------------------------------------------------------

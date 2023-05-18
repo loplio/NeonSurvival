@@ -441,7 +441,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	pMetalonShader->BuildComponents(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL);
 	pMetalonShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 	// Monster Object의 (MST_INSTANCE m_InstInfo)만 수정 가능.
-	for (int i = 0; i < 30; ++i) pMetalonShader->AppendMonster(pd3dDevice, pd3dCommandList, XMFLOAT3(3000.f + 20.f * i, 260.f, 3000.f));
+	for (int i = 0; i < 1; ++i) pMetalonShader->AppendMonster(pd3dDevice, pd3dCommandList, XMFLOAT3(2900.f + 20.f * i, 260.f, 3000.f));
 	m_ppShaders.back() = pMetalonShader;
 
 	/// PistolBullet ///
@@ -863,8 +863,8 @@ void CMonsterMetalon::RunTimeBuild(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 }
 void CMonsterMetalon::Update(float fTimeElapsed)
 {
-	m_fDriection = Vector3::Normalize(m_fDriection);
-	SetPosition(Vector3::Add(GetPosition(), Vector3::ScalarProduct(m_fDriection, m_fMaxVelocityXZ * fTimeElapsed, false)));
+	//m_fDriection = Vector3::Normalize(m_fDriection);
+	//SetPosition(Vector3::Add(GetPosition(), Vector3::ScalarProduct(m_fDriection, m_fMaxVelocityXZ * fTimeElapsed, false)));
 }
 void CMonsterMetalon::ReleaseUploadBuffers()
 {
@@ -954,6 +954,19 @@ void CPistolBulletObject::ReleaseUploadBuffers()
 	//if (m_pRandowmValueTexture) m_pRandowmValueTexture->ReleaseUploadBuffers();
 
 	CGameObject::ReleaseUploadBuffers();
+}
+//-------------------------------------------------------------------------------
+CRectTextureObject::CRectTextureObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CMaterial* pMaterial)
+{
+	SetMaterial(0, pMaterial);
+	m_pMesh = new CTexturedRectMesh(pd3dDevice, pd3dCommandList, XMFLOAT3(0.0f, METER_PER_PIXEL(1.5), 0.0f), METER_PER_PIXEL(2), METER_PER_PIXEL(0.15), 1.0f);
+}
+CRectTextureObject::~CRectTextureObject()
+{
+}
+
+void CRectTextureObject::Update(float fTimeElapsed)
+{
 }
 //-------------------------------------------------------------------------------
 NexusObject::NexusObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks)
