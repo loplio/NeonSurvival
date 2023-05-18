@@ -4,7 +4,7 @@
 #include "ShaderObjects.h"
 #include "GameSource.h"
 
-CPlayer::CPlayer() : CGameObject()
+CPlayer::CPlayer()
 {
 	m_pCamera = NULL;
 	m_xmf3RayDirection = XMFLOAT3(0.0f, 0.0f, 0.0f);

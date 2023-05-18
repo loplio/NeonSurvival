@@ -709,21 +709,40 @@ CGameObject::CGameObject(int nMaterials)
 			m_ppMaterials[i] = NULL;
 	}
 }
+CGameObject::CGameObject(const CGameObject& pGameObject)
+{
+	strcpy(m_pstrFrameName, pGameObject.m_pstrFrameName);
+
+	m_xmf4x4World = pGameObject.m_xmf4x4World;
+	m_xmf4x4Transform = pGameObject.m_xmf4x4Transform;
+	m_xmf3Scale = pGameObject.m_xmf3Scale;
+	m_xmf3PrevScale = pGameObject.m_xmf3PrevScale;
+	m_Mass = pGameObject.m_Mass;
+
+	m_nMaterials = 0;
+	m_ppMaterials = NULL;
+	m_pMesh = NULL;
+
+	m_Mobility = pGameObject.m_Mobility;
+
+	if (pGameObject.m_pChild) m_pChild = new CGameObject(*pGameObject.m_pChild);
+	if (pGameObject.m_pSibling) m_pSibling = new CGameObject(*pGameObject.m_pSibling);
+}
 CGameObject::~CGameObject()
 {
 	ReleaseShaderVariables();
 
 	if (m_pMesh) m_pMesh->Release();
 
-	if (!m_ppBBMeshes.empty())
+	if (!m_ppBoundingMeshes.empty())
 	{
-		for (int i = 0; i < m_ppBBMeshes.size(); ++i)
+		for (int i = 0; i < m_ppBoundingMeshes.size(); ++i)
 		{
-			if (m_ppBBMeshes[i]) {
-				m_ppBBMeshes[i]->Release();
-				//m_ppBBMeshes[i]->ReleaseUploadBuffers();
+			if (m_ppBoundingMeshes[i]) {
+				m_ppBoundingMeshes[i]->Release();
+				//m_ppBoundingMeshes[i]->ReleaseUploadBuffers();
 			}
-			m_ppBBMeshes[i] = NULL;
+			m_ppBoundingMeshes[i] = NULL;
 		}
 	}
 	if (m_nMaterials > 0)
@@ -880,6 +899,32 @@ void CGameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pC
 	if (m_pSibling) m_pSibling->Render(pd3dCommandList, pCamera);
 	if (m_pChild) m_pChild->Render(pd3dCommandList, pCamera);
 }
+void CGameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, UINT nInstances, D3D12_VERTEX_BUFFER_VIEW d3dInstancingBufferView)
+{
+	if (m_pSkinnedAnimationController) m_pSkinnedAnimationController->UpdateShaderVariables(pd3dCommandList);
+
+	if (m_pMesh)
+	{
+		UpdateShaderVariable(pd3dCommandList, &m_xmf4x4World);
+
+		if (m_nMaterials > 0)
+		{
+			for (int i = 0; i < m_nMaterials; i++)
+			{
+				if (m_ppMaterials[i])
+				{
+					if (m_ppMaterials[i]->m_pShader) m_ppMaterials[i]->m_pShader->Render(pd3dCommandList, pCamera);
+					m_ppMaterials[i]->UpdateShaderVariables(pd3dCommandList);
+				}
+
+				m_pMesh->Render(pd3dCommandList, i, nInstances, d3dInstancingBufferView);
+			}
+		}
+	}
+
+	if (m_pSibling) m_pSibling->Render(pd3dCommandList, pCamera, nInstances, d3dInstancingBufferView);
+	if (m_pChild) m_pChild->Render(pd3dCommandList, pCamera, nInstances, d3dInstancingBufferView);
+}
 void CGameObject::RunTimeBuild(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
 }
@@ -937,7 +982,13 @@ void CGameObject::UpdateTransform(XMFLOAT4X4* pxmf4x4Parent)
 	if (m_pSibling) m_pSibling->UpdateTransform(pxmf4x4Parent);
 	if (m_pChild) m_pChild->UpdateTransform(&m_xmf4x4World);
 }
+void CGameObject::UpdateMobility(Mobility mobility)
+{
+	m_Mobility = mobility;
 
+	if (m_pSibling) m_pSibling->UpdateMobility(mobility);
+	if (m_pChild) m_pChild->UpdateMobility(mobility);
+}
 void CGameObject::SetPrevScale(XMFLOAT4X4* pxmf4x4Parent)
 {
 	m_xmf3PrevScale.x = m_xmf4x4World._11;
@@ -1057,25 +1108,40 @@ int CGameObject::PickObjectByRayIntersection(XMFLOAT3& xmf3PickPosition, XMFLOAT
 
 void CGameObject::CreateBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader)
 {
-	bool IsAdd = false;
-	this;
 	if (m_pMesh &&
 		EPSILON < m_pMesh->GetAABBExtents().x &&
 		EPSILON < m_pMesh->GetAABBExtents().y &&
 		EPSILON < m_pMesh->GetAABBExtents().z) {
 		XMFLOAT3 Extents = m_pMesh->GetAABBExtents();
 		XMFLOAT3 center = m_pMesh->GetAABBCenter();
-		CBoundingBoxMesh* BBMesh = new CBoundingBoxMesh(pd3dDevice, pd3dCommandList, Extents, center, m_xmf4x4World, m_pMesh);
-		m_ppBBMeshes.push_back(BBMesh);
-		if (!IsAdd) {
-			((CBoundingBoxObjects*)BBShader)->AddBBObject(this);
-			IsAdd = true;
-		}
+		CBoundingBoxMesh* BBMesh = new CBoundingBoxMesh(pd3dDevice, pd3dCommandList, Extents, center, m_xmf4x4World);
+		m_ppBoundingMeshes.push_back(BBMesh);
+		((CBoundingBoxObjects*)BBShader)->AppendBoundingObject(this);
 	}
 
 	if (m_pSibling) m_pSibling->CreateBoundingBoxMesh(pd3dDevice, pd3dCommandList, BBShader);
 	if (m_pChild) m_pChild->CreateBoundingBoxMesh(pd3dDevice, pd3dCommandList, BBShader);
 }
+void CGameObject::CreateBoundingBoxInst(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGameObject* pGameObject, LPVOID BBShader)
+{
+	if (pGameObject->m_pMesh)
+	{
+		CMesh* pMesh = pGameObject->m_pMesh;
+		if (EPSILON < pMesh->GetAABBExtents().x &&
+			EPSILON < pMesh->GetAABBExtents().y &&
+			EPSILON < pMesh->GetAABBExtents().z) {
+			XMFLOAT3 Extents = pMesh->GetAABBExtents();
+			XMFLOAT3 center = pMesh->GetAABBCenter();
+			CBoundingBoxMesh* BBMesh = new CBoundingBoxMesh(pd3dDevice, pd3dCommandList, Extents, center, m_xmf4x4World);
+			m_ppBoundingMeshes.push_back(BBMesh);
+			((CBoundingBoxObjects*)BBShader)->AppendBoundingObject(this);
+		}
+	}
+
+	if (m_pSibling) m_pSibling->CreateBoundingBoxInst(pd3dDevice, pd3dCommandList, pGameObject->m_pSibling, BBShader);
+	if (m_pChild) m_pChild->CreateBoundingBoxInst(pd3dDevice, pd3dCommandList, pGameObject->m_pChild, BBShader);
+}
+
 
 void CGameObject::SetTrackAnimationSet(int nAnimationTrack, int nAnimationSet)
 {
@@ -1111,7 +1177,7 @@ void CGameObject::FindAndSetSkinnedMesh(CSkinnedMesh** ppSkinnedMeshes, int* pnS
 CGameObject* CGameObject::FindFrame(const char* pstrFrameName)
 {
 	CGameObject* pFrameObject = NULL;
-	if (!strncmp(m_pstrFrameName, pstrFrameName, strlen(pstrFrameName))) return(this);
+	if (strlen(m_pstrFrameName) == strlen(pstrFrameName) && !strncmp(m_pstrFrameName, pstrFrameName, strlen(pstrFrameName))) return(this);
 
 	if (m_pSibling) if (pFrameObject = m_pSibling->FindFrame(pstrFrameName)) return(pFrameObject);
 	if (m_pChild) if (pFrameObject = m_pChild->FindFrame(pstrFrameName)) return(pFrameObject);
@@ -1484,6 +1550,36 @@ CLoadedModelInfo* CGameObject::LoadGeometryAndAnimationFromFile(ID3D12Device* pd
 #endif
 
 	return(pLoadedModel);
+}
+
+//-------------------------------------------------------------------------------
+/*	Object Type  															   */
+//-------------------------------------------------------------------------------
+StaticObject::StaticObject()
+{
+	m_Mobility = Static;
+}
+StaticObject::StaticObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel) : StaticObject()
+{
+	CLoadedModelInfo* pMapModel = pModel;
+	SetChild(pMapModel->m_pModelRootObject, true);
+}
+StaticObject::~StaticObject()
+{
+}
+
+//-------------------------------------------------------------------------------
+DynamicObject::DynamicObject()
+{
+	m_Mobility = Moveable;
+}
+DynamicObject::DynamicObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel) : DynamicObject()
+{
+	CLoadedModelInfo* pMapModel = pModel;
+	SetChild(pMapModel->m_pModelRootObject, true);
+}
+DynamicObject::~DynamicObject()
+{
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////

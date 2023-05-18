@@ -63,6 +63,7 @@ public:
 class CMesh {
 public:
 	CMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
+	CMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const CMesh& other);
 	virtual ~CMesh();
 
 private:
@@ -110,20 +111,18 @@ protected:
 	UINT m_nOffset = 0;
 	UINT m_nStride = sizeof(XMFLOAT3);
 
-	BOOL m_bUpdateBounds = false;
-
 public:
 	virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) { }
 	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList) { }
 	virtual void ReleaseShaderVariables() { }
 
 	virtual void OnPreRender(ID3D12GraphicsCommandList* pd3dCommandList, void* pContext);
+	virtual void OnPreRender(ID3D12GraphicsCommandList* pd3dCommandList, void* pContext, D3D12_VERTEX_BUFFER_VIEW d3dInstancingBufferView);
 	virtual void PreRender(ID3D12GraphicsCommandList* pd3dCommandList, int nPipelineState) { }
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, int nSubSet);
+	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, int nSubSet, UINT nInstances, D3D12_VERTEX_BUFFER_VIEW d3dInstancingBufferView);
 	virtual void PostRender(ID3D12GraphicsCommandList* pd3dCommandList, int nPipelineState) { };
 	virtual void OnPostRender(int nPipelineState) { };
-
-	virtual bool IsSkinnedMesh() const { return false; }
 
 	int CheckRayIntersection(XMFLOAT3& xmRayPosition, XMFLOAT3& xmRayDirection, float* pfNearHitDistance, XMFLOAT4X4& xmf4x4World, float ReduceScale);
 
@@ -187,7 +186,7 @@ public:
 	XMFLOAT4X4 CenterTransform;
 
 public:
-	CBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const XMFLOAT3& Extents, const XMFLOAT3& Center, XMFLOAT4X4& WorldTransform, CMesh* pMesh);
+	CBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const XMFLOAT3& Extents, const XMFLOAT3& Center, XMFLOAT4X4& WorldTransform);
 	virtual ~CBoundingBoxMesh();
 };
 
@@ -339,6 +338,7 @@ class CSkinnedMesh : public CStandardMesh
 {
 public:
 	CSkinnedMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
+	CSkinnedMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const CSkinnedMesh& other);
 	virtual ~CSkinnedMesh();
 
 protected:
@@ -382,8 +382,7 @@ public:
 	virtual void ReleaseUploadBuffers();
 
 	virtual void OnPreRender(ID3D12GraphicsCommandList* pd3dCommandList, void* pContext);
-
-	virtual bool IsSkinnedMesh() const { return true; }
+	virtual void OnPreRender(ID3D12GraphicsCommandList* pd3dCommandList, void* pContext, D3D12_VERTEX_BUFFER_VIEW d3dInstancingBufferView);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -437,7 +436,7 @@ public:
 	virtual void CreateStreamOutputBuffer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, UINT nMaxParticles);
 
 	void PreRender(ID3D12GraphicsCommandList* pd3dCommandList, int nPipelineState) override;
-	void Render(ID3D12GraphicsCommandList* pd3dCommandList);
+	void Render(ID3D12GraphicsCommandList* pd3dCommandList, UINT nInstances = 1);
 	void Render(ID3D12GraphicsCommandList* pd3dCommandList, int nPipelineState) override;
 	void PostRender(ID3D12GraphicsCommandList* pd3dCommandList, int nPipelineState) override;
 

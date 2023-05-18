@@ -50,8 +50,6 @@ void SERVER::init(HWND hWnd)
         PlayersPosition[i].id = -1;
         PlayersPosition2[i].id = -1;
     }
-<<<<<<< Updated upstream
-=======
 
     for (int i = 0; i < MAX_MONSTER; ++i)
     {
@@ -59,7 +57,7 @@ void SERVER::init(HWND hWnd)
         MonsterData[i].State = NONE;
         MonsterData[i].PrevState = NULL;
     }
->>>>>>> Stashed changes
+
 }
 
 void SERVER::ProcessSocketMessage(HWND hWnd, UINT unit, WPARAM wParam, LPARAM lParam)
@@ -114,6 +112,15 @@ void SERVER::ProcessSocketMessage(HWND hWnd, UINT unit, WPARAM wParam, LPARAM lP
                 return;
             }
 >>>>>>> Stashed changes
+            break;
+        }
+        case MESSAGETYPE::MONSTER_DATA:
+        {
+            memcpy(MonsterData, m_Packet.buf, sizeof(MonsterData));
+            if (len == SOCKET_ERROR) {
+                printf("MONSTER_DATA error : %d\n", WSAGetLastError());
+                return;
+            }
             break;
         }
         default:

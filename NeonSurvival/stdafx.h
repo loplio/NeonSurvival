@@ -20,6 +20,7 @@
 #include <vector>
 #include <array>
 #include <string>
+#include <random>
 #include <wrl.h>
 #include <shellapi.h>
 
@@ -39,6 +40,7 @@
 
 #include <dxgidebug.h>
 
+//#include <dsound.h>
 using namespace DirectX;
 using namespace DirectX::PackedVector;
 

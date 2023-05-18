@@ -3,6 +3,7 @@
 #include "Scene.h"
 #include "UILayer.h"
 #include "Server.h"
+#include "ShaderObjects.h"
 
 //-------------------------------------------------------------------------------
 /*	Player																	   */
@@ -68,17 +69,34 @@ public:
 
 public:
 	PACKET_INGAME2* m_pOtherPlayerData2 = SERVER::getInstance().GetPlayersPosition2();
+	PACKET_MONSTER_DATA* m_pMonsterData = SERVER::getInstance().GetMonsterData();
 	int m_MyId = -1;
 	bool m_OtherPlayerPrevFire[3] = { false,false,false };
-<<<<<<< Updated upstream
-=======
+
 	float prevangle = 0;
 	XMFLOAT3 m_NexusModelPos;
 	XMFLOAT3 m_SpawnPotal_Pos[4];
->>>>>>> Stashed changes
+
 };
 
+//-------------------------------------------------------------------------------
+/*	Monster Object															   */
+//-------------------------------------------------------------------------------
+class CMonsterMetalon : public DynamicObject {
+public:
+	CMonsterMetalon();
+	CMonsterMetalon(const CGameObject& pGameObject);
+	virtual ~CMonsterMetalon();
 
+	void RunTimeBuild(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) override;
+	void Update(float fTimeElapsed) override;
+	void ReleaseUploadBuffers();
+
+public:
+	float m_fLife = 100.0f;
+	float m_fMaxVelocityXZ = PIXEL_KPH(12);
+	XMFLOAT3 m_fDriection = XMFLOAT3(0.0f, 0.0f, 0.0f);
+};
 
 //-------------------------------------------------------------------------------
 /*	Other Object															   */
@@ -89,7 +107,7 @@ public:
 	virtual ~CParticleObject_Neon();
 };
 
-class CPistolBulletObject : public CGameObject {
+class CPistolBulletObject : public DynamicObject {
 public:
 	CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection);
 	virtual ~CPistolBulletObject();
@@ -105,28 +123,10 @@ public:
 	//CTexture* m_pRandowmValueTexture = NULL;
 };
 
-class NexusObject : public CGameObject {
+class NexusObject : public DynamicObject {
 public:
 	NexusObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks);
 	virtual ~NexusObject();
-};
-
-class StaticObject : public CGameObject {
-public:
-	StaticObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel);
-	virtual ~StaticObject();
-};
-
-class MapObject : public CGameObject {
-public:
-	MapObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel);
-	virtual ~MapObject();
-};
-
-class LevelUpTableObject : public CGameObject {
-public:
-	LevelUpTableObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel);
-	virtual ~LevelUpTableObject();
 };
 
 class Crosshair : public CGameObject {

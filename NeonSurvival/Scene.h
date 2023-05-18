@@ -147,7 +147,7 @@ public:
 	CSkyBox*								m_pSkyBox = NULL;
 	CHeightMapTerrain*						m_pTerrain = NULL;
 	std::shared_ptr<CPlayer>				m_pPlayer = NULL;
-	std::shared_ptr<CBoundingBoxObjects>	m_pBBObjects = NULL;
+	std::shared_ptr<CBoundingBoxObjects>	m_pBoundingObjects = NULL;
 	std::vector<CParticleObject*>			m_vParticleObjects;
 	std::vector<CGameObject*>				m_vGameObjects;
 	std::vector<CGameObject*>				m_vHierarchicalGameObjects;

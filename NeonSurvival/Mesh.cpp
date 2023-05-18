@@ -8,6 +8,9 @@ CMesh::CMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandLis
 	memset(&m_d3dIndexBufferView, 0, sizeof(m_d3dIndexBufferView));
 	memset(&m_d3dVertexBufferView, 0, sizeof(m_d3dVertexBufferView));
 }
+CMesh::CMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const CMesh& other) : CMesh(pd3dDevice, pd3dCommandList)
+{
+}
 CMesh::~CMesh()
 {
 	if (m_pd3dPositionBuffer) m_pd3dPositionBuffer->Release();
@@ -45,6 +48,9 @@ void CMesh::OnPreRender(ID3D12GraphicsCommandList* pd3dCommandList, void* pConte
 {
 	pd3dCommandList->IASetVertexBuffers(m_nSlot, 1, &m_d3dPositionBufferView);
 }
+void CMesh::OnPreRender(ID3D12GraphicsCommandList* pd3dCommandList, void* pContext, D3D12_VERTEX_BUFFER_VIEW d3dInstancingBufferView)
+{
+}
 void CMesh::Render(ID3D12GraphicsCommandList* pd3dCommandList, int nSubSet)
 {
 	UpdateShaderVariables(pd3dCommandList);
@@ -61,6 +67,24 @@ void CMesh::Render(ID3D12GraphicsCommandList* pd3dCommandList, int nSubSet)
 	else
 	{
 		pd3dCommandList->DrawInstanced(m_nVertices, 1, m_nOffset, 0);
+	}
+}
+void CMesh::Render(ID3D12GraphicsCommandList* pd3dCommandList, int nSubSet, UINT nInstances, D3D12_VERTEX_BUFFER_VIEW d3dInstancingBufferView)
+{
+	UpdateShaderVariables(pd3dCommandList);
+
+	OnPreRender(pd3dCommandList, NULL, d3dInstancingBufferView);
+
+	pd3dCommandList->IASetPrimitiveTopology(m_d3dPrimitiveTopology);
+
+	if ((m_nSubMeshes > 0) && (nSubSet < m_nSubMeshes))
+	{
+		pd3dCommandList->IASetIndexBuffer(&(m_pd3dSubSetIndexBufferViews[nSubSet]));
+		pd3dCommandList->DrawIndexedInstanced(m_pnSubSetIndices[nSubSet], nInstances, 0, 0, 0);
+	}
+	else
+	{
+		pd3dCommandList->DrawInstanced(m_nVertices, nInstances, m_nOffset, 0);
 	}
 }
 
@@ -182,18 +206,9 @@ void CStandardMesh::LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 
 		if (!strcmp(pstrToken, "<Bounds>:"))
 		{
-			if (m_bUpdateBounds)
-			{
-				XMFLOAT3 Data;
-				nReads = (UINT)::fread(&Data, sizeof(XMFLOAT3), 1, pInFile);
-				nReads = (UINT)::fread(&Data, sizeof(XMFLOAT3), 1, pInFile);
-			}
-			else
-			{
-				nReads = (UINT)::fread(&m_xmf3AABBCenter, sizeof(XMFLOAT3), 1, pInFile);
-				nReads = (UINT)::fread(&m_xmf3AABBExtents, sizeof(XMFLOAT3), 1, pInFile);
-				m_xmBoundingBox = BoundingOrientedBox(m_xmf3AABBCenter, m_xmf3AABBExtents, XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
-			}
+			nReads = (UINT)::fread(&m_xmf3AABBCenter, sizeof(XMFLOAT3), 1, pInFile);
+			nReads = (UINT)::fread(&m_xmf3AABBExtents, sizeof(XMFLOAT3), 1, pInFile);
+			m_xmBoundingBox = BoundingOrientedBox(m_xmf3AABBCenter, m_xmf3AABBExtents, XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
 		}
 		else if (!strcmp(pstrToken, "<Positions>:"))
 		{
@@ -351,7 +366,7 @@ void CStandardMesh::LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 //-------------------------------------------------------------------------------
 /*	CBoundingBoxMesh : public CMesh											   */
 //-------------------------------------------------------------------------------
-CBoundingBoxMesh::CBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const XMFLOAT3& Extents, const XMFLOAT3& Center, XMFLOAT4X4& WorldTransform, CMesh* pMesh) : CMesh(pd3dDevice, pd3dCommandList)
+CBoundingBoxMesh::CBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const XMFLOAT3& Extents, const XMFLOAT3& Center, XMFLOAT4X4& WorldTransform) : CMesh(pd3dDevice, pd3dCommandList)
 {
 	// default setting.
 	m_nVertices = 8;
@@ -364,29 +379,14 @@ CBoundingBoxMesh::CBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 	// Position setting.
 	float fx = Extents.x, fy = Extents.y, fz = Extents.z;
 	m_pxmf3Positions = new XMFLOAT3[m_nVertices];
-	if (pMesh->IsSkinnedMesh())
-	{
-		XMFLOAT4X4 RootBone = ((CSkinnedMesh*)pMesh)->GetSkinningBoneFrameCache()->m_xmf4x4World;
-		m_pxmf3Positions[0] = Vector3::TransformCoord(XMFLOAT3(-fx, +fy, -fz), RootBone);
-		m_pxmf3Positions[1] = Vector3::TransformCoord(XMFLOAT3(+fx, +fy, -fz), RootBone);
-		m_pxmf3Positions[2] = Vector3::TransformCoord(XMFLOAT3(+fx, +fy, +fz), RootBone);
-		m_pxmf3Positions[3] = Vector3::TransformCoord(XMFLOAT3(-fx, +fy, +fz), RootBone);
-		m_pxmf3Positions[4] = Vector3::TransformCoord(XMFLOAT3(-fx, -fy, -fz), RootBone);
-		m_pxmf3Positions[5] = Vector3::TransformCoord(XMFLOAT3(+fx, -fy, -fz), RootBone);
-		m_pxmf3Positions[6] = Vector3::TransformCoord(XMFLOAT3(+fx, -fy, +fz), RootBone);
-		m_pxmf3Positions[7] = Vector3::TransformCoord(XMFLOAT3(-fx, -fy, +fz), RootBone);
-	}
-	else
-	{
-		m_pxmf3Positions[0] = XMFLOAT3(-fx, +fy, -fz);
-		m_pxmf3Positions[1] = XMFLOAT3(+fx, +fy, -fz);
-		m_pxmf3Positions[2] = XMFLOAT3(+fx, +fy, +fz);
-		m_pxmf3Positions[3] = XMFLOAT3(-fx, +fy, +fz);
-		m_pxmf3Positions[4] = XMFLOAT3(-fx, -fy, -fz);
-		m_pxmf3Positions[5] = XMFLOAT3(+fx, -fy, -fz);
-		m_pxmf3Positions[6] = XMFLOAT3(+fx, -fy, +fz);
-		m_pxmf3Positions[7] = XMFLOAT3(-fx, -fy, +fz);
-	}
+	m_pxmf3Positions[0] = XMFLOAT3(-fx, +fy, -fz);
+	m_pxmf3Positions[1] = XMFLOAT3(+fx, +fy, -fz);
+	m_pxmf3Positions[2] = XMFLOAT3(+fx, +fy, +fz);
+	m_pxmf3Positions[3] = XMFLOAT3(-fx, +fy, +fz);
+	m_pxmf3Positions[4] = XMFLOAT3(-fx, -fy, -fz);
+	m_pxmf3Positions[5] = XMFLOAT3(+fx, -fy, -fz);
+	m_pxmf3Positions[6] = XMFLOAT3(+fx, -fy, +fz);
+	m_pxmf3Positions[7] = XMFLOAT3(-fx, -fy, +fz);
 
 	// PositionBuffer setting.
 	m_pd3dPositionBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList, m_pxmf3Positions, sizeof(XMFLOAT3) * m_nVertices, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pd3dPositionUploadBuffer);
@@ -426,10 +426,11 @@ CBoundingBoxMesh::CBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 	m_pd3dSubSetIndexBufferViews[0].SizeInBytes = sizeof(UINT) * m_pnSubSetIndices[0];
 
 	// Apply WorldTransform to BoundingBox 
+	XMFLOAT4X4 world = WorldTransform;
 	CenterTransform = Matrix4x4::Identity();
-	CenterTransform._41 += Center.x;
-	CenterTransform._42 += Center.y;
-	CenterTransform._43 += Center.z;
+	CenterTransform._41 = Center.x;
+	CenterTransform._42 = Center.y;
+	CenterTransform._43 = Center.z ;
 	CenterTransform = Matrix4x4::Multiply(CenterTransform, WorldTransform);
 }
 CBoundingBoxMesh::~CBoundingBoxMesh()
@@ -1195,6 +1196,36 @@ void CTexturedRectMesh::Render(ID3D12GraphicsCommandList* pd3dCommandList, int n
 CSkinnedMesh::CSkinnedMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) : CStandardMesh(pd3dDevice, pd3dCommandList)
 {
 }
+CSkinnedMesh::CSkinnedMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const CSkinnedMesh& other) : CSkinnedMesh(pd3dDevice, pd3dCommandList)
+{
+	m_nBonesPerVertex = other.m_nBonesPerVertex;
+	m_RootBoneIndex = other.m_RootBoneIndex;
+
+	memcpy(m_pxmn4BoneIndices, other.m_pxmn4BoneIndices, sizeof(XMINT4));
+	memcpy(m_pxmf4BoneWeights, other.m_pxmf4BoneWeights, sizeof(XMFLOAT4));
+
+//	ID3D12Resource* m_pd3dBoneIndexBuffer = NULL;
+//	ID3D12Resource* m_pd3dBoneIndexUploadBuffer = NULL;
+//	D3D12_VERTEX_BUFFER_VIEW		m_d3dBoneIndexBufferView;
+//
+//	ID3D12Resource* m_pd3dBoneWeightBuffer = NULL;
+//	ID3D12Resource* m_pd3dBoneWeightUploadBuffer = NULL;
+//	D3D12_VERTEX_BUFFER_VIEW		m_d3dBoneWeightBufferView;
+//
+//public:
+//	int								m_nSkinningBones = 0;
+//
+//	char(*m_ppstrSkinningBoneNames)[64];
+//	CGameObject** m_ppSkinningBoneFrameCaches = NULL; //[m_nSkinningBones]
+//
+//	XMFLOAT4X4* m_pxmf4x4BindPoseBoneOffsets = NULL; //Transposed
+//
+//	ID3D12Resource* m_pd3dcbBindPoseBoneOffsets = NULL;
+//	XMFLOAT4X4* m_pcbxmf4x4MappedBindPoseBoneOffsets = NULL;
+//
+//	ID3D12Resource* m_pd3dcbSkinningBoneTransforms = NULL; //Pointer Only
+//	XMFLOAT4X4* m_pcbxmf4x4MappedSkinningBoneTransforms = NULL;
+}
 
 CSkinnedMesh::~CSkinnedMesh()
 {
@@ -1279,7 +1310,6 @@ void CSkinnedMesh::LoadSkinInfoFromFile(ID3D12Device* pd3dDevice, ID3D12Graphics
 			nReads = (UINT)::fread(&m_xmf3AABBCenter, sizeof(XMFLOAT3), 1, pInFile);
 			nReads = (UINT)::fread(&m_xmf3AABBExtents, sizeof(XMFLOAT3), 1, pInFile);
 			m_xmBoundingBox = BoundingOrientedBox(m_xmf3AABBCenter, m_xmf3AABBExtents, XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
-			m_bUpdateBounds = true;
 		}
 		else if (!strcmp(pstrToken, "<BoneNames>:"))
 		{
@@ -1362,6 +1392,11 @@ void CSkinnedMesh::OnPreRender(ID3D12GraphicsCommandList* pd3dCommandList, void*
 {
 	D3D12_VERTEX_BUFFER_VIEW pVertexBufferViews[7] = { m_d3dPositionBufferView, m_d3dTextureCoord0BufferView, m_d3dNormalBufferView, m_d3dTangentBufferView, m_d3dBiTangentBufferView, m_d3dBoneIndexBufferView, m_d3dBoneWeightBufferView };
 	pd3dCommandList->IASetVertexBuffers(m_nSlot, 7, pVertexBufferViews);
+}
+void CSkinnedMesh::OnPreRender(ID3D12GraphicsCommandList* pd3dCommandList, void* pContext, D3D12_VERTEX_BUFFER_VIEW d3dInstancingBufferView)
+{
+	D3D12_VERTEX_BUFFER_VIEW pVertexBufferViews[8] = { m_d3dPositionBufferView, m_d3dTextureCoord0BufferView, m_d3dNormalBufferView, m_d3dTangentBufferView, m_d3dBiTangentBufferView, m_d3dBoneIndexBufferView, m_d3dBoneWeightBufferView, d3dInstancingBufferView };
+	pd3dCommandList->IASetVertexBuffers(m_nSlot, 8, pVertexBufferViews);
 }
 
 //-------------------------------------------------------------------------------
@@ -1491,18 +1526,18 @@ void CParticleMesh::PreRender(ID3D12GraphicsCommandList* pd3dCommandList, int nP
 	}
 }
 
-void CParticleMesh::Render(ID3D12GraphicsCommandList* pd3dCommandList)
+void CParticleMesh::Render(ID3D12GraphicsCommandList* pd3dCommandList, UINT nInstances)
 {
 	pd3dCommandList->IASetPrimitiveTopology(m_d3dPrimitiveTopology);
 	pd3dCommandList->IASetVertexBuffers(m_nSlot, 1, &m_d3dVertexBufferView);
 	if (m_pd3dIndexBuffer)
 	{
 		pd3dCommandList->IASetIndexBuffer(&m_d3dIndexBufferView);
-		pd3dCommandList->DrawIndexedInstanced(m_nIndices, 1, 0, 0, 0);
+		pd3dCommandList->DrawIndexedInstanced(m_nIndices, nInstances, 0, 0, 0);
 	}
 	else
 	{
-		pd3dCommandList->DrawInstanced(m_nVertices, 1, m_nOffset, 0);
+		pd3dCommandList->DrawInstanced(m_nVertices, nInstances, m_nOffset, 0);
 	}
 }
 void CParticleMesh::Render(ID3D12GraphicsCommandList* pd3dCommandList, int nPipelineState)
@@ -1530,7 +1565,7 @@ void CParticleMesh::Render(ID3D12GraphicsCommandList* pd3dCommandList, int nPipe
 	{
 		pd3dCommandList->SOSetTargets(0, 1, NULL);
 
-		CParticleMesh::Render(pd3dCommandList); //Render m_pd3dDrawBuffer 
+		CParticleMesh::Render(pd3dCommandList, 1); //Render m_pd3dDrawBuffer 
 	}
 }
 

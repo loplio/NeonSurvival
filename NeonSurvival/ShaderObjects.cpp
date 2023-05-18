@@ -7,10 +7,28 @@
 //-------------------------------------------------------------------------------
 CBoundingBoxObjects::CBoundingBoxObjects()
 {
-	m_BBObjects.reserve(64);
+	m_BoundingObjects.reserve(64);
 }
 CBoundingBoxObjects::~CBoundingBoxObjects()
 {
+}
+
+void CBoundingBoxObjects::Update(float fTimeElapsed)
+{
+	for (int i = 0; i < m_BoundingObjects.size(); ++i)
+	{
+		if (m_BoundingObjects[i]->m_Mobility == CGameObject::Static) continue;
+
+		std::vector<CBoundingBoxMesh*>& boundingMeshes = m_BoundingObjects[i]->GetMesh();
+		for (int n = 0; n < boundingMeshes.size(); ++n)
+		{
+			XMFLOAT4X4 CenterPosition = Matrix4x4::Identity();
+			CenterPosition._41 = boundingMeshes[n]->GetAABBCenter().x;
+			CenterPosition._42 = boundingMeshes[n]->GetAABBCenter().y;
+			CenterPosition._43 = boundingMeshes[n]->GetAABBCenter().z;
+			boundingMeshes[n]->CenterTransform = Matrix4x4::Multiply(CenterPosition, m_BoundingObjects[i]->m_xmf4x4World);
+		}
+	}
 }
 
 void CBoundingBoxObjects::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int nPipelineState)
@@ -19,22 +37,24 @@ void CBoundingBoxObjects::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCa
 
 	CShader::Render(pd3dCommandList, pCamera);
 
-	for (int i = 0; i < m_BBObjects.size(); ++i)
+	for (int i = 0; i < m_BoundingObjects.size(); ++i)
 	{
-		for (int n = 0; n < m_BBObjects[i]->GetBoundingBoxMesh().size(); ++n)
+		std::vector<CBoundingBoxMesh*>& boundingMeshes = m_BoundingObjects[i]->GetMesh();
+		for (int n = 0; n < boundingMeshes.size(); ++n)
 		{
-			if (m_BBObjects[i]->GetBoundingBoxMesh()[n])
+			if (boundingMeshes[n])
 			{
-				XMFLOAT4X4 CenterPosition = Matrix4x4::Identity();
-				CenterPosition._41 += m_BBObjects[i]->GetBoundingBoxMesh()[n]->GetAABBCenter().x;
-				CenterPosition._42 += m_BBObjects[i]->GetBoundingBoxMesh()[n]->GetAABBCenter().y;
-				CenterPosition._43 += m_BBObjects[i]->GetBoundingBoxMesh()[n]->GetAABBCenter().z;
-				CenterPosition = Matrix4x4::Multiply(CenterPosition, m_BBObjects[i]->m_xmf4x4World);
-				m_BBObjects[i]->UpdateShaderVariable(pd3dCommandList, &CenterPosition);
-				m_BBObjects[i]->GetBoundingBoxMesh()[n]->Render(pd3dCommandList, 0);
+				m_BoundingObjects[i]->UpdateShaderVariable(pd3dCommandList, &boundingMeshes[n]->CenterTransform);
+				boundingMeshes[n]->Render(pd3dCommandList, 0);
 			}
 		}
 	}
+}
+
+void CBoundingBoxObjects::AppendBoundingObject(CGameObject* obj)
+{
+	m_BoundingObjects.push_back(obj);
+	m_BoundingObjects.back()->m_Mobility = obj->m_Mobility;
 }
 
 int CBoundingBoxObjects::IsCollide(CGameObject* obj)
@@ -250,6 +270,235 @@ void TexturedObjects_1::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 }
 
 //-------------------------------------------------------------------------------
+/*	CMonsterObjects															   */
+//-------------------------------------------------------------------------------
+CMonsterObjects::CMonsterObjects()
+{
+}
+CMonsterObjects::~CMonsterObjects()
+{
+	if (m_pMetalonModel) {
+		if (m_pMetalonModel->m_pModelRootObject)
+		{
+			m_pMetalonModel->m_pModelRootObject->ReleaseShaderVariables();
+			m_pMetalonModel->m_pModelRootObject->Release();
+		}
+		delete m_pMetalonModel;
+	}
+}
+
+D3D12_INPUT_LAYOUT_DESC CMonsterObjects::CreateInputLayout()
+{
+	UINT nInputElementDescs = 11;
+	D3D12_INPUT_ELEMENT_DESC* pd3dInputElementDescs = new D3D12_INPUT_ELEMENT_DESC[nInputElementDescs];
+
+	pd3dInputElementDescs[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	pd3dInputElementDescs[1] = { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 1, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	pd3dInputElementDescs[2] = { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 2, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	pd3dInputElementDescs[3] = { "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 3, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	pd3dInputElementDescs[4] = { "BITANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 4, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	pd3dInputElementDescs[5] = { "BONEINDEX", 0, DXGI_FORMAT_R32G32B32A32_SINT, 5, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	pd3dInputElementDescs[6] = { "BONEWEIGHT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 6, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	pd3dInputElementDescs[7] = { "WORLDMATRIX", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 7, 0, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 };
+	pd3dInputElementDescs[8] = { "WORLDMATRIX", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 7, 16, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 };
+	pd3dInputElementDescs[9] = { "WORLDMATRIX", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 7, 32, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 };
+	pd3dInputElementDescs[10] = { "WORLDMATRIX", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 7, 48, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 };
+
+	D3D12_INPUT_LAYOUT_DESC d3dInputLayoutDesc;
+	d3dInputLayoutDesc.pInputElementDescs = pd3dInputElementDescs;
+	d3dInputLayoutDesc.NumElements = nInputElementDescs;
+
+	return(d3dInputLayoutDesc);
+}
+D3D12_SHADER_BYTECODE CMonsterObjects::CreateVertexShader()
+{
+	return(CShader::CompileShaderFromFile((wchar_t*)L"Shaders.hlsl", "VSSkinnedAnimationStandard_Inst", "vs_5_1", &m_pd3dVertexShaderBlob));
+}
+
+void CMonsterObjects::Update(float fTimeElapsed)
+{
+	for (CGameObject* monster : m_ppObjects)
+	{
+		if (monster) monster->Update(fTimeElapsed);
+	}
+}
+void CMonsterObjects::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int nPipelineState)
+{
+	CShader::Render(pd3dCommandList, pCamera);
+
+	UpdateShaderVariables(pd3dCommandList);
+
+	if(!m_ppObjects.empty()) m_pMetalonModel->m_pModelRootObject->Render(pd3dCommandList, pCamera, m_ppObjects.size(), m_d3dInstancingBufferView);
+}
+void CMonsterObjects::RunTimeBuild(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandLis)
+{
+	for (int i = 0; i < m_nBuildIndex; ++i)
+	{
+		auto monster = m_ppObjects.rbegin();
+		std::advance(monster, i);
+		if (*monster)
+		{
+			(*monster)->RunTimeBuild(pd3dDevice, pd3dCommandLis);
+		}
+	}
+
+	m_nBuildIndex = 0;
+}
+
+void CMonsterObjects::ReleaseObjects()
+{
+	if (!m_ppObjects.empty()) {
+		for (CGameObject* monster : m_ppObjects)
+		{
+			if (monster) monster->Release();
+		}
+	}
+}
+void CMonsterObjects::ReleaseUploadBuffers()
+{
+	if (!m_ppObjects.empty()) {
+		for (CGameObject* monster : m_ppObjects)
+		{
+			if (monster) monster->ReleaseUploadBuffers();
+		}
+	}
+	if (m_pMetalonModel)
+	{
+		if (m_pMetalonModel->m_pModelRootObject)
+		{
+			m_pMetalonModel->m_pModelRootObject->ReleaseUploadBuffers();
+		}
+	}
+}
+void CMonsterObjects::ReleaseShaderVariables()
+{
+	if (m_pd3dcbObjects) m_pd3dcbObjects->Unmap(0, NULL);
+	if (m_pd3dcbObjects) m_pd3dcbObjects->Release();
+}
+//--Concrete_1-------------------------------------------------------------------
+MonsterMetalonObjects::MonsterMetalonObjects()
+{
+}
+MonsterMetalonObjects::~MonsterMetalonObjects()
+{
+}
+
+void MonsterMetalonObjects::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	m_pd3dcbObjects = ::CreateBufferResource(pd3dDevice, pd3dCommandList, NULL, sizeof(MST_INSTANCE) * m_nMaxObjects, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, NULL);
+	m_pd3dcbObjects->Map(0, NULL, (void**)&m_pcbMappedGameObjects);
+
+	m_d3dInstancingBufferView.BufferLocation = m_pd3dcbObjects->GetGPUVirtualAddress();
+	m_d3dInstancingBufferView.StrideInBytes = sizeof(MST_INSTANCE);
+	m_d3dInstancingBufferView.SizeInBytes = sizeof(MST_INSTANCE) * m_nMaxObjects;
+}
+void MonsterMetalonObjects::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	int n = 0;
+	for (CGameObject* monster : m_ppObjects)
+	{
+		XMFLOAT4X4 InstInfo = monster->m_xmf4x4World;
+		InstInfo._11 = 20.f * (n + 1);
+		InstInfo._21 = 40.f * (n + 1);
+		XMStoreFloat4x4(&m_pcbMappedGameObjects[n++].m_xmf4x4Transform, XMMatrixTranspose(XMLoadFloat4x4(&InstInfo)));
+	}
+}
+
+void MonsterMetalonObjects::InitShader(CGameObject* pChild)
+{
+	for (int i = 0; i < pChild->m_nMaterials; ++i)
+	{
+		if (pChild->m_ppMaterials[i] && pChild->m_ppMaterials[i]->m_pShader) {
+			pChild->m_ppMaterials[i]->m_pShader->Release();
+			pChild->m_ppMaterials[i]->m_pShader = NULL;
+		}
+	}
+
+	if (pChild->m_pChild) InitShader(pChild->m_pChild);
+	if (pChild->m_pSibling) InitShader(pChild->m_pSibling);
+}
+void MonsterMetalonObjects::CreateBoundingBox(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader)
+{
+	for (CGameObject* monster : m_ppObjects)
+		monster->CreateBoundingBoxInst(pd3dDevice, pd3dCommandList, m_pMetalonModel->m_pModelRootObject, BBShader);
+}
+void MonsterMetalonObjects::BuildComponents(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CTexture* pTexture)
+{
+	CLoadedModelInfo* pMonsterModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Metalon/Green_Metalon.bin", NULL);
+	m_pMetalonModel = pMonsterModel;
+	pMonsterModel->m_pModelRootObject->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 1, m_pMetalonModel);
+	pMonsterModel->m_pModelRootObject->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
+	pMonsterModel->m_pModelRootObject->m_pSkinnedAnimationController->SetTrackEnable(0, 0);
+	pMonsterModel->m_pModelRootObject->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
+	pMonsterModel->m_pModelRootObject->UpdateMobility(CGameObject::Moveable);
+
+	m_nMaxObjects = 30;
+
+	InitShader(m_pMetalonModel->m_pModelRootObject);
+	CreateShaderVariables(pd3dDevice, pd3dCommandList);
+}
+void MonsterMetalonObjects::Update(float fTimeElapsed)
+{
+	CMonsterObjects::Update(fTimeElapsed);
+
+	EventRemove();
+}
+void MonsterMetalonObjects::AnimateObjects(float fTimeElapsed)
+{
+	if (m_pMetalonModel->m_pModelRootObject->m_pSkinnedAnimationController)
+	{
+		m_pMetalonModel->m_pModelRootObject->m_pSkinnedAnimationController->SetTrackEnable(0, true);
+		m_pMetalonModel->m_pModelRootObject->Animate(fTimeElapsed);
+	}
+	//for (auto monster : m_ppObjects)
+	//{
+	//	if (monster->m_pSkinnedAnimationController) monster->m_pSkinnedAnimationController->SetTrackEnable(0, true);
+	//	monster->Animate(fTimeElapsed);
+	//}
+}
+void MonsterMetalonObjects::AppendMonster(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, XMFLOAT3&& StartPosition)
+{
+	//m_nBuildIndex++;
+
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_real_distribution<> vdist(-1.0, +1.0);
+	srand((unsigned)time(NULL));
+
+	// Instanced.
+	if (m_ppObjects.size() < m_nMaxObjects)
+	{
+		CMonsterMetalon* metalon = new CMonsterMetalon(*m_pMetalonModel->m_pModelRootObject);
+		metalon->SetPosition(StartPosition.x, StartPosition.y, StartPosition.z);
+		metalon->m_fDriection = XMFLOAT3(vdist(gen), 0.0f, vdist(gen));
+		m_ppObjects.push_back(metalon);
+	}
+}
+void MonsterMetalonObjects::EventRemove()
+{
+	for (std::list<CGameObject*>::iterator monster = m_ppObjects.begin(); monster != m_ppObjects.end(); ++monster)
+	{
+		if (((CMonsterMetalon*)(*monster))->m_fLife < 0.0f)
+		{
+			(*monster)->Release();
+			std::list<CGameObject*>::iterator iter = m_ppObjects.erase(monster);
+			if (iter != m_ppObjects.end())
+			{
+				monster = iter;
+				continue;
+			}
+			else
+				break;
+		}
+	}
+}
+
+void MonsterMetalonObjects::OnPostReleaseUploadBuffers()
+{
+	CMonsterObjects::ReleaseUploadBuffers();
+}
+
+//-------------------------------------------------------------------------------
 /*	CBulletObjects															   */
 //-------------------------------------------------------------------------------
 CBulletObjects::CBulletObjects()
@@ -266,7 +515,6 @@ void CBulletObjects::Update(float fTimeElapsed)
 		if (bullet) bullet->Update(fTimeElapsed);
 	}
 }
-
 void CBulletObjects::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int nPipelineState)
 {
 	CShader::Render(pd3dCommandList, pCamera);
@@ -276,7 +524,6 @@ void CBulletObjects::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera*
 		if (bullet) bullet->Render(pd3dCommandList, pCamera);
 	}
 }
-
 void CBulletObjects::RunTimeBuild(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandLis)
 {
 	for (int i = 0; i < m_nBuildIndex; ++i)
