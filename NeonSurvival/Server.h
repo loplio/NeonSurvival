@@ -18,11 +18,10 @@ using namespace DirectX;
 #define BUFSIZE		1024
 #define WM_SOCKET	(WM_USER+1)
 #define MAX_PLAYER	3
+
 enum MESSAGETYPE{
 	LOGIN = 100,
-<<<<<<< Updated upstream
 	INGAME,
-=======
 	INGAME = 101,
 	MONSTER_DATA,
 };
@@ -35,7 +34,6 @@ enum MONSTER_STATE {
 	DIE = 203,
 	TargetPlayer = 204,
 	TargetNexus,
->>>>>>> Stashed changes
 };
 
 typedef struct{
@@ -66,8 +64,6 @@ typedef struct {
 } PACKET_INGAME2;
 
 typedef struct {
-<<<<<<< Updated upstream
-=======
 	int			TargetType;
 	XMFLOAT3	TargetPos;
 	int			HP;
@@ -81,17 +77,10 @@ typedef struct {
 }PACKET_MONSTER_DATA;
 
 typedef struct {
->>>>>>> Stashed changes
 	int MessageType;
 	int byte;
 	char buf[BUFSIZE];
-	char buf2[BUFSIZE];
 }PACKET;
-
-typedef struct {
-	PACKET_INGAME2 PlayersPostion2[MAX_PLAYER];
-	PACKET_MONSTER_DATA MonsterData[MAX_MONSTER];
-}PACKET_GAMEDATA;
 
 class SERVER {
 private:

@@ -50,16 +50,6 @@ void SERVER::init(HWND hWnd)
         PlayersPosition[i].id = -1;
         PlayersPosition2[i].id = -1;
     }
-<<<<<<< Updated upstream
-=======
-
-    for (int i = 0; i < MAX_MONSTER; ++i)
-    {
-        MonsterData[i].Id = -1;
-        MonsterData[i].State = NONE;
-        MonsterData[i].PrevState = NULL;
-    }
->>>>>>> Stashed changes
 }
 
 void SERVER::ProcessSocketMessage(HWND hWnd, UINT unit, WPARAM wParam, LPARAM lParam)
@@ -81,7 +71,8 @@ void SERVER::ProcessSocketMessage(HWND hWnd, UINT unit, WPARAM wParam, LPARAM lP
             printf("read error : %d\n", WSAGetLastError());
             return;
         }
-
+        //m_Packet = (PACKET)m_Packet;
+        //printf("read\n");
         switch (m_Packet.MessageType)
         {
         case MESSAGETYPE::LOGIN:
@@ -97,23 +88,17 @@ void SERVER::ProcessSocketMessage(HWND hWnd, UINT unit, WPARAM wParam, LPARAM lP
         }
         case MESSAGETYPE::INGAME:
         {
+            //len = recv(wParam, (char*)&PlayersPosition, sizeof(PlayersPosition), 0);
+            //memcpy(PlayersPosition, m_Packet.buf, sizeof(PlayersPosition));
             memcpy(PlayersPosition2, m_Packet.buf, sizeof(PlayersPosition2));
             if (len == SOCKET_ERROR) {
                 printf("inGame error : %d\n", WSAGetLastError());
                 return;
             }
-<<<<<<< Updated upstream
             //printxmfloat4x4(PlayersPosition[0].position);
             //printxmfloat4x4(PlayersPosition[1].position);
             //printf("id : %d - x : %f y : %f z : %f\n", PlayersPosition[0].id, PlayersPosition[0].position.x, PlayersPosition[0].position.y, PlayersPosition[0].position.z);
             //printf("id : %d - x : %f y : %f z : %f\n", PlayersPosition[1].id, PlayersPosition[1].position.x, PlayersPosition[1].position.y, PlayersPosition[1].position.z);
-=======
-            memcpy(MonsterData, m_Packet.buf2, sizeof(MonsterData));
-            if (len == SOCKET_ERROR) {
-                printf("inGame error : %d\n", WSAGetLastError());
-                return;
-            }
->>>>>>> Stashed changes
             break;
         }
         default:
@@ -138,7 +123,15 @@ void SERVER::UpdatePlayerPosition(const XMFLOAT3 &position)
 {
     P_InGame.id = ClientNumId;
     P_InGame.position = position;
+    //printf("x : %f y : %f z : %f\n", P_InGame.position.x, P_InGame.position.y, P_InGame.position.z);
 }
+
+//void SERVER::UpdatePlayerPosition(const XMFLOAT4X4 &position)
+//{
+//    P_InGame.id = ClientNumId;
+//    P_InGame.position = position;
+//    //printf("x : %f y : %f z : %f\n", P_InGame.position.x, P_InGame.position.y, P_InGame.position.z);
+//}
 
 void SERVER::SendPosition(const XMFLOAT3& position)
 {
@@ -152,6 +145,19 @@ void SERVER::SendPosition(const XMFLOAT3& position)
     memcpy(m_Packet.buf, &P_InGame, sizeof(P_InGame));
     len = send(clientSocket, (char*)&m_Packet, sizeof(m_Packet), 0);
 }
+
+//void SERVER::SendPosition(const XMFLOAT4X4& position)
+//{
+//    if (IsCount() == false) return;
+//    UpdatePlayerPosition(position);
+//    printf("send position\n");
+//    //len = SendMessageType(clientSocket, MESSAGETYPE::INGAME);
+//
+//    m_Packet.MessageType = MESSAGETYPE::INGAME;
+//    m_Packet.byte = sizeof(PACKET_INGAME);
+//    memcpy(m_Packet.buf, &P_InGame, sizeof(P_InGame));
+//    len = send(clientSocket, (char*)&m_Packet, sizeof(m_Packet), 0);
+//}
 
 void SERVER::AddFPSCount()
 {
@@ -252,3 +258,26 @@ void SERVER::printxmfloat4x4(const XMFLOAT4X4& p)
     //    p._31 << p._32 << p._33 << p._34 << std::endl <<
     //    p._41 << p._42 << p._43 << p._44 << std::endl << std::endl;
 }
+
+//void SERVER::SetOtherPlayerPosition(std::vector<CGameObject*> &m_OtherPlayers)
+//{
+//    int myid = ClientNumId;
+//    for (int i = 0; i < 2; ++i)
+//    {
+//        if (myid == PlayersPosition[i].id) continue;
+//        int index = PlayersPosition[i].id;
+//        m_OtherPlayers[index]->SetPosition(PlayersPosition[index].position);
+//    }
+//   
+//}
+
+//void SERVER::SetOtherPlayerPosition(std::vector<CGameObject**>& m_OtherPlayers)
+//{
+//    int myid = ClientNumId;
+//    for (int i = 0; i < 2; ++i)
+//    {
+//        if (myid == PlayersPosition[i].id) continue;
+//        int index = PlayersPosition[i].id;
+//        m_OtherPlayers[index]->SetPosition(PlayersPosition[index].position);
+//    }
+//}
