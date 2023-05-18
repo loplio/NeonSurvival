@@ -629,25 +629,42 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 
 	CLoadedModelInfo* pPortalModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Portal/Portal.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pPortalModel));
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(300), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(100), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, -90.0f, 0.0f);
+<<<<<<< Updated upstream
+=======
+	m_SpawnPotal_Pos[0] = m_vHierarchicalGameObjects.back()->GetPosition();
+>>>>>>> Stashed changes
 	if (pPortalModel) delete pPortalModel;
 
 	CLoadedModelInfo* pPortal2Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Portal/Portal.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pPortal2Model));
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - METER_PER_PIXEL(300), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - METER_PER_PIXEL(100), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 90.0f, 0.0f);
+<<<<<<< Updated upstream
+=======
+	m_SpawnPotal_Pos[1] = m_vHierarchicalGameObjects.back()->GetPosition();
+>>>>>>> Stashed changes
 	if (pPortal2Model) delete pPortal2Model;
 
 	CLoadedModelInfo* pPortal3Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Portal/Portal.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pPortal3Model));
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, METER_PER_PIXEL(300) + m_pTerrain->GetLength() * 0.5f);
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, METER_PER_PIXEL(100) + m_pTerrain->GetLength() * 0.5f);
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 180.0f, 0.0f);
+<<<<<<< Updated upstream
+=======
+	m_SpawnPotal_Pos[2] = m_vHierarchicalGameObjects.back()->GetPosition();
+>>>>>>> Stashed changes
 	if (pPortal3Model) delete pPortal3Model;
 
 	CLoadedModelInfo* pPortal4Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Portal/Portal.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pPortal4Model));
+<<<<<<< Updated upstream
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, METER_PER_PIXEL(-300) + m_pTerrain->GetLength() * 0.5f);
+=======
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, METER_PER_PIXEL(-100) + m_pTerrain->GetLength() * 0.5f);
+	m_SpawnPotal_Pos[3] = m_vHierarchicalGameObjects.back()->GetPosition();
+>>>>>>> Stashed changes
 	if (pPortal4Model) delete pPortal4Model;
 
 
@@ -657,6 +674,49 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 90.0f, 0.0f);
 	if (pLevelUpTableModel) delete pLevelUpTableModel;
 
+<<<<<<< Updated upstream
+=======
+	// Monster.
+	CLoadedModelInfo* pMonsterModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Monster/Metalon/Green_Metalon.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new DynamicObject());
+	m_vHierarchicalGameObjects.back()->SetChild(pMonsterModel->m_pModelRootObject);
+	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 1, pMonsterModel);
+	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
+	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackEnable(0, 0);
+	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - 200.f, 10.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
+	if (pMonsterModel) delete pMonsterModel;
+	
+	// 몬스터들
+	for (int i = 0; i < MAX_MONSTER; ++i)
+	{
+		CLoadedModelInfo* pMonsterModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Monster/Metalon/Green_Metalon.bin", NULL);
+		m_vMonsters.push_back(new DynamicObject());
+		m_vMonsters.back()->SetChild(pMonsterModel->m_pModelRootObject);
+		m_vMonsters.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 1, pMonsterModel);
+		m_vMonsters.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
+		m_vMonsters.back()->m_pSkinnedAnimationController->SetTrackEnable(0, true);
+		m_vMonsters.back()->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
+		m_vMonsters.back()->SetPosition(0, 10.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1,0);
+		if (pMonsterModel) delete pMonsterModel;
+	}
+
+	// 다른 플레이어
+	for (int i = 0; i < MAX_PLAYER - 1; ++i)
+	{
+		CLoadedModelInfo* pOtherModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/NeonHuman/NeonHuman.bin", NULL);
+		m_vOtherPlayer.push_back(new CPlayer());
+		m_vOtherPlayer.back()->SetChild(pOtherModel->m_pModelRootObject, true);
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 26, pOtherModel);
+		for (int j = 0; j < 26; ++j)
+		{
+			m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(j, j);
+			m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(j, false);
+		}
+		if (pOtherModel) delete pOtherModel;
+	}
+
+>>>>>>> Stashed changes
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
 	// BoundingBoxObjects Build.
@@ -823,6 +883,31 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 			}
 		}
 	}
+<<<<<<< Updated upstream
+=======
+
+	for (int i = 0; i < m_vMonsters.size(); ++i)
+	{
+		if (m_pMonsterData[i].State == SPAWN && m_pMonsterData[i].State != m_pMonsterData[i].PrevState)
+		{
+			printf("Spawn %d" , i);
+			int potalnum = m_pMonsterData[i].SpawnPotalNum;
+			m_vMonsters[i]->SetPosition(m_SpawnPotal_Pos[potalnum]);
+		}
+		else if (m_pMonsterData[i].State == MOVE)
+		{
+			XMFLOAT3 pPos;
+			if (m_pMonsterData[i].TargetType == TargetNexus)
+			{
+				pPos = m_NexusModelPos;
+			}
+			m_vMonsters[i]->SetLookAt(pPos);
+			m_vMonsters[i]->MoveForward(METER_PER_PIXEL(m_pMonsterData[i].Speed) * fTimeElapsed);
+		}
+		
+		m_vMonsters[i]->Animate(fTimeElapsed);
+	}
+>>>>>>> Stashed changes
 }
 //--ProcessOutput : Scene_Neon-------------------------------------------------------
 void Scene_Neon::OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
