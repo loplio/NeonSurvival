@@ -1720,3 +1720,171 @@ CHeightMapTerrain::~CHeightMapTerrain(void)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+CGroundObject::CGroundObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nWidth, int nLength) : StaticObject()
+{
+	CLoadedModelInfo* pGroundModel = pModel;
+	SetChild(pGroundModel->m_pModelRootObject, true);
+
+	m_nWidth = nWidth;
+	m_nLength = nLength;
+	m_pHeightBuffer = new std::vector<XMFLOAT3>[nWidth * nLength];	
+}
+CGroundObject::~CGroundObject()
+{
+	if (m_pHeightBuffer) delete[] m_pHeightBuffer;
+	m_pHeightBuffer = NULL;
+}
+
+void CGroundObject::SetDefaultHeight(float hHeight)
+{
+	m_fHeight = hHeight;
+}
+void CGroundObject::SetHeightBuffer()
+{
+	XMFLOAT4X4 transform = m_pChild->m_xmf4x4Transform;
+	XMFLOAT3 Center = Vector3::TransformCoord(m_pChild->m_pMesh->GetAABBCenter(), transform);
+	XMFLOAT3 Extents = Vector3::TransformCoord(m_pChild->m_pMesh->GetAABBExtents(), transform);
+	XMFLOAT3 position = GetPosition();
+
+	CStandardMesh* pMesh = (CStandardMesh*)m_pChild->m_pMesh;
+	XMFLOAT3* pPositionBuffer = pMesh->GetPositionBuffer();
+	XMFLOAT3* pNormalBuffer = pMesh->GetNormalBuffer();
+	int nPosition = pMesh->GetVerticesNum();
+
+	m_Rect.left = position.x - Extents.x + Center.x;
+	m_Rect.top = position.z + Extents.z + Center.z;
+	m_Rect.right = position.x + Extents.x + Center.x;
+	m_Rect.bottom = position.z - Extents.z + Center.z;
+
+	m_xInterval = Extents.x * 2.f / m_nWidth;
+	m_zInterval = Extents.z * 2.f / m_nLength;
+
+	for (int i = 0; i < nPosition; ++i)
+	{
+		XMFLOAT3 vertice = Vector3::Add(Vector3::TransformCoord(pPositionBuffer[i], transform), GetPosition());
+		float xGap = vertice.x - m_Rect.left;
+		float zGap = vertice.z - m_Rect.bottom;
+		if (pNormalBuffer[i].y > 0)
+		{
+			int width = int(xGap / m_xInterval);
+			int length = int(zGap / m_zInterval);
+			float x = width * m_xInterval + m_Rect.left;
+			float z = length * m_zInterval + m_Rect.bottom;
+			if (m_nWidth - width < EPSILON) width -= 1;
+			if (m_nLength - length< EPSILON) length -= 1;
+
+			m_pHeightBuffer[width + (length * m_nWidth)].push_back(vertice);
+			if (width > 0)
+				m_pHeightBuffer[(width - 1) + length * m_nWidth].push_back(vertice);
+			if (width > 0 && length + 1 < m_nLength)
+				m_pHeightBuffer[(width - 1) + (length + 1) * m_nWidth].push_back(vertice);
+			if (width + 1 < m_nWidth)
+				m_pHeightBuffer[(width + 1) + length * m_nWidth].push_back(vertice);
+			if(width + 2 < m_nWidth)
+				m_pHeightBuffer[(width + 2) + length * m_nWidth].push_back(vertice);
+			
+			if(length > 0)
+				m_pHeightBuffer[width + (length - 1) * m_nWidth].push_back(vertice);
+			if (width + 1 < m_nWidth && length > 0)
+				m_pHeightBuffer[(width + 1) + (length - 1) * m_nWidth].push_back(vertice);
+			if (length + 1 < m_nLength)
+				m_pHeightBuffer[width + (length + 1) * m_nWidth].push_back(vertice);
+			if(length + 2 < m_nLength)
+				m_pHeightBuffer[width + (length + 2) * m_nWidth].push_back(vertice);
+			
+			if (width + 1 < m_nWidth && length + 1 < m_nLength)
+				m_pHeightBuffer[(width + 1) + (length + 1) * m_nWidth].push_back(vertice);
+			if(width + 2 < m_nWidth && length + 1 < m_nLength)
+				m_pHeightBuffer[(width + 2) + (length + 1) * m_nWidth].push_back(vertice);
+			if (width + 1 < m_nWidth && length + 2 < m_nLength)
+				m_pHeightBuffer[(width + 1) + (length + 2) * m_nWidth].push_back(vertice);
+		}
+	}
+
+	for (int width = 0; width < m_nWidth; ++width)
+	{
+		for (int length = 0; length < m_nLength; ++length)
+		{
+			int nBuffer = width + (length * m_nWidth);
+			float x = width * m_xInterval + m_Rect.left;
+			float z = length * m_zInterval + m_Rect.bottom;
+			XMFLOAT3 LB = XMFLOAT3(x - m_xInterval, m_fHeight, z - m_zInterval);
+			XMFLOAT3 LT = XMFLOAT3(x - m_xInterval, m_fHeight, z + m_zInterval);
+			XMFLOAT3 RB = XMFLOAT3(x + m_xInterval, m_fHeight, z - m_zInterval);
+			XMFLOAT3 RT = XMFLOAT3(x + m_xInterval, m_fHeight, z + m_zInterval);
+			float lbLength = FLT_MAX, ltLength = FLT_MAX, rbLength = FLT_MAX, rtLength = FLT_MAX;
+			for (int i = 0; i < m_pHeightBuffer[nBuffer].size(); ++i)
+			{
+				XMFLOAT3 vertice = m_pHeightBuffer[nBuffer][i];
+				float s = pow(x - vertice.x, 2) + pow(z - vertice.z, 2);
+				if (vertice.x < x && vertice.z < z && s < lbLength)
+				{
+					lbLength = s;
+					LB = vertice;
+				}
+				else if (vertice.x < x && vertice.z >= z && s < ltLength)
+				{
+					ltLength = s;
+					LT = vertice;
+				}
+				else if (vertice.x >= x && vertice.z < z && s < rbLength)
+				{
+					rbLength = s;
+					RB = vertice;
+				}
+				else if (vertice.x >= x && vertice.z >= z && s < rtLength)
+				{
+					rtLength = s;
+					RT = vertice;
+				}
+			}
+			float interpolation = (abs(LB.z - LT.z) < EPSILON) ? 0 : abs(LB.z - z) / abs(LB.z - LT.z);
+			XMFLOAT3 fLeftHeight = Vector3::Add(Vector3::ScalarProduct(LB, (1 - interpolation), false), Vector3::ScalarProduct(LT, interpolation, false));
+			interpolation = (abs(RB.z - RT.z) < EPSILON) ? 0 : abs(RB.z - z) / abs(RB.z - RT.z);
+			XMFLOAT3 fRightHeight = Vector3::Add(Vector3::ScalarProduct(RB, (1 - interpolation), false), Vector3::ScalarProduct(RT, interpolation, false));
+			interpolation = (abs(fLeftHeight.x - fRightHeight.x) < EPSILON) ? 0 : abs(fLeftHeight.x - x) / abs(fLeftHeight.x - fRightHeight.x);
+			float fHeight = fLeftHeight.y * (1 - interpolation) + fRightHeight.y * (interpolation);
+			m_pHeightBuffer[nBuffer].push_back(XMFLOAT3(x, fHeight, z));
+		}
+	}
+}
+float CGroundObject::GetHeight(float fx, float fz)
+{
+	if ((fx < m_Rect.left) || (fz < m_Rect.bottom) || (fx >= m_Rect.right) || (fz >= m_Rect.top)) return 0.0f;
+	int x = int((fx - m_Rect.left) / m_xInterval);
+	int z = int((fz - m_Rect.bottom) / m_zInterval);
+	float fxPercent = 0.0f;
+	float fzPercent = 0.0f;
+
+	//if (!m_pHeightBuffer[x + (z * m_nWidth)].empty())
+	//	std::cout << "index = " << x + (z * m_nWidth) << ", width: " << x << ", length: " << z << ", vertice: " << m_pHeightBuffer[x + (z * m_nWidth)].back().x
+	//	<< ", " << m_pHeightBuffer[x + (z * m_nWidth)].back().y << ", " << m_pHeightBuffer[x + (z * m_nWidth)].back().z << std::endl;
+
+	float fBottomLeft = (!m_pHeightBuffer[x + (z * m_nWidth)].empty()) ? m_pHeightBuffer[x + (z * m_nWidth)].back().y : 0.0f;
+	float fBottomRight = (x + 1 < m_nWidth && !m_pHeightBuffer[(x + 1) + z * m_nWidth].empty()) ? m_pHeightBuffer[(x + 1) + z * m_nWidth].back().y : 0.0f;
+	float fTopLeft = (z + 1 < m_nLength && !m_pHeightBuffer[x + (z + 1) * m_nWidth].empty()) ? m_pHeightBuffer[x + (z + 1) * m_nWidth].back().y : 0.0f;
+	float fTopRight = (x + 1 < m_nWidth && z + 1 < m_nLength && !m_pHeightBuffer[(x + 1) + (z + 1) * m_nWidth].empty()) ? m_pHeightBuffer[(x + 1) + (z + 1) * m_nWidth].back().y : 0.0f;
+
+#ifdef _WITH_APPROXIMATE_OPPOSITE_CORNER
+	bool bRightToLeft = ((z % 2) != 0);
+	if (bRightToLeft)
+	{
+		if (fzPercent >= fxPercent)
+			fBottomRight = fBottomLeft + (fTopRight - fTopLeft);
+		else
+			fTopLeft = fTopRight + (fBottomLeft - fBottomRight);
+	}
+	else
+	{
+		if (fzPercent < (1.0f - fxPercent))
+			fTopRight = fTopLeft + (fBottomRight - fBottomLeft);
+		else
+			fBottomLeft = fTopLeft + (fBottomRight - fTopRight);
+	}
+#endif
+	//float fTopHeight = fTopLeft * (1 - fxPercent) + fTopRight * fxPercent;
+	//float fBottomHeight = fBottomLeft * (1 - fxPercent) + fBottomRight * fxPercent;
+	//float fHeight = fBottomHeight * (1 - fzPercent) + fTopHeight * fzPercent;
+	float fHeight = fBottomLeft;
+	return fHeight;
+}

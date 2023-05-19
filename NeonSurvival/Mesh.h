@@ -129,6 +129,8 @@ public:
 	UINT GetType() { return(m_nType); }
 	XMFLOAT3& GetAABBExtents() { return m_xmf3AABBExtents; }
 	XMFLOAT3& GetAABBCenter() { return m_xmf3AABBCenter; }
+	XMFLOAT3* GetPositionBuffer() { return m_pxmf3Positions; }
+	int GetVerticesNum() { return m_nVertices; }
 	BoundingOrientedBox GetBoundingBox() { return m_xmBoundingBox; }
 };
 
@@ -177,6 +179,8 @@ public:
 	void LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, FILE* pInFile);
 
 	virtual void OnPreRender(ID3D12GraphicsCommandList* pd3dCommandList, void* pContext);
+
+	XMFLOAT3* GetNormalBuffer() { return m_pxmf3Normals; }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

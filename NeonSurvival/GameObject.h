@@ -554,3 +554,27 @@ public:
 	float GetLength() { return m_nLength * m_xmf3Scale.z; }
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+struct fRect {
+	float left;
+	float top;
+	float right;
+	float bottom;
+};
+class CGroundObject : public StaticObject {
+public:
+	CGroundObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nWidth, int nHeight);
+	virtual ~CGroundObject();
+
+	void SetHeightBuffer();
+	void SetDefaultHeight(float fHeight);
+	float GetHeight(float fx, float fz);
+
+public:
+	std::vector<XMFLOAT3>* m_pHeightBuffer = NULL;
+	int m_nWidth = 0;
+	int m_nLength = 0;
+	float m_fHeight = 0.0f;
+	float m_xInterval = 0.0f;
+	float m_zInterval = 0.0f;
+	fRect m_Rect;
+};

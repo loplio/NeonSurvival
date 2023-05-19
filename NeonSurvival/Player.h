@@ -32,6 +32,7 @@ protected:
 
 	LPVOID m_pPlayerUpdatedContext;
 	LPVOID m_pCameraUpdatedContext;
+	std::vector<CGroundObject*>* m_vGroundObjects;
 
 	CCamera* m_pCamera = NULL;
 	CShader* m_pShader = NULL;
@@ -105,6 +106,8 @@ public:
 	CCamera* OnChangeCamera(DWORD nNewCameraMode, DWORD nCurrentCameraMode);
 	virtual CCamera* ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed) { return NULL; }
 
+	virtual void OnGroundUpdateCallback(float fTimeElapsed) {};
+	void SetGroundUpdatedContext(std::vector<CGroundObject*>* vGroundObjects) { m_vGroundObjects = vGroundObjects; }
 	virtual void OnPlayerUpdateCallback(float fTimeElapsed) {};
 	void SetPlayerUpdatedContext(LPVOID pContext) { m_pPlayerUpdatedContext = pContext; }
 	virtual void OnCameraUpdateCallback(float fTimeElapsed) {};

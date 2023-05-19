@@ -573,6 +573,13 @@ void MonsterMetalonObjects::OnPostReleaseUploadBuffers()
 	CMonsterObjects::ReleaseUploadBuffers();
 }
 
+void MonsterMetalonObjects::SetPosition(XMFLOAT3 xmf3Position, int index)
+{
+	auto monster = m_ppObjects.begin();
+	std::advance(monster, index);
+	(*monster)->SetPosition(xmf3Position);
+}
+
 //-------------------------------------------------------------------------------
 /*	CBulletObjects															   */
 //-------------------------------------------------------------------------------

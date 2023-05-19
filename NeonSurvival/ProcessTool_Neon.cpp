@@ -288,7 +288,7 @@ void GameRenderDisplay_Neon::Render()
 	// Scene Render
 	m_Scene.OnPrepareRender(&m_pd3dCommandList, Camera);
 	m_Scene.Render(&m_pd3dCommandList, Camera);
-
+	std::cout << m_Player.GetPosition().x << ", " << m_Player.GetPosition().y << ", " << m_Player.GetPosition().z << std::endl;
 	// Player Render
 	m_Player.Render(&m_pd3dCommandList, Camera);
 

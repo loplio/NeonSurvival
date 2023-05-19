@@ -172,6 +172,8 @@ public:
 	void EventRemove();
 	void OnPostReleaseUploadBuffers() override;
 
+	void SetPosition(XMFLOAT3 xmf3Position, int index);
+
 public:
 	const int nMaxMetalon = 20;
 };

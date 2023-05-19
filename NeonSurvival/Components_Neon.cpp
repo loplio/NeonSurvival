@@ -6,7 +6,7 @@
 //-------------------------------------------------------------------------------
 /*	Player																	   */
 //-------------------------------------------------------------------------------
-Player_Neon::Player_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext, int nMeshes) : CPlayer()
+Player_Neon::Player_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext) : CPlayer()
 {
 	m_pCamera = ChangeCamera(FIRST_PERSON_CAMERA, 0.0f);
 
@@ -100,6 +100,7 @@ void Player_Neon::Update(float fTimeElapsed)
 	CPlayer::Move(timeElapsedDistance, false);
 
 	// Keep out of the ground and align the player and the camera.
+	if (!m_vGroundObjects->empty()) OnGroundUpdateCallback(fTimeElapsed);
 	if (m_pPlayerUpdatedContext) OnPlayerUpdateCallback(fTimeElapsed);
 	DWORD nCameraMode = m_pCamera->GetMode();
 	if (nCameraMode == FIRST_PERSON_CAMERA || nCameraMode == THIRD_PERSON_CAMERA || nCameraMode == SHOULDER_HOLD_CAMERA) m_pCamera->Update(m_xmf3Position, fTimeElapsed);
@@ -211,6 +212,21 @@ void Player_Neon::OnPrepareRender()
 
 	SetScale(XMFLOAT3(1.f, 1.f, 1.f));
 	m_xmf4x4Transform = Matrix4x4::Multiply(XMMatrixScaling(m_xmf3Scale.x, m_xmf3Scale.y, m_xmf3Scale.z), m_xmf4x4Transform);
+}
+
+void Player_Neon::OnGroundUpdateCallback(float fTimeElapsed)
+{
+	XMFLOAT3 xmf3PlayerPosition = GetPosition();
+	float fHeight = m_vGroundObjects->back()->GetHeight(xmf3PlayerPosition.x, xmf3PlayerPosition.z);
+
+	if (xmf3PlayerPosition.y < fHeight)
+	{
+		XMFLOAT3 xmf3PlayerVelocity = GetVelocity();
+		xmf3PlayerVelocity.y = 0.0f;
+		SetVelocity(xmf3PlayerVelocity);
+		xmf3PlayerPosition.y = fHeight;
+		SetPosition(xmf3PlayerPosition);
+	}
 }
 
 void Player_Neon::OnPlayerUpdateCallback(float fTimeElapsed)
@@ -467,12 +483,23 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vParticleObjects.reserve(5);
 	m_vGameObjects.reserve(5);
 	m_vHierarchicalGameObjects.reserve(5);
+	m_vGroundObjects.reserve(5);
 
 	// ParticleObjects.
 	//m_vParticleObjects.push_back(new CParticleObject_Neon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pParticleBlurComputeShader1->m_pTexture, XMFLOAT3(3100.0f, 290.0f, 3100.0f), XMFLOAT3(0.0f, PIXEL_KPH(60), 0.0f), 0.0f, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 0.0f, 0.0f), XMFLOAT2(8.0f, 8.0f), MAX_PARTICLES));
 
 	// GameObjects.
 	m_vGameObjects.push_back(new Crosshair(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, 0.0035f, 0.02f, 0.03f, 0.003f, true));
+
+	// GroundObjects.
+	CLoadedModelInfo* pGroundModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Ground/Ground2.bin", NULL);
+	m_vGroundObjects.push_back(new CGroundObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pGroundModel, 80, 80));
+	m_vGroundObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, 11.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
+	m_vGroundObjects.back()->SetDefaultHeight(m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f));
+	m_vGroundObjects.back()->SetHeightBuffer();
+	if (pGroundModel) delete pGroundModel;
+
+	m_pPlayer.get()->SetGroundUpdatedContext(&m_vGroundObjects);
 
 	// HierarchicalGameObjects.
 	CLoadedModelInfo* pNexusModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Nexus/Nexus.bin", NULL);
@@ -483,11 +510,6 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, 17.0f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
 	m_NexusModelPos = m_vHierarchicalGameObjects.back()->GetPosition();
 	if (pNexusModel) delete pNexusModel;
-
-	CLoadedModelInfo* pGroundModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Ground/Ground.bin", NULL);
-	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pGroundModel));
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, 10.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
-	if (pGroundModel) delete pGroundModel;
 
 	CLoadedModelInfo* pBaseModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Mana/Base.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pBaseModel));
