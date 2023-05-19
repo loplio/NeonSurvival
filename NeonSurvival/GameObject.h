@@ -511,7 +511,12 @@ public:
 	MonsterObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel);
 	virtual ~MonsterObject();
 public:
-	int test;
+	enum {IDLE,ATTACK,MOVE,DIE,TAKEDAMAGE};
+	enum {Dragon,Golem,KingCobra,Spider,TreasureChest,Giant_Bee};
+	int State = IDLE;
+	int HP;
+	int MAXHP;
+	int Type;
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

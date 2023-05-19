@@ -18,7 +18,7 @@ using namespace DirectX;
 #define BUFSIZE		2048
 #define WM_SOCKET	(WM_USER+1)
 #define MAX_PLAYER	3
-#define MAX_MONSTER 10
+#define MAX_MONSTER 3
 
 enum MESSAGETYPE{
 	LOGIN = 100,

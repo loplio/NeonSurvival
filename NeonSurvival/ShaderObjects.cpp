@@ -497,7 +497,7 @@ void MonsterMetalonObjects::BuildComponents(ID3D12Device* pd3dDevice, ID3D12Grap
 		pDragonModel->m_pModelRootObject->m_pSkinnedAnimationController->SetTrackAnimationSet(i, i);
 		pDragonModel->m_pModelRootObject->m_pSkinnedAnimationController->SetTrackEnable(i, 0);
 	}
-	pDragonModel->m_pModelRootObject->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
+		pDragonModel->m_pModelRootObject->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
 	pDragonModel->m_pModelRootObject->UpdateMobility(CGameObject::Moveable);
 	pDragonModel->m_pModelRootObject->SetMonsterType(CGameObject::Dragon);
 
@@ -510,7 +510,7 @@ void MonsterMetalonObjects::BuildComponents(ID3D12Device* pd3dDevice, ID3D12Grap
 		pGolemModel->m_pModelRootObject->m_pSkinnedAnimationController->SetTrackAnimationSet(i, i);
 		pGolemModel->m_pModelRootObject->m_pSkinnedAnimationController->SetTrackEnable(i, 0);
 	}
-	pGolemModel->m_pModelRootObject->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
+		pGolemModel->m_pModelRootObject->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
 	pGolemModel->m_pModelRootObject->UpdateMobility(CGameObject::Moveable);
 	pGolemModel->m_pModelRootObject->SetMonsterType(CGameObject::Golem);
 
@@ -564,22 +564,23 @@ void MonsterMetalonObjects::AppendMonster(ID3D12Device* pd3dDevice, ID3D12Graphi
 	if (m_ppObjects.size() < m_nMaxObjects)
 	{
 		//°Å¹Ì
-		CMonsterMetalon* metalon = new CMonsterMetalon(*m_pMetalonModel->m_pModelRootObject);
-		metalon->SetPosition(StartPosition.x, StartPosition.y, StartPosition.z);
-		metalon->m_fDriection = XMFLOAT3(vdist(gen), 0.0f, vdist(gen));
-		m_ppObjects.push_back(metalon);
+		//CMonsterMetalon* metalon = new CMonsterMetalon(*m_pMetalonModel->m_pModelRootObject);
+		//metalon->SetPosition(StartPosition.x, StartPosition.y, StartPosition.z);
+		//metalon->m_fDriection = XMFLOAT3(vdist(gen), 0.0f, vdist(gen));
+		//m_ppObjects.push_back(metalon);
 		
 		//µå·¡°ï
 		CMonsterDragon* dragon = new CMonsterDragon(*m_pDragononModel->m_pModelRootObject);
+		dragon->SetAnimation(pd3dDevice, pd3dCommandList, m_pDragononModel);
 		dragon->SetPosition(StartPosition.x, StartPosition.y, StartPosition.z);
 		dragon->m_fDriection = XMFLOAT3(vdist(gen), 0.0f, vdist(gen));
 		m_ppObjects.push_back(dragon);
 
 		//°ñ·½
-		CMonsterDragon* golem = new CMonsterDragon(*m_pGolemModel->m_pModelRootObject);
-		golem->SetPosition(StartPosition.x, StartPosition.y, StartPosition.z);
-		golem->m_fDriection = XMFLOAT3(vdist(gen), 0.0f, vdist(gen));
-		m_ppObjects.push_back(golem);
+		//CMonsterDragon* golem = new CMonsterDragon(*m_pGolemModel->m_pModelRootObject);
+		//golem->SetPosition(StartPosition.x, StartPosition.y, StartPosition.z);
+		//golem->m_fDriection = XMFLOAT3(vdist(gen), 0.0f, vdist(gen));
+		//m_ppObjects.push_back(golem);
 	}
 }
 void MonsterMetalonObjects::EventRemove()
