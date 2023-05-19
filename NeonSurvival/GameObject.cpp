@@ -1582,6 +1582,18 @@ DynamicObject::~DynamicObject()
 {
 }
 
+MonsterObject::MonsterObject()
+{
+	m_Mobility = Moveable;
+}
+MonsterObject::MonsterObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel) : MonsterObject()
+{
+	CLoadedModelInfo* pMapModel = pModel;
+	SetChild(pMapModel->m_pModelRootObject, true);
+}
+MonsterObject::~MonsterObject()
+{
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 CParticleObject::CParticleObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, XMFLOAT3 xmf3Position, XMFLOAT3 xmf3Velocity, float fLifetime, XMFLOAT3 xmf3Acceleration, XMFLOAT3 xmf3Color, XMFLOAT2 xmf2Size, UINT nMaxParticles)

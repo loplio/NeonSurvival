@@ -146,6 +146,9 @@ public:
 	std::list<CGameObject*> m_ppObjects;
 
 	CLoadedModelInfo* m_pMetalonModel = NULL;
+	CLoadedModelInfo* m_pDragononModel = NULL;
+	CLoadedModelInfo* m_pGiant_BeeModel = NULL;
+	CLoadedModelInfo* m_pGolemModel = NULL;
 };
 
 class MonsterMetalonObjects : public CMonsterObjects {
@@ -164,6 +167,8 @@ public:
 	void AppendMonster(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, XMFLOAT3&& StartPosition);
 	void EventRemove();
 	void OnPostReleaseUploadBuffers() override;
+	void SetPosition(XMFLOAT3& xmf3Position, int index);
+	void SetTransform(int index, XMFLOAT4X4& transform);
 
 public:
 	const int nMaxMetalon = 20;

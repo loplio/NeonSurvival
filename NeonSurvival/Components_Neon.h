@@ -69,20 +69,20 @@ public:
 
 public:
 	PACKET_INGAME2* m_pOtherPlayerData2 = SERVER::getInstance().GetPlayersPosition2();
-	PACKET_MONSTER_DATA* m_pMonsterData = SERVER::getInstance().GetMonsterData();
+	PACKET_MONSTERDATA* m_pMonsterData = SERVER::getInstance().GetMonsterData();
 	int m_MyId = -1;
 	bool m_OtherPlayerPrevFire[3] = { false,false,false };
 
 	float prevangle = 0;
 	XMFLOAT3 m_NexusModelPos;
 	XMFLOAT3 m_SpawnPotal_Pos[4];
-
+	MonsterMetalonObjects* pMetalonShader = new MonsterMetalonObjects(); //∏ÛΩ∫≈Õ
 };
 
 //-------------------------------------------------------------------------------
 /*	Monster Object															   */
 //-------------------------------------------------------------------------------
-class CMonsterMetalon : public DynamicObject {
+class CMonsterMetalon : public MonsterObject {
 public:
 	CMonsterMetalon();
 	CMonsterMetalon(const CGameObject& pGameObject);
@@ -90,8 +90,24 @@ public:
 
 	void RunTimeBuild(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) override;
 	void Update(float fTimeElapsed) override;
+	void Animate(float fTimeElapsed, XMFLOAT4X4* pxmf4x4Parent = NULL) override;
 	void ReleaseUploadBuffers();
+public:
+	float m_fLife = 100.0f;
+	float m_fMaxVelocityXZ = PIXEL_KPH(12);
+	XMFLOAT3 m_fDriection = XMFLOAT3(0.0f, 0.0f, 0.0f);
+};
 
+class CMonsterDragon : public MonsterObject {
+public:
+	CMonsterDragon();
+	CMonsterDragon(const CGameObject& pGameObject);
+	virtual ~CMonsterDragon();
+
+	void RunTimeBuild(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) override;
+	void Update(float fTimeElapsed) override;
+	void Animate(float fTimeElapsed, XMFLOAT4X4* pxmf4x4Parent = NULL) override;
+	void ReleaseUploadBuffers();
 public:
 	float m_fLife = 100.0f;
 	float m_fMaxVelocityXZ = PIXEL_KPH(12);
