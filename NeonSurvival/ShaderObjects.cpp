@@ -22,10 +22,10 @@ void CBoundingBoxObjects::Update(float fTimeElapsed)
 		std::vector<CBoundingBoxMesh*>& boundingMeshes = m_BoundingObjects[i]->GetMesh();
 		for (int n = 0; n < boundingMeshes.size(); ++n)
 		{
+			XMFLOAT3 Scale = m_BoundingObjects[i]->GetBoundingScale();
 			XMFLOAT4X4 CenterPosition = Matrix4x4::Identity();
-			CenterPosition._41 = boundingMeshes[n]->GetAABBCenter().x;
-			CenterPosition._42 = boundingMeshes[n]->GetAABBCenter().y;
-			CenterPosition._43 = boundingMeshes[n]->GetAABBCenter().z;
+			CenterPosition._41 = boundingMeshes[n]->GetAABBCenter().x; CenterPosition._42 = boundingMeshes[n]->GetAABBCenter().y;  CenterPosition._43 = boundingMeshes[n]->GetAABBCenter().z;
+			CenterPosition._11 = Scale.x; CenterPosition._22 = Scale.y; CenterPosition._33 = Scale.z;
 			boundingMeshes[n]->CenterTransform = Matrix4x4::Multiply(CenterPosition, m_BoundingObjects[i]->m_xmf4x4World);
 		}
 	}
@@ -478,7 +478,7 @@ void MonsterMetalonObjects::CreateBoundingBox(ID3D12Device* pd3dDevice, ID3D12Gr
 }
 void MonsterMetalonObjects::BuildComponents(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CTexture* pTexture)
 {
-	CLoadedModelInfo* pMonsterModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Metalon/Green_Metalon.bin", NULL);
+	CLoadedModelInfo* pMonsterModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Bat/Polygonal_One_Eyed_Bat.bin", NULL);
 	m_pMonsterModel = pMonsterModel;
 	pMonsterModel->m_pModelRootObject->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 1, m_pMonsterModel);
 	pMonsterModel->m_pModelRootObject->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);

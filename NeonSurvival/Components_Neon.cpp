@@ -22,6 +22,11 @@ Player_Neon::Player_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd
 	SetChild(pPlayerModel->m_pModelRootObject, true);
 	UpdateMobility(Moveable);
 
+	m_pMesh = new CMesh(pd3dDevice, pd3dCommandList);
+	m_pMesh->SetBoundinBoxCenter(XMFLOAT3(0.0f, 9.0f, 0.0f));
+	m_pMesh->SetBoundinBoxExtents(XMFLOAT3(2.5f, 9.0f, 1.5f));
+	m_xmf3BoundingScale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+
 	const int nAnimation = 26;
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimation, pPlayerModel);
 	for (int i = 0; i < nAnimation; ++i)
@@ -77,6 +82,7 @@ void Player_Neon::Update(float fTimeElapsed)
 {
 	// Gravity operation
 	m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, Vector3::ScalarProduct(m_xmf3Gravity, fTimeElapsed, false));
+	//m_xmf3Position = Vector3::Add(m_xmf3Position, m_xmf3Direction);
 
 	// Limit xz-speed
 	float fLength = sqrtf(m_xmf3Velocity.x * m_xmf3Velocity.x + m_xmf3Velocity.z * m_xmf3Velocity.z);
@@ -217,6 +223,7 @@ void Player_Neon::OnPrepareRender()
 void Player_Neon::OnGroundUpdateCallback(float fTimeElapsed)
 {
 	XMFLOAT3 xmf3PlayerPosition = GetPosition();
+	XMFLOAT3 xmf3CameraPosition = m_pCamera->GetPosition();
 	float fHeight = m_vGroundObjects->back()->GetHeight(xmf3PlayerPosition.x, xmf3PlayerPosition.z);
 
 	if (xmf3PlayerPosition.y < fHeight)
@@ -226,6 +233,17 @@ void Player_Neon::OnGroundUpdateCallback(float fTimeElapsed)
 		SetVelocity(xmf3PlayerVelocity);
 		xmf3PlayerPosition.y = fHeight;
 		SetPosition(xmf3PlayerPosition);
+	}
+
+	if (xmf3CameraPosition.y <= fHeight)
+	{
+		xmf3CameraPosition.y = fHeight;
+		m_pCamera->SetPosition(xmf3CameraPosition);
+		if (m_pCamera->GetMode() == THIRD_PERSON_CAMERA || m_pCamera->GetMode() == SHOULDER_HOLD_CAMERA)
+		{
+			CThirdPersonCamera* p3rdPersonCamera = (CThirdPersonCamera*)m_pCamera;
+			p3rdPersonCamera->SetLookAt(GetPosition());
+		}
 	}
 }
 
@@ -534,18 +552,21 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 
 	CLoadedModelInfo* pTreeModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Tree/Tree.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pTreeModel));
+	m_vHierarchicalGameObjects.back()->SetBoundingScale(XMFLOAT3(0.2f, 1.0f, 0.2f));
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + 55.0f, 15.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, 95.0f + m_pTerrain->GetLength() * 0.5f);
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, -90.0f, 0.0f);
 	if (pTreeModel) delete pTreeModel;
 
 	CLoadedModelInfo* pTree2Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Tree/Tree.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pTree2Model));
+	m_vHierarchicalGameObjects.back()->SetBoundingScale(XMFLOAT3(0.2f, 1.0f, 0.2f));
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + 70.0f, 13.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, -73.0f + m_pTerrain->GetLength() * 0.5f);
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 90.0f, 0.0f);
 	if (pTree2Model) delete pTree2Model;
 
 	CLoadedModelInfo* pTree3Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Tree/Tree.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pTree3Model));
+	m_vHierarchicalGameObjects.back()->SetBoundingScale(XMFLOAT3(0.2f, 1.0f, 0.2f));
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - 75.0f, 15.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, -35.0f + m_pTerrain->GetLength() * 0.5f);
 	if (pTree3Model) delete pTree3Model;
 
@@ -864,7 +885,9 @@ CMonsterMetalon::CMonsterMetalon(const CGameObject& pGameObject)
 	m_xmf4x4World = pGameObject.m_xmf4x4World;
 	m_xmf4x4Transform = pGameObject.m_xmf4x4Transform;
 	m_xmf3Scale = pGameObject.m_xmf3Scale;
+	m_xmf3BoundingScale = pGameObject.GetBoundingScale();
 	m_xmf3PrevScale = pGameObject.m_xmf3PrevScale;
+	m_xmf3Direction = pGameObject.m_xmf3Direction;
 	m_Mass = pGameObject.m_Mass;
 
 	m_nMaterials = 0;

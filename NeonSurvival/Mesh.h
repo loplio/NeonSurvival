@@ -132,6 +132,10 @@ public:
 	XMFLOAT3* GetPositionBuffer() { return m_pxmf3Positions; }
 	int GetVerticesNum() { return m_nVertices; }
 	BoundingOrientedBox GetBoundingBox() { return m_xmBoundingBox; }
+	void SetBoundinBoxCenter(XMFLOAT3& center) { m_xmBoundingBox.Center = center; m_xmf3AABBCenter = center; }
+	void SetBoundinBoxCenter(XMFLOAT3&& center) { SetBoundinBoxCenter(center); }
+	void SetBoundinBoxExtents(XMFLOAT3& extents) { m_xmBoundingBox.Extents = extents; m_xmf3AABBExtents = extents; }
+	void SetBoundinBoxExtents(XMFLOAT3&& extents) { SetBoundinBoxExtents(extents); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -188,9 +192,10 @@ public:
 class CBoundingBoxMesh : public CMesh {
 public:
 	XMFLOAT4X4 CenterTransform;
+	XMFLOAT3 BoundingScale;
 
 public:
-	CBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const XMFLOAT3& Extents, const XMFLOAT3& Center, XMFLOAT4X4& WorldTransform);
+	CBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const XMFLOAT3& Extents, const XMFLOAT3& Center, XMFLOAT3& BoundingScale, XMFLOAT4X4& WorldTransform);
 	virtual ~CBoundingBoxMesh();
 };
 

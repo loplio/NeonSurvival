@@ -696,7 +696,9 @@ CGameObject::CGameObject(int nMaterials)
 	m_xmf4x4World = Matrix4x4::Identity();
 	m_xmf4x4Transform = Matrix4x4::Identity();
 	m_xmf3Scale = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	m_xmf3BoundingScale = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	m_xmf3PrevScale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	m_xmf3Direction = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	m_Mass = 0;
 
 	m_pMesh = NULL;
@@ -716,7 +718,9 @@ CGameObject::CGameObject(const CGameObject& pGameObject)
 	m_xmf4x4World = pGameObject.m_xmf4x4World;
 	m_xmf4x4Transform = pGameObject.m_xmf4x4Transform;
 	m_xmf3Scale = pGameObject.m_xmf3Scale;
+	m_xmf3BoundingScale = pGameObject.GetBoundingScale();
 	m_xmf3PrevScale = pGameObject.m_xmf3PrevScale;
+	m_xmf3Direction = pGameObject.m_xmf3Direction;
 	m_Mass = pGameObject.m_Mass;
 
 	m_nMaterials = 0;
@@ -844,16 +848,35 @@ void CGameObject::SetChild(CGameObject* pChild, bool bReferenceUpdate)
 	}
 }
 
-void CGameObject::Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects, XMFLOAT4X4* pxmf4x4Parent)
+void CGameObject::Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects)
 {
-	if (m_pSibling) m_pSibling->Collide(GameSource, BoundingBoxObjects, pxmf4x4Parent);
-	if (m_pChild) m_pChild->Collide(GameSource, BoundingBoxObjects, &m_xmf4x4World);
+	m_xmf3Direction = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	std::vector<CGameObject*>& BoundingObjects = BoundingBoxObjects.GetBoundingObjects();
+	if (m_pMesh)
+	{
+		BoundingOrientedBox wBoundingBox = m_pMesh->GetBoundingBox();
+		wBoundingBox.Center = Vector3::TransformCoord(wBoundingBox.Center, m_xmf4x4World);
+		wBoundingBox.Extents.x *= m_xmf4x4World._11;  wBoundingBox.Extents.y *= m_xmf4x4World._22; wBoundingBox.Extents.z *= m_xmf4x4World._33;
+
+		for (int i = 0; i < BoundingObjects.size(); ++i)
+		{
+			if (BoundingObjects[i]->m_Mobility == Static &&
+				BoundingObjects[i]->BeginOverlapBoundingBox(wBoundingBox))
+			{
+				std::cout << "index: " << i << ", x = " << (int)BoundingObjects[i]->GetPosition().x << ", y = " << (int)BoundingObjects[i]->GetPosition().y << ", z = " << (int)BoundingObjects[i]->GetPosition().z << std::endl;
+				XMFLOAT3 Direction = Vector3::Subtract(GetPosition(), BoundingObjects[i]->GetPosition());
+				m_xmf3Direction = Vector3::Normalize(Direction);
+				return;
+			}
+		}
+	}
 }
 void CGameObject::OnPrepareAnimate()
 {
 }
 void CGameObject::Update(float fTimeElapsed)
 {
+	SetPosition(Vector3::Add(GetPosition(), Vector3::ScalarProduct(m_xmf3Direction, fTimeElapsed)));
 }
 void CGameObject::Animate(float fTimeElapsed, XMFLOAT4X4* pxmf4x4Parent)
 {
@@ -1112,14 +1135,15 @@ void CGameObject::CreateBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12Graphics
 		EPSILON < m_pMesh->GetAABBExtents().x &&
 		EPSILON < m_pMesh->GetAABBExtents().y &&
 		EPSILON < m_pMesh->GetAABBExtents().z) {
-		XMFLOAT3 Extents = m_pMesh->GetAABBExtents();
+		XMFLOAT3 extents = m_pMesh->GetAABBExtents();
 		XMFLOAT3 center = m_pMesh->GetAABBCenter();
-		CBoundingBoxMesh* BBMesh = new CBoundingBoxMesh(pd3dDevice, pd3dCommandList, Extents, center, m_xmf4x4World);
+		CBoundingBoxMesh* BBMesh = new CBoundingBoxMesh(pd3dDevice, pd3dCommandList, extents, center, m_xmf3BoundingScale, m_xmf4x4World);
 		m_ppBoundingMeshes.push_back(BBMesh);
+		m_pMesh->SetBoundinBoxExtents(XMFLOAT3(extents.x * m_xmf3BoundingScale.x, extents.y * m_xmf3BoundingScale.y, extents.z * m_xmf3BoundingScale.z));
 		((CBoundingBoxObjects*)BBShader)->AppendBoundingObject(this);
 	}
 
-	if (m_pSibling) m_pSibling->CreateBoundingBoxMesh(pd3dDevice, pd3dCommandList, BBShader);
+	if (m_pSibling) m_pSibling->CreateBoundingBoxMesh(pd3dDevice, pd3dCommandList,  BBShader);
 	if (m_pChild) m_pChild->CreateBoundingBoxMesh(pd3dDevice, pd3dCommandList, BBShader);
 }
 void CGameObject::CreateBoundingBoxInst(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGameObject* pGameObject, LPVOID BBShader)
@@ -1132,7 +1156,7 @@ void CGameObject::CreateBoundingBoxInst(ID3D12Device* pd3dDevice, ID3D12Graphics
 			EPSILON < pMesh->GetAABBExtents().z) {
 			XMFLOAT3 Extents = pMesh->GetAABBExtents();
 			XMFLOAT3 center = pMesh->GetAABBCenter();
-			CBoundingBoxMesh* BBMesh = new CBoundingBoxMesh(pd3dDevice, pd3dCommandList, Extents, center, m_xmf4x4World);
+			CBoundingBoxMesh* BBMesh = new CBoundingBoxMesh(pd3dDevice, pd3dCommandList, Extents, center, m_xmf3BoundingScale, m_xmf4x4World);
 			m_ppBoundingMeshes.push_back(BBMesh);
 			((CBoundingBoxObjects*)BBShader)->AppendBoundingObject(this);
 		}
@@ -1141,7 +1165,48 @@ void CGameObject::CreateBoundingBoxInst(ID3D12Device* pd3dDevice, ID3D12Graphics
 	if (m_pSibling) m_pSibling->CreateBoundingBoxInst(pd3dDevice, pd3dCommandList, pGameObject->m_pSibling, BBShader);
 	if (m_pChild) m_pChild->CreateBoundingBoxInst(pd3dDevice, pd3dCommandList, pGameObject->m_pChild, BBShader);
 }
+void CGameObject::CreateBoundingBoxObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader)
+{
+	XMFLOAT3 extents = m_pMesh->GetAABBExtents();
+	XMFLOAT3 center = m_pMesh->GetAABBCenter();
+	m_ppBoundingMeshes.push_back(new CBoundingBoxMesh(pd3dDevice, pd3dCommandList, extents, center, m_xmf3BoundingScale, m_xmf4x4World));
+	m_pMesh->SetBoundinBoxExtents(XMFLOAT3(extents.x * m_xmf3BoundingScale.x, extents.y * m_xmf3BoundingScale.y, extents.z * m_xmf3BoundingScale.z));
+	((CBoundingBoxObjects*)BBShader)->AppendBoundingObject(this);
+}
+void CGameObject::SetBoundingScale(XMFLOAT3& BoundingScale)
+{
+	m_xmf3BoundingScale = BoundingScale;
 
+	if (m_pSibling) m_pSibling->SetBoundingScale(BoundingScale);
+	if (m_pChild) m_pChild->SetBoundingScale(BoundingScale);
+}
+void CGameObject::SetBoundingScale(XMFLOAT3&& BoundingScale)
+{
+	SetBoundingScale(BoundingScale);
+}
+bool CGameObject::BeginOverlapBoundingBox(const BoundingOrientedBox& OtherOBB)
+{
+	bool retval = false;
+	if (m_pMesh)
+	{
+		BoundingOrientedBox OBB = m_pMesh->GetBoundingBox();
+		OBB.Center = Vector3::TransformCoord(OBB.Center, m_xmf4x4World);
+		OBB.Extents.x *= m_xmf4x4World._11;  OBB.Extents.y *= m_xmf4x4World._22; OBB.Extents.z *= m_xmf4x4World._33;
+		if (OBB.Intersects(OtherOBB)) {
+			//std::cout << "OBB' Center: " << (int)OBB.Center.x << ", " << (int)OBB.Center.y << ", " << (int)OBB.Center.z << std::endl;
+			//std::cout << "OBB' Extents: " << (int)OBB.Extents.x << ", " << (int)OBB.Extents.y << ", " << (int)OBB.Extents.z << std::endl;
+			//std::cout << "LB: " << (int)(OBB.Center.x - OBB.Extents.x) << ", " << (int)(OBB.Center.z - OBB.Extents.z) << std::endl;
+			//std::cout << "LT: " << (int)(OBB.Center.x - OBB.Extents.x) << ", " << (int)(OBB.Center.z + OBB.Extents.z) << std::endl;
+			//std::cout << "RB: " << (int)(OBB.Center.x + OBB.Extents.x) << ", " << (int)(OBB.Center.z - OBB.Extents.z) << std::endl;
+			//std::cout << "RT: " << (int)(OBB.Center.x + OBB.Extents.x) << ", " << (int)(OBB.Center.z + OBB.Extents.z) << std::endl;
+			return true;
+		}
+	}
+	if (m_pSibling) retval = m_pSibling->BeginOverlapBoundingBox(OtherOBB);
+	if (m_pChild && !retval) retval = m_pChild->BeginOverlapBoundingBox(OtherOBB);
+
+	return retval;
+}
 
 void CGameObject::SetTrackAnimationSet(int nAnimationTrack, int nAnimationSet)
 {

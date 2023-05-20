@@ -366,7 +366,7 @@ void CStandardMesh::LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 //-------------------------------------------------------------------------------
 /*	CBoundingBoxMesh : public CMesh											   */
 //-------------------------------------------------------------------------------
-CBoundingBoxMesh::CBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const XMFLOAT3& Extents, const XMFLOAT3& Center, XMFLOAT4X4& WorldTransform) : CMesh(pd3dDevice, pd3dCommandList)
+CBoundingBoxMesh::CBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const XMFLOAT3& Extents, const XMFLOAT3& Center, XMFLOAT3& Scale, XMFLOAT4X4& WorldTransform) : CMesh(pd3dDevice, pd3dCommandList)
 {
 	// default setting.
 	m_nVertices = 8;
@@ -428,10 +428,10 @@ CBoundingBoxMesh::CBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 	// Apply WorldTransform to BoundingBox 
 	XMFLOAT4X4 world = WorldTransform;
 	CenterTransform = Matrix4x4::Identity();
-	CenterTransform._41 = Center.x;
-	CenterTransform._42 = Center.y;
-	CenterTransform._43 = Center.z ;
+	CenterTransform._41 = Center.x; CenterTransform._42 = Center.y; CenterTransform._43 = Center.z;
+	CenterTransform._11 = Scale.x; CenterTransform._22 = Scale.y; CenterTransform._33 = Scale.z;
 	CenterTransform = Matrix4x4::Multiply(CenterTransform, WorldTransform);
+	BoundingScale = Scale;
 }
 CBoundingBoxMesh::~CBoundingBoxMesh()
 {

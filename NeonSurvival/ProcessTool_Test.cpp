@@ -147,7 +147,7 @@ void GameCompute_Test::Animate() const
 
 void GameCompute_Test::Collide() const
 {
-	m_Player.Collide(m_GameSource, m_BoundingObjects, NULL);
+	m_Player.Collide(m_GameSource, m_BoundingObjects);
 }
 
 void GameCompute_Test::RayTrace() const

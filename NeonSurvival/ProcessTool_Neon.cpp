@@ -222,7 +222,7 @@ void GameCompute_Neon::RayTrace() const
 	CGameObject* pSelectedObject = NULL;
 	XMFLOAT3 ClientPosition = XMFLOAT3(0.0f, 0.0f, 1.0f);
 	XMFLOAT4X4 xmfCameraViewMatrix = m_Player.GetCamera()->GetViewMatrix();
-	std::vector<CGameObject*>& BoundingObjects = m_BoundingObjects.GetBBObject();
+	std::vector<CGameObject*>& BoundingObjects = m_BoundingObjects.GetBoundingObjects();
 	for (int i = 0; i < BoundingObjects.size(); ++i)
 	{
 		if (BoundingObjects[i]->GetRootParentObject() == &m_Player) continue;
@@ -256,7 +256,7 @@ void GameCompute_Neon::RayTrace() const
 void GameCompute_Neon::Collide() const
 {
 	// Collide
-	m_Player.Collide(m_GameSource, m_BoundingObjects, NULL);
+	m_Player.Collide(m_GameSource, m_BoundingObjects);
 }
 
 //-------------------------------------------------------------------------------
@@ -288,7 +288,13 @@ void GameRenderDisplay_Neon::Render()
 	// Scene Render
 	m_Scene.OnPrepareRender(&m_pd3dCommandList, Camera);
 	m_Scene.Render(&m_pd3dCommandList, Camera);
-	std::cout << m_Player.GetPosition().x << ", " << m_Player.GetPosition().y << ", " << m_Player.GetPosition().z << std::endl;
+	//static float time = 0.0f;
+	//if (time > 0.5f)
+	//{
+	//	time = 0.0f;
+	//	std::cout << m_Player.GetPosition().x << ", " << m_Player.GetPosition().y << ", " << m_Player.GetPosition().z << std::endl;
+	//}
+	//time += m_Scene.m_fElapsedTime;
 	// Player Render
 	m_Player.Render(&m_pd3dCommandList, Camera);
 
