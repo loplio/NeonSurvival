@@ -375,6 +375,7 @@ public:
 
 protected:
 	std::vector<CBoundingBoxMesh*> m_ppBoundingMeshes;
+	XMFLOAT3					m_xmf3BoundingScale;
 
 public:
 	char						m_pstrFrameName[64];
@@ -383,6 +384,7 @@ public:
 	XMFLOAT4X4					m_xmf4x4Transform;
 	XMFLOAT3					m_xmf3Scale;
 	XMFLOAT3					m_xmf3PrevScale;
+	XMFLOAT3					m_xmf3Direction;
 	float						m_Mass;
 
 	CGameObject*				m_pParent = NULL;
@@ -412,7 +414,7 @@ public:
 	void SetChild(CGameObject* pChild, bool bReferenceUpdate = false);
 
 	// processcompute..
-	virtual void Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects, XMFLOAT4X4* pxmf4x4Parent = NULL);
+	virtual void Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects);
 	virtual void OnPrepareAnimate();
 	virtual void Update(float fTimeElapsed);
 	virtual void Animate(float fTimeElapsed, XMFLOAT4X4* pxmf4x4Parent = NULL);
@@ -458,6 +460,12 @@ public:
 	std::vector<CBoundingBoxMesh*>& GetMesh() { return m_ppBoundingMeshes; }
 	void CreateBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader);
 	void CreateBoundingBoxInst(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGameObject* pGameObject, LPVOID BBShader);
+	void CreateBoundingBoxObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader);
+	void SetBoundingScale(XMFLOAT3& BoundingScale);
+	void SetBoundingScale(XMFLOAT3&& BoundingScale);
+	XMFLOAT3 GetBoundingScale() const { return m_xmf3BoundingScale; }
+	XMFLOAT3& GetBoundingScale() { return m_xmf3BoundingScale; }
+	bool BeginOverlapBoundingBox(const BoundingOrientedBox& OtherOBB);
 
 	UINT GetMeshType() { return((m_pMesh) ? m_pMesh->GetType() : 0x00); }
 	CGameObject* GetParent() { return(m_pParent); }
@@ -554,3 +562,27 @@ public:
 	float GetLength() { return m_nLength * m_xmf3Scale.z; }
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+struct fRect {
+	float left;
+	float top;
+	float right;
+	float bottom;
+};
+class CGroundObject : public StaticObject {
+public:
+	CGroundObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nWidth, int nHeight);
+	virtual ~CGroundObject();
+
+	void SetHeightBuffer();
+	void SetDefaultHeight(float fHeight);
+	float GetHeight(float fx, float fz);
+
+public:
+	std::vector<XMFLOAT3>* m_pHeightBuffer = NULL;
+	int m_nWidth = 0;
+	int m_nLength = 0;
+	float m_fHeight = 0.0f;
+	float m_xInterval = 0.0f;
+	float m_zInterval = 0.0f;
+	fRect m_Rect;
+};

@@ -129,7 +129,13 @@ public:
 	UINT GetType() { return(m_nType); }
 	XMFLOAT3& GetAABBExtents() { return m_xmf3AABBExtents; }
 	XMFLOAT3& GetAABBCenter() { return m_xmf3AABBCenter; }
+	XMFLOAT3* GetPositionBuffer() { return m_pxmf3Positions; }
+	int GetVerticesNum() { return m_nVertices; }
 	BoundingOrientedBox GetBoundingBox() { return m_xmBoundingBox; }
+	void SetBoundinBoxCenter(XMFLOAT3& center) { m_xmBoundingBox.Center = center; m_xmf3AABBCenter = center; }
+	void SetBoundinBoxCenter(XMFLOAT3&& center) { SetBoundinBoxCenter(center); }
+	void SetBoundinBoxExtents(XMFLOAT3& extents) { m_xmBoundingBox.Extents = extents; m_xmf3AABBExtents = extents; }
+	void SetBoundinBoxExtents(XMFLOAT3&& extents) { SetBoundinBoxExtents(extents); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -177,6 +183,8 @@ public:
 	void LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, FILE* pInFile);
 
 	virtual void OnPreRender(ID3D12GraphicsCommandList* pd3dCommandList, void* pContext);
+
+	XMFLOAT3* GetNormalBuffer() { return m_pxmf3Normals; }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -184,9 +192,10 @@ public:
 class CBoundingBoxMesh : public CMesh {
 public:
 	XMFLOAT4X4 CenterTransform;
+	XMFLOAT3 BoundingScale;
 
 public:
-	CBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const XMFLOAT3& Extents, const XMFLOAT3& Center, XMFLOAT4X4& WorldTransform);
+	CBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const XMFLOAT3& Extents, const XMFLOAT3& Center, XMFLOAT3& BoundingScale, XMFLOAT4X4& WorldTransform);
 	virtual ~CBoundingBoxMesh();
 };
 
@@ -221,10 +230,12 @@ public:
 
 class CTexturedRectMesh : public CStandardMesh {
 public:
+	CTexturedRectMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, XMFLOAT3 offset, float fWidth, float fHeight, float fDepth);
 	CTexturedRectMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float fWidth = 20.0f, float fHeight = 20.0f, float fDepth = 20.0f, float fxPosition = 0.0f, float fyPosition = 0.0f, float fzPosition = 0.0f);
 	virtual ~CTexturedRectMesh();
 
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, int nSubSet);
+	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, int nSubSet, UINT nInstances, D3D12_VERTEX_BUFFER_VIEW d3dInstancingBufferView);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
