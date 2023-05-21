@@ -321,7 +321,7 @@ void LobbyRenderDisplay_Neon::Render()
 	m_InterfaceFramework.ClearDisplay();
 
 	// Update
-
+	((CGameFramework_Neon*)&gBaseFramework)->UpdateUI();
 	// Render
 	m_Scene.OnPrepareRender(&m_pd3dCommandList, &m_Camera);
 	m_Scene.DrawUI(&m_pd3dCommandList, &m_Camera);

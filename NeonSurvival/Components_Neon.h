@@ -165,4 +165,9 @@ public:
 	void OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
 	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
 	void DrawUI(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
+
+public:
+	bool on1 = false;
+	bool on2 = false;
+	bool on3 = false;
 };

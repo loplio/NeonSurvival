@@ -35,8 +35,10 @@ protected:
 
 	CCamera* m_pCamera = NULL;
 	CShader* m_pShader = NULL;
-
+	
 	bool IsFire = false;
+
+
 public:
 	CPlayer();
 	virtual ~CPlayer();
@@ -111,7 +113,6 @@ public:
 	void SetCameraUpdatedContext(LPVOID pContext) { m_pCameraUpdatedContext = pContext; }
 
 	float GetCameraPitch();
-
 public:
 	const float fPitchThickness = 0.2f;
 	bool IsDash = false;
