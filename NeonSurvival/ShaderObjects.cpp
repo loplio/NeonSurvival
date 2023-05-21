@@ -743,13 +743,6 @@ void PistolBulletTexturedObjects::AppendBullet(XMFLOAT3& startLocation, XMFLOAT3
 	m_nBuildIndex++;
 	m_ppObjects.push_back(new CPistolBulletObject(m_pMaterial, startLocation, rayDirection,type));
 }
-
-void PistolBulletTexturedObjects::AppendOtherPlayerBullet(XMFLOAT3& startLocation, XMFLOAT3& rayDirection)
-{
-	m_nOtherBuildIndex++;
-	m_ppOtherPlayerObjects.push_back(new CPistolBulletObject(m_pMaterial, startLocation, rayDirection,0));
-}
-
 void PistolBulletTexturedObjects::EventRemove()
 {
 	for (std::list<CGameObject*>::iterator bullet = m_ppObjects.begin(); bullet != m_ppObjects.end(); ++bullet)

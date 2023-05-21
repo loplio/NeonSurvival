@@ -199,9 +199,7 @@ public:
 
 public:
 	int m_nBuildIndex = 0;
-	int m_nOtherBuildIndex = 0;
 	std::list<CGameObject*> m_ppObjects;
-	std::list<CGameObject*> m_ppOtherPlayerObjects;
 	//std::vector<CGameObject*> m_ppObjects;
 };
 
@@ -213,7 +211,6 @@ public:
 	void BuildComponents(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CTexture* pTexture = NULL) override;
 	void Update(float fTimeElapsed) override;
 	void AppendBullet(XMFLOAT3& startLocation, XMFLOAT3& rayDirection,int type);
-	void AppendOtherPlayerBullet(XMFLOAT3& startLocation, XMFLOAT3& rayDirection);
 	void EventRemove();
 	void ReleaseUploadBuffers() override;
 	void OnPostReleaseUploadBuffers() override;
