@@ -818,21 +818,6 @@ void Scene_Neon::Update(float fTimeElapsed)
 		XMFLOAT3 pos = m_pMonsterData[i].Pos;
 		m_vMonsters[i]->SetPosition(pos);
 	}
-
-	//총알과 몬스터간 충돌체크
-	//for (int i = 0; i < MAX_MONSTER * 10; ++i)
-	//{
-	//	if (m_pMonsterData[i].State == 5) // state NONE
-	//		continue;
-	//	for (std::list<CGameObject*>::iterator bullet = pBullets->m_ppObjects.begin(); bullet != pBullets->m_ppObjects.end(); ++bullet)
-	//	{
-	//		if (((CPistolBulletObject*)(*bullet))->Type == 0)
-	//		{
-	//			
-	//		}
-	//	}
-	//	
-	//}
 	CScene::Update(fTimeElapsed);
 }
 void Scene_Neon::AnimateObjects(float fTimeElapsed)
@@ -896,6 +881,8 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 			}
 		}
 	}
+
+	//몬스터 애니메이션
 	for (int i = 0; i < m_vMonsters.size(); ++i)
 	{
 		int aniTrack = m_pMonsterData[i].State;
@@ -905,35 +892,7 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 			m_vMonsters[i]->m_pSkinnedAnimationController->SetTrackSpeed(aniTrack, 1.0f);
 			m_vMonsters[i]->Animate(fTimeElapsed);
 		}
-
-		//XMFLOAT3 pPos;
-		//pPos = m_NexusModelPos;
-		//m_vMonsters[i]->SetLookAt(pPos);
-		//m_vMonsters[i]->MoveForward(METER_PER_PIXEL(0.5f) * fTimeElapsed);
-
 	}
-	//몬스터 위치 이동 및 애니메이션
-	//for (int i = 0; i < m_vMonsters.size(); ++i)
-	//{
-	//	if (m_pMonsterData[i].State == SPAWN && m_pMonsterData[i].State != m_pMonsterData[i].PrevState)
-	//	{
-	//		printf("Spawn %d" , i);
-	//		int potalnum = m_pMonsterData[i].SpawnPotalNum;
-	//		m_vMonsters[i]->SetPosition(m_SpawnPotal_Pos[potalnum]);
-	//	}
-	//	else if (m_pMonsterData[i].State == MOVE)
-	//	{
-	//		XMFLOAT3 pPos;
-	//		if (m_pMonsterData[i].TargetType == TargetNexus)
-	//		{
-	//			pPos = m_NexusModelPos;
-	//		}
-	//		m_vMonsters[i]->SetLookAt(pPos);
-	//		m_vMonsters[i]->MoveForward(METER_PER_PIXEL(m_pMonsterData[i].Speed) * fTimeElapsed);
-	//	}
-	//	
-	//	m_vMonsters[i]->Animate(fTimeElapsed);
-	//}
 }
 //--ProcessOutput : Scene_Neon-------------------------------------------------------
 void Scene_Neon::OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
