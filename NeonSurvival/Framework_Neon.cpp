@@ -144,8 +144,8 @@ void CGameFramework_Neon::FrameAdvance()
 
 	m_ProcessCompute->RayTrace();
 	m_ProcessCompute->Update();
-	m_ProcessCompute->Collide();
 	m_ProcessCompute->Animate();
+	m_ProcessCompute->Collide();
 
 	m_DisplayOutput->Render();
 	//m_pUILayer->Render(m_nSwapChainBufferIndex);

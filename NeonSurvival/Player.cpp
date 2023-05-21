@@ -14,6 +14,7 @@ CPlayer::CPlayer()
 	m_xmf3Up = XMFLOAT3(0.0f, 1.0f, 0.0f);
 	m_xmf3Look = XMFLOAT3(0.0f, 0.0f, 1.0f);
 	m_xmf3Velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	m_xmf3Displacement = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	m_xmf3Gravity = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	m_fMaxVelocityXZ = 0.0f;
 	m_fMaxVelocityY = 0.0f;

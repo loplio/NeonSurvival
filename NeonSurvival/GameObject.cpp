@@ -698,7 +698,7 @@ CGameObject::CGameObject(int nMaterials)
 	m_xmf3Scale = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	m_xmf3BoundingScale = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	m_xmf3PrevScale = XMFLOAT3(1.0f, 1.0f, 1.0f);
-	m_xmf3Direction = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	m_IsExistBoundingBox = true;
 	m_Mass = 0;
 
 	m_pMesh = NULL;
@@ -720,8 +720,9 @@ CGameObject::CGameObject(const CGameObject& pGameObject)
 	m_xmf3Scale = pGameObject.m_xmf3Scale;
 	m_xmf3BoundingScale = pGameObject.GetBoundingScale();
 	m_xmf3PrevScale = pGameObject.m_xmf3PrevScale;
-	m_xmf3Direction = pGameObject.m_xmf3Direction;
 	m_Mass = pGameObject.m_Mass;
+
+	m_IsExistBoundingBox = pGameObject.m_IsExistBoundingBox;
 
 	m_nMaterials = 0;
 	m_ppMaterials = NULL;
@@ -848,35 +849,35 @@ void CGameObject::SetChild(CGameObject* pChild, bool bReferenceUpdate)
 	}
 }
 
-void CGameObject::Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects)
+bool CGameObject::Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects)
 {
-	m_xmf3Direction = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	assert(GetDisplacement());	// Has a displacement value.
+	XMFLOAT3* Displacement = GetDisplacement();
+
 	std::vector<CGameObject*>& BoundingObjects = BoundingBoxObjects.GetBoundingObjects();
 	if (m_pMesh)
 	{
-		BoundingOrientedBox wBoundingBox = m_pMesh->GetBoundingBox();
-		wBoundingBox.Center = Vector3::TransformCoord(wBoundingBox.Center, m_xmf4x4World);
-		wBoundingBox.Extents.x *= m_xmf4x4World._11;  wBoundingBox.Extents.y *= m_xmf4x4World._22; wBoundingBox.Extents.z *= m_xmf4x4World._33;
-
+		BoundingOrientedBox wBoundingBox = m_pMesh->GetTransformedBoundingBox();
 		for (int i = 0; i < BoundingObjects.size(); ++i)
 		{
 			if (BoundingObjects[i]->m_Mobility == Static &&
-				BoundingObjects[i]->BeginOverlapBoundingBox(wBoundingBox))
+				BoundingObjects[i]->BeginOverlapBoundingBox(wBoundingBox, Displacement))
 			{
-				std::cout << "index: " << i << ", x = " << (int)BoundingObjects[i]->GetPosition().x << ", y = " << (int)BoundingObjects[i]->GetPosition().y << ", z = " << (int)BoundingObjects[i]->GetPosition().z << std::endl;
-				XMFLOAT3 Direction = Vector3::Subtract(GetPosition(), BoundingObjects[i]->GetPosition());
-				m_xmf3Direction = Vector3::Normalize(Direction);
-				return;
+				//std::cout << "Prev Player Position: " << GetPosition().x << ", " << GetPosition().y << ", " << GetPosition().z << std::endl;
+				//std::cout << "Collide Object[" << i << "]: " << "x = " << (int)BoundingObjects[i]->GetPosition().x << ", y = " << (int)BoundingObjects[i]->GetPosition().y << ", z = " << (int)BoundingObjects[i]->GetPosition().z << std::endl;
+				// Displacement operation(Collision)
+				//SetPosition(Vector3::Add(GetPosition(), *Displacement));
+				return true;
 			}
 		}
 	}
+	return false;
 }
 void CGameObject::OnPrepareAnimate()
 {
 }
 void CGameObject::Update(float fTimeElapsed)
 {
-	SetPosition(Vector3::Add(GetPosition(), Vector3::ScalarProduct(m_xmf3Direction, fTimeElapsed)));
 }
 void CGameObject::Animate(float fTimeElapsed, XMFLOAT4X4* pxmf4x4Parent)
 {
@@ -950,6 +951,11 @@ void CGameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pC
 }
 void CGameObject::RunTimeBuild(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
+}
+
+XMFLOAT3* CGameObject::GetDisplacement()
+{
+	return NULL;
 }
 
 XMFLOAT3 CGameObject::GetPosition()
@@ -1131,6 +1137,8 @@ int CGameObject::PickObjectByRayIntersection(XMFLOAT3& xmf3PickPosition, XMFLOAT
 
 void CGameObject::CreateBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader)
 {
+	if (!m_IsExistBoundingBox) return;
+
 	if (m_pMesh &&
 		EPSILON < m_pMesh->GetAABBExtents().x &&
 		EPSILON < m_pMesh->GetAABBExtents().y &&
@@ -1148,6 +1156,8 @@ void CGameObject::CreateBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12Graphics
 }
 void CGameObject::CreateBoundingBoxInst(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGameObject* pGameObject, LPVOID BBShader)
 {
+	if (!m_IsExistBoundingBox) return;
+
 	if (pGameObject->m_pMesh)
 	{
 		CMesh* pMesh = pGameObject->m_pMesh;
@@ -1167,11 +1177,43 @@ void CGameObject::CreateBoundingBoxInst(ID3D12Device* pd3dDevice, ID3D12Graphics
 }
 void CGameObject::CreateBoundingBoxObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader)
 {
+	if (!m_IsExistBoundingBox) return;
+
 	XMFLOAT3 extents = m_pMesh->GetAABBExtents();
 	XMFLOAT3 center = m_pMesh->GetAABBCenter();
 	m_ppBoundingMeshes.push_back(new CBoundingBoxMesh(pd3dDevice, pd3dCommandList, extents, center, m_xmf3BoundingScale, m_xmf4x4World));
 	m_pMesh->SetBoundinBoxExtents(XMFLOAT3(extents.x * m_xmf3BoundingScale.x, extents.y * m_xmf3BoundingScale.y, extents.z * m_xmf3BoundingScale.z));
 	((CBoundingBoxObjects*)BBShader)->AppendBoundingObject(this);
+
+	SetWorldTransformBoundingBox();
+}
+void CGameObject::SetWorldTransformBoundingBox()
+{
+	if (m_pMesh)
+	{
+		BoundingOrientedBox BoundingBox = m_pMesh->GetBoundingBox();
+		XMFLOAT3 center = Vector3::TransformCoord(BoundingBox.Center, m_xmf4x4World);
+		XMFLOAT3 extents = XMFLOAT3(BoundingBox.Extents.x * m_xmf4x4World._11 * m_xmf3BoundingScale.x, BoundingBox.Extents.y * m_xmf4x4World._22 * m_xmf3BoundingScale.y, BoundingBox.Extents.z * m_xmf4x4World._33 * m_xmf3BoundingScale.z);
+		XMFLOAT4 orientation = Vector4::Orientation(BoundingBox.Orientation, m_xmf4x4World);
+		m_pMesh->SetTransformedBoundingBox(center, extents, orientation);
+	}
+
+	if (m_pSibling) m_pSibling->SetWorldTransformBoundingBox();
+	if (m_pChild) m_pChild->SetWorldTransformBoundingBox();
+}
+void CGameObject::UpdateWorldTransformBoundingBox()
+{
+	if (m_pMesh)
+	{
+		BoundingOrientedBox BoundingBox = m_pMesh->GetBoundingBox();
+		XMFLOAT3 center = Vector3::TransformCoord(BoundingBox.Center, m_xmf4x4World);
+		XMFLOAT4 orientation = Vector4::Orientation(BoundingBox.Orientation, m_xmf4x4World);
+		m_pMesh->SetTransformedBoundingBoxCenter(center);
+		m_pMesh->SetTransformedBoundingBoxOrientation(orientation);
+	}
+
+	if (m_pSibling) m_pSibling->UpdateWorldTransformBoundingBox();
+	if (m_pChild) m_pChild->UpdateWorldTransformBoundingBox();
 }
 void CGameObject::SetBoundingScale(XMFLOAT3& BoundingScale)
 {
@@ -1184,26 +1226,172 @@ void CGameObject::SetBoundingScale(XMFLOAT3&& BoundingScale)
 {
 	SetBoundingScale(BoundingScale);
 }
-bool CGameObject::BeginOverlapBoundingBox(const BoundingOrientedBox& OtherOBB)
+bool CGameObject::BeginOverlapBoundingBox(const BoundingOrientedBox& OtherOBB, XMFLOAT3* displacement)
 {
+	const UINT nDirection = 4;
 	bool retval = false;
 	if (m_pMesh)
 	{
-		BoundingOrientedBox OBB = m_pMesh->GetBoundingBox();
-		OBB.Center = Vector3::TransformCoord(OBB.Center, m_xmf4x4World);
-		OBB.Extents.x *= m_xmf4x4World._11;  OBB.Extents.y *= m_xmf4x4World._22; OBB.Extents.z *= m_xmf4x4World._33;
+		BoundingOrientedBox OBB = m_pMesh->GetTransformedBoundingBox();
 		if (OBB.Intersects(OtherOBB)) {
+			XMFLOAT3 ObjectDirection = XMFLOAT3((*displacement).x, 0.0f, (*displacement).z);
+			//std::cout << "Prev Displacement: " << (*displacement).x << ", " << (*displacement).y << ", " << (*displacement).z << std::endl;
+			UINT nContains = 0;
+			XMFLOAT3 Center = XMFLOAT3(0.0f, 0.0f, 0.0f);
+			XMFLOAT3 CornersXZ[nDirection] = {
+				XMFLOAT3(-OtherOBB.Extents.x, 0.0f, -OtherOBB.Extents.z),	// LB
+				XMFLOAT3(-OtherOBB.Extents.x, 0.0f, OtherOBB.Extents.z),		// LT
+				XMFLOAT3(OtherOBB.Extents.x, 0.0f, -OtherOBB.Extents.z),		// RB
+				XMFLOAT3(OtherOBB.Extents.x, 0.0f, OtherOBB.Extents.z),		// RT
+			};
+			XMMATRIX mtxRotate = XMMatrixRotationQuaternion(XMLoadFloat4(&OtherOBB.Orientation));
+			
+			for (int i = 0; i < nDirection; ++i)
+			{
+				// No consider y-value.
+				CornersXZ[i] = Vector3::TransformCoord(CornersXZ[i], mtxRotate);
+				CornersXZ[i] = Vector3::Add(CornersXZ[i], OtherOBB.Center);
+				CornersXZ[i].y = OBB.Center.y;
+				if (OBB.Contains(XMLoadFloat3(&CornersXZ[i])))
+				{
+					Center = Vector3::Add(Center, CornersXZ[i]);
+					nContains++;
+				}
+			}
+			if (nContains)
+			{
+				Center = Vector3::ScalarProduct(Center, 1.0f / nContains, false);
+				Center = Vector3::Normalize(Vector3::Subtract(Center, OBB.Center));
+				ObjectDirection = Vector3::Normalize(ObjectDirection);
+
+				float RatioXZ = 1.0f / (OBB.Extents.x + OBB.Extents.z);
+				XMFLOAT3 OBBDirectionXZ[nDirection] = {				// BoundingBox Normal Vector.
+				XMFLOAT3(-(OBB.Extents.x * RatioXZ), 0.0f, 0.0f),		// L
+				XMFLOAT3((OBB.Extents.x * RatioXZ), 0.0f, 0.0f),		// R
+				XMFLOAT3(0.0f, 0.0f, -(OBB.Extents.z * RatioXZ)),		// B
+				XMFLOAT3(0.0f, 0.0f, (OBB.Extents.z * RatioXZ)),		// T
+				};
+				mtxRotate = XMMatrixRotationQuaternion(XMLoadFloat4(&OBB.Orientation));
+
+				std::vector<XMFLOAT3> ValidDirection;
+				for (int i = 0; i < nDirection; ++i)
+				{
+					OBBDirectionXZ[i] = Vector3::TransformCoord(OBBDirectionXZ[i], mtxRotate);
+					if (Vector3::DotProduct(OBBDirectionXZ[i], ObjectDirection) < 0.0f)
+					{
+						ValidDirection.push_back(OBBDirectionXZ[i]);
+					}
+				}
+
+				XMFLOAT3 BoundingBoxNormal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+				if (ValidDirection.size() == 1)
+				{
+					BoundingBoxNormal = ValidDirection.back();
+				}
+				else if(ValidDirection.size() == 2)
+				{
+					XMFLOAT3 DiagonalDirection = XMFLOAT3(0.0f, 0.0f, 0.0f);
+					for (int i = 0; i < ValidDirection.size(); ++i)
+					{
+						DiagonalDirection = Vector3::Add(DiagonalDirection, ValidDirection[i]);
+					}
+					DiagonalDirection = Vector3::Normalize(DiagonalDirection);
+
+					float degreeToDiagonal = XMConvertToDegrees(acos(Vector3::DotProduct(ValidDirection.back(), DiagonalDirection)));
+					float degreeToCenter = XMConvertToDegrees(acos(Vector3::DotProduct(ValidDirection.back(), Center)));
+					if (degreeToCenter < degreeToDiagonal)
+					{
+						BoundingBoxNormal = ValidDirection.back();
+					}
+					else
+					{
+						BoundingBoxNormal = ValidDirection.front();
+					}
+				}
+				else
+				{
+					//assert(0);
+				}
+				BoundingBoxNormal = Vector3::Normalize(BoundingBoxNormal);
+				float scale = Vector3::DotProduct(ObjectDirection, BoundingBoxNormal);
+				BoundingBoxNormal = Vector3::ScalarProduct(BoundingBoxNormal, scale, false);
+				ObjectDirection = Vector3::Subtract(ObjectDirection, BoundingBoxNormal);
+				*displacement = Vector3::Add(Vector3::ScalarProduct(*displacement, -1.0f, false), ObjectDirection);
+				(*displacement).y = 0.0f;
+			}
+			else
+			{
+				//float RatioXZ = 1.0f / (OBB.Extents.x + OBB.Extents.z);
+				//XMFLOAT3 OBBDirectionXZ[nDirection] = {				// BoundingBox Normal Vector.
+				//XMFLOAT3(-(OBB.Extents.x * RatioXZ), 0.0f, 0.0f),		// L
+				//XMFLOAT3((OBB.Extents.x * RatioXZ), 0.0f, 0.0f),		// R
+				//XMFLOAT3(0.0f, 0.0f, -(OBB.Extents.z * RatioXZ)),		// B
+				//XMFLOAT3(0.0f, 0.0f, (OBB.Extents.z * RatioXZ)),		// T
+				//};
+				//mtxRotate = XMMatrixRotationQuaternion(XMLoadFloat4(&OBB.Orientation));
+
+				//std::vector<XMFLOAT3> ValidDirection;
+				//for (int i = 0; i < nDirection; ++i)
+				//{
+				//	OBBDirectionXZ[i] = Vector3::TransformCoord(OBBDirectionXZ[i], mtxRotate);
+				//	if (Vector3::DotProduct(OBBDirectionXZ[i], ObjectDirection) < 0.0f)
+				//	{
+				//		ValidDirection.push_back(OBBDirectionXZ[i]);
+				//	}
+				//}
+				//
+				//XMFLOAT3 DiagonalDirection = XMFLOAT3(0.0f, 0.0f, 0.0f);
+				//for (int i = 0; i < ValidDirection.size(); ++i)
+				//{
+				//	DiagonalDirection = Vector3::Add(DiagonalDirection, ValidDirection[i]);
+				//}
+				//DiagonalDirection = Vector3::Normalize(DiagonalDirection);
+				//float scale = Vector3::DotProduct(ObjectDirection, DiagonalDirection);
+				//DiagonalDirection = Vector3::ScalarProduct(DiagonalDirection, scale, false);
+				//ObjectDirection = Vector3::Subtract(ObjectDirection, DiagonalDirection);
+				//*displacement = Vector3::Add(Vector3::ScalarProduct(*displacement, -1.0f, false), ObjectDirection);
+				//(*displacement).y = 0.0f;
+
+				//std::cout << "Diagonal Invalid!!!!!!" << std::endl;
+
+				//*displacement = Vector3::ScalarProduct(*displacement, -1.0f, false);
+				//(*displacement).y = 0.0f;
+			}
+			//std::cout << "after Displacement: " << (*displacement).x << ", " << (*displacement).y << ", " << (*displacement).z << std::endl;
+
+			//std::cout << "nContains: " << nContains << std::endl;
+			//std::cout << "OtherOBB' Center: " << (int)OtherOBB.Center.x << ", " << (int)OtherOBB.Center.y << ", " << (int)OtherOBB.Center.z << std::endl;
+			////std::cout << "OtherOBB' Extents: " << extents.x << ", " << extents.y << ", " << extents.z << std::endl;
+			//std::cout << "LB: " << (int)(OtherOBB.Center.x - OtherOBB.Extents.x) << ", " << (int)(OtherOBB.Center.z - OtherOBB.Extents.z) << std::endl;
+			//std::cout << "LT: " << (int)(OtherOBB.Center.x - OtherOBB.Extents.x) << ", " << (int)(OtherOBB.Center.z + OtherOBB.Extents.z) << std::endl;
+			//std::cout << "RB: " << (int)(OtherOBB.Center.x + OtherOBB.Extents.x) << ", " << (int)(OtherOBB.Center.z - OtherOBB.Extents.z) << std::endl;
+			//std::cout << "RT: " << (int)(OtherOBB.Center.x + OtherOBB.Extents.x) << ", " << (int)(OtherOBB.Center.z + OtherOBB.Extents.z) << std::endl;
+
+			//XMFLOAT3 Test[nDirection] = {				// BoundingBox Normal Vector.
+			//XMFLOAT3(-(OBB.Extents.x), 0.0f, 0.0f),		// L
+			//XMFLOAT3((OBB.Extents.x), 0.0f, 0.0f),		// R
+			//XMFLOAT3(0.0f, 0.0f, -(OBB.Extents.z )),		// B
+			//XMFLOAT3(0.0f, 0.0f, (OBB.Extents.z)),		// T
+			//};
+			//mtxRotate = XMMatrixRotationQuaternion(XMLoadFloat4(&OBB.Orientation));
+
+			//for (int i = 0; i < nDirection; ++i)
+			//{
+			//	Test[i] = Vector3::TransformCoord(Test[i], mtxRotate);
+			//}
 			//std::cout << "OBB' Center: " << (int)OBB.Center.x << ", " << (int)OBB.Center.y << ", " << (int)OBB.Center.z << std::endl;
 			//std::cout << "OBB' Extents: " << (int)OBB.Extents.x << ", " << (int)OBB.Extents.y << ", " << (int)OBB.Extents.z << std::endl;
-			//std::cout << "LB: " << (int)(OBB.Center.x - OBB.Extents.x) << ", " << (int)(OBB.Center.z - OBB.Extents.z) << std::endl;
-			//std::cout << "LT: " << (int)(OBB.Center.x - OBB.Extents.x) << ", " << (int)(OBB.Center.z + OBB.Extents.z) << std::endl;
-			//std::cout << "RB: " << (int)(OBB.Center.x + OBB.Extents.x) << ", " << (int)(OBB.Center.z - OBB.Extents.z) << std::endl;
-			//std::cout << "RT: " << (int)(OBB.Center.x + OBB.Extents.x) << ", " << (int)(OBB.Center.z + OBB.Extents.z) << std::endl;
+			//std::cout << "LB: " << (int)(OBB.Center.x - Test[0].x ) << ", " << (int)(OBB.Center.z - Test[2].z) << std::endl;
+			//std::cout << "LT: " << (int)(OBB.Center.x - Test[0].x) << ", " << (int)(OBB.Center.z + Test[3].z) << std::endl;
+			//std::cout << "RB: " << (int)(OBB.Center.x + Test[1].x) << ", " << (int)(OBB.Center.z - Test[2].z) << std::endl;
+			//std::cout << "RT: " << (int)(OBB.Center.x + Test[1].x ) << ", " << (int)(OBB.Center.z + Test[3].z) << std::endl;
+			//std::cout << std::endl;
+
 			return true;
 		}
 	}
-	if (m_pSibling) retval = m_pSibling->BeginOverlapBoundingBox(OtherOBB);
-	if (m_pChild && !retval) retval = m_pChild->BeginOverlapBoundingBox(OtherOBB);
+	if (m_pSibling) retval = m_pSibling->BeginOverlapBoundingBox(OtherOBB, displacement);
+	if (m_pChild && !retval) retval = m_pChild->BeginOverlapBoundingBox(OtherOBB, displacement);
 
 	return retval;
 }
@@ -1589,6 +1777,7 @@ CLoadedModelInfo* CGameObject::LoadGeometryAndAnimationFromFile(ID3D12Device* pd
 				// Update the world matrix of bone.
 				pLoadedModel->m_pModelRootObject->UpdateTransform();
 				pLoadedModel->m_pModelRootObject->SetPrevScale();
+				pLoadedModel->m_pModelRootObject->SetWorldTransformBoundingBox();
 			}
 			else if (!strcmp(pstrToken, "<Animation>:"))
 			{
@@ -1756,6 +1945,7 @@ CHeightMapTerrain::CHeightMapTerrain(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 	m_nWidth = nWidth;
 	m_nLength = nLength;
 	m_xmf3Scale = xmf3Scale;
+	m_xmf3PrevScale = xmf3Scale;
 	m_pHeightMapImage = new CHeightMapImage(pFileName, nWidth, nLength, xmf3Scale);
 
 	CHeightMapGridMesh* pHeightMapGridMesh = new CHeightMapGridMesh(pd3dDevice, pd3dCommandList, this, 0, 0, nWidth, nLength, xmf3Scale, xmf4Color, m_pHeightMapImage);
