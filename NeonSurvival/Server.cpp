@@ -87,12 +87,12 @@ void SERVER::ProcessSocketMessage(HWND hWnd, UINT unit, WPARAM wParam, LPARAM lP
         }
         case MESSAGETYPE::INGAME:
         {
-            memcpy(PlayersPosition2, m_Packet.buf, sizeof(PlayersPosition2));
+            memcpy(PlayersPosition2, &m_Packet.buf, sizeof(PlayersPosition2));
             if (len == SOCKET_ERROR) {
                 printf("inGame error : %d\n", WSAGetLastError());
                 return;
             }
-            memcpy(MonsterData, m_Packet.buf2, sizeof(MonsterData));
+            memcpy(MonsterData, &m_Packet.buf2, sizeof(MonsterData));
             if (len == SOCKET_ERROR) {
                 printf("inGame error : %d\n", WSAGetLastError());
                 return;
@@ -101,7 +101,7 @@ void SERVER::ProcessSocketMessage(HWND hWnd, UINT unit, WPARAM wParam, LPARAM lP
         }
         case MESSAGETYPE::MONSTER_DATA:
         {
-            memcpy(MonsterData, m_Packet.buf, sizeof(MonsterData));
+            memcpy(MonsterData, m_Packet.buf2, sizeof(MonsterData));
             if (len == SOCKET_ERROR) {
                 printf("MONSTER_DATA error : %d\n", WSAGetLastError());
                 return;

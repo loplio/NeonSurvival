@@ -16,6 +16,7 @@ using namespace DirectX;
 
 #define SERVERPORT	9000
 #define BUFSIZE		2048
+#define BUF2SIZE	3072
 #define WM_SOCKET	(WM_USER+1)
 #define MAX_PLAYER	3
 #define MAX_MONSTER 3
@@ -66,7 +67,6 @@ typedef struct {
 } PACKET_INGAME2;
 
 typedef struct {
-
 	int			TargetType;
 	XMFLOAT3	TargetPos;
 	int			HP;
@@ -80,24 +80,21 @@ typedef struct {
 }PACKET_MONSTER_DATA;
 
 typedef struct {
-	XMFLOAT4X4	m_xmf4x4Transform;
+	XMFLOAT4X4	m_xmf4x4World;
 	int			HP;
 	int			MAXHP;
 	int			State;
 	int			SpawnPotalNum;
-	float		Speed;
-	double		SpawnToMoveDelay;
 	int			PrevState;
-	XMFLOAT3	TargetPos;
+	XMFLOAT3	Pos;
 	int			TargetType;
 }PACKET_MONSTERDATA;
 
 typedef struct {
-
 	int MessageType;
 	int byte;
 	char buf[BUFSIZE];
-	char buf2[BUFSIZE];
+	char buf2[BUF2SIZE];
 }PACKET;
 
 typedef struct {
@@ -128,7 +125,7 @@ private:
 	PACKET_INGAME2 P_InGame2;
 	PACKET_INGAME2 PlayersPosition2[MAX_PLAYER];
 	
-	PACKET_MONSTERDATA MonsterData[MAX_MONSTER];
+	PACKET_MONSTERDATA MonsterData[30];
 public:
 	static SERVER& getInstance() {
 		static SERVER s;

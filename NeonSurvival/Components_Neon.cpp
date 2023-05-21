@@ -648,6 +648,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 90.0f, 0.0f);
 	if (pLevelUpTableModel) delete pLevelUpTableModel;
 	
+	m_vMonsters.reserve(MAX_MONSTER * 10);
 	//// 몬스터들
 	for (int i = 0; i < MAX_MONSTER; ++i)
 	{
@@ -768,14 +769,15 @@ void Scene_Neon::Update(float fTimeElapsed)
 	}
 
 	//몬스터 위치값 적용(서버)
-	//for (int i = 0; i < MAX_MONSTER; ++i)
-	//{
-	//	XMFLOAT4X4 tranfrom = m_pMonsterData[i].m_xmf4x4Transform;
-	//	//XMFLOAT3 pos = m_pMonsterData[i].TargetPos;
-	//
-	//	pMetalonShader->SetTransform(i, tranfrom);
-	//	//pMetalonShader->SetPosition(pos, i);
-	//}
+	for (int i = 0; i < MAX_MONSTER * 10; ++i)
+	{
+		//XMFLOAT4X4 tranfrom = m_pMonsterData[i].m_xmf4x4Transform;
+		XMFLOAT3 pos = m_pMonsterData[i].Pos;
+	
+		//pMetalonShader->SetTransform(i, tranfrom);
+		//pMetalonShader->SetPosition(pos, i);
+		m_vMonsters[i]->SetPosition(pos);
+	}
 	CScene::Update(fTimeElapsed);
 }
 void Scene_Neon::AnimateObjects(float fTimeElapsed)
@@ -842,9 +844,19 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 	}
 	for (int i = 0; i < m_vMonsters.size(); ++i)
 	{
-		m_vMonsters[i]->m_pSkinnedAnimationController->SetOneOfTrackEnable(2);
-		m_vMonsters[i]->m_pSkinnedAnimationController->SetTrackSpeed(2, 1.0f);
-		m_vMonsters[i]->Animate(fTimeElapsed);
+		int aniTrack = m_pMonsterData[i].State;
+		if (aniTrack != 5)
+		{
+			m_vMonsters[i]->m_pSkinnedAnimationController->SetOneOfTrackEnable(aniTrack);
+			m_vMonsters[i]->m_pSkinnedAnimationController->SetTrackSpeed(aniTrack, 1.0f);
+			m_vMonsters[i]->Animate(fTimeElapsed);
+		}
+
+		//XMFLOAT3 pPos;
+		//pPos = m_NexusModelPos;
+		//m_vMonsters[i]->SetLookAt(pPos);
+		//m_vMonsters[i]->MoveForward(METER_PER_PIXEL(0.5f) * fTimeElapsed);
+
 	}
 	//몬스터 위치 이동 및 애니메이션
 	//for (int i = 0; i < m_vMonsters.size(); ++i)
@@ -896,14 +908,12 @@ void Scene_Neon::CreateMonsters(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandL
 	//m_vMonsters.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - 30.f * x, 10.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f - 30.f * Z++);
 	//if (pMetalonModel) delete pMetalonModel;
 
-	//CreateMonster(pd3dDevice, pd3dCommandList, (char*)"Model/Monster/Dragon/Polygonal_Dragon.bin", x, Z++);
-	//CreateMonster(pd3dDevice, pd3dCommandList, (char*)"Model/Monster/Giant_Bee/Polygonal_Giant_Bee.bin", x, Z++);
-	//CreateMonster(pd3dDevice, pd3dCommandList, (char*)"Model/Monster/Golem/Polygonal_Golem.bin", x, Z++);
-	//CreateMonster(pd3dDevice, pd3dCommandList, (char*)"Model/Monster/KingCobra/Polygonal_King_Cobra.bin", x, Z++);
-	//CreateMonster(pd3dDevice, pd3dCommandList, (char*)"Model/Monster/TreasureChest/Polygonal_Treasure_Chest_Monster.bin", x, Z++);
-	//CreateMonster(pd3dDevice, pd3dCommandList, (char*)"Model/Monster/Spider/Polygonal_Spiderling_Venom.bin", x, Z++);
-	
-	//애니메이션 오류
+	CreateMonster(pd3dDevice, pd3dCommandList, (char*)"Model/Monster/Dragon/Polygonal_Dragon.bin", x, Z++);
+	CreateMonster(pd3dDevice, pd3dCommandList, (char*)"Model/Monster/Giant_Bee/Polygonal_Giant_Bee.bin", x, Z++);
+	CreateMonster(pd3dDevice, pd3dCommandList, (char*)"Model/Monster/Golem/Polygonal_Golem.bin", x, Z++);
+	CreateMonster(pd3dDevice, pd3dCommandList, (char*)"Model/Monster/KingCobra/Polygonal_King_Cobra.bin", x, Z++);
+	CreateMonster(pd3dDevice, pd3dCommandList, (char*)"Model/Monster/TreasureChest/Polygonal_Treasure_Chest_Monster.bin", x, Z++);
+	CreateMonster(pd3dDevice, pd3dCommandList, (char*)"Model/Monster/Spider/Polygonal_Spiderling_Venom.bin", x, Z++);
 	CreateMonster(pd3dDevice, pd3dCommandList, (char*)"Model/Monster/Bat/Polygonal_One_Eyed_Bat.bin", x, Z++);
 	CreateMonster(pd3dDevice, pd3dCommandList, (char*)"Model/Monster/Magma/Polygonal_Magma.bin", x, Z++);
 	CreateMonster(pd3dDevice, pd3dCommandList, (char*)"Model/Monster/Treant/Polygonal_Treant.bin", x, Z++);
