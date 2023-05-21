@@ -423,6 +423,7 @@ void CScene::ReleaseUploadBuffers()
 	for (int i = 0; i < m_UIShaders.size(); ++i) m_UIShaders[i]->ReleaseUploadBuffers();
 	for (int i = 0; i < m_ppComputeShaders.size(); ++i) m_ppComputeShaders[i]->ReleaseUploadBuffers();
 	for (int i = 0; i < m_vHierarchicalGameObjects.size(); i++) m_vHierarchicalGameObjects[i]->ReleaseUploadBuffers();
+	for (int i = 0; i < m_vGroundObjects.size(); i++) m_vGroundObjects[i]->ReleaseUploadBuffers();
 	for (int i = 0; i < m_vGameObjects.size(); i++) m_vGameObjects[i]->ReleaseUploadBuffers();
 	for (int i = 0; i < m_vParticleObjects.size(); i++) m_vParticleObjects[i]->ReleaseUploadBuffers();
 	for (int i = 0; i < m_vOtherPlayer.size(); i++) m_vOtherPlayer[i]->ReleaseUploadBuffers();
@@ -467,6 +468,10 @@ void CScene::ReleaseObjects()
 	if (!m_vHierarchicalGameObjects.empty())
 	{
 		for (int i = 0; i < m_vHierarchicalGameObjects.size(); i++) m_vHierarchicalGameObjects[i]->Release();
+	}
+	if (!m_vGroundObjects.empty())
+	{
+		for (int i = 0; i < m_vGroundObjects.size(); i++) m_vGroundObjects[i]->Release();
 	}
 	if (!m_vGameObjects.empty())
 	{
@@ -623,6 +628,10 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 	for (int i = 0; i < m_vHierarchicalGameObjects.size(); i++)
 	{
 		m_vHierarchicalGameObjects[i]->Render(pd3dCommandList, pCamera);
+	}
+	for (int i = 0; i < m_vGroundObjects.size(); i++)
+	{
+		m_vGroundObjects[i]->Render(pd3dCommandList, pCamera);
 	}
 	for (int i = 0; i < m_vGameObjects.size(); i++)
 	{

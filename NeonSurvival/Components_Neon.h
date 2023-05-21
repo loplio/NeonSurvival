@@ -10,7 +10,7 @@
 //-------------------------------------------------------------------------------
 class Player_Neon : public CPlayer {
 public:
-	Player_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext, int nMeshes = 1);
+	Player_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext);
 	virtual ~Player_Neon();
 
 	void Move(ULONG nDirection, float fDistance, bool bVelocity = false) override;
@@ -18,6 +18,7 @@ public:
 
 	void OnPrepareRender() override;
 
+	void OnGroundUpdateCallback(float fTimeElapsed) override;
 	void OnPlayerUpdateCallback(float fTimeElapsed) override;
 	void OnCameraUpdateCallback(float fTimeElapsed) override;
 	CCamera* ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed) override;
@@ -142,6 +143,14 @@ public:
 	float m_fLifeTime = 0.0f;
 	XMFLOAT3 m_fRayDriection;
 	//CTexture* m_pRandowmValueTexture = NULL;
+};
+
+class CRectTextureObject : public StaticObject {
+public:
+	CRectTextureObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CMaterial* pMaterial);
+	virtual ~CRectTextureObject();
+
+	void Update(float fTimeElapsed) override;
 };
 
 class NexusObject : public DynamicObject {

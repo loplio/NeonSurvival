@@ -42,7 +42,7 @@ class NeonGameSource : public CGameSource {
 public:
 	NeonGameSource(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) : CGameSource(pd3dDevice, pd3dCommandList) {
 		m_pScene = std::make_shared<Scene_Neon>(pd3dDevice, pd3dCommandList);
-		m_pPlayer = m_pScene->m_pPlayer = std::make_shared<Player_Neon>(pd3dDevice, pd3dCommandList, m_pScene->GetGraphicsRootSignature(), m_pScene->m_pTerrain, 1);
+		m_pPlayer = m_pScene->m_pPlayer = std::make_shared<Player_Neon>(pd3dDevice, pd3dCommandList, m_pScene->GetGraphicsRootSignature(), m_pScene->m_pTerrain);
 		m_pBoundingObjects = m_pScene->m_pBoundingObjects = std::make_shared<BoundingBoxObjects_1>(*m_pScene, *m_pPlayer);
 	}
 };
