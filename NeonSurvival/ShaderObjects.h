@@ -172,6 +172,8 @@ public:
 	void AppendMonster(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, XMFLOAT3&& StartPosition);
 	void EventRemove();
 	void OnPostReleaseUploadBuffers() override;
+	void SetPosition(XMFLOAT3& xmf3Position, int index);
+	void SetTransform(int index, XMFLOAT4X4& transform);
 
 	void SetPosition(XMFLOAT3 xmf3Position, int index);
 
@@ -208,7 +210,7 @@ public:
 
 	void BuildComponents(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CTexture* pTexture = NULL) override;
 	void Update(float fTimeElapsed) override;
-	void AppendBullet(XMFLOAT3& startLocation, XMFLOAT3& rayDirection);
+	void AppendBullet(XMFLOAT3& startLocation, XMFLOAT3& rayDirection,int type);
 	void EventRemove();
 	void ReleaseUploadBuffers() override;
 	void OnPostReleaseUploadBuffers() override;

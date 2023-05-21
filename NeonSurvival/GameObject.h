@@ -398,6 +398,8 @@ public:
 	enum Mobility				{ Static, Moveable };
 	UINT						m_Mobility = Static;
 
+	enum MonsterType			{ Metalon, Dragon,Golem, Giant_Bee};
+	UINT						m_MonsterType;
 public:
 	// ShaderVariable.
 	virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
@@ -456,6 +458,9 @@ public:
 	void GenerateRayForPicking(XMFLOAT3& xmf3PickPosition, XMFLOAT4X4& xmf4x4View, XMFLOAT3* pxmf3PickRayOrigin, XMFLOAT3* pxmf3PickRayDirection);
 	int PickObjectByRayIntersection(XMFLOAT3& xmf3PickPosition, XMFLOAT4X4& xmf4x4View, float* pfHitDistance);
 
+	void SetMonsterType(UINT type) { m_MonsterType = type; }
+	UINT GetMonsterType() { return m_MonsterType; }
+
 public:
 	std::vector<CBoundingBoxMesh*>& GetMesh() { return m_ppBoundingMeshes; }
 	void CreateBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader);
@@ -507,6 +512,25 @@ public:
 	DynamicObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel);
 	virtual ~DynamicObject();
 };
+
+class MonsterObject : public CGameObject {
+public:
+	MonsterObject();
+	MonsterObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel);
+	virtual ~MonsterObject();
+	void UpdaetHP();
+public:
+	enum {IDLE,ATTACK,MOVE,DIE,TAKEDAMAGE};
+	enum {Dragon,Golem,KingCobra,Spider,TreasureChest,Giant_Bee};
+	int State = IDLE;
+	int HP;
+	int MAXHP;
+	int Type;
+	
+	CGameObject* m_pHPObject = NULL;
+	CMaterial* m_pHPMaterial = NULL;
+};
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CParticleObject : public DynamicObject {
 public:

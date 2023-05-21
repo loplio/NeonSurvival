@@ -68,23 +68,26 @@ public:
 	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
 	void DrawUI(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
 
+	void CreateMonsters(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,int x);
+	void CreateMonster(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,char* model,int x,int z);
+
 public:
 	PACKET_INGAME2* m_pOtherPlayerData2 = SERVER::getInstance().GetPlayersPosition2();
-	PACKET_MONSTER_DATA* m_pMonsterData = SERVER::getInstance().GetMonsterData();
+	PACKET_MONSTERDATA* m_pMonsterData = SERVER::getInstance().GetMonsterData();
 	int m_MyId = -1;
 	bool m_OtherPlayerPrevFire[3] = { false,false,false };
+
 	float prevangle = 0;
 	XMFLOAT3 m_NexusModelPos;
-	XMFLOAT3 m_Potal1_Pos;
-	XMFLOAT3 m_Potal2_Pos;
-	XMFLOAT3 m_Potal3_Pos;
-	XMFLOAT3 m_Potal4_Pos;
+	XMFLOAT3 m_SpawnPotal_Pos[4];
+	MonsterMetalonObjects* pMetalonShader = new MonsterMetalonObjects(); //¸ó½ºÅÍ
+	PistolBulletTexturedObjects* pBullets = NULL;							//ÃÑ¾Ë
 };
 
 //-------------------------------------------------------------------------------
 /*	Monster Object															   */
 //-------------------------------------------------------------------------------
-class CMonsterMetalon : public DynamicObject {
+class CMonsterMetalon : public MonsterObject {
 public:
 	CMonsterMetalon();
 	CMonsterMetalon(const CGameObject& pGameObject);
@@ -92,12 +95,30 @@ public:
 
 	void RunTimeBuild(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) override;
 	void Update(float fTimeElapsed) override;
+	void Animate(float fTimeElapsed, XMFLOAT4X4* pxmf4x4Parent = NULL) override;
 	void ReleaseUploadBuffers();
-
 public:
 	float m_fLife = 100.0f;
 	float m_fMaxVelocityXZ = PIXEL_KPH(12);
 	XMFLOAT3 m_fDriection = XMFLOAT3(0.0f, 0.0f, 0.0f);
+};
+
+
+class CMonsterDragon : public MonsterObject {
+public:
+	CMonsterDragon();
+	CMonsterDragon(const CGameObject& pGameObject);
+	virtual ~CMonsterDragon();
+
+	void RunTimeBuild(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) override;
+	void Update(float fTimeElapsed) override;
+	void ReleaseUploadBuffers();
+	void SetAnimation(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CLoadedModelInfo* model);
+public:
+	float m_fLife = 100.0f;
+	float m_fMaxVelocityXZ = PIXEL_KPH(12);
+	XMFLOAT3 m_fDriection = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	int randomAniTrack = 0;
 };
 
 //-------------------------------------------------------------------------------
@@ -111,7 +132,7 @@ public:
 
 class CPistolBulletObject : public DynamicObject {
 public:
-	CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection);
+	CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection,int type);
 	virtual ~CPistolBulletObject();
 
 	void RunTimeBuild(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) override;
@@ -122,6 +143,7 @@ public:
 	const float m_fSpeed = PIXEL_MPS(35);
 	float m_fLifeTime = 0.0f;
 	XMFLOAT3 m_fRayDriection;
+	int Type;
 	//CTexture* m_pRandowmValueTexture = NULL;
 };
 

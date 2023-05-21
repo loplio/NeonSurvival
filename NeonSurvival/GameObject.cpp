@@ -863,7 +863,7 @@ void CGameObject::Collide(const CGameSource& GameSource, CBoundingBoxObjects& Bo
 			if (BoundingObjects[i]->m_Mobility == Static &&
 				BoundingObjects[i]->BeginOverlapBoundingBox(wBoundingBox))
 			{
-				std::cout << "index: " << i << ", x = " << (int)BoundingObjects[i]->GetPosition().x << ", y = " << (int)BoundingObjects[i]->GetPosition().y << ", z = " << (int)BoundingObjects[i]->GetPosition().z << std::endl;
+				//std::cout << "index: " << i << ", x = " << (int)BoundingObjects[i]->GetPosition().x << ", y = " << (int)BoundingObjects[i]->GetPosition().y << ", z = " << (int)BoundingObjects[i]->GetPosition().z << std::endl;
 				XMFLOAT3 Direction = Vector3::Subtract(GetPosition(), BoundingObjects[i]->GetPosition());
 				m_xmf3Direction = Vector3::Normalize(Direction);
 				return;
@@ -1647,6 +1647,34 @@ DynamicObject::~DynamicObject()
 {
 }
 
+MonsterObject::MonsterObject()
+{
+	m_Mobility = Moveable;
+}
+MonsterObject::MonsterObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel) : MonsterObject()
+{
+	CLoadedModelInfo* pMapModel = pModel;
+	SetChild(pMapModel->m_pModelRootObject, true);
+
+	//HP¹Ù
+	m_pHPMaterial = new CMaterial();
+	m_pHPMaterial->AddRef();
+	CTexture* pBulletTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0, 1);
+	pBulletTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, (wchar_t*)L"UI/hpds.dds", 0);
+	m_pHPMaterial->SetTexture(pBulletTexture);
+	CScene::CreateSRVUAVs(pd3dDevice, pBulletTexture, ROOT_PARAMETER_TEXTURE, true);
+	m_pHPObject = new CRectTextureObject(pd3dDevice, pd3dCommandList, m_pHPMaterial);
+	m_pHPObject->SetPosition(GetPosition().x, GetPosition().y + 100, GetPosition().z);
+	SetChild(m_pHPObject, true);
+}
+MonsterObject::~MonsterObject()
+{
+}
+
+void MonsterObject::UpdaetHP()
+{
+	
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 CParticleObject::CParticleObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, XMFLOAT3 xmf3Position, XMFLOAT3 xmf3Velocity, float fLifetime, XMFLOAT3 xmf3Acceleration, XMFLOAT3 xmf3Color, XMFLOAT2 xmf2Size, UINT nMaxParticles)
