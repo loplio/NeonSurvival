@@ -81,6 +81,7 @@ public:
 	XMFLOAT3 m_NexusModelPos;
 	XMFLOAT3 m_SpawnPotal_Pos[4];
 	MonsterMetalonObjects* pMetalonShader = new MonsterMetalonObjects(); //¸ó½ºÅÍ
+	PistolBulletTexturedObjects* pBullets = NULL;							//ÃÑ¾Ë
 };
 
 //-------------------------------------------------------------------------------
@@ -131,7 +132,7 @@ public:
 
 class CPistolBulletObject : public DynamicObject {
 public:
-	CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection);
+	CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection,int type);
 	virtual ~CPistolBulletObject();
 
 	void RunTimeBuild(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) override;
@@ -142,6 +143,7 @@ public:
 	const float m_fSpeed = PIXEL_MPS(35);
 	float m_fLifeTime = 0.0f;
 	XMFLOAT3 m_fRayDriection;
+	int Type;
 	//CTexture* m_pRandowmValueTexture = NULL;
 };
 

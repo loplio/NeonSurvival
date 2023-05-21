@@ -483,6 +483,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	PistolBulletTexturedObjects* pPistolBulletShader = new PistolBulletTexturedObjects();
 	pPistolBulletShader->BuildComponents(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pBulletBlurComputeShader1->m_pTexture);
 	pPistolBulletShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	pBullets = pPistolBulletShader;
 	m_ppShaders.back() = pPistolBulletShader;
 
 	// Monster.
@@ -764,7 +765,7 @@ bool Scene_Neon::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wPa
 				PistolBulletTexturedObjects* pObjectsShader = (PistolBulletTexturedObjects*)m_ppShaders[i];
 				XMFLOAT3 startLocation = Vector3::Add(m_pPlayer.get()->GetPosition(), m_pPlayer.get()->GetOffset());
 				XMFLOAT3 rayDirection = m_pPlayer.get()->GetRayDirection();
-				pObjectsShader->AppendBullet(startLocation, rayDirection);
+				pObjectsShader->AppendBullet(startLocation, rayDirection,0);
 			}
 		}
 		break;
@@ -814,13 +815,24 @@ void Scene_Neon::Update(float fTimeElapsed)
 	//몬스터 위치값 적용(서버)
 	for (int i = 0; i < MAX_MONSTER * 10; ++i)
 	{
-		//XMFLOAT4X4 tranfrom = m_pMonsterData[i].m_xmf4x4Transform;
 		XMFLOAT3 pos = m_pMonsterData[i].Pos;
-	
-		//pMetalonShader->SetTransform(i, tranfrom);
-		//pMetalonShader->SetPosition(pos, i);
 		m_vMonsters[i]->SetPosition(pos);
 	}
+
+	//총알과 몬스터간 충돌체크
+	//for (int i = 0; i < MAX_MONSTER * 10; ++i)
+	//{
+	//	if (m_pMonsterData[i].State == 5) // state NONE
+	//		continue;
+	//	for (std::list<CGameObject*>::iterator bullet = pBullets->m_ppObjects.begin(); bullet != pBullets->m_ppObjects.end(); ++bullet)
+	//	{
+	//		if (((CPistolBulletObject*)(*bullet))->Type == 0)
+	//		{
+	//			
+	//		}
+	//	}
+	//	
+	//}
 	CScene::Update(fTimeElapsed);
 }
 void Scene_Neon::AnimateObjects(float fTimeElapsed)
@@ -876,12 +888,11 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 							XMFLOAT3 startLocation = m_pOtherPlayerData2[OtherId].position;
 							XMFLOAT3 rayDirection = m_pOtherPlayerData2[OtherId].RayDirection;
 							startLocation.y += METER_PER_PIXEL(1.5);
-							pObjectsShader->AppendBullet(startLocation, rayDirection);
+							pObjectsShader->AppendBullet(startLocation, rayDirection,1);
 						}
 					}
 				}
 				m_OtherPlayerPrevFire[OtherId] = currfire;
-				
 			}
 		}
 	}
@@ -1159,8 +1170,9 @@ CParticleObject_Neon::~CParticleObject_Neon()
 {
 }
 //-------------------------------------------------------------------------------
-CPistolBulletObject::CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection)
+CPistolBulletObject::CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection,int type)
 {
+	Type = type;
 	SetMaterial(0, pMaterial);
 	SetPosition(startLocation);
 	m_fRayDriection = Vector3::Normalize(rayDirection);

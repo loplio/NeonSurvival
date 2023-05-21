@@ -518,6 +518,7 @@ public:
 	MonsterObject();
 	MonsterObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel);
 	virtual ~MonsterObject();
+	void UpdaetHP();
 public:
 	enum {IDLE,ATTACK,MOVE,DIE,TAKEDAMAGE};
 	enum {Dragon,Golem,KingCobra,Spider,TreasureChest,Giant_Bee};
@@ -525,6 +526,9 @@ public:
 	int HP;
 	int MAXHP;
 	int Type;
+	
+	CGameObject* m_pHPObject = NULL;
+	CMaterial* m_pHPMaterial = NULL;
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

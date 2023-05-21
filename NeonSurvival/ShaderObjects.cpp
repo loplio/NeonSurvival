@@ -487,37 +487,37 @@ void MonsterMetalonObjects::BuildComponents(ID3D12Device* pd3dDevice, ID3D12Grap
 	pMonsterModel->m_pModelRootObject->UpdateMobility(CGameObject::Moveable);
 	pMonsterModel->m_pModelRootObject->SetMonsterType(CGameObject::Metalon);
 
-	//µå·¡°ï
-	CLoadedModelInfo* pDragonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Dragon/Polygonal_Dragon.bin", NULL);
-	m_pDragononModel = pDragonModel;
-	pDragonModel->m_pModelRootObject->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 5, m_pDragononModel);
-	for (int i = 0; i < 5; ++i)
-	{
-		pDragonModel->m_pModelRootObject->m_pSkinnedAnimationController->SetTrackAnimationSet(i, i);
-		pDragonModel->m_pModelRootObject->m_pSkinnedAnimationController->SetTrackEnable(i, 0);
-	}
-		pDragonModel->m_pModelRootObject->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
-	pDragonModel->m_pModelRootObject->UpdateMobility(CGameObject::Moveable);
-	pDragonModel->m_pModelRootObject->SetMonsterType(CGameObject::Dragon);
-
-	//°ñ·½
-	CLoadedModelInfo* pGolemModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Golem/Polygonal_Golem.bin", NULL);
-	m_pGolemModel = pGolemModel;
-	pGolemModel->m_pModelRootObject->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 5, pGolemModel);
-	for (int i = 0; i < 5; ++i)
-	{
-		pGolemModel->m_pModelRootObject->m_pSkinnedAnimationController->SetTrackAnimationSet(i, i);
-		pGolemModel->m_pModelRootObject->m_pSkinnedAnimationController->SetTrackEnable(i, 0);
-	}
-		pGolemModel->m_pModelRootObject->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
-	pGolemModel->m_pModelRootObject->UpdateMobility(CGameObject::Moveable);
-	pGolemModel->m_pModelRootObject->SetMonsterType(CGameObject::Golem);
-
-	m_nMaxObjects = 30;
-
-	InitShader(m_pMetalonModel->m_pModelRootObject);
-	InitShader(m_pDragononModel->m_pModelRootObject);
-	InitShader(m_pGolemModel->m_pModelRootObject);
+	////µå·¡°ï
+	//CLoadedModelInfo* pDragonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Dragon/Polygonal_Dragon.bin", NULL);
+	//m_pDragononModel = pDragonModel;
+	//pDragonModel->m_pModelRootObject->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 5, m_pDragononModel);
+	//for (int i = 0; i < 5; ++i)
+	//{
+	//	pDragonModel->m_pModelRootObject->m_pSkinnedAnimationController->SetTrackAnimationSet(i, i);
+	//	pDragonModel->m_pModelRootObject->m_pSkinnedAnimationController->SetTrackEnable(i, 0);
+	//}
+	//	pDragonModel->m_pModelRootObject->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
+	//pDragonModel->m_pModelRootObject->UpdateMobility(CGameObject::Moveable);
+	//pDragonModel->m_pModelRootObject->SetMonsterType(CGameObject::Dragon);
+	//
+	////°ñ·½
+	//CLoadedModelInfo* pGolemModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Golem/Polygonal_Golem.bin", NULL);
+	//m_pGolemModel = pGolemModel;
+	//pGolemModel->m_pModelRootObject->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 5, pGolemModel);
+	//for (int i = 0; i < 5; ++i)
+	//{
+	//	pGolemModel->m_pModelRootObject->m_pSkinnedAnimationController->SetTrackAnimationSet(i, i);
+	//	pGolemModel->m_pModelRootObject->m_pSkinnedAnimationController->SetTrackEnable(i, 0);
+	//}
+	//	pGolemModel->m_pModelRootObject->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
+	//pGolemModel->m_pModelRootObject->UpdateMobility(CGameObject::Moveable);
+	//pGolemModel->m_pModelRootObject->SetMonsterType(CGameObject::Golem);
+	//
+	//m_nMaxObjects = 30;
+	//
+	//InitShader(m_pMetalonModel->m_pModelRootObject);
+	//InitShader(m_pDragononModel->m_pModelRootObject);
+	//InitShader(m_pGolemModel->m_pModelRootObject);
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
 	m_pHPMaterial = new CMaterial();
@@ -738,10 +738,16 @@ void PistolBulletTexturedObjects::Update(float fTimeElapsed)
 	EventRemove();
 }
 
-void PistolBulletTexturedObjects::AppendBullet(XMFLOAT3& startLocation, XMFLOAT3& rayDirection)
+void PistolBulletTexturedObjects::AppendBullet(XMFLOAT3& startLocation, XMFLOAT3& rayDirection,int type)
 {
 	m_nBuildIndex++;
-	m_ppObjects.push_back(new CPistolBulletObject(m_pMaterial, startLocation, rayDirection));
+	m_ppObjects.push_back(new CPistolBulletObject(m_pMaterial, startLocation, rayDirection,type));
+}
+
+void PistolBulletTexturedObjects::AppendOtherPlayerBullet(XMFLOAT3& startLocation, XMFLOAT3& rayDirection)
+{
+	m_nOtherBuildIndex++;
+	m_ppOtherPlayerObjects.push_back(new CPistolBulletObject(m_pMaterial, startLocation, rayDirection,0));
 }
 
 void PistolBulletTexturedObjects::EventRemove()
