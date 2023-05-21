@@ -376,6 +376,7 @@ public:
 protected:
 	std::vector<CBoundingBoxMesh*> m_ppBoundingMeshes;
 	XMFLOAT3					m_xmf3BoundingScale;
+	bool						m_IsExistBoundingBox;
 
 public:
 	char						m_pstrFrameName[64];
@@ -384,7 +385,6 @@ public:
 	XMFLOAT4X4					m_xmf4x4Transform;
 	XMFLOAT3					m_xmf3Scale;
 	XMFLOAT3					m_xmf3PrevScale;
-	XMFLOAT3					m_xmf3Direction;
 	float						m_Mass;
 
 	CGameObject*				m_pParent = NULL;
@@ -416,7 +416,7 @@ public:
 	void SetChild(CGameObject* pChild, bool bReferenceUpdate = false);
 
 	// processcompute..
-	virtual void Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects);
+	virtual bool Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects);
 	virtual void OnPrepareAnimate();
 	virtual void Update(float fTimeElapsed);
 	virtual void Animate(float fTimeElapsed, XMFLOAT4X4* pxmf4x4Parent = NULL);
@@ -427,6 +427,8 @@ public:
 	virtual void OnPrepareRender();
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, UINT nInstances, D3D12_VERTEX_BUFFER_VIEW d3dInstancingBufferView);
+
+	virtual XMFLOAT3* GetDisplacement();
 
 	XMFLOAT3 GetPosition();
 	XMFLOAT3 GetLook();
@@ -466,11 +468,15 @@ public:
 	void CreateBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader);
 	void CreateBoundingBoxInst(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGameObject* pGameObject, LPVOID BBShader);
 	void CreateBoundingBoxObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader);
+	void SetWorldTransformBoundingBox();
+	void UpdateWorldTransformBoundingBox();
 	void SetBoundingScale(XMFLOAT3& BoundingScale);
 	void SetBoundingScale(XMFLOAT3&& BoundingScale);
-	XMFLOAT3 GetBoundingScale() const { return m_xmf3BoundingScale; }
 	XMFLOAT3& GetBoundingScale() { return m_xmf3BoundingScale; }
-	bool BeginOverlapBoundingBox(const BoundingOrientedBox& OtherOBB);
+	XMFLOAT3 GetBoundingScale() const { return m_xmf3BoundingScale; }
+	bool GetIsExistBoundingBox() const { return m_IsExistBoundingBox; }
+	void SetIsExistBoundingBox(bool bIsExist) { m_IsExistBoundingBox = bIsExist; }
+	bool BeginOverlapBoundingBox(const BoundingOrientedBox& OtherOBB, XMFLOAT3* displacement);
 
 	UINT GetMeshType() { return((m_pMesh) ? m_pMesh->GetType() : 0x00); }
 	CGameObject* GetParent() { return(m_pParent); }

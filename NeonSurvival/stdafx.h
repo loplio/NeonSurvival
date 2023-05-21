@@ -383,6 +383,38 @@ namespace Vector4
 		XMStoreFloat4(&xmf4Result, fScalar * XMLoadFloat4(&xmf4Vector));
 		return(xmf4Result);
 	}
+	inline void Normalize(XMFLOAT4X4& mat)
+	{
+		DirectX::XMFLOAT4 vec1 = { mat._11, mat._12, mat._13, mat._14 }; // 열 벡터 1
+		DirectX::XMFLOAT4 vec2 = { mat._21, mat._22, mat._23, mat._24 }; // 열 벡터 2
+		DirectX::XMFLOAT4 vec3 = { mat._31, mat._32, mat._33, mat._34 }; // 열 벡터 3
+		DirectX::XMFLOAT4 vec4 = { mat._41, mat._42, mat._43, mat._44 }; // 열 벡터 4
+
+		DirectX::XMVECTOR xmVec1 = DirectX::XMLoadFloat4(&vec1);
+		DirectX::XMVECTOR xmVec2 = DirectX::XMLoadFloat4(&vec2);
+		DirectX::XMVECTOR xmVec3 = DirectX::XMLoadFloat4(&vec3);
+		DirectX::XMVECTOR xmVec4 = DirectX::XMLoadFloat4(&vec4);
+
+		XMStoreFloat4(&vec1, DirectX::XMVector3Normalize(xmVec1));
+		XMStoreFloat4(&vec2, DirectX::XMVector3Normalize(xmVec2));
+		XMStoreFloat4(&vec3, DirectX::XMVector3Normalize(xmVec3));
+		XMStoreFloat4(&vec4, DirectX::XMVector3Normalize(xmVec4));
+
+		mat._11 = vec1.x; mat._12 = vec1.y; mat._13 = vec1.z; mat._14 = vec1.w;
+		mat._21 = vec2.x; mat._22 = vec2.y; mat._23 = vec2.z; mat._24 = vec2.w;
+		mat._31 = vec3.x; mat._32 = vec3.y; mat._33 = vec3.z; mat._34 = vec3.w;
+		mat._41 = vec4.x; mat._42 = vec4.y; mat._43 = vec4.z; mat._44 = vec4.w;
+	}
+	inline XMFLOAT4 Orientation(XMFLOAT4& xmf4Quaternion, XMFLOAT4X4& xmmtx4x4Matrix1)
+	{
+		XMFLOAT4 xmf4Result;
+		XMFLOAT4X4 matrix = xmmtx4x4Matrix1;
+		Normalize(matrix);
+		XMVECTOR xmfvector = XMQuaternionRotationMatrix(XMLoadFloat4x4(&matrix));
+		XMVECTOR transformOrientation = XMQuaternionNormalize(XMQuaternionMultiply(XMLoadFloat4(&xmf4Quaternion), xmfvector));
+		XMStoreFloat4(&xmf4Result, transformOrientation);
+		return xmf4Result;
+	}
 }
 
 namespace Matrix4x4

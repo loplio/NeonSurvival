@@ -255,8 +255,20 @@ void GameCompute_Neon::RayTrace() const
 
 void GameCompute_Neon::Collide() const
 {
+	//XMFLOAT3 displacement = *m_Player.GetDisplacement();
+
+	// Prepare Collide
+	m_Player.UpdateWorldTransformBoundingBox();
+
 	// Collide
-	m_Player.Collide(m_GameSource, m_BoundingObjects);
+	if (m_Player.Collide(m_GameSource, m_BoundingObjects))
+	{
+		// Apply Sliding.
+		m_Player.SetOnlyPlayerPosition(*m_Player.GetDisplacement());
+		m_Player.SetViewMatrix();
+		//*m_Player.GetDisplacement() = displacement;/* Vector3::ScalarProduct(displacement, 0.1, false);*/
+		//std::cout << "PlayerPosition: " << m_Player.GetPosition().x << ", " << m_Player.GetPosition().y << ", " << m_Player.GetPosition().z << std::endl;
+	}
 }
 
 //-------------------------------------------------------------------------------

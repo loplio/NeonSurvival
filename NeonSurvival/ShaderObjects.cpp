@@ -474,7 +474,10 @@ void MonsterMetalonObjects::InitShader(CGameObject* pChild)
 void MonsterMetalonObjects::CreateBoundingBox(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader)
 {
 	for (CGameObject* monster : m_ppObjects)
+	{
 		monster->CreateBoundingBoxInst(pd3dDevice, pd3dCommandList, m_pMonsterModel->m_pModelRootObject, BBShader);
+		monster->SetWorldTransformBoundingBox();
+	}
 }
 void MonsterMetalonObjects::BuildComponents(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CTexture* pTexture)
 {
