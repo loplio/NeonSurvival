@@ -846,29 +846,29 @@ void Scene_Neon::Update(float fTimeElapsed)
 	}
 
 	//몬스터 위치값 적용(서버)
-	for (int i = 0; i < MAX_MONSTER * 10; ++i)
-	{
-		XMFLOAT3 pos = m_pMonsterData[i].Pos;
+	//for (int i = 0; i < MAX_MONSTER * 10; ++i)
+	//{
+	//	XMFLOAT3 pos = m_pMonsterData[i].Pos;
 
-		m_vMonsters[i]->SetPosition(pos);
+	//	m_vMonsters[i]->SetPosition(pos);
 
-		if (MonsterRotate[i] == false)
-		{
-			MonsterRotate[i] = true;
-			switch (m_pMonsterData[i].SpawnPotal)
-			{
-			case 0:
-				m_vMonsters[i]->Rotate(0, 90, 0);
-				break;
-			case 1:
-				m_vMonsters[i]->Rotate(0, 180, 0);
-				break;
-			case 2:
-				m_vMonsters[i]->Rotate(0, -90, 0);
-				break;
-			}
-		}
-	}
+	//	if (MonsterRotate[i] == false)
+	//	{
+	//		MonsterRotate[i] = true;
+	//		switch (m_pMonsterData[i].SpawnPotal)
+	//		{
+	//		case 0:
+	//			m_vMonsters[i]->Rotate(0, 90, 0);
+	//			break;
+	//		case 1:
+	//			m_vMonsters[i]->Rotate(0, 180, 0);
+	//			break;
+	//		case 2:
+	//			m_vMonsters[i]->Rotate(0, -90, 0);
+	//			break;
+	//		}
+	//	}
+	//}
 
 	CScene::Update(fTimeElapsed);
 }
@@ -996,6 +996,7 @@ void Scene_Neon::CreateMonster(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 		m_vMonsters.back()->m_pSkinnedAnimationController->SetTrackEnable(i, false);
 		m_vMonsters.back()->m_pSkinnedAnimationController->SetTrackSpeed(i, 1.0f);
 	}
+	//m_vMonsters.back()->SetIsExistBoundingBox(false);
 	m_vMonsters.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + 30.f * x, 10.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f - 30.f * z);
 	if (pModel) delete pModel;
 }
@@ -1195,7 +1196,7 @@ CParticleObject_Neon::~CParticleObject_Neon()
 {
 }
 //-------------------------------------------------------------------------------
-CPistolBulletObject::CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection,int type)
+CPistolBulletObject::CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection, int type)
 {
 	Type = type;
 	SetMaterial(0, pMaterial);

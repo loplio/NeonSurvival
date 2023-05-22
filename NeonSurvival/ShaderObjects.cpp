@@ -762,7 +762,7 @@ void PistolBulletTexturedObjects::Collide(const CGameSource& GameSource, CBoundi
 				if (BoundingBoxObjects.m_StartIndex[i] <= nConflicted && nConflicted < BoundingBoxObjects.m_StartIndex[i] + BoundingBoxObjects.m_nObjects[i])
 				{
 					float damage = ((CPistolBulletObject*)(*bullet))->m_fDamege;
-					((CMonsterMetalon*)BoundingBoxObjects.m_ParentObjects[i])->Conflicted(damage);
+					((MonsterObject*)BoundingBoxObjects.m_ParentObjects[i])->Conflicted(damage);
 					break;
 				}
 			}
@@ -779,10 +779,10 @@ void PistolBulletTexturedObjects::Collide(const CGameSource& GameSource, CBoundi
 	}
 }
 
-void PistolBulletTexturedObjects::AppendBullet(XMFLOAT3& startLocation, XMFLOAT3& rayDirection)
+void PistolBulletTexturedObjects::AppendBullet(XMFLOAT3& startLocation, XMFLOAT3& rayDirection, int type)
 {
 	m_nBuildIndex++;
-	m_ppObjects.push_back(new CPistolBulletObject(m_pMaterial, startLocation, rayDirection,type));
+	m_ppObjects.push_back(new CPistolBulletObject(m_pMaterial, startLocation, rayDirection, type));
 }
 void PistolBulletTexturedObjects::EventRemove()
 {

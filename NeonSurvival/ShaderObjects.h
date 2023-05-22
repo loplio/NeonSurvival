@@ -218,7 +218,7 @@ public:
 	void BuildComponents(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CTexture* pTexture = NULL) override;
 	void Update(float fTimeElapsed) override;
 	void Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects) override;
-	void AppendBullet(XMFLOAT3& startLocation, XMFLOAT3& rayDirection);
+	void AppendBullet(XMFLOAT3& startLocation, XMFLOAT3& rayDirection, int type);
 	void EventRemove();
 	void ReleaseUploadBuffers() override;
 	void OnPostReleaseUploadBuffers() override;
