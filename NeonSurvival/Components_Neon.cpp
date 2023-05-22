@@ -848,8 +848,27 @@ void Scene_Neon::Update(float fTimeElapsed)
 	for (int i = 0; i < MAX_MONSTER * 10; ++i)
 	{
 		XMFLOAT3 pos = m_pMonsterData[i].Pos;
+
 		m_vMonsters[i]->SetPosition(pos);
+
+		if (MonsterRotate[i] == false)
+		{
+			MonsterRotate[i] = true;
+			switch (m_pMonsterData[i].SpawnPotal)
+			{
+			case 0:
+				m_vMonsters[i]->Rotate(0, 90, 0);
+				break;
+			case 1:
+				m_vMonsters[i]->Rotate(0, 180, 0);
+				break;
+			case 2:
+				m_vMonsters[i]->Rotate(0, -90, 0);
+				break;
+			}
+		}
 	}
+
 	CScene::Update(fTimeElapsed);
 }
 void Scene_Neon::AnimateObjects(float fTimeElapsed)

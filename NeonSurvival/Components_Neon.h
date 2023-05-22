@@ -81,7 +81,8 @@ public:
 	XMFLOAT3 m_NexusModelPos;
 	XMFLOAT3 m_SpawnPotal_Pos[4];
 	MonsterMetalonObjects* pMetalonShader = new MonsterMetalonObjects(); //¸ó½ºÅÍ
-	PistolBulletTexturedObjects* pBullets = NULL;							//ÃÑ¾Ë
+	PistolBulletTexturedObjects* pBullets = NULL;		//ÃÑ¾Ë
+	bool MonsterRotate[30] = { false, };
 };
 
 //-------------------------------------------------------------------------------
