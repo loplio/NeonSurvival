@@ -369,7 +369,7 @@ private:
 public:
 	void AddRef();
 	void Release();
-
+	
 	bool IsVisible(CCamera* pCamera = NULL);
 	bool IsCollide(BoundingOrientedBox& box);
 
@@ -414,7 +414,10 @@ public:
 	void SetChild(CGameObject* pChild, bool bReferenceUpdate = false);
 
 	// processcompute..
+	virtual void Conflicted(LPVOID CollisionInfo);
+	virtual bool Collide(FXMVECTOR Origin, FXMVECTOR Direction, float& Dist);
 	virtual bool Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects);
+	virtual bool Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects, UINT& nConflicted) { return false; };
 	virtual void OnPrepareAnimate();
 	virtual void Update(float fTimeElapsed);
 	virtual void Animate(float fTimeElapsed, XMFLOAT4X4* pxmf4x4Parent = NULL);
@@ -460,8 +463,11 @@ public:
 
 public:
 	std::vector<CBoundingBoxMesh*>& GetMesh() { return m_ppBoundingMeshes; }
+	void CreateBoundingBoxMeshSet(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader);
 	void CreateBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader);
+	void CreateBoundingBoxInstSet(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGameObject* pGameObject, LPVOID BBShader);
 	void CreateBoundingBoxInst(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGameObject* pGameObject, LPVOID BBShader);
+	void CreateBoundingBoxObjectSet(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader);
 	void CreateBoundingBoxObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader);
 	void SetWorldTransformBoundingBox();
 	void UpdateWorldTransformBoundingBox();

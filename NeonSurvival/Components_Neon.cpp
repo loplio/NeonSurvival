@@ -2,6 +2,7 @@
 #include "Components_Neon.h"
 #include "GameObject.h"
 #include "ShaderObjects.h"
+#include "GameSource.h"
 
 //-------------------------------------------------------------------------------
 /*	Player																	   */
@@ -921,7 +922,16 @@ CMonsterMetalon::CMonsterMetalon(const CGameObject& pGameObject)
 
 	m_nMaterials = 0;
 	m_ppMaterials = NULL;
-	m_pMesh = NULL;
+
+	if (pGameObject.m_pMesh)
+	{
+		m_pMesh = new CMesh();
+		BoundingOrientedBox BoundingBox = pGameObject.m_pMesh->GetBoundingBox();
+		m_pMesh->SetBoundinBoxCenter(BoundingBox.Center);
+		m_pMesh->SetBoundinBoxExtents(BoundingBox.Extents);
+	}
+	else
+		m_pMesh = NULL;
 
 	m_Mobility = pGameObject.m_Mobility;
 
@@ -934,6 +944,13 @@ CMonsterMetalon::~CMonsterMetalon()
 
 void CMonsterMetalon::RunTimeBuild(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
+}
+void CMonsterMetalon::Conflicted(LPVOID CollisionInfo)
+{
+	int Damege = (int)CollisionInfo;
+
+	m_fLife -= Damege;
+	std::cout << "Monster Life: " << m_fLife << std::endl;
 }
 void CMonsterMetalon::Update(float fTimeElapsed)
 {
@@ -1022,6 +1039,26 @@ void CPistolBulletObject::Update(float fTimeElapsed)
 {
 	SetPosition(Vector3::Add(GetPosition(), Vector3::ScalarProduct(m_fRayDriection, m_fSpeed * fTimeElapsed, false)));
 	m_fLifeTime += fTimeElapsed;
+}
+bool CPistolBulletObject::Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects, UINT& nConflicted)
+{
+	float distance = 0.0f;
+	XMFLOAT3 RayOrigin = GetPosition();
+	std::vector<CGameObject*>& BoundingObjects = BoundingBoxObjects.GetBoundingObjects();
+	for (int i = 0; i < BoundingObjects.size(); ++i)
+	{
+		if (BoundingObjects[i]->m_Mobility == Moveable)
+		{
+			if (BoundingObjects[i]->Collide(XMLoadFloat3(&RayOrigin), XMLoadFloat3(&m_fRayDriection), distance))
+			{
+				nConflicted = i;
+
+				return true;
+			}
+		}
+	}
+
+	return false;
 }
 void CPistolBulletObject::ReleaseUploadBuffers()
 {

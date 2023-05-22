@@ -475,13 +475,13 @@ void MonsterMetalonObjects::CreateBoundingBox(ID3D12Device* pd3dDevice, ID3D12Gr
 {
 	for (CGameObject* monster : m_ppObjects)
 	{
-		monster->CreateBoundingBoxInst(pd3dDevice, pd3dCommandList, m_pMonsterModel->m_pModelRootObject, BBShader);
+		monster->CreateBoundingBoxInstSet(pd3dDevice, pd3dCommandList, m_pMonsterModel->m_pModelRootObject, BBShader);
 		monster->SetWorldTransformBoundingBox();
 	}
 }
 void MonsterMetalonObjects::BuildComponents(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CTexture* pTexture)
 {
-	CLoadedModelInfo* pMonsterModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Bat/Polygonal_One_Eyed_Bat.bin", NULL);
+	CLoadedModelInfo* pMonsterModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Metalon/Green_Metalon.bin", NULL);
 	m_pMonsterModel = pMonsterModel;
 	pMonsterModel->m_pModelRootObject->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 1, m_pMonsterModel);
 	pMonsterModel->m_pModelRootObject->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
@@ -521,6 +521,14 @@ void MonsterMetalonObjects::Update(float fTimeElapsed)
 
 	EventRemove();
 }
+void MonsterMetalonObjects::Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects)
+{
+	for (CGameObject* bullet : m_ppObjects)
+	{
+		// Prepare Collision
+		if (bullet) bullet->UpdateWorldTransformBoundingBox();
+	}
+}
 void MonsterMetalonObjects::AnimateObjects(float fTimeElapsed)
 {
 	if (m_pMonsterModel->m_pModelRootObject->m_pSkinnedAnimationController)
@@ -548,6 +556,7 @@ void MonsterMetalonObjects::AppendMonster(ID3D12Device* pd3dDevice, ID3D12Graphi
 	{
 		CMonsterMetalon* metalon = new CMonsterMetalon(*m_pMonsterModel->m_pModelRootObject);
 		metalon->SetPosition(StartPosition.x, StartPosition.y, StartPosition.z);
+		metalon->SetWorldTransformBoundingBox();
 		metalon->m_fDriection = XMFLOAT3(vdist(gen), 0.0f, vdist(gen));
 		m_ppObjects.push_back(metalon);
 	}
@@ -700,6 +709,26 @@ void PistolBulletTexturedObjects::Update(float fTimeElapsed)
 	CBulletObjects::Update(fTimeElapsed);
 
 	EventRemove();
+}
+
+void PistolBulletTexturedObjects::Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects)
+{
+	UINT nConflicted;
+	for (std::list<CGameObject*>::iterator bullet = m_ppObjects.begin(); bullet != m_ppObjects.end(); ++bullet)
+	{
+		if (*bullet && ((CPistolBulletObject*)(*bullet))->Collide(GameSource, BoundingBoxObjects, nConflicted))
+		{
+			(*bullet)->Release();
+			std::list<CGameObject*>::iterator iter = m_ppObjects.erase(bullet);
+			if (iter != m_ppObjects.end())
+			{
+				bullet = iter;
+				continue;
+			}
+			else
+				break;
+		}
+	}
 }
 
 void PistolBulletTexturedObjects::AppendBullet(XMFLOAT3& startLocation, XMFLOAT3& rayDirection)

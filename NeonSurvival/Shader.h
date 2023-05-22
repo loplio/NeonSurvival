@@ -47,6 +47,7 @@ public:
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int nPipelineState = 0);
 
 	virtual void CreateBoundingBox(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader) { }
+	virtual void Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects) { };
 	virtual void Update(float fTimeElapsed) { }
 	virtual void RunTimeBuild(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) { }
 	virtual void AnimateObjects(float fTimeElapsed) { }
