@@ -718,6 +718,15 @@ void PistolBulletTexturedObjects::Collide(const CGameSource& GameSource, CBoundi
 	{
 		if (*bullet && ((CPistolBulletObject*)(*bullet))->Collide(GameSource, BoundingBoxObjects, nConflicted))
 		{
+			for (int i = 0; i < BoundingBoxObjects.m_ParentObjects.size(); ++i)
+			{
+				if (BoundingBoxObjects.m_StartIndex[i] <= nConflicted && nConflicted < BoundingBoxObjects.m_StartIndex[i] + BoundingBoxObjects.m_nObjects[i])
+				{
+					float damage = ((CPistolBulletObject*)(*bullet))->m_fDamege;
+					((CMonsterMetalon*)BoundingBoxObjects.m_ParentObjects[i])->Conflicted(damage);
+					break;
+				}
+			}
 			(*bullet)->Release();
 			std::list<CGameObject*>::iterator iter = m_ppObjects.erase(bullet);
 			if (iter != m_ppObjects.end())

@@ -858,9 +858,9 @@ void CGameObject::SetChild(CGameObject* pChild, bool bReferenceUpdate)
 	}
 }
 
-void CGameObject::Conflicted(LPVOID CollisionInfo)
-{
-}
+//void CGameObject::Conflicted(LPVOID CollisionInfo)
+//{
+//}
 bool CGameObject::Collide(FXMVECTOR Origin, FXMVECTOR Direction, float& Dist)
 {
 	bool bHit = false;
@@ -1174,9 +1174,9 @@ void CGameObject::CreateBoundingBoxMeshSet(ID3D12Device* pd3dDevice, ID3D12Graph
 	CreateBoundingBoxMesh(pd3dDevice, pd3dCommandList, BBShader);
 	if (((CBoundingBoxObjects*)BBShader)->bCreate)
 	{
-		nBoundingObjects = ((CBoundingBoxObjects*)BBShader)->GetBoundingObjects().size() - nBoundingObjects;
+		int nCreateObjects = ((CBoundingBoxObjects*)BBShader)->GetBoundingObjects().size() - nBoundingObjects;
 		((CBoundingBoxObjects*)BBShader)->m_ParentObjects.push_back(this);
-		((CBoundingBoxObjects*)BBShader)->m_nObjects.push_back(nBoundingObjects);
+		((CBoundingBoxObjects*)BBShader)->m_nObjects.push_back(nCreateObjects);
 		((CBoundingBoxObjects*)BBShader)->m_StartIndex.push_back(nBoundingObjects);
 		((CBoundingBoxObjects*)BBShader)->bCreate = false;
 	}
@@ -1207,9 +1207,9 @@ void CGameObject::CreateBoundingBoxInstSet(ID3D12Device* pd3dDevice, ID3D12Graph
 	CreateBoundingBoxInst(pd3dDevice, pd3dCommandList, pGameObject, BBShader);
 	if (((CBoundingBoxObjects*)BBShader)->bCreate)
 	{
-		nBoundingObjects = ((CBoundingBoxObjects*)BBShader)->GetBoundingObjects().size() - nBoundingObjects;
+		int nCreateObjects = ((CBoundingBoxObjects*)BBShader)->GetBoundingObjects().size() - nBoundingObjects;
 		((CBoundingBoxObjects*)BBShader)->m_ParentObjects.push_back(this);
-		((CBoundingBoxObjects*)BBShader)->m_nObjects.push_back(nBoundingObjects);
+		((CBoundingBoxObjects*)BBShader)->m_nObjects.push_back(nCreateObjects);
 		((CBoundingBoxObjects*)BBShader)->m_StartIndex.push_back(nBoundingObjects);
 		((CBoundingBoxObjects*)BBShader)->bCreate = false;
 	}
@@ -1242,9 +1242,9 @@ void CGameObject::CreateBoundingBoxObjectSet(ID3D12Device* pd3dDevice, ID3D12Gra
 	CreateBoundingBoxObject(pd3dDevice, pd3dCommandList, BBShader);
 	if (((CBoundingBoxObjects*)BBShader)->bCreate)
 	{
-		nBoundingObjects = ((CBoundingBoxObjects*)BBShader)->GetBoundingObjects().size() - nBoundingObjects;
+		int nCreateObjects = ((CBoundingBoxObjects*)BBShader)->GetBoundingObjects().size() - nBoundingObjects;
 		((CBoundingBoxObjects*)BBShader)->m_ParentObjects.push_back(this);
-		((CBoundingBoxObjects*)BBShader)->m_nObjects.push_back(nBoundingObjects);
+		((CBoundingBoxObjects*)BBShader)->m_nObjects.push_back(nCreateObjects);
 		((CBoundingBoxObjects*)BBShader)->m_StartIndex.push_back(nBoundingObjects);
 		((CBoundingBoxObjects*)BBShader)->bCreate = false;
 	}

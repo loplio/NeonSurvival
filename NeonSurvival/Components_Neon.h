@@ -91,7 +91,7 @@ public:
 	virtual ~CMonsterMetalon();
 
 	void RunTimeBuild(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) override;
-	void Conflicted(LPVOID CollisionInfo) override;
+	void Conflicted(float damage);
 	void Update(float fTimeElapsed) override;
 	void ReleaseUploadBuffers();
 

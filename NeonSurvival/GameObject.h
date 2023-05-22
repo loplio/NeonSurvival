@@ -414,7 +414,6 @@ public:
 	void SetChild(CGameObject* pChild, bool bReferenceUpdate = false);
 
 	// processcompute..
-	virtual void Conflicted(LPVOID CollisionInfo);
 	virtual bool Collide(FXMVECTOR Origin, FXMVECTOR Direction, float& Dist);
 	virtual bool Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects);
 	virtual bool Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects, UINT& nConflicted) { return false; };

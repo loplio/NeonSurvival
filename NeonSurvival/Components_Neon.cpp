@@ -945,11 +945,9 @@ CMonsterMetalon::~CMonsterMetalon()
 void CMonsterMetalon::RunTimeBuild(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
 }
-void CMonsterMetalon::Conflicted(LPVOID CollisionInfo)
+void CMonsterMetalon::Conflicted(float damage)
 {
-	int Damege = (int)CollisionInfo;
-
-	m_fLife -= Damege;
+	m_fLife -= damage;
 	std::cout << "Monster Life: " << m_fLife << std::endl;
 }
 void CMonsterMetalon::Update(float fTimeElapsed)

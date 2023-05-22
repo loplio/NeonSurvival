@@ -29,7 +29,8 @@ protected:
 
 public:
 	std::vector<CGameObject*> m_ParentObjects;
-	std::vector<UINT> m_ObjectsIndex;
+	std::vector<UINT> m_nObjects;
+	std::vector<UINT> m_StartIndex;
 };
 
 //--Concrete_1-------------------------------------------------------------------
