@@ -22,9 +22,15 @@ public:
 	int IsCollide(CGameObject* obj/*, ObjectType excludetype*/);
 
 	bool m_bCollisionBoxWireFrame = false;
+	bool bCreate = false;
 
 protected:
 	std::vector<CGameObject*> m_BoundingObjects;
+
+public:
+	std::vector<CGameObject*> m_ParentObjects;
+	std::vector<UINT> m_nObjects;
+	std::vector<UINT> m_StartIndex;
 };
 
 //--Concrete_1-------------------------------------------------------------------
@@ -37,7 +43,7 @@ public:
 	void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature) override {
 		CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
 
-		m_Player.CreateBoundingBoxObject(pd3dDevice, pd3dCommandList, this);
+		m_Player.CreateBoundingBoxObjectSet(pd3dDevice, pd3dCommandList, this);
 		//m_Player.CreateBoundingBoxMesh(pd3dDevice, pd3dCommandList, this);
 		m_Scene.CreateBoundingBox(pd3dDevice, pd3dCommandList, this);		// 종료 시 느려지는 현상.
 	}
@@ -168,6 +174,7 @@ public:
 	void CreateBoundingBox(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader) override;
 	void BuildComponents(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CTexture* pTexture = NULL) override;
 	void Update(float fTimeElapsed) override;
+	void Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects) override;
 	void AnimateObjects(float fTimeElapsed) override;
 	void AppendMonster(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, XMFLOAT3&& StartPosition);
 	void EventRemove();
@@ -210,7 +217,8 @@ public:
 
 	void BuildComponents(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CTexture* pTexture = NULL) override;
 	void Update(float fTimeElapsed) override;
-	void AppendBullet(XMFLOAT3& startLocation, XMFLOAT3& rayDirection,int type);
+	void Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects) override;
+	void AppendBullet(XMFLOAT3& startLocation, XMFLOAT3& rayDirection);
 	void EventRemove();
 	void ReleaseUploadBuffers() override;
 	void OnPostReleaseUploadBuffers() override;

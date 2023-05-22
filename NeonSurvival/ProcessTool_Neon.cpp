@@ -257,6 +257,11 @@ void GameCompute_Neon::Collide() const
 {
 	//XMFLOAT3 displacement = *m_Player.GetDisplacement();
 
+	for (int i = 0; i < m_Scene.m_ppShaders.size(); ++i)
+	{
+		m_Scene.m_ppShaders[i]->Collide(m_GameSource, m_BoundingObjects);
+	}
+
 	// Prepare Collide
 	m_Player.UpdateWorldTransformBoundingBox();
 

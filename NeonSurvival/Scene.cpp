@@ -396,7 +396,7 @@ void CScene::CreateBoundingBox(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 
 	for (int i = 0; i < m_vHierarchicalGameObjects.size(); ++i)
 	{
-		m_vHierarchicalGameObjects[i]->CreateBoundingBoxMesh(pd3dDevice, pd3dCommandList, BBShader);
+		m_vHierarchicalGameObjects[i]->CreateBoundingBoxMeshSet(pd3dDevice, pd3dCommandList, BBShader);
 		m_vHierarchicalGameObjects[i]->UpdateWorldTransformBoundingBox();
 	}
 

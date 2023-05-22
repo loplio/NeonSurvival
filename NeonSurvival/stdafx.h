@@ -345,6 +345,23 @@ namespace Vector3
 	{
 		return(TransformCoord(xmf3Vector, XMLoadFloat4x4(&xmmtx4x4Matrix)));
 	}
+	inline XMFLOAT3 OriginScale(XMFLOAT4X4& xmmtx4x4Matrix)
+	{
+		XMMATRIX rotationMatrix = XMMatrixSet(
+			xmmtx4x4Matrix._11, xmmtx4x4Matrix._12, xmmtx4x4Matrix._13, xmmtx4x4Matrix._14,
+			xmmtx4x4Matrix._21, xmmtx4x4Matrix._22, xmmtx4x4Matrix._23, xmmtx4x4Matrix._24,
+			xmmtx4x4Matrix._31, xmmtx4x4Matrix._32, xmmtx4x4Matrix._33, xmmtx4x4Matrix._34,
+			0.0f, 0.0f, 0.0f, 1.0f
+		);
+		XMMATRIX inverseRotationMatrix = XMMatrixTranspose(rotationMatrix);
+
+		XMFLOAT4X4 xmmtx4x4Result;
+		XMStoreFloat4x4(&xmmtx4x4Result, inverseRotationMatrix * XMLoadFloat4x4(&xmmtx4x4Matrix));
+
+		XMFLOAT3 xmf3Scale = XMFLOAT3(sqrt(xmmtx4x4Result._11), sqrt(xmmtx4x4Result._22), sqrt(xmmtx4x4Result._33));
+
+		return(xmf3Scale);
+	}
 }
 
 namespace Vector4

@@ -95,6 +95,7 @@ public:
 	virtual ~CMonsterMetalon();
 
 	void RunTimeBuild(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) override;
+	void Conflicted(float damage);
 	void Update(float fTimeElapsed) override;
 	void Animate(float fTimeElapsed, XMFLOAT4X4* pxmf4x4Parent = NULL) override;
 	void ReleaseUploadBuffers();
@@ -138,9 +139,11 @@ public:
 
 	void RunTimeBuild(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) override;
 	void Update(float fTimeElapsed) override;
+	bool Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects, UINT& nConflicted) override;
 	void ReleaseUploadBuffers();
 
 public:
+	const float m_fDamege = 18.0f;
 	const float m_fSpeed = PIXEL_MPS(35);
 	float m_fLifeTime = 0.0f;
 	XMFLOAT3 m_fRayDriection;

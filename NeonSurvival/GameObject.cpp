@@ -726,7 +726,16 @@ CGameObject::CGameObject(const CGameObject& pGameObject)
 
 	m_nMaterials = 0;
 	m_ppMaterials = NULL;
-	m_pMesh = NULL;
+	if (pGameObject.m_pMesh)
+	{
+		m_pMesh = new CMesh();
+		BoundingOrientedBox BoundingBox = pGameObject.m_pMesh->GetBoundingBox();
+		m_pMesh->SetBoundinBoxCenter(BoundingBox.Center);
+		m_pMesh->SetBoundinBoxExtents(BoundingBox.Extents);
+	}
+	else
+		m_pMesh = NULL;
+
 
 	m_Mobility = pGameObject.m_Mobility;
 
@@ -849,6 +858,30 @@ void CGameObject::SetChild(CGameObject* pChild, bool bReferenceUpdate)
 	}
 }
 
+//void CGameObject::Conflicted(LPVOID CollisionInfo)
+//{
+//}
+bool CGameObject::Collide(FXMVECTOR Origin, FXMVECTOR Direction, float& Dist)
+{
+	bool bHit = false;
+	if (m_pMesh)
+	{
+		BoundingOrientedBox OBB = m_pMesh->GetTransformedBoundingBox();
+		if (OBB.Intersects(Origin, Direction, Dist))
+		{
+			if (Dist < METER_PER_PIXEL(1))
+			{
+				std::cout << "hit!!!!" << std::endl;
+				return true;
+			}
+		}
+	}
+
+	if (m_pSibling) bHit = m_pSibling->Collide(Origin, Direction, Dist);
+	if (m_pChild && !bHit) bHit = m_pChild->Collide(Origin, Direction, Dist);
+
+	return bHit;
+}
 bool CGameObject::Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects)
 {
 	assert(GetDisplacement());	// Has a displacement value.
@@ -1135,6 +1168,19 @@ int CGameObject::PickObjectByRayIntersection(XMFLOAT3& xmf3PickPosition, XMFLOAT
 	return nIntersected;
 }
 
+void CGameObject::CreateBoundingBoxMeshSet(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader)
+{
+	int nBoundingObjects = ((CBoundingBoxObjects*)BBShader)->GetBoundingObjects().size();
+	CreateBoundingBoxMesh(pd3dDevice, pd3dCommandList, BBShader);
+	if (((CBoundingBoxObjects*)BBShader)->bCreate)
+	{
+		int nCreateObjects = ((CBoundingBoxObjects*)BBShader)->GetBoundingObjects().size() - nBoundingObjects;
+		((CBoundingBoxObjects*)BBShader)->m_ParentObjects.push_back(this);
+		((CBoundingBoxObjects*)BBShader)->m_nObjects.push_back(nCreateObjects);
+		((CBoundingBoxObjects*)BBShader)->m_StartIndex.push_back(nBoundingObjects);
+		((CBoundingBoxObjects*)BBShader)->bCreate = false;
+	}
+}
 void CGameObject::CreateBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader)
 {
 	if (!m_IsExistBoundingBox) return;
@@ -1149,10 +1195,24 @@ void CGameObject::CreateBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12Graphics
 		m_ppBoundingMeshes.push_back(BBMesh);
 		m_pMesh->SetBoundinBoxExtents(XMFLOAT3(extents.x * m_xmf3BoundingScale.x, extents.y * m_xmf3BoundingScale.y, extents.z * m_xmf3BoundingScale.z));
 		((CBoundingBoxObjects*)BBShader)->AppendBoundingObject(this);
+		((CBoundingBoxObjects*)BBShader)->bCreate = true;
 	}
 
 	if (m_pSibling) m_pSibling->CreateBoundingBoxMesh(pd3dDevice, pd3dCommandList,  BBShader);
 	if (m_pChild) m_pChild->CreateBoundingBoxMesh(pd3dDevice, pd3dCommandList, BBShader);
+}
+void CGameObject::CreateBoundingBoxInstSet(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGameObject* pGameObject, LPVOID BBShader)
+{
+	int nBoundingObjects = ((CBoundingBoxObjects*)BBShader)->GetBoundingObjects().size();
+	CreateBoundingBoxInst(pd3dDevice, pd3dCommandList, pGameObject, BBShader);
+	if (((CBoundingBoxObjects*)BBShader)->bCreate)
+	{
+		int nCreateObjects = ((CBoundingBoxObjects*)BBShader)->GetBoundingObjects().size() - nBoundingObjects;
+		((CBoundingBoxObjects*)BBShader)->m_ParentObjects.push_back(this);
+		((CBoundingBoxObjects*)BBShader)->m_nObjects.push_back(nCreateObjects);
+		((CBoundingBoxObjects*)BBShader)->m_StartIndex.push_back(nBoundingObjects);
+		((CBoundingBoxObjects*)BBShader)->bCreate = false;
+	}
 }
 void CGameObject::CreateBoundingBoxInst(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGameObject* pGameObject, LPVOID BBShader)
 {
@@ -1169,11 +1229,25 @@ void CGameObject::CreateBoundingBoxInst(ID3D12Device* pd3dDevice, ID3D12Graphics
 			CBoundingBoxMesh* BBMesh = new CBoundingBoxMesh(pd3dDevice, pd3dCommandList, Extents, center, m_xmf3BoundingScale, m_xmf4x4World);
 			m_ppBoundingMeshes.push_back(BBMesh);
 			((CBoundingBoxObjects*)BBShader)->AppendBoundingObject(this);
+			((CBoundingBoxObjects*)BBShader)->bCreate = true;
 		}
 	}
 
 	if (m_pSibling) m_pSibling->CreateBoundingBoxInst(pd3dDevice, pd3dCommandList, pGameObject->m_pSibling, BBShader);
 	if (m_pChild) m_pChild->CreateBoundingBoxInst(pd3dDevice, pd3dCommandList, pGameObject->m_pChild, BBShader);
+}
+void CGameObject::CreateBoundingBoxObjectSet(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader)
+{
+	int nBoundingObjects = ((CBoundingBoxObjects*)BBShader)->GetBoundingObjects().size();
+	CreateBoundingBoxObject(pd3dDevice, pd3dCommandList, BBShader);
+	if (((CBoundingBoxObjects*)BBShader)->bCreate)
+	{
+		int nCreateObjects = ((CBoundingBoxObjects*)BBShader)->GetBoundingObjects().size() - nBoundingObjects;
+		((CBoundingBoxObjects*)BBShader)->m_ParentObjects.push_back(this);
+		((CBoundingBoxObjects*)BBShader)->m_nObjects.push_back(nCreateObjects);
+		((CBoundingBoxObjects*)BBShader)->m_StartIndex.push_back(nBoundingObjects);
+		((CBoundingBoxObjects*)BBShader)->bCreate = false;
+	}
 }
 void CGameObject::CreateBoundingBoxObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader)
 {
@@ -1184,6 +1258,7 @@ void CGameObject::CreateBoundingBoxObject(ID3D12Device* pd3dDevice, ID3D12Graphi
 	m_ppBoundingMeshes.push_back(new CBoundingBoxMesh(pd3dDevice, pd3dCommandList, extents, center, m_xmf3BoundingScale, m_xmf4x4World));
 	m_pMesh->SetBoundinBoxExtents(XMFLOAT3(extents.x * m_xmf3BoundingScale.x, extents.y * m_xmf3BoundingScale.y, extents.z * m_xmf3BoundingScale.z));
 	((CBoundingBoxObjects*)BBShader)->AppendBoundingObject(this);
+	((CBoundingBoxObjects*)BBShader)->bCreate = true;
 
 	SetWorldTransformBoundingBox();
 }
@@ -1191,9 +1266,10 @@ void CGameObject::SetWorldTransformBoundingBox()
 {
 	if (m_pMesh)
 	{
+		XMFLOAT3 WorldScale = Vector3::OriginScale(m_xmf4x4World);
 		BoundingOrientedBox BoundingBox = m_pMesh->GetBoundingBox();
 		XMFLOAT3 center = Vector3::TransformCoord(BoundingBox.Center, m_xmf4x4World);
-		XMFLOAT3 extents = XMFLOAT3(BoundingBox.Extents.x * m_xmf4x4World._11 * m_xmf3BoundingScale.x, BoundingBox.Extents.y * m_xmf4x4World._22 * m_xmf3BoundingScale.y, BoundingBox.Extents.z * m_xmf4x4World._33 * m_xmf3BoundingScale.z);
+		XMFLOAT3 extents = XMFLOAT3(BoundingBox.Extents.x * WorldScale.x * m_xmf3BoundingScale.x, BoundingBox.Extents.y * WorldScale.y * m_xmf3BoundingScale.y, BoundingBox.Extents.z * WorldScale.z * m_xmf3BoundingScale.z);
 		XMFLOAT4 orientation = Vector4::Orientation(BoundingBox.Orientation, m_xmf4x4World);
 		m_pMesh->SetTransformedBoundingBox(center, extents, orientation);
 	}
