@@ -105,7 +105,11 @@ void Player_Neon::Update(float fTimeElapsed)
 	// Distance traveled in elapsed time
 	XMFLOAT3 timeElapsedDistance = Vector3::ScalarProduct(m_xmf3Velocity, fTimeElapsed, false);
 	m_xmf3Displacement = timeElapsedDistance;
+
+	//std::cout << "B : " << m_xmf3Position.x << ", " << m_xmf3Position.y << ", " << m_xmf3Position.z << std::endl;
+	//std::cout << "Displacement : " << m_xmf3Displacement.x << ", " << m_xmf3Displacement.y << ", " << m_xmf3Displacement.z << std::endl;
 	CPlayer::Move(timeElapsedDistance, false);
+	//std::cout << "A : " << m_xmf3Position.x << ", " << m_xmf3Position.y << ", " << m_xmf3Position.z << std::endl;
 
 	// Keep out of the ground and align the player and the camera.
 	if (!m_vGroundObjects->empty()) OnGroundUpdateCallback(fTimeElapsed);

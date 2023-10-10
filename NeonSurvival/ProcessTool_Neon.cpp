@@ -269,8 +269,10 @@ void GameCompute_Neon::Collide() const
 	if (m_Player.Collide(m_GameSource, m_BoundingObjects))
 	{
 		// Apply Sliding.
+		//std::cout << "Apply before Pos: " << m_Player.GetPosition().x << ", " << m_Player.GetPosition().y << ", " << m_Player.GetPosition().z << std::endl;
 		m_Player.SetOnlyPlayerPosition(*m_Player.GetDisplacement());
 		m_Player.SetViewMatrix();
+		//std::cout << "Apply after Pos: " << m_Player.GetPosition().x << ", " << m_Player.GetPosition().y << ", " << m_Player.GetPosition().z << std::endl;
 		//*m_Player.GetDisplacement() = displacement;/* Vector3::ScalarProduct(displacement, 0.1, false);*/
 		//std::cout << "PlayerPosition: " << m_Player.GetPosition().x << ", " << m_Player.GetPosition().y << ", " << m_Player.GetPosition().z << std::endl;
 	}
@@ -305,13 +307,13 @@ void GameRenderDisplay_Neon::Render()
 	// Scene Render
 	m_Scene.OnPrepareRender(&m_pd3dCommandList, Camera);
 	m_Scene.Render(&m_pd3dCommandList, Camera);
-	//static float time = 0.0f;
-	//if (time > 0.5f)
-	//{
-	//	time = 0.0f;
-	//	std::cout << m_Player.GetPosition().x << ", " << m_Player.GetPosition().y << ", " << m_Player.GetPosition().z << std::endl;
-	//}
-	//time += m_Scene.m_fElapsedTime;
+	static float time = 0.0f;
+	if (time > 0.5f)
+	{
+		time = 0.0f;
+		std::cout << m_Player.GetPosition().x << ", " << m_Player.GetPosition().y << ", " << m_Player.GetPosition().z << std::endl;
+	}
+	time += m_Scene.m_fElapsedTime;
 	// Player Render
 	m_Player.Render(&m_pd3dCommandList, Camera);
 

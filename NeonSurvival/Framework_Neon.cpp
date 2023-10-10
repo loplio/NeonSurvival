@@ -294,8 +294,13 @@ void CGameFramework_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID
 			m_Iframe.ChangeSwapChainState();
 			break;
 		case VK_F11:
-			m_bReleaseCapture = true;
-			ReleaseCapture();
+			if (!m_bReleaseCapture)
+			{
+				m_bReleaseCapture = true;
+				ReleaseCapture();
+			}
+			else
+				m_bReleaseCapture = false;
 			break;
 		default:
 			break;
