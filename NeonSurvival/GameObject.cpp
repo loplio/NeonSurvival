@@ -698,7 +698,10 @@ CGameObject::CGameObject(int nMaterials)
 	m_xmf3Scale = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	m_xmf3BoundingScale = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	m_xmf3PrevScale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	m_nBoundingCylinderRadius = 0.0f;
+	m_IsBoundingCylinder = false;
 	m_IsExistBoundingBox = true;
+	m_IsCrosshair = false;
 	m_Mass = 0;
 
 	m_pMesh = NULL;
@@ -722,7 +725,10 @@ CGameObject::CGameObject(const CGameObject& pGameObject)
 	m_xmf3PrevScale = pGameObject.m_xmf3PrevScale;
 	m_Mass = pGameObject.m_Mass;
 
+	m_nBoundingCylinderRadius = pGameObject.m_nBoundingCylinderRadius;
+	m_IsBoundingCylinder = pGameObject.m_IsBoundingCylinder;
 	m_IsExistBoundingBox = pGameObject.m_IsExistBoundingBox;
+	m_IsCrosshair = pGameObject.m_IsExistBoundingBox;
 
 	m_nMaterials = 0;
 	m_ppMaterials = NULL;
@@ -934,7 +940,7 @@ void CGameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pC
 {
 	if (m_pSkinnedAnimationController) m_pSkinnedAnimationController->UpdateShaderVariables(pd3dCommandList);
 
-	if (m_pMesh && IsVisible(pCamera))
+	if (m_pMesh && (IsVisible(pCamera) || IsCrosshair()))
 	{
 		UpdateShaderVariable(pd3dCommandList, &m_xmf4x4World);
 
@@ -1145,6 +1151,11 @@ bool CGameObject::IsCollide(BoundingOrientedBox& box)
 	return xmBoundingBox.Intersects(box);
 }
 
+bool CGameObject::IsCrosshair()
+{
+	return m_IsCrosshair;
+}
+
 void CGameObject::GenerateRayForPicking(XMFLOAT3& xmf3PickPosition, XMFLOAT4X4& xmf4x4View, XMFLOAT3* pxmf3PickRayOrigin, XMFLOAT3* pxmf3PickRayDirection)
 {
 	XMFLOAT4X4 xmf4x4WorldView = Matrix4x4::Multiply(m_xmf4x4World, xmf4x4View);
@@ -1302,6 +1313,14 @@ void CGameObject::SetBoundingScale(XMFLOAT3&& BoundingScale)
 {
 	SetBoundingScale(BoundingScale);
 }
+void CGameObject::SetIsBoundingCylinder(bool bIsCylinder, float fRadius)
+{
+	m_IsBoundingCylinder = bIsCylinder;
+	m_nBoundingCylinderRadius = fRadius;
+
+	if (m_pSibling) m_pSibling->SetIsBoundingCylinder(bIsCylinder, fRadius);
+	if (m_pChild) m_pChild->SetIsBoundingCylinder(bIsCylinder, fRadius);
+}
 bool CGameObject::BeginOverlapBoundingBox(const BoundingOrientedBox& OtherOBB, XMFLOAT3* displacement)
 {
 	const UINT nDirection = 4;
@@ -1338,141 +1357,191 @@ bool CGameObject::BeginOverlapBoundingBox(const BoundingOrientedBox& OtherOBB, X
 			//std::cout << " nContains 개수: " << nContains << std::endl;
 			if (nContains)
 			{
-				Center = Vector3::ScalarProduct(Center, 1.0f / nContains, false);
-				Center = Vector3::Normalize(Vector3::Subtract(Center, OBB.Center));
-
-				//if (ObjectDirection.x < EPSILON && ObjectDirection.y < EPSILON && ObjectDirection.z < EPSILON)
-				//{
-				//	ObjectDirection = XMFLOAT3(0.0f, 0.0f, OtherOBB.Extents.z);
-				//	ObjectDirection = Vector3::Normalize(Vector3::TransformCoord(ObjectDirection, mtxRotate));
-				//}
-				ObjectDirection = Vector3::Normalize(ObjectDirection);
-
-				float RatioXZ = 1.0f / (OBB.Extents.x + OBB.Extents.z);
-				XMFLOAT3 OBBDirectionXZ[nDirection] = {				// BoundingBox Normal Vector.
-				XMFLOAT3(-(OBB.Extents.x * RatioXZ), 0.0f, 0.0f),		// L
-				XMFLOAT3((OBB.Extents.x * RatioXZ), 0.0f, 0.0f),		// R
-				XMFLOAT3(0.0f, 0.0f, -(OBB.Extents.z * RatioXZ)),		// B
-				XMFLOAT3(0.0f, 0.0f, (OBB.Extents.z * RatioXZ)),		// T
-				};
-				XMMATRIX mtxOBBRotate = XMMatrixRotationQuaternion(XMLoadFloat4(&OBB.Orientation));
-
-				std::vector<XMFLOAT3> ValidDirection;
-				for (int i = 0; i < nDirection; ++i)
+				if (m_IsBoundingCylinder)
 				{
-					OBBDirectionXZ[i] = Vector3::TransformCoord(OBBDirectionXZ[i], mtxOBBRotate);
-					if (Vector3::DotProduct(OBBDirectionXZ[i], ObjectDirection) < 0.0f)
-					{
-						ValidDirection.push_back(OBBDirectionXZ[i]);
-					}
-				}
+					XMFLOAT3 vOBBtoOtherOBBC = Vector3::Subtract(OBB.Center, OtherOBB.Center);
+					float OBBRad = (m_nBoundingCylinderRadius > 0.0f) ? m_nBoundingCylinderRadius : (OBB.Extents.x < OBB.Extents.z) ? OBB.Extents.x : OBB.Extents.z;
+					float OtherOBBRad = (OtherOBB.Extents.x > OtherOBB.Extents.z) ? OtherOBB.Extents.x : OtherOBB.Extents.z;
+					float LengthOBBtoOtherOBBC = Vector3::Length(vOBBtoOtherOBBC);
 
-				int ValidDirectionIDX = 0;
-				XMFLOAT3 BoundingBoxNormal = XMFLOAT3(0.0f, 0.0f, 0.0f);
-				if (ValidDirection.size() == 1)
-				{
-					BoundingBoxNormal = ValidDirection.back();
-					ValidDirectionIDX = 0;
-				}
-				else if(ValidDirection.size() == 2)
-				{
-					XMFLOAT3 DiagonalDirection = XMFLOAT3(0.0f, 0.0f, 0.0f);
-					for (int i = 0; i < ValidDirection.size(); ++i)
+					if (OBBRad + OtherOBBRad > LengthOBBtoOtherOBBC)
 					{
-						DiagonalDirection = Vector3::Add(DiagonalDirection, ValidDirection[i]);
-					}
-					DiagonalDirection = Vector3::Normalize(DiagonalDirection);
-
-					float degreeToDiagonal = XMConvertToDegrees(acos(Vector3::DotProduct(ValidDirection.back(), DiagonalDirection) * (1 / (Vector3::Length(ValidDirection.back()) * Vector3::Length(DiagonalDirection))) ));
-					float degreeToCenter = XMConvertToDegrees(acos(Vector3::DotProduct(ValidDirection.back(), Center) * (1 / (Vector3::Length(ValidDirection.back()) * Vector3::Length(DiagonalDirection))) ));
-					//std::cout << degreeToDiagonal << ", " << degreeToCenter << std::endl;
-					if (degreeToCenter < degreeToDiagonal)
-					{
-						BoundingBoxNormal = ValidDirection.back();
-						ValidDirectionIDX = 1;
-					}
-					else
-					{
-						BoundingBoxNormal = ValidDirection.front();
-						ValidDirectionIDX = 0;
-					}
-				}
-				else
-				{
-					return true;
-					assert(0);
-				}
-
-				XMFLOAT3 PrevObjectDirection = Vector3::Normalize(ObjectDirection);
-				XMFLOAT3 SubObjectDirection = ObjectDirection;
-
-				BoundingBoxNormal = Vector3::Normalize(BoundingBoxNormal);
-				float scale = Vector3::DotProduct(ObjectDirection, BoundingBoxNormal);
-				BoundingBoxNormal = Vector3::ScalarProduct(BoundingBoxNormal, scale, false);
-				ObjectDirection = Vector3::Subtract(ObjectDirection, BoundingBoxNormal);
-
-				XMFLOAT3 dpm = Vector3::Add(Vector3::ScalarProduct(*displacement, -1.0f, false), ObjectDirection);
-				for (int i = 0; i < nDirection; ++i)
-				{
-					// No consider y-value.
-					
-					CornersXZ[i] = Vector3::Add(CornersXZ[i], dpm);
-					if (OBB.Contains(XMLoadFloat3(&CornersXZ[i])))
-					{
-						//float degree = XMConvertToDegrees(acos(Vector3::DotProduct(PrevObjectDirection, NObjectDirection) * 1 / (Vector3::Length(PrevObjectDirection) * Vector3::Length(NObjectDirection)) ));
-						float degree = XMConvertToDegrees(asin((PrevObjectDirection.x * BoundingBoxNormal.z - PrevObjectDirection.z * BoundingBoxNormal.x) / (Vector3::Length(PrevObjectDirection) * (Vector3::Length(BoundingBoxNormal)))));
-						//std::cout << "Degree: " << degree << std::endl;
-						//std::cout << "dpm: x - " << dpm.x << ", y - " << dpm.y << ", z - " << dpm.z << std::endl;
-						//std::cout << "PrevObjectDirection: x - " << PrevObjectDirection.x << ", z - " << PrevObjectDirection.z << std::endl;
-						//std::cout << "BoundingBoxNormal: x - " << BoundingBoxNormal.x << ", z - " << BoundingBoxNormal.z << std::endl;
-						if (degree > 0.0f)
+						if (Vector3::Length(ObjectDirection) < EPSILON)
 						{
-							//std::cout << "오른쪽 슬라이딩 -------------------->>>>>>>>>>>>>" << std::endl;
-							PrevObjectDirection = XMFLOAT3(PrevObjectDirection.z, PrevObjectDirection.y, -PrevObjectDirection.x);
-							//std::cout << "SlidingDirection: x - " << PrevObjectDirection.x << ", z - " << PrevObjectDirection.z << std::endl;
-							//ObjectDirection = Vector3::ScalarProduct(PrevObjectDirection, ObjectDirection.x, false);
+							*displacement = Vector3::Subtract(Vector3::ScalarProduct(*displacement, -1.0f, false), Vector3::Normalize(vOBBtoOtherOBBC));
+							(*displacement).y = 0.0f;
+							return true;
+						}
+
+						XMFLOAT3 SlideDisplacement;
+						float degree = XMConvertToDegrees(asin((vOBBtoOtherOBBC.x * ObjectDirection.z - vOBBtoOtherOBBC.z * ObjectDirection.x) / (Vector3::Length(vOBBtoOtherOBBC) * (Vector3::Length(ObjectDirection)))));
+
+						if (degree < 0.0f)
+						{
+							// 방향 벡터를 시계방향으로 90도 회전.
+							SlideDisplacement = Vector3::ScalarProduct(Vector3::Normalize(XMFLOAT3(vOBBtoOtherOBBC.z, vOBBtoOtherOBBC.y, -vOBBtoOtherOBBC.x)), Vector3::Length(ObjectDirection)*abs(sin(XMConvertToRadians(degree))), false);
 						}
 						else
 						{
-							//std::cout << "<<<<<<<<<<<<<--------------------왼쪽 슬라이딩" << std::endl;
-							PrevObjectDirection = XMFLOAT3(-PrevObjectDirection.z, PrevObjectDirection.y, PrevObjectDirection.x);
-							//std::cout << "SlidingDirection: x - " << PrevObjectDirection.x << ", z - " << PrevObjectDirection.z << std::endl;
+							// 방향 벡터를 반시계방향으로 90도 회전.
+							SlideDisplacement = Vector3::ScalarProduct(Vector3::Normalize(XMFLOAT3(-vOBBtoOtherOBBC.z, vOBBtoOtherOBBC.y, vOBBtoOtherOBBC.x)), Vector3::Length(ObjectDirection) * abs(sin(XMConvertToRadians(degree))), false);
 						}
-						//ObjectDirection = Vector3::ScalarProduct(PrevObjectDirection, ObjectDirection.z, false);
-						ObjectDirection = Vector3::ScalarProduct(PrevObjectDirection, 2 * Vector3::Length(*displacement), false);
-						//ObjectDirection = PrevObjectDirection;
-						//std::cout << "모서리에 있어서 슬라이딩 적용 시 오류가 있는 부분." << std::endl;
 
-						CornersXZ[i] = Vector3::Subtract(CornersXZ[i], dpm);
-						dpm = Vector3::Add(Vector3::ScalarProduct(*displacement, -1.0f, false), ObjectDirection);
+						XMFLOAT3 dpm = Vector3::Subtract(Vector3::ScalarProduct(*displacement, -1.0f, false), Vector3::Normalize(vOBBtoOtherOBBC));
+						vOBBtoOtherOBBC = Vector3::Subtract(OBB.Center, Vector3::Add(OtherOBB.Center, dpm));
+						LengthOBBtoOtherOBBC = Vector3::Length(vOBBtoOtherOBBC);
+						if (OBBRad + OtherOBBRad > LengthOBBtoOtherOBBC)
+						{
+							*displacement = Vector3::Subtract(Vector3::Add(Vector3::ScalarProduct(*displacement, -1.0f, false), SlideDisplacement), Vector3::Normalize(vOBBtoOtherOBBC));
+							(*displacement).y = 0.0f;
+							return true;
+						}
+
+						*displacement = Vector3::Add(Vector3::ScalarProduct(*displacement, -1.0f, false), SlideDisplacement);
+						(*displacement).y = 0.0f;
+						return true;
+					}
+
+					return false;
+				}
+				else
+				{
+					Center = Vector3::ScalarProduct(Center, 1.0f / nContains, false);
+					Center = Vector3::Normalize(Vector3::Subtract(Center, OBB.Center));
+
+					//if (ObjectDirection.x < EPSILON && ObjectDirection.y < EPSILON && ObjectDirection.z < EPSILON)
+					//{
+					//	ObjectDirection = XMFLOAT3(0.0f, 0.0f, OtherOBB.Extents.z);
+					//	ObjectDirection = Vector3::Normalize(Vector3::TransformCoord(ObjectDirection, mtxRotate));
+					//}
+					ObjectDirection = Vector3::Normalize(ObjectDirection);
+
+					float RatioXZ = 1.0f / (OBB.Extents.x + OBB.Extents.z);
+					XMFLOAT3 OBBDirectionXZ[nDirection] = {				// BoundingBox Normal Vector.
+					XMFLOAT3(-(OBB.Extents.x * RatioXZ), 0.0f, 0.0f),		// L
+					XMFLOAT3((OBB.Extents.x * RatioXZ), 0.0f, 0.0f),		// R
+					XMFLOAT3(0.0f, 0.0f, -(OBB.Extents.z * RatioXZ)),		// B
+					XMFLOAT3(0.0f, 0.0f, (OBB.Extents.z * RatioXZ)),		// T
+					};
+					XMMATRIX mtxOBBRotate = XMMatrixRotationQuaternion(XMLoadFloat4(&OBB.Orientation));
+
+					std::vector<XMFLOAT3> ValidDirection;
+					for (int i = 0; i < nDirection; ++i)
+					{
+						OBBDirectionXZ[i] = Vector3::TransformCoord(OBBDirectionXZ[i], mtxOBBRotate);
+						if (Vector3::DotProduct(OBBDirectionXZ[i], ObjectDirection) < 0.0f)
+						{
+							ValidDirection.push_back(OBBDirectionXZ[i]);
+						}
+					}
+
+					int ValidDirectionIDX = 0;
+					XMFLOAT3 BoundingBoxNormal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+					if (ValidDirection.size() == 1)
+					{
+						BoundingBoxNormal = ValidDirection.back();
+						ValidDirectionIDX = 0;
+					}
+					else if (ValidDirection.size() == 2)
+					{
+						XMFLOAT3 DiagonalDirection = XMFLOAT3(0.0f, 0.0f, 0.0f);
+						for (int i = 0; i < ValidDirection.size(); ++i)
+						{
+							DiagonalDirection = Vector3::Add(DiagonalDirection, ValidDirection[i]);
+						}
+						DiagonalDirection = Vector3::Normalize(DiagonalDirection);
+
+						float degreeToDiagonal = XMConvertToDegrees(acos(Vector3::DotProduct(ValidDirection.back(), DiagonalDirection) * (1 / (Vector3::Length(ValidDirection.back()) * Vector3::Length(DiagonalDirection)))));
+						float degreeToCenter = XMConvertToDegrees(acos(Vector3::DotProduct(ValidDirection.back(), Center) * (1 / (Vector3::Length(ValidDirection.back()) * Vector3::Length(DiagonalDirection)))));
+						//std::cout << degreeToDiagonal << ", " << degreeToCenter << std::endl;
+						if (degreeToCenter < degreeToDiagonal)
+						{
+							BoundingBoxNormal = ValidDirection.back();
+							ValidDirectionIDX = 1;
+						}
+						else
+						{
+							BoundingBoxNormal = ValidDirection.front();
+							ValidDirectionIDX = 0;
+						}
+					}
+					else
+					{
+						return true;
+						assert(0);
+					}
+
+					XMFLOAT3 PrevObjectDirection = Vector3::Normalize(ObjectDirection);
+					XMFLOAT3 SubObjectDirection = ObjectDirection;
+
+					BoundingBoxNormal = Vector3::Normalize(BoundingBoxNormal);
+					float scale = Vector3::DotProduct(ObjectDirection, BoundingBoxNormal);
+					BoundingBoxNormal = Vector3::ScalarProduct(BoundingBoxNormal, scale, false);
+					ObjectDirection = Vector3::Subtract(ObjectDirection, BoundingBoxNormal);
+
+					XMFLOAT3 dpm = Vector3::Add(Vector3::ScalarProduct(*displacement, -1.0f, false), ObjectDirection);
+					for (int i = 0; i < nDirection; ++i)
+					{
+						// No consider y-value.
+
 						CornersXZ[i] = Vector3::Add(CornersXZ[i], dpm);
-
 						if (OBB.Contains(XMLoadFloat3(&CornersXZ[i])))
 						{
-							if (ValidDirectionIDX)
-								BoundingBoxNormal = ValidDirection.front();
+							//float degree = XMConvertToDegrees(acos(Vector3::DotProduct(PrevObjectDirection, NObjectDirection) * 1 / (Vector3::Length(PrevObjectDirection) * Vector3::Length(NObjectDirection)) ));
+							float degree = XMConvertToDegrees(asin((PrevObjectDirection.x * BoundingBoxNormal.z - PrevObjectDirection.z * BoundingBoxNormal.x) / (Vector3::Length(PrevObjectDirection) * (Vector3::Length(BoundingBoxNormal)))));
+							//std::cout << "Degree: " << degree << std::endl;
+							//std::cout << "dpm: x - " << dpm.x << ", y - " << dpm.y << ", z - " << dpm.z << std::endl;
+							//std::cout << "PrevObjectDirection: x - " << PrevObjectDirection.x << ", z - " << PrevObjectDirection.z << std::endl;
+							//std::cout << "BoundingBoxNormal: x - " << BoundingBoxNormal.x << ", z - " << BoundingBoxNormal.z << std::endl;
+							if (degree > 0.0f)
+							{
+								//std::cout << "오른쪽 슬라이딩 -------------------->>>>>>>>>>>>>" << std::endl;
+								PrevObjectDirection = XMFLOAT3(PrevObjectDirection.z, PrevObjectDirection.y, -PrevObjectDirection.x);
+								//std::cout << "SlidingDirection: x - " << PrevObjectDirection.x << ", z - " << PrevObjectDirection.z << std::endl;
+								//ObjectDirection = Vector3::ScalarProduct(PrevObjectDirection, ObjectDirection.x, false);
+							}
 							else
-								BoundingBoxNormal = ValidDirection.back();
+							{
+								//std::cout << "<<<<<<<<<<<<<--------------------왼쪽 슬라이딩" << std::endl;
+								PrevObjectDirection = XMFLOAT3(-PrevObjectDirection.z, PrevObjectDirection.y, PrevObjectDirection.x);
+								//std::cout << "SlidingDirection: x - " << PrevObjectDirection.x << ", z - " << PrevObjectDirection.z << std::endl;
+							}
+							//ObjectDirection = Vector3::ScalarProduct(PrevObjectDirection, ObjectDirection.z, false);
+							ObjectDirection = Vector3::ScalarProduct(PrevObjectDirection, 2 * Vector3::Length(*displacement), false);
+							//ObjectDirection = PrevObjectDirection;
+							//std::cout << "모서리에 있어서 슬라이딩 적용 시 오류가 있는 부분." << std::endl;
 
-							BoundingBoxNormal = Vector3::Normalize(BoundingBoxNormal);
-							float scale = Vector3::DotProduct(SubObjectDirection, BoundingBoxNormal);
-							BoundingBoxNormal = Vector3::ScalarProduct(BoundingBoxNormal, scale, false);
-							SubObjectDirection = Vector3::Subtract(SubObjectDirection, BoundingBoxNormal);
+							CornersXZ[i] = Vector3::Subtract(CornersXZ[i], dpm);
+							dpm = Vector3::Add(Vector3::ScalarProduct(*displacement, -1.0f, false), ObjectDirection);
+							CornersXZ[i] = Vector3::Add(CornersXZ[i], dpm);
 
-							//dpm = Vector3::Add(Vector3::ScalarProduct(*displacement, -1.0f, false), SubObjectDirection);
-							ObjectDirection = SubObjectDirection;
+							if (OBB.Contains(XMLoadFloat3(&CornersXZ[i])))
+							{
+								if (ValidDirectionIDX)
+									BoundingBoxNormal = ValidDirection.front();
+								else
+									BoundingBoxNormal = ValidDirection.back();
 
-							//std::cout << "모서리 지점을 지날 때 오류가 생겨 엉키는 부분~~~~~~~~~~~~~~~~" << std::endl;
+								BoundingBoxNormal = Vector3::Normalize(BoundingBoxNormal);
+								float scale = Vector3::DotProduct(SubObjectDirection, BoundingBoxNormal);
+								BoundingBoxNormal = Vector3::ScalarProduct(BoundingBoxNormal, scale, false);
+								SubObjectDirection = Vector3::Subtract(SubObjectDirection, BoundingBoxNormal);
+
+								//dpm = Vector3::Add(Vector3::ScalarProduct(*displacement, -1.0f, false), SubObjectDirection);
+								ObjectDirection = SubObjectDirection;
+
+								//std::cout << "모서리 지점을 지날 때 오류가 생겨 엉키는 부분~~~~~~~~~~~~~~~~" << std::endl;
+							}
+
+							break;
 						}
-
-						break;
 					}
-				}
 
-				*displacement = Vector3::Add(Vector3::ScalarProduct(*displacement, -1.0f, false), ObjectDirection);
-				(*displacement).y = 0.0f;
-				//std::cout << "ObjectDirection: x - " << ObjectDirection.x << ", y - " << ObjectDirection.y << ", z - " << ObjectDirection.z << std::endl;
-				//std::cout << "displacement: x - " << displacement->x << ", y - " << displacement->y << ", z - " << displacement->z << std::endl;
+					*displacement = Vector3::Add(Vector3::ScalarProduct(*displacement, -1.0f, false), ObjectDirection);
+					(*displacement).y = 0.0f;
+					//std::cout << "ObjectDirection: x - " << ObjectDirection.x << ", y - " << ObjectDirection.y << ", z - " << ObjectDirection.z << std::endl;
+					//std::cout << "displacement: x - " << displacement->x << ", y - " << displacement->y << ", z - " << displacement->z << std::endl;
+				}
 			}
 			else
 			{
@@ -1561,35 +1630,6 @@ bool CGameObject::BeginOverlapBoundingBox(const BoundingOrientedBox& OtherOBB, X
 				//std::cout << "displacement: x - " << displacement->x << ", y - " << displacement->y << ", z - " << displacement->z << std::endl;
 				//std::cout << " 충돌은 했지만 모서리는 충돌하지 않음!			End" << std::endl;
 			}
-			//std::cout << "after Displacement: " << (*displacement).x << ", " << (*displacement).y << ", " << (*displacement).z << std::endl;
-
-			//std::cout << "nContains: " << nContains << std::endl;
-			//std::cout << "OtherOBB' Center: " << (int)OtherOBB.Center.x << ", " << (int)OtherOBB.Center.y << ", " << (int)OtherOBB.Center.z << std::endl;
-			////std::cout << "OtherOBB' Extents: " << extents.x << ", " << extents.y << ", " << extents.z << std::endl;
-			//std::cout << "LB: " << (int)(OtherOBB.Center.x - OtherOBB.Extents.x) << ", " << (int)(OtherOBB.Center.z - OtherOBB.Extents.z) << std::endl;
-			//std::cout << "LT: " << (int)(OtherOBB.Center.x - OtherOBB.Extents.x) << ", " << (int)(OtherOBB.Center.z + OtherOBB.Extents.z) << std::endl;
-			//std::cout << "RB: " << (int)(OtherOBB.Center.x + OtherOBB.Extents.x) << ", " << (int)(OtherOBB.Center.z - OtherOBB.Extents.z) << std::endl;
-			//std::cout << "RT: " << (int)(OtherOBB.Center.x + OtherOBB.Extents.x) << ", " << (int)(OtherOBB.Center.z + OtherOBB.Extents.z) << std::endl;
-
-			//XMFLOAT3 Test[nDirection] = {				// BoundingBox Normal Vector.
-			//XMFLOAT3(-(OBB.Extents.x), 0.0f, 0.0f),		// L
-			//XMFLOAT3((OBB.Extents.x), 0.0f, 0.0f),		// R
-			//XMFLOAT3(0.0f, 0.0f, -(OBB.Extents.z )),		// B
-			//XMFLOAT3(0.0f, 0.0f, (OBB.Extents.z)),		// T
-			//};
-			//mtxRotate = XMMatrixRotationQuaternion(XMLoadFloat4(&OBB.Orientation));
-
-			//for (int i = 0; i < nDirection; ++i)
-			//{
-			//	Test[i] = Vector3::TransformCoord(Test[i], mtxRotate);
-			//}
-			//std::cout << "OBB' Center: " << (int)OBB.Center.x << ", " << (int)OBB.Center.y << ", " << (int)OBB.Center.z << std::endl;
-			//std::cout << "OBB' Extents: " << (int)OBB.Extents.x << ", " << (int)OBB.Extents.y << ", " << (int)OBB.Extents.z << std::endl;
-			//std::cout << "LB: " << (int)(OBB.Center.x - Test[0].x ) << ", " << (int)(OBB.Center.z - Test[2].z) << std::endl;
-			//std::cout << "LT: " << (int)(OBB.Center.x - Test[0].x) << ", " << (int)(OBB.Center.z + Test[3].z) << std::endl;
-			//std::cout << "RB: " << (int)(OBB.Center.x + Test[1].x) << ", " << (int)(OBB.Center.z - Test[2].z) << std::endl;
-			//std::cout << "RT: " << (int)(OBB.Center.x + Test[1].x ) << ", " << (int)(OBB.Center.z + Test[3].z) << std::endl;
-			//std::cout << std::endl;
 
 			return true;
 		}

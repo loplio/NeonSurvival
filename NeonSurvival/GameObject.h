@@ -372,11 +372,15 @@ public:
 	
 	bool IsVisible(CCamera* pCamera = NULL);
 	bool IsCollide(BoundingOrientedBox& box);
+	bool IsCrosshair();
 
 protected:
 	std::vector<CBoundingBoxMesh*> m_ppBoundingMeshes;
 	XMFLOAT3					m_xmf3BoundingScale;
+	float						m_nBoundingCylinderRadius;
+	bool						m_IsBoundingCylinder;
 	bool						m_IsExistBoundingBox;
+	bool						m_IsCrosshair;
 
 public:
 	char						m_pstrFrameName[64];
@@ -481,6 +485,7 @@ public:
 	XMFLOAT3 GetBoundingScale() const { return m_xmf3BoundingScale; }
 	bool GetIsExistBoundingBox() const { return m_IsExistBoundingBox; }
 	void SetIsExistBoundingBox(bool bIsExist) { m_IsExistBoundingBox = bIsExist; }
+	void SetIsBoundingCylinder(bool bIsCylinder, float fRadius = 0.0f);
 	bool BeginOverlapBoundingBox(const BoundingOrientedBox& OtherOBB, XMFLOAT3* displacement);
 
 	UINT GetMeshType() { return((m_pMesh) ? m_pMesh->GetType() : 0x00); }

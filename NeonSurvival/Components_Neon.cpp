@@ -546,6 +546,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	CLoadedModelInfo* pBaseModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Mana/Base.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pBaseModel));
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, 10.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
+	m_vHierarchicalGameObjects.back()->SetIsBoundingCylinder(true);
 	//m_vHierarchicalGameObjects.back()->Rotate(0.0f, 45.0f, 0.0f);
 	if (pBaseModel) delete pBaseModel;
 
@@ -735,7 +736,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	//// 몬스터들
 	for (int i = 0; i < MAX_MONSTER; ++i)
 	{
-		CreateMonsters(pd3dDevice, pd3dCommandList, i);
+		//CreateMonsters(pd3dDevice, pd3dCommandList, i);
 	}
 
 	// 다른 플레이어
@@ -1279,6 +1280,7 @@ Crosshair::Crosshair(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCo
 	m_ppMaterials[0]->SetShader(new CCrosshairShader());
 	m_ppMaterials[0]->m_pShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
 	m_ppMaterials[0]->m_pShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
+	m_IsCrosshair = true;
 }
 Crosshair::~Crosshair()
 {
