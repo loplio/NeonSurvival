@@ -2,6 +2,7 @@
 #include "Shader.h"
 #include "Player.h"
 #include "Scene.h"
+#include "Server.h"
 
 class CGameObject;
 class CCamera;
@@ -121,6 +122,7 @@ public:
 /*	CMonsterObjects															   */
 //-------------------------------------------------------------------------------
 struct MST_INSTANCE {
+	float m_fHP;
 	XMFLOAT4X4 m_xmf4x4Transform;
 };
 
@@ -149,12 +151,50 @@ protected:
 public:
 	int m_nBuildIndex = 0;
 	int m_nMaxObjects = 0;
-	std::list<CGameObject*> m_ppObjects;
+	int m_nMonsterLoop = 0;
+	std::vector<CGameObject*> m_ppObjects;
 
 	CLoadedModelInfo* m_pMonsterModel = NULL;
 
 	CGameObject* m_pHPObject = NULL;
 	CMaterial* m_pHPMaterial = NULL;
+};
+
+class GeneralMonsterObjects : public CMonsterObjects {
+public:
+	GeneralMonsterObjects();
+	virtual ~GeneralMonsterObjects();
+
+	virtual void CreateGraphicsPipelineState(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature);
+	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
+	virtual D3D12_SHADER_BYTECODE CreateVertexShader();
+	virtual D3D12_SHADER_BYTECODE CreatePixelShader();
+
+	void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) override;
+	void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList) override;
+
+	void InitShader(CGameObject* pChild);
+	void CreateBoundingBox(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader) override;
+	void BuildComponents(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CTexture* pTexture = NULL) override;
+	
+	void CreateMonsters(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, int nLoop);
+	void CreateMonster(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, char* model, int x, int z);
+
+	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int nPipelineState = 0) override;
+	void Update(float fTimeElapsed) override;
+	void Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects) override;
+	void AnimateObjects(float fTimeElapsed) override;
+	void AppendMonster(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, MonsterObject::MonsterType Type);
+	void EventRemove();
+	void OnPostReleaseUploadBuffers() override;
+	void SetPosition(XMFLOAT3& xmf3Position, int index);
+	void SetTransform(int index, XMFLOAT4X4& transform);
+
+	void SetPosition(XMFLOAT3 xmf3Position, int index);
+
+public:
+	PACKET_MONSTERDATA* m_pMonsterData = SERVER::getInstance().GetMonsterData();
+	const int nMaxMonster = 30;
 };
 
 class MonsterMetalonObjects : public CMonsterObjects {

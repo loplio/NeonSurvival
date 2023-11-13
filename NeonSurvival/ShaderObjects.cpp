@@ -381,6 +381,275 @@ void CMonsterObjects::ReleaseShaderVariables()
 	if (m_pd3dcbObjects) m_pd3dcbObjects->Release();
 }
 //--Concrete_1-------------------------------------------------------------------
+GeneralMonsterObjects::GeneralMonsterObjects()
+{
+}
+GeneralMonsterObjects::~GeneralMonsterObjects()
+{
+}
+
+void GeneralMonsterObjects::CreateGraphicsPipelineState(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature)
+{
+	m_nPipelineStates = 2;
+	m_ppd3dPipelineStates = new ID3D12PipelineState * [m_nPipelineStates];
+
+	CShader::CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
+	CShader::CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
+}
+
+D3D12_INPUT_LAYOUT_DESC GeneralMonsterObjects::CreateInputLayout()
+{
+	D3D12_INPUT_LAYOUT_DESC d3dInputLayoutDesc;
+	if (m_nCurrentPipelineState == 0)
+	{
+		UINT nInputElementDescs = 7;
+		D3D12_INPUT_ELEMENT_DESC* pd3dInputElementDescs = new D3D12_INPUT_ELEMENT_DESC[nInputElementDescs];
+
+		pd3dInputElementDescs[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+		pd3dInputElementDescs[1] = { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 1, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+		pd3dInputElementDescs[2] = { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 2, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+		pd3dInputElementDescs[3] = { "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 3, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+		pd3dInputElementDescs[4] = { "BITANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 4, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+		pd3dInputElementDescs[5] = { "BONEINDEX", 0, DXGI_FORMAT_R32G32B32A32_SINT, 5, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+		pd3dInputElementDescs[6] = { "BONEWEIGHT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 6, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+
+		d3dInputLayoutDesc.pInputElementDescs = pd3dInputElementDescs;
+		d3dInputLayoutDesc.NumElements = nInputElementDescs;
+	}
+	else
+	{
+		UINT nInputElementDescs = 7;
+		D3D12_INPUT_ELEMENT_DESC* pd3dInputElementDescs = new D3D12_INPUT_ELEMENT_DESC[nInputElementDescs];
+
+		pd3dInputElementDescs[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+		pd3dInputElementDescs[1] = { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 1, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+		pd3dInputElementDescs[2] = { "HP", 0, DXGI_FORMAT_R32G32_FLOAT, 2, 0, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 };
+		pd3dInputElementDescs[3] = { "WORLDMATRIX", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, 4, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 };
+		pd3dInputElementDescs[4] = { "WORLDMATRIX", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, 20, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 };
+		pd3dInputElementDescs[5] = { "WORLDMATRIX", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, 36, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 };
+		pd3dInputElementDescs[6] = { "WORLDMATRIX", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, 52, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 };
+
+		d3dInputLayoutDesc.pInputElementDescs = pd3dInputElementDescs;
+		d3dInputLayoutDesc.NumElements = nInputElementDescs;
+	}
+	return(d3dInputLayoutDesc);
+}
+D3D12_SHADER_BYTECODE GeneralMonsterObjects::CreateVertexShader()
+{
+	if (m_nCurrentPipelineState == 0)
+		return(CShader::CompileShaderFromFile((wchar_t*)L"Shaders.hlsl", "VSSkinnedAnimationStandard", "vs_5_1", &m_pd3dVertexShaderBlob));
+	else
+		return(CShader::CompileShaderFromFile((wchar_t*)L"Shaders.hlsl", "VSHPbar", "vs_5_1", &m_pd3dVertexShaderBlob));
+}
+
+D3D12_SHADER_BYTECODE GeneralMonsterObjects::CreatePixelShader()
+{
+	if (m_nCurrentPipelineState == 0)
+		return(CShader::CompileShaderFromFile((wchar_t*)L"Shaders.hlsl", "PSStandard", "ps_5_1", &m_pd3dPixelShaderBlob));
+	else
+		return(CShader::CompileShaderFromFile((wchar_t*)L"Shaders.hlsl", "PSHPbar", "ps_5_1", &m_pd3dPixelShaderBlob));
+}
+
+void GeneralMonsterObjects::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	m_pd3dcbObjects = ::CreateBufferResource(pd3dDevice, pd3dCommandList, NULL, sizeof(MST_INSTANCE) * m_nMaxObjects, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, NULL);
+	m_pd3dcbObjects->Map(0, NULL, (void**)&m_pcbMappedGameObjects);
+
+	m_d3dInstancingBufferView.BufferLocation = m_pd3dcbObjects->GetGPUVirtualAddress();
+	m_d3dInstancingBufferView.StrideInBytes = sizeof(MST_INSTANCE);
+	m_d3dInstancingBufferView.SizeInBytes = sizeof(MST_INSTANCE) * m_nMaxObjects;
+}
+void GeneralMonsterObjects::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	int n = 0;
+	for (CGameObject* monster : m_ppObjects)
+	{
+		XMFLOAT4X4 InstInfo = monster->m_xmf4x4World;
+		InstInfo._11 = 20.f * (n + 1);
+		InstInfo._21 = 40.f * (n + 1);
+		m_pcbMappedGameObjects[n].m_fHP = ((MonsterObject*)monster)->HP;
+		XMStoreFloat4x4(&m_pcbMappedGameObjects[n++].m_xmf4x4Transform, XMMatrixTranspose(XMLoadFloat4x4(&InstInfo)));
+	}
+}
+
+void GeneralMonsterObjects::InitShader(CGameObject* pChild)
+{
+	for (int i = 0; i < pChild->m_nMaterials; ++i)
+	{
+		if (pChild->m_ppMaterials[i] && pChild->m_ppMaterials[i]->m_pShader) {
+			pChild->m_ppMaterials[i]->m_pShader->Release();
+			pChild->m_ppMaterials[i]->m_pShader = NULL;
+		}
+	}
+
+	if (pChild->m_pChild) InitShader(pChild->m_pChild);
+	if (pChild->m_pSibling) InitShader(pChild->m_pSibling);
+}
+void GeneralMonsterObjects::CreateBoundingBox(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader)
+{
+	for (CGameObject* monster : m_ppObjects)
+	{
+		//monster->CreateBoundingBoxInstSet(pd3dDevice, pd3dCommandList, m_pMonsterModel->m_pModelRootObject, BBShader);
+		monster->CreateBoundingBoxMeshSet(pd3dDevice, pd3dCommandList, BBShader);
+		monster->SetWorldTransformBoundingBox();
+	}
+}
+void GeneralMonsterObjects::BuildComponents(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CTexture* pTexture)
+{
+	CreateMonsters(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, 3);
+
+	CreateShaderVariables(pd3dDevice, pd3dCommandList);
+
+	m_pHPMaterial = new CMaterial();
+	m_pHPMaterial->AddRef();
+	if (pTexture)	// blur
+	{
+		m_pHPMaterial->SetTexture(pTexture);
+		pTexture->AddRef();
+
+		CScene::CreateSRVUAVs(pd3dDevice, m_pHPMaterial->m_ppTextures[0], ROOT_PARAMETER_TEXTURE, true, true, true, 0, 1);
+		CScene::CreateSRVUAVs(pd3dDevice, m_pHPMaterial->m_ppTextures[0], ROOT_PARAMETER_OUTPUT, true, true, true, 2, 1, 1);
+	}
+	else
+	{
+		CTexture* pBulletTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0, 1);
+		pBulletTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, (wchar_t*)L"UI/hpds.dds", 0);
+
+		m_pHPMaterial->SetTexture(pBulletTexture);
+
+		CScene::CreateSRVUAVs(pd3dDevice, pBulletTexture, ROOT_PARAMETER_TEXTURE, true);
+	}
+	m_pHPObject = new CRectTextureObject(pd3dDevice, pd3dCommandList, m_pHPMaterial);
+}
+void GeneralMonsterObjects::CreateMonsters(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, int nLoop)
+{
+	m_nMonsterLoop = nLoop;
+	m_nMaxObjects = nLoop * 10;
+	for (int i = 0; i < nLoop; ++i)
+	{
+		int Z = 0;
+
+		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Dragon/Polygonal_Dragon.bin", i, Z++);
+		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Giant_Bee/Polygonal_Giant_Bee.bin", i, Z++);
+		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Golem/Polygonal_Golem.bin", i, Z++);
+		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/KingCobra/Polygonal_King_Cobra.bin", i, Z++);
+		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/TreasureChest/Polygonal_Treasure_Chest_Monster.bin", i, Z++);
+		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Spider/Polygonal_Spiderling_Venom.bin", i, Z++);
+		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Bat/Polygonal_One_Eyed_Bat.bin", i, Z++);
+		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Magma/Polygonal_Magma.bin", i, Z++);
+		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Treant/Polygonal_Treant.bin", i, Z++);
+		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Wolf/Polygonal_Wolf.bin", i, Z++);
+	}
+}
+void GeneralMonsterObjects::CreateMonster(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, char* model, int x, int z)
+{
+	CLoadedModelInfo* pModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, model, NULL);
+	//m_ppObjects.push_back(new MonsterObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pModel));
+	m_ppObjects.push_back(new MonsterObject());
+	m_ppObjects.back()->SetChild(pModel->m_pModelRootObject);
+	m_ppObjects.back()->UpdateMobility(CGameObject::Moveable);
+	m_ppObjects.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 5, pModel);
+	for (int i = 0; i < 5; ++i)
+	{
+		m_ppObjects.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(i, i);
+		m_ppObjects.back()->m_pSkinnedAnimationController->SetTrackEnable(i, false);
+		m_ppObjects.back()->m_pSkinnedAnimationController->SetTrackSpeed(i, 1.0f);
+	}
+	//m_ppObjects.back()->SetIsExistBoundingBox(false);
+	m_ppObjects.back()->SetPosition(2800.f + 30.f * x, 265.0f, 3000.f - 30.f * z);
+	if (pModel) delete pModel;
+}
+void GeneralMonsterObjects::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int nPipelineState)
+{
+	CShader::Render(pd3dCommandList, pCamera);
+
+	UpdateShaderVariables(pd3dCommandList);
+
+	if (!m_ppObjects.empty())
+	{
+		int i = 0;
+		//for (int i = 0; i < m_ppObjects.size(); ++i)
+		for (auto monster : m_ppObjects)
+		{
+			if (((MonsterObject*)(monster))->bActivate)
+				monster->Render(pd3dCommandList, pCamera);
+		}
+		//m_pMonsterModel->m_pModelRootObject->Render(pd3dCommandList, pCamera, m_ppObjects.size(), m_d3dInstancingBufferView);
+	}
+
+	CShader::Render(pd3dCommandList, pCamera, 1);
+
+	if (!m_ppObjects.empty()) m_pHPObject->Render(pd3dCommandList, pCamera, m_ppObjects.size(), m_d3dInstancingBufferView);
+}
+void GeneralMonsterObjects::Update(float fTimeElapsed)
+{
+	CMonsterObjects::Update(fTimeElapsed);
+
+	//몬스터 위치값 적용(서버)
+	int count = 0;
+	for (auto monster : m_ppObjects)
+	{
+		XMFLOAT3 pos = m_pMonsterData[count++].Pos;
+		monster->SetPosition(pos);
+	}
+
+	EventRemove();
+}
+void GeneralMonsterObjects::Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects)
+{
+	for (CGameObject* monster : m_ppObjects)
+	{
+		// Prepare Collision
+		if (monster) monster->UpdateWorldTransformBoundingBox();
+	}
+}
+void GeneralMonsterObjects::AnimateObjects(float fTimeElapsed)
+{
+	int n = 0;
+	for (auto monster : m_ppObjects)
+	{
+		int aniTrack = m_pMonsterData[n++].State;
+		if (aniTrack != 5)
+		{
+			monster->m_pSkinnedAnimationController->SetOneOfTrackEnable(aniTrack);
+			monster->m_pSkinnedAnimationController->SetTrackSpeed(aniTrack, 1.0f);
+			monster->Animate(fTimeElapsed);
+		}
+	}
+}
+void GeneralMonsterObjects::AppendMonster(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, MonsterObject::MonsterType Type)
+{
+	// append monster
+	int MSTIndex = (int)Type * m_nMonsterLoop;
+
+	for (int i = 0; i < m_nMonsterLoop; ++i)
+	{
+		if (((MonsterObject*)m_ppObjects[MSTIndex + i])->bActivate == false)
+		{
+			((MonsterObject*)m_ppObjects[MSTIndex + i])->HP = 100.0f;
+			((MonsterObject*)m_ppObjects[MSTIndex + i])->bActivate = true;
+			break;
+		}
+	}
+}
+void GeneralMonsterObjects::EventRemove()
+{
+	for (auto monster : m_ppObjects)
+	{
+		if (((MonsterObject*)(monster))->HP <= 0.0f)
+		{
+			((MonsterObject*)(monster))->bActivate = false;
+			monster->SetPosition(0.0f, 0.0f, 0.0f);
+		}
+	}
+}
+
+void GeneralMonsterObjects::OnPostReleaseUploadBuffers()
+{
+	CMonsterObjects::ReleaseUploadBuffers();
+}
+
+//--Concrete_2-------------------------------------------------------------------
 MonsterMetalonObjects::MonsterMetalonObjects()
 {
 }
@@ -488,7 +757,6 @@ void MonsterMetalonObjects::BuildComponents(ID3D12Device* pd3dDevice, ID3D12Grap
 	pMonsterModel->m_pModelRootObject->m_pSkinnedAnimationController->SetTrackEnable(0, 0);
 	pMonsterModel->m_pModelRootObject->m_pSkinnedAnimationController->SetTrackSpeed(0, 1.0f);
 	pMonsterModel->m_pModelRootObject->UpdateMobility(CGameObject::Moveable);
-	pMonsterModel->m_pModelRootObject->SetMonsterType(CGameObject::Metalon);
 
 	////드래곤
 	//CLoadedModelInfo* pDragonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Dragon/Polygonal_Dragon.bin", NULL);
@@ -592,21 +860,21 @@ void MonsterMetalonObjects::AppendMonster(ID3D12Device* pd3dDevice, ID3D12Graphi
 }
 void MonsterMetalonObjects::EventRemove()
 {
-	for (std::list<CGameObject*>::iterator monster = m_ppObjects.begin(); monster != m_ppObjects.end(); ++monster)
-	{
-		if (((CMonsterMetalon*)(*monster))->m_fLife < 0.0f)
-		{
-			(*monster)->Release();
-			std::list<CGameObject*>::iterator iter = m_ppObjects.erase(monster);
-			if (iter != m_ppObjects.end())
-			{
-				monster = iter;
-				continue;
-			}
-			else
-				break;
-		}
-	}
+	//for (std::list<CGameObject*>::iterator monster = m_ppObjects.begin(); monster != m_ppObjects.end(); ++monster)
+	//{
+	//	if (((CMonsterMetalon*)(*monster))->m_fLife < 0.0f)
+	//	{
+	//		(*monster)->Release();
+	//		std::list<CGameObject*>::iterator iter = m_ppObjects.erase(monster);
+	//		if (iter != m_ppObjects.end())
+	//		{
+	//			monster = iter;
+	//			continue;
+	//		}
+	//		else
+	//			break;
+	//	}
+	//}
 }
 
 void MonsterMetalonObjects::OnPostReleaseUploadBuffers()
@@ -753,7 +1021,8 @@ void PistolBulletTexturedObjects::Update(float fTimeElapsed)
 void PistolBulletTexturedObjects::Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects)
 {
 	UINT nConflicted;
-	for (std::list<CGameObject*>::iterator bullet = m_ppObjects.begin(); bullet != m_ppObjects.end(); ++bullet)
+	int count = 0;
+	for (std::list<CGameObject*>::iterator bullet = m_ppObjects.begin(); bullet != m_ppObjects.end(); ++bullet, ++count)
 	{
 		if (*bullet && ((CPistolBulletObject*)(*bullet))->Collide(GameSource, BoundingBoxObjects, nConflicted))
 		{
@@ -768,6 +1037,7 @@ void PistolBulletTexturedObjects::Collide(const CGameSource& GameSource, CBoundi
 			}
 			(*bullet)->Release();
 			std::list<CGameObject*>::iterator iter = m_ppObjects.erase(bullet);
+			if (m_ppObjects.size() - count <= m_nBuildIndex) --m_nBuildIndex;
 			if (iter != m_ppObjects.end())
 			{
 				bullet = iter;

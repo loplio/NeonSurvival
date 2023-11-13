@@ -697,6 +697,7 @@ CGameObject::CGameObject(int nMaterials)
 	m_xmf4x4Transform = Matrix4x4::Identity();
 	m_xmf3Scale = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	m_xmf3BoundingScale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	m_xmf3BoundingLocation = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	m_xmf3PrevScale = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	m_nBoundingCylinderRadius = 0.0f;
 	m_IsBoundingCylinder = false;
@@ -722,6 +723,7 @@ CGameObject::CGameObject(const CGameObject& pGameObject)
 	m_xmf4x4Transform = pGameObject.m_xmf4x4Transform;
 	m_xmf3Scale = pGameObject.m_xmf3Scale;
 	m_xmf3BoundingScale = pGameObject.GetBoundingScale();
+	m_xmf3BoundingLocation = pGameObject.GetBoundingLocation();
 	m_xmf3PrevScale = pGameObject.m_xmf3PrevScale;
 	m_Mass = pGameObject.m_Mass;
 
@@ -1279,7 +1281,7 @@ void CGameObject::SetWorldTransformBoundingBox()
 	{
 		XMFLOAT3 WorldScale = Vector3::OriginScale(m_xmf4x4World);
 		BoundingOrientedBox BoundingBox = m_pMesh->GetBoundingBox();
-		XMFLOAT3 center = Vector3::TransformCoord(BoundingBox.Center, m_xmf4x4World);
+		XMFLOAT3 center = Vector3::Add(Vector3::TransformCoord(BoundingBox.Center, m_xmf4x4World), m_xmf3BoundingLocation);
 		XMFLOAT3 extents = XMFLOAT3(BoundingBox.Extents.x * WorldScale.x * m_xmf3BoundingScale.x, BoundingBox.Extents.y * WorldScale.y * m_xmf3BoundingScale.y, BoundingBox.Extents.z * WorldScale.z * m_xmf3BoundingScale.z);
 		XMFLOAT4 orientation = Vector4::Orientation(BoundingBox.Orientation, m_xmf4x4World);
 		m_pMesh->SetTransformedBoundingBox(center, extents, orientation);
@@ -1293,7 +1295,7 @@ void CGameObject::UpdateWorldTransformBoundingBox()
 	if (m_pMesh)
 	{
 		BoundingOrientedBox BoundingBox = m_pMesh->GetBoundingBox();
-		XMFLOAT3 center = Vector3::TransformCoord(BoundingBox.Center, m_xmf4x4World);
+		XMFLOAT3 center = Vector3::Add(Vector3::TransformCoord(BoundingBox.Center, m_xmf4x4World), m_xmf3BoundingLocation);
 		XMFLOAT4 orientation = Vector4::Orientation(BoundingBox.Orientation, m_xmf4x4World);
 		m_pMesh->SetTransformedBoundingBoxCenter(center);
 		m_pMesh->SetTransformedBoundingBoxOrientation(orientation);
@@ -1312,6 +1314,17 @@ void CGameObject::SetBoundingScale(XMFLOAT3& BoundingScale)
 void CGameObject::SetBoundingScale(XMFLOAT3&& BoundingScale)
 {
 	SetBoundingScale(BoundingScale);
+}
+void CGameObject::SetBoundingLocation(XMFLOAT3& BoundingLocation)
+{
+	m_xmf3BoundingLocation = BoundingLocation;
+
+	if (m_pSibling) m_pSibling->SetBoundingLocation(BoundingLocation);
+	if (m_pChild) m_pChild->SetBoundingLocation(BoundingLocation);
+}
+void CGameObject::SetBoundingLocation(XMFLOAT3&& BoundingLocation)
+{
+	SetBoundingLocation(BoundingLocation);
 }
 void CGameObject::SetIsBoundingCylinder(bool bIsCylinder, float fRadius)
 {
@@ -1360,6 +1373,7 @@ bool CGameObject::BeginOverlapBoundingBox(const BoundingOrientedBox& OtherOBB, X
 				if (m_IsBoundingCylinder)
 				{
 					XMFLOAT3 vOBBtoOtherOBBC = Vector3::Subtract(OBB.Center, OtherOBB.Center);
+					vOBBtoOtherOBBC.y = 0.0f;
 					float OBBRad = (m_nBoundingCylinderRadius > 0.0f) ? m_nBoundingCylinderRadius : (OBB.Extents.x < OBB.Extents.z) ? OBB.Extents.x : OBB.Extents.z;
 					float OtherOBBRad = (OtherOBB.Extents.x > OtherOBB.Extents.z) ? OtherOBB.Extents.x : OtherOBB.Extents.z;
 					float LengthOBBtoOtherOBBC = Vector3::Length(vOBBtoOtherOBBC);
@@ -1374,7 +1388,7 @@ bool CGameObject::BeginOverlapBoundingBox(const BoundingOrientedBox& OtherOBB, X
 						}
 
 						XMFLOAT3 SlideDisplacement;
-						float degree = XMConvertToDegrees(asin((vOBBtoOtherOBBC.x * ObjectDirection.z - vOBBtoOtherOBBC.z * ObjectDirection.x) / (Vector3::Length(vOBBtoOtherOBBC) * (Vector3::Length(ObjectDirection)))));
+						float degree = XMConvertToDegrees(asin((vOBBtoOtherOBBC.x * ObjectDirection.z - vOBBtoOtherOBBC.z * ObjectDirection.x) / (LengthOBBtoOtherOBBC * (Vector3::Length(ObjectDirection)))));
 
 						if (degree < 0.0f)
 						{
@@ -1396,7 +1410,6 @@ bool CGameObject::BeginOverlapBoundingBox(const BoundingOrientedBox& OtherOBB, X
 							(*displacement).y = 0.0f;
 							return true;
 						}
-
 						*displacement = Vector3::Add(Vector3::ScalarProduct(*displacement, -1.0f, false), SlideDisplacement);
 						(*displacement).y = 0.0f;
 						return true;
@@ -2097,7 +2110,7 @@ MonsterObject::MonsterObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList
 	m_pHPMaterial->SetTexture(pBulletTexture);
 	CScene::CreateSRVUAVs(pd3dDevice, pBulletTexture, ROOT_PARAMETER_TEXTURE, true);
 	m_pHPObject = new CRectTextureObject(pd3dDevice, pd3dCommandList, m_pHPMaterial);
-	m_pHPObject->SetPosition(GetPosition().x, GetPosition().y + 100, GetPosition().z);
+	m_pHPObject->SetPosition(GetPosition().x, GetPosition().y + 10, GetPosition().z);
 	SetChild(m_pHPObject, true);
 }
 MonsterObject::~MonsterObject()

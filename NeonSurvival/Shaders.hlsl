@@ -496,6 +496,43 @@ float4 PSBillboard(VS_TEXTURED_OUTPUT input) : SV_TARGET
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//// HPBar
+struct VS_HPBAR_INPUT
+{
+	float3 position : POSITION;
+	float2 uv : TEXCOORD;
+	float  hp : HP;
+	matrix transform : WORLDMATRIX;
+};
+
+struct VS_HPBAR_OUTPUT
+{
+	float4 position : SV_POSITION;
+	float2 uv : TEXCOORD;
+	float  hp : HP;
+};
+
+VS_HPBAR_OUTPUT VSHPbar(VS_HPBAR_INPUT input)
+{
+	VS_HPBAR_OUTPUT output;
+
+	float3 positionW = mul(float4(input.position, 1.0f), (float3x3)gmtxInverseView) + input.transform[3].xyz;
+	output.position = mul(mul(float4(positionW, 1.0f), gmtxView), gmtxProjection);
+	output.uv = input.uv;
+	//output.uv.x = output.uv.x * input.hp / 100.0f;
+	output.hp = input.hp;
+
+	return(output);
+}
+
+float4 PSHPbar(VS_HPBAR_OUTPUT input) : SV_TARGET
+{
+	float4 cColor = (input.uv.x > input.hp / 100.0f) ? float4(1.0f, 1.0f, 1.0f, 1.0f) : gtxtTexture.Sample(gssClamp, input.uv);
+
+	return(cColor);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //// Terrain
 Texture2D gtxtTerrainTexture : register(t14);
 Texture2D gtxtDetailTexture : register(t15);

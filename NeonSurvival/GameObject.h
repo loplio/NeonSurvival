@@ -377,6 +377,7 @@ public:
 protected:
 	std::vector<CBoundingBoxMesh*> m_ppBoundingMeshes;
 	XMFLOAT3					m_xmf3BoundingScale;
+	XMFLOAT3					m_xmf3BoundingLocation;
 	float						m_nBoundingCylinderRadius;
 	bool						m_IsBoundingCylinder;
 	bool						m_IsExistBoundingBox;
@@ -401,9 +402,6 @@ public:
 
 	enum Mobility				{ Static, Moveable };
 	UINT						m_Mobility = Static;
-
-	enum MonsterType			{ Metalon, Dragon,Golem, Giant_Bee};
-	UINT						m_MonsterType;
 public:
 	// ShaderVariable.
 	virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
@@ -466,9 +464,6 @@ public:
 	void GenerateRayForPicking(XMFLOAT3& xmf3PickPosition, XMFLOAT4X4& xmf4x4View, XMFLOAT3* pxmf3PickRayOrigin, XMFLOAT3* pxmf3PickRayDirection);
 	int PickObjectByRayIntersection(XMFLOAT3& xmf3PickPosition, XMFLOAT4X4& xmf4x4View, float* pfHitDistance);
 
-	void SetMonsterType(UINT type) { m_MonsterType = type; }
-	UINT GetMonsterType() { return m_MonsterType; }
-
 public:
 	std::vector<CBoundingBoxMesh*>& GetMesh() { return m_ppBoundingMeshes; }
 	void CreateBoundingBoxMeshSet(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader);
@@ -481,8 +476,12 @@ public:
 	void UpdateWorldTransformBoundingBox();
 	void SetBoundingScale(XMFLOAT3& BoundingScale);
 	void SetBoundingScale(XMFLOAT3&& BoundingScale);
+	void SetBoundingLocation(XMFLOAT3& BoundingLocation);
+	void SetBoundingLocation(XMFLOAT3&& BoundingLocation);
 	XMFLOAT3& GetBoundingScale() { return m_xmf3BoundingScale; }
 	XMFLOAT3 GetBoundingScale() const { return m_xmf3BoundingScale; }
+	XMFLOAT3& GetBoundingLocation() { return m_xmf3BoundingLocation; }
+	XMFLOAT3 GetBoundingLocation() const { return m_xmf3BoundingLocation; }
 	bool GetIsExistBoundingBox() const { return m_IsExistBoundingBox; }
 	void SetIsExistBoundingBox(bool bIsExist) { m_IsExistBoundingBox = bIsExist; }
 	void SetIsBoundingCylinder(bool bIsCylinder, float fRadius = 0.0f);
@@ -538,12 +537,13 @@ public:
 	void Conflicted(float damage);
 
 public:
-	enum {IDLE,ATTACK,MOVE,DIE,TAKEDAMAGE};
-	enum {Dragon,Golem,KingCobra,Spider,TreasureChest,Giant_Bee};
+	enum MonsterState{IDLE,ATTACK,MOVE,DIE,TAKEDAMAGE};
+	enum MonsterType{Dragon, Giant_Bee, Golem, KingCobra, TreasureChest, Spider, Bat, Magma, Treant, Wolf};
 	int State = IDLE;
-	int HP;
-	int MAXHP;
+	float HP = 100.0f;
+	float MAXHP = 100.0f;
 	int Type;
+	bool bActivate = true;
 	
 	CGameObject* m_pHPObject = NULL;
 	CMaterial* m_pHPMaterial = NULL;

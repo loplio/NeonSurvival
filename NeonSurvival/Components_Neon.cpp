@@ -352,7 +352,7 @@ CCamera* Player_Neon::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 //-------------------------------------------------------------------------------
 Scene_Neon::Scene_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) : CScene(pd3dDevice, pd3dCommandList)
 {
-	CreateCbvSrvDescriptorHeaps(pd3dDevice, 10, 300, 10);
+	CreateCbvSrvDescriptorHeaps(pd3dDevice, 10, 400, 10);
 
 	// Terrain Build.
 	XMFLOAT3 xmf3Scale(12.0f, 1.0f, 12.0f);
@@ -490,6 +490,18 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	//for (int i = 0; i < 30; ++i) pMetalonShader->AppendMonster(pd3dDevice, pd3dCommandList, XMFLOAT3(3000.f + 20.f * i, 260.f, 3000.f));
 	//m_ppShaders.back() = pMetalonShader;
 
+	//수정할 부분 => 현재 몬스터 오브젝트들이 직접 렌더링되고 있는데, 인스턴싱된 HP바 정보와 텍스쳐를 그릴 파이프라인을 따로 가져야 하며,
+	//               몬스터 오브젝트들은 인스턴싱할 정보가 많고 복잡하기 때문에 인스턴싱을 하지 않을 예정임.
+	//               현재 몬스터 쉐이더 구조는 인스턴싱을 기반으로 만들어졌는데, 이를 수정하여 몬스터 정보를 따로 렌더링하도록 하고,
+	//				 서버에 필요한 정보(위치, 애니메이션 정보)를 넘겨주기도 해야함. 
+	m_ppShaders.push_back(new CShader);
+	GeneralMonsterObjects* pMonsterShader = new GeneralMonsterObjects();
+	pMonsterShader->BuildComponents(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL);
+	pMonsterShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	// Monster Object의 (MST_INSTANCE m_InstInfo)만 수정 가능.
+	//for (int i = 0; i < 30; ++i) pMonsterShader->AppendMonster(pd3dDevice, pd3dCommandList, XMFLOAT3(3000.f + 20.f * i, 260.f, 3000.f));
+	m_ppShaders.back() = pMonsterShader;
+
 	/// PistolBullet ///
 	m_ppShaders.push_back(new CShader);
 	PistolBulletTexturedObjects* pPistolBulletShader = new PistolBulletTexturedObjects();
@@ -572,24 +584,30 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 
 	CLoadedModelInfo* pTreeModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Tree/Tree.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pTreeModel));
-	m_vHierarchicalGameObjects.back()->SetBoundingScale(XMFLOAT3(0.2f, 1.0f, 0.2f));
+	m_vHierarchicalGameObjects.back()->SetBoundingScale(XMFLOAT3(0.14f, 1.0f, 0.1f));
+	m_vHierarchicalGameObjects.back()->SetBoundingLocation(XMFLOAT3(-8.0f, 0.0f, 12.0f));
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + 55.0f, 15.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, 95.0f + m_pTerrain->GetLength() * 0.5f);
 	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
+	m_vHierarchicalGameObjects.back()->SetIsBoundingCylinder(true);
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 0.0f, 0.0f);
 	if (pTreeModel) delete pTreeModel;
 
 	CLoadedModelInfo* pTree2Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Tree/Tree.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pTree2Model));
-	m_vHierarchicalGameObjects.back()->SetBoundingScale(XMFLOAT3(0.2f, 1.0f, 0.2f));
+	m_vHierarchicalGameObjects.back()->SetBoundingScale(XMFLOAT3(0.14f, 1.0f, 0.1f));
+	m_vHierarchicalGameObjects.back()->SetBoundingLocation(XMFLOAT3(-8.0f, 0.0f, 12.0f));
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + 70.0f, 13.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, -73.0f + m_pTerrain->GetLength() * 0.5f);
 	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
+	m_vHierarchicalGameObjects.back()->SetIsBoundingCylinder(true);
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 0.0f, 0.0f);
 	if (pTree2Model) delete pTree2Model;
 
 	CLoadedModelInfo* pTree3Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Tree/Tree.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pTree3Model));
-	m_vHierarchicalGameObjects.back()->SetBoundingScale(XMFLOAT3(0.2f, 1.0f, 0.2f));
+	m_vHierarchicalGameObjects.back()->SetBoundingScale(XMFLOAT3(0.14f, 1.0f, 0.1f));
+	m_vHierarchicalGameObjects.back()->SetBoundingLocation(XMFLOAT3(-8.0f, 0.0f, 12.0f));
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - 75.0f, 15.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, -35.0f + m_pTerrain->GetLength() * 0.5f);
+	m_vHierarchicalGameObjects.back()->SetIsBoundingCylinder(true);
 	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
 	if (pTree3Model) delete pTree3Model;
 
@@ -732,12 +750,12 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.back()->SetIsExistBoundingBox(false);
 	if (pLevelUpTableModel) delete pLevelUpTableModel;
 	
-	m_vMonsters.reserve(MAX_MONSTER * 10);
-	//// 몬스터들
-	for (int i = 0; i < MAX_MONSTER; ++i)
-	{
-		//CreateMonsters(pd3dDevice, pd3dCommandList, i);
-	}
+	//m_vMonsters.reserve(MAX_MONSTER * 10);
+	////// 몬스터들
+	//for (int i = 0; i < MAX_MONSTER; ++i)
+	//{
+	//	CreateMonsters(pd3dDevice, pd3dCommandList, i);
+	//}
 
 	// 다른 플레이어
 	for (int i = 0; i < MAX_PLAYER - 1; ++i)
@@ -940,16 +958,16 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 	}
 
 	//몬스터 애니메이션
-	for (int i = 0; i < m_vMonsters.size(); ++i)
-	{
-		int aniTrack = m_pMonsterData[i].State;
-		if (aniTrack != 5)
-		{
-			m_vMonsters[i]->m_pSkinnedAnimationController->SetOneOfTrackEnable(aniTrack);
-			m_vMonsters[i]->m_pSkinnedAnimationController->SetTrackSpeed(aniTrack, 1.0f);
-			m_vMonsters[i]->Animate(fTimeElapsed);
-		}
-	}
+	//for (int i = 0; i < m_vMonsters.size(); ++i)
+	//{
+	//	int aniTrack = m_pMonsterData[i].State;
+	//	if (aniTrack != 5)
+	//	{
+	//		m_vMonsters[i]->m_pSkinnedAnimationController->SetOneOfTrackEnable(aniTrack);
+	//		m_vMonsters[i]->m_pSkinnedAnimationController->SetTrackSpeed(aniTrack, 1.0f);
+	//		m_vMonsters[i]->Animate(fTimeElapsed);
+	//	}
+	//}
 }
 //--ProcessOutput : Scene_Neon-------------------------------------------------------
 void Scene_Neon::OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
@@ -992,8 +1010,10 @@ void Scene_Neon::CreateMonsters(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandL
 void Scene_Neon::CreateMonster(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, char* model, int x, int z)
 {
 	CLoadedModelInfo* pModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, model, NULL);
-	m_vMonsters.push_back(new MonsterObject());
-	m_vMonsters.back()->SetChild(pModel->m_pModelRootObject);
+	m_vMonsters.push_back(new MonsterObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pModel));
+	//m_vMonsters.push_back(new MonsterObject());
+	//m_vMonsters.back()->SetChild(pModel->m_pModelRootObject);
+	m_vMonsters.back()->UpdateMobility(CGameObject::Moveable);
 	m_vMonsters.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 5, pModel);
 	for (int i = 0; i < 5; ++i)
 	{
@@ -1020,6 +1040,7 @@ CMonsterMetalon::CMonsterMetalon(const CGameObject& pGameObject)
 	m_xmf3Scale = pGameObject.m_xmf3Scale;
 	m_xmf3PrevScale = pGameObject.m_xmf3PrevScale;
 	m_xmf3BoundingScale = pGameObject.GetBoundingScale();
+	m_xmf3BoundingLocation = pGameObject.GetBoundingLocation();
 	m_IsExistBoundingBox = pGameObject.GetIsExistBoundingBox();
 	m_Mass = pGameObject.m_Mass;
 
@@ -1230,6 +1251,7 @@ bool CPistolBulletObject::Collide(const CGameSource& GameSource, CBoundingBoxObj
 	{
 		if (BoundingObjects[i]->m_Mobility == Moveable)
 		{
+			BoundingObjects[i]->UpdateWorldTransformBoundingBox();
 			if (BoundingObjects[i]->Collide(XMLoadFloat3(&RayOrigin), XMLoadFloat3(&m_fRayDriection), distance))
 			{
 				nConflicted = i;
