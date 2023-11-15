@@ -399,6 +399,7 @@ public:
 	int							m_nMaterials;
 	CMaterial**					m_ppMaterials;
 	CMesh*						m_pMesh;
+	CBoundingBoxMesh*			m_pTopBoundingMesh = NULL;
 
 	enum Mobility				{ Static, Moveable };
 	UINT						m_Mobility = Static;
@@ -488,6 +489,7 @@ public:
 	bool BeginOverlapBoundingBox(const BoundingOrientedBox& OtherOBB, XMFLOAT3* displacement);
 
 	UINT GetMeshType() { return((m_pMesh) ? m_pMesh->GetType() : 0x00); }
+	CGameObject* GetTopParent();
 	CGameObject* GetParent() { return(m_pParent); }
 	CGameObject* FindFrame(const char* pstrFrameName);
 

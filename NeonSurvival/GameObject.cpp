@@ -1209,6 +1209,8 @@ void CGameObject::CreateBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12Graphics
 		m_pMesh->SetBoundinBoxExtents(XMFLOAT3(extents.x * m_xmf3BoundingScale.x, extents.y * m_xmf3BoundingScale.y, extents.z * m_xmf3BoundingScale.z));
 		((CBoundingBoxObjects*)BBShader)->AppendBoundingObject(this);
 		((CBoundingBoxObjects*)BBShader)->bCreate = true;
+
+		if (!GetTopParent()->m_pTopBoundingMesh) GetTopParent()->m_pTopBoundingMesh = BBMesh;
 	}
 
 	if (m_pSibling) m_pSibling->CreateBoundingBoxMesh(pd3dDevice, pd3dCommandList,  BBShader);
@@ -1243,6 +1245,8 @@ void CGameObject::CreateBoundingBoxInst(ID3D12Device* pd3dDevice, ID3D12Graphics
 			m_ppBoundingMeshes.push_back(BBMesh);
 			((CBoundingBoxObjects*)BBShader)->AppendBoundingObject(this);
 			((CBoundingBoxObjects*)BBShader)->bCreate = true;
+
+			if (!GetTopParent()->m_pTopBoundingMesh) GetTopParent()->m_pTopBoundingMesh = BBMesh;
 		}
 	}
 
@@ -1272,6 +1276,8 @@ void CGameObject::CreateBoundingBoxObject(ID3D12Device* pd3dDevice, ID3D12Graphi
 	m_pMesh->SetBoundinBoxExtents(XMFLOAT3(extents.x * m_xmf3BoundingScale.x, extents.y * m_xmf3BoundingScale.y, extents.z * m_xmf3BoundingScale.z));
 	((CBoundingBoxObjects*)BBShader)->AppendBoundingObject(this);
 	((CBoundingBoxObjects*)BBShader)->bCreate = true;
+
+	if (m_pTopBoundingMesh) m_pTopBoundingMesh = m_ppBoundingMeshes.back();
 
 	SetWorldTransformBoundingBox();
 }
@@ -1694,6 +1700,14 @@ CGameObject* CGameObject::FindFrame(const char* pstrFrameName)
 
 	return(NULL);
 }
+CGameObject* CGameObject::GetTopParent()
+{
+	CGameObject* parent = this;
+	if (m_pParent) parent = m_pParent->GetTopParent();
+
+	return parent;
+}
+
 CTexture* CGameObject::FindReplicatedTexture(_TCHAR* pstrTextureName)
 {
 	for (int i = 0; i < m_nMaterials; i++)

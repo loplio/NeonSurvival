@@ -502,6 +502,7 @@ struct VS_HPBAR_INPUT
 	float3 position : POSITION;
 	float2 uv : TEXCOORD;
 	float  hp : HP;
+	float  maxhp : MAXHP;
 	matrix transform : WORLDMATRIX;
 };
 
@@ -509,25 +510,26 @@ struct VS_HPBAR_OUTPUT
 {
 	float4 position : SV_POSITION;
 	float2 uv : TEXCOORD;
-	float  hp : HP;
+	float  interpHp : INTERPHP;
 };
 
 VS_HPBAR_OUTPUT VSHPbar(VS_HPBAR_INPUT input)
 {
 	VS_HPBAR_OUTPUT output;
 
-	float3 positionW = mul(float4(input.position, 1.0f), (float3x3)gmtxInverseView) + input.transform[3].xyz;
+	float InterpolationHP = input.maxhp / 1000.0f;	// Monster Max HP: 1000
+	float3 position = float3(input.position.x * InterpolationHP, input.position.y, input.position.z);
+	float3 positionW = mul(float4(position, 1.0f), (float3x3)gmtxInverseView) + input.transform[3].xyz;
 	output.position = mul(mul(float4(positionW, 1.0f), gmtxView), gmtxProjection);
 	output.uv = input.uv;
-	//output.uv.x = output.uv.x * input.hp / 100.0f;
-	output.hp = input.hp;
+	output.interpHp = input.hp / input.maxhp;
 
 	return(output);
 }
 
 float4 PSHPbar(VS_HPBAR_OUTPUT input) : SV_TARGET
 {
-	float4 cColor = (input.uv.x > input.hp / 100.0f) ? float4(1.0f, 1.0f, 1.0f, 1.0f) : gtxtTexture.Sample(gssClamp, input.uv);
+	float4 cColor = (input.uv.x > input.interpHp) ? float4(1.0f, 1.0f, 1.0f, 1.0f) : gtxtTexture.Sample(gssClamp, input.uv);
 
 	return(cColor);
 }

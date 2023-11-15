@@ -1273,7 +1273,7 @@ void CPistolBulletObject::ReleaseUploadBuffers()
 CRectTextureObject::CRectTextureObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CMaterial* pMaterial)
 {
 	SetMaterial(0, pMaterial);
-	m_pMesh = new CTexturedRectMesh(pd3dDevice, pd3dCommandList, XMFLOAT3(0.0f, METER_PER_PIXEL(1.5), 0.0f), METER_PER_PIXEL(2), METER_PER_PIXEL(0.15), 1.0f);
+	m_pMesh = new CTexturedRectMesh(pd3dDevice, pd3dCommandList, XMFLOAT3(0.0f, 0.0f/*METER_PER_PIXEL(1.5)*/, 0.0f), METER_PER_PIXEL(6), METER_PER_PIXEL(0.15), 1.0f);
 }
 CRectTextureObject::~CRectTextureObject()
 {

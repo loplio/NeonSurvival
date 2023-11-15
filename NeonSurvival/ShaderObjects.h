@@ -123,6 +123,7 @@ public:
 //-------------------------------------------------------------------------------
 struct MST_INSTANCE {
 	float m_fHP;
+	float m_fMaxHP;
 	XMFLOAT4X4 m_xmf4x4Transform;
 };
 
@@ -178,7 +179,7 @@ public:
 	void BuildComponents(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CTexture* pTexture = NULL) override;
 	
 	void CreateMonsters(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, int nLoop);
-	void CreateMonster(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, char* model, int x, int z);
+	void CreateMonster(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, char* model, float maxHP, int x, int z);
 
 	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int nPipelineState = 0) override;
 	void Update(float fTimeElapsed) override;

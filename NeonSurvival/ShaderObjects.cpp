@@ -418,16 +418,17 @@ D3D12_INPUT_LAYOUT_DESC GeneralMonsterObjects::CreateInputLayout()
 	}
 	else
 	{
-		UINT nInputElementDescs = 7;
+		UINT nInputElementDescs = 8;
 		D3D12_INPUT_ELEMENT_DESC* pd3dInputElementDescs = new D3D12_INPUT_ELEMENT_DESC[nInputElementDescs];
 
 		pd3dInputElementDescs[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
 		pd3dInputElementDescs[1] = { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 1, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
 		pd3dInputElementDescs[2] = { "HP", 0, DXGI_FORMAT_R32G32_FLOAT, 2, 0, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 };
-		pd3dInputElementDescs[3] = { "WORLDMATRIX", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, 4, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 };
-		pd3dInputElementDescs[4] = { "WORLDMATRIX", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, 20, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 };
-		pd3dInputElementDescs[5] = { "WORLDMATRIX", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, 36, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 };
-		pd3dInputElementDescs[6] = { "WORLDMATRIX", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, 52, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 };
+		pd3dInputElementDescs[3] = { "MAXHP", 0, DXGI_FORMAT_R32G32_FLOAT, 2, 4, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 };
+		pd3dInputElementDescs[4] = { "WORLDMATRIX", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, 8, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 };
+		pd3dInputElementDescs[5] = { "WORLDMATRIX", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, 24, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 };
+		pd3dInputElementDescs[6] = { "WORLDMATRIX", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, 40, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 };
+		pd3dInputElementDescs[7] = { "WORLDMATRIX", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, 56, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 };
 
 		d3dInputLayoutDesc.pInputElementDescs = pd3dInputElementDescs;
 		d3dInputLayoutDesc.NumElements = nInputElementDescs;
@@ -464,10 +465,16 @@ void GeneralMonsterObjects::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3
 	int n = 0;
 	for (CGameObject* monster : m_ppObjects)
 	{
-		XMFLOAT4X4 InstInfo = monster->m_xmf4x4World;
-		InstInfo._11 = 20.f * (n + 1);
-		InstInfo._21 = 40.f * (n + 1);
+		XMFLOAT4X4 InstInfo = monster->m_pTopBoundingMesh->CenterTransform;
+		XMFLOAT4X4 IncreseY = Matrix4x4::Identity();
+		
+		float ExtentY = monster->m_pTopBoundingMesh->GetAABBExtents().y;
+		float ScaleY = monster->m_pTopBoundingMesh->CenterTransform._22;	
+		IncreseY._42 = ExtentY * ScaleY;
+		InstInfo = Matrix4x4::Multiply(InstInfo, IncreseY);
+
 		m_pcbMappedGameObjects[n].m_fHP = ((MonsterObject*)monster)->HP;
+		m_pcbMappedGameObjects[n].m_fMaxHP = ((MonsterObject*)monster)->MAXHP;
 		XMStoreFloat4x4(&m_pcbMappedGameObjects[n++].m_xmf4x4Transform, XMMatrixTranspose(XMLoadFloat4x4(&InstInfo)));
 	}
 }
@@ -529,19 +536,19 @@ void GeneralMonsterObjects::CreateMonsters(ID3D12Device* pd3dDevice, ID3D12Graph
 	{
 		int Z = 0;
 
-		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Dragon/Polygonal_Dragon.bin", i, Z++);
-		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Giant_Bee/Polygonal_Giant_Bee.bin", i, Z++);
-		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Golem/Polygonal_Golem.bin", i, Z++);
-		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/KingCobra/Polygonal_King_Cobra.bin", i, Z++);
-		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/TreasureChest/Polygonal_Treasure_Chest_Monster.bin", i, Z++);
-		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Spider/Polygonal_Spiderling_Venom.bin", i, Z++);
-		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Bat/Polygonal_One_Eyed_Bat.bin", i, Z++);
-		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Magma/Polygonal_Magma.bin", i, Z++);
-		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Treant/Polygonal_Treant.bin", i, Z++);
-		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Wolf/Polygonal_Wolf.bin", i, Z++);
+		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Dragon/Polygonal_Dragon.bin", 1000.0f, i, Z++);
+		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Giant_Bee/Polygonal_Giant_Bee.bin", 150.0f, i, Z++);
+		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Golem/Polygonal_Golem.bin", 500.0f, i, Z++);
+		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/KingCobra/Polygonal_King_Cobra.bin", 400.0f, i, Z++);
+		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/TreasureChest/Polygonal_Treasure_Chest_Monster.bin", 250.0f, i, Z++);
+		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Spider/Polygonal_Spiderling_Venom.bin", 300.0f, i, Z++);
+		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Bat/Polygonal_One_Eyed_Bat.bin", 100.0f, i, Z++);
+		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Magma/Polygonal_Magma.bin", 400.0f, i, Z++);
+		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Treant/Polygonal_Treant.bin", 500.0f, i, Z++);
+		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Wolf/Polygonal_Wolf.bin", 300.0f, i, Z++);
 	}
 }
-void GeneralMonsterObjects::CreateMonster(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, char* model, int x, int z)
+void GeneralMonsterObjects::CreateMonster(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, char* model, float maxHP, int x, int z)
 {
 	CLoadedModelInfo* pModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, model, NULL);
 	//m_ppObjects.push_back(new MonsterObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pModel));
@@ -557,6 +564,8 @@ void GeneralMonsterObjects::CreateMonster(ID3D12Device* pd3dDevice, ID3D12Graphi
 	}
 	//m_ppObjects.back()->SetIsExistBoundingBox(false);
 	m_ppObjects.back()->SetPosition(2800.f + 30.f * x, 265.0f, 3000.f - 30.f * z);
+	((MonsterObject*)m_ppObjects.back())->MAXHP = maxHP;
+	((MonsterObject*)m_ppObjects.back())->HP = maxHP;
 	if (pModel) delete pModel;
 }
 void GeneralMonsterObjects::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int nPipelineState)
@@ -585,7 +594,7 @@ void GeneralMonsterObjects::Update(float fTimeElapsed)
 {
 	CMonsterObjects::Update(fTimeElapsed);
 
-	//몬스터 위치값 적용(서버)
+	////몬스터 위치값 적용(서버)
 	int count = 0;
 	for (auto monster : m_ppObjects)
 	{
@@ -626,7 +635,7 @@ void GeneralMonsterObjects::AppendMonster(ID3D12Device* pd3dDevice, ID3D12Graphi
 	{
 		if (((MonsterObject*)m_ppObjects[MSTIndex + i])->bActivate == false)
 		{
-			((MonsterObject*)m_ppObjects[MSTIndex + i])->HP = 100.0f;
+			((MonsterObject*)m_ppObjects[MSTIndex + i])->HP = ((MonsterObject*)m_ppObjects[MSTIndex + i])->MAXHP;
 			((MonsterObject*)m_ppObjects[MSTIndex + i])->bActivate = true;
 			break;
 		}

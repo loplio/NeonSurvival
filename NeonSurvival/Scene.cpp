@@ -401,11 +401,11 @@ void CScene::CreateBoundingBox(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	}
 
 	//∏ÛΩ∫≈Õ
-	for (int i = 0; i < m_vMonsters.size(); ++i)
-	{
-		m_vMonsters[i]->CreateBoundingBoxMeshSet(pd3dDevice, pd3dCommandList, BBShader);
-		m_vMonsters[i]->UpdateWorldTransformBoundingBox();
-	}
+	//for (int i = 0; i < m_vMonsters.size(); ++i)
+	//{
+	//	m_vMonsters[i]->CreateBoundingBoxMeshSet(pd3dDevice, pd3dCommandList, BBShader);
+	//	m_vMonsters[i]->UpdateWorldTransformBoundingBox();
+	//}
 }
 void CScene::RunTimeBuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {

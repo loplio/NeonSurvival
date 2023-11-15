@@ -143,12 +143,11 @@ public:
 	void ReleaseUploadBuffers();
 
 public:
-	const float m_fDamege = 18.0f;
+	const float m_fDamege = 36.0f;
 	const float m_fSpeed = PIXEL_MPS(35);
 	float m_fLifeTime = 0.0f;
 	XMFLOAT3 m_fRayDriection;
 	int Type;
-	//CTexture* m_pRandowmValueTexture = NULL;
 };
 
 class CRectTextureObject : public StaticObject {
