@@ -38,6 +38,7 @@ protected:
 	CCamera* m_pCamera = NULL;
 	CShader* m_pShader = NULL;
 	
+	bool bReadyFire = false;
 	bool IsFire = false;
 
 
@@ -100,11 +101,13 @@ public:
 	float GetRayLength() { return m_fRayLength; }
 	XMFLOAT3 GetRayDirection() { return m_xmf3RayDirection; }
 	bool GetFire() const { return IsFire; }
+	bool GetReadyFire() const { return bReadyFire; }
 
 	void SetYaw(float Yaw) { m_fYaw = Yaw; }
 	void SetPitch(float Pitch) { m_fPitch = Pitch; }
 	void SetRoll(float Roll) { m_fRoll = Roll; }
 	void SetFire(bool fire) { IsFire = fire; }
+	void SetReadyFire(bool fire) { bReadyFire = fire; }
 
 	CCamera* GetCamera() const { return(m_pCamera); }
 	void SetCamera(CCamera* pCamera) { m_pCamera = pCamera; }
@@ -119,6 +122,9 @@ public:
 	void SetCameraUpdatedContext(LPVOID pContext) { m_pCameraUpdatedContext = pContext; }
 
 	float GetCameraPitch();
+
+	ReafObjectType GetReafObjectType() override { return Player; }
+
 public:
 	const float fPitchThickness = 0.2f;
 	bool IsDash = false;

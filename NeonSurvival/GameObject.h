@@ -435,6 +435,12 @@ public:
 
 	virtual XMFLOAT3* GetDisplacement();
 
+	enum ReafObjectType {
+		Object,
+		Player
+	};
+	virtual ReafObjectType GetReafObjectType() { return Object; }
+
 	XMFLOAT3 GetPosition();
 	XMFLOAT3 GetLook();
 	XMFLOAT3 GetUp();
