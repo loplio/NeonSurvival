@@ -209,6 +209,15 @@ void Player_Neon::Update(float fTimeElapsed)
 		ServerInnResultAnimBundle = nResultAnimBundle;
 	}
 
+	//XMFLOAT4X4 xmf4x4Rotate = Matrix4x4::Identity();
+
+	//xmf4x4Rotate._11 = m_xmf3Right.x; xmf4x4Rotate._21 = m_xmf3Up.x; xmf4x4Rotate._31 = m_xmf3Look.x;
+	//xmf4x4Rotate._12 = m_xmf3Right.y; xmf4x4Rotate._22 = m_xmf3Up.y; xmf4x4Rotate._32 = m_xmf3Look.y;
+	//xmf4x4Rotate._13 = m_xmf3Right.z; xmf4x4Rotate._23 = m_xmf3Up.z; xmf4x4Rotate._33 = m_xmf3Look.z;
+
+	//m_xmf3Offset = Vector3::TransformCoord(m_xmf3BaseOffset, xmf4x4Rotate);
+	//std::cout << "Offset : " << m_xmf3Offset.x << ", " << m_xmf3Offset.y << ", " << m_xmf3Offset.z << std::endl;
+
 	//서버로 위치 전송
 	//SERVER::getInstance().SendPosition(GetPosition());
 	SERVER::getInstance().SendPlayerData(*this, m_nGunType, ServerfLength, ServerInnResultAnimBundle);
@@ -327,6 +336,7 @@ CCamera* Player_Neon::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 		m_pCamera->GenerateProjectionMatrix(1.01f, 5000.0f, ASPECT_RATIO, 60.0f);
 		m_pCamera->SetViewport(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT, 0.0f, 1.0f);
 		m_pCamera->SetScissorRect(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT);
+		m_nGunType = Empty;
 		break;
 	case SHOULDER_HOLD_CAMERA:
 		SetFriction(0.0f);
@@ -784,7 +794,20 @@ bool Scene_Neon::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wPa
 {
 	switch (nMessageID) {
 	case WM_LBUTTONDOWN:
-		//m_pPlayer->SetFire(true);
+		if (m_pPlayer->GetCamera()->GetMode() == THIRD_PERSON_CAMERA) break;
+
+		// Change the animation while shooting
+		if (((Player_Neon*)m_pPlayer.get())->GetReafObjectType() == CGameObject::Player)
+		{
+			if (m_pPlayer->m_pSkinnedAnimationController->m_nCurrentTrack == m_pPlayer->m_pSkinnedAnimationController->m_nAnimationBundle[CAnimationController::RUN])
+				break;
+
+			if (((Player_Neon*)m_pPlayer.get())->m_nGunType == Player_Neon::Empty)
+			{
+				((Player_Neon*)m_pPlayer.get())->m_nGunType = Player_Neon::Pistol;
+			}
+		}
+
 		m_pPlayer->SetReadyFire(true);
 		for (int i = 0; i < m_ppShaders.size(); ++i)
 		{
@@ -846,8 +869,8 @@ void Scene_Neon::Update(float fTimeElapsed)
 				if (((PistolBulletTexturedObjects*)m_ppShaders[i])->m_fCoolTime <= 0.0f)
 				{
 					PistolBulletTexturedObjects* pObjectsShader = (PistolBulletTexturedObjects*)m_ppShaders[i];
-					XMFLOAT3 startLocation = Vector3::Add(m_pPlayer.get()->GetPosition(), m_pPlayer.get()->GetOffset());
 					XMFLOAT3 rayDirection = m_pPlayer.get()->GetRayDirection();
+					XMFLOAT3 startLocation = Vector3::Add(Vector3::Add(m_pPlayer.get()->GetPosition(), m_pPlayer.get()->GetOffset()), Vector3::ScalarProduct(Vector3::Normalize(rayDirection), ((PistolBulletTexturedObjects*)m_ppShaders[i])->OffsetLength, false));
 					pObjectsShader->AppendBullet(startLocation, rayDirection, 0);
 					((PistolBulletTexturedObjects*)m_ppShaders[i])->m_fCoolTime = ((PistolBulletTexturedObjects*)m_ppShaders[i])->m_fMaxCoolTime;
 					((PistolBulletTexturedObjects*)m_ppShaders[i])->m_fLastTime = 0.0f;
@@ -919,8 +942,8 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 						if (m_ppShaders[k]->GetReafShaderType() == CShader::ReafShaderType::PistolBulletShader)
 						{
 							PistolBulletTexturedObjects* pObjectsShader = (PistolBulletTexturedObjects*)m_ppShaders[k];
-							XMFLOAT3 startLocation = Vector3::Add(m_pOtherPlayerData2[OtherId].position, m_pPlayer.get()->GetOffset());
 							XMFLOAT3 rayDirection = m_pOtherPlayerData2[OtherId].RayDirection;
+							XMFLOAT3 startLocation = Vector3::Add(Vector3::Add(m_pOtherPlayerData2[OtherId].position, m_pPlayer.get()->GetOffset()), Vector3::ScalarProduct(Vector3::Normalize(rayDirection), ((PistolBulletTexturedObjects*)m_ppShaders[i])->OffsetLength, false));
 							pObjectsShader->AppendBullet(startLocation, rayDirection,1);
 						}
 					}
