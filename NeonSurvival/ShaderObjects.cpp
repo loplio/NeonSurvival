@@ -598,8 +598,17 @@ void GeneralMonsterObjects::Update(float fTimeElapsed)
 	int count = 0;
 	for (auto monster : m_ppObjects)
 	{
-		XMFLOAT3 pos = m_pMonsterData[count++].Pos;
-		monster->SetPosition(pos);
+		XMFLOAT4X4 world = m_pMonsterData[count].m_xmf4x4World;
+		XMFLOAT3 pos = m_pMonsterData[count].Pos;
+		XMFLOAT3 right = XMFLOAT3(world._11, world._12, world._13);
+		XMFLOAT3 up = XMFLOAT3(world._21, world._22, world._23);
+		XMFLOAT3 look = XMFLOAT3(world._31, world._32, world._33);
+		if (world._11 < EPSILON && world._22 < EPSILON && world._33 < EPSILON)
+			monster->SetPosition(pos);
+		else
+			monster->SetTransform(right, up, look, pos);
+
+		count++;
 	}
 
 	EventRemove();

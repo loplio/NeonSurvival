@@ -212,7 +212,8 @@ void Player_Neon::Update(float fTimeElapsed)
 	//서버로 위치 전송
 	//SERVER::getInstance().SendPosition(GetPosition());
 	SERVER::getInstance().SendPlayerData(*this, m_nGunType, ServerfLength, ServerInnResultAnimBundle);
-	
+	//if((*this).GetFire())std::cout << "Send!!! FireState: " << (*this).GetFire() << std::endl;
+
 }
 
 void Player_Neon::OnPrepareRender()
@@ -799,7 +800,7 @@ bool Scene_Neon::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wPa
 		break;
 	case WM_LBUTTONUP:
 		m_pPlayer->SetReadyFire(false);
-		//m_pPlayer->SetFire(false);
+		m_pPlayer->SetFire(false);
 		break;
 	case WM_RBUTTONUP:
 		break;
@@ -852,6 +853,7 @@ void Scene_Neon::Update(float fTimeElapsed)
 					((PistolBulletTexturedObjects*)m_ppShaders[i])->m_fLastTime = 0.0f;
 					
 					m_pPlayer->SetFire(true);
+					//std::cout << "Fire!!!" << std::endl;
 				}
 				else
 				{
@@ -908,7 +910,9 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 
 				//총알 발사
 				bool currfire = m_pOtherPlayerData2[OtherId].Fire;
-				if (currfire /*&& m_OtherPlayerPrevFire[OtherId] == false*/)
+				//if(currfire) std::cout << "OtherPlayer ID: " << OtherId << ", FireState: " << currfire  << ", PrevState: " << m_OtherPlayerPrevFire[OtherId] << std::endl;
+				//if(!currfire && m_OtherPlayerPrevFire[OtherId]) std::cout << "PrevOtherPlayer ID: " << OtherId << ", FireState: " << currfire  << ", PrevState: " << m_OtherPlayerPrevFire[OtherId] << std::endl;
+				if (currfire && m_OtherPlayerPrevFire[OtherId] == false)
 				{
 					for (int k = 0; k < m_ppShaders.size(); ++k)
 					{
