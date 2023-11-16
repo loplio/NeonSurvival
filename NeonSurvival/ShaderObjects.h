@@ -121,12 +121,6 @@ public:
 //-------------------------------------------------------------------------------
 /*	CMonsterObjects															   */
 //-------------------------------------------------------------------------------
-struct MST_INSTANCE {
-	float m_fHP;
-	float m_fMaxHP;
-	XMFLOAT4X4 m_xmf4x4Transform;
-};
-
 class CMonsterObjects : public CSkinnedAnimationObjectsShader {
 public:
 	CMonsterObjects();
@@ -145,7 +139,7 @@ public:
 
 protected:
 	ID3D12Resource* m_pd3dcbObjects = NULL;
-	MST_INSTANCE* m_pcbMappedGameObjects = NULL;
+	HP_INSTANCE* m_pcbMappedGameObjects = NULL;
 
 	D3D12_VERTEX_BUFFER_VIEW m_d3dInstancingBufferView;
 
@@ -188,10 +182,6 @@ public:
 	void AppendMonster(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, MonsterObject::MonsterType Type);
 	void EventRemove();
 	void OnPostReleaseUploadBuffers() override;
-	void SetPosition(XMFLOAT3& xmf3Position, int index);
-	void SetTransform(int index, XMFLOAT4X4& transform);
-
-	void SetPosition(XMFLOAT3 xmf3Position, int index);
 
 public:
 	PACKET_MONSTERDATA* m_pMonsterData = SERVER::getInstance().GetMonsterData();

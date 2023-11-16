@@ -281,6 +281,41 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
+struct HP_INSTANCE {
+	float m_fHP;
+	float m_fMaxHP;
+	XMFLOAT4X4 m_xmf4x4Transform;
+};
+
+class CHPBarShader : public CShader {
+public:
+	CHPBarShader();
+	virtual ~CHPBarShader();
+
+	void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) override;
+	void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList) override;
+	void ReleaseShaderVariables() override;
+
+	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
+	virtual D3D12_SHADER_BYTECODE CreateVertexShader();
+	virtual D3D12_SHADER_BYTECODE CreatePixelShader();
+
+	virtual void CreateGraphicsPipelineState(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dRootSignature);
+
+	void SetInstancingObject(CGameObject* pObject) { m_pObject = pObject; }
+	D3D12_VERTEX_BUFFER_VIEW GetInstancingBufferView() { return m_d3dInstancingBufferView; }
+
+protected:
+	ID3D12Resource* m_pd3dcbObjects = NULL;
+	HP_INSTANCE* m_pcbMappedGameObjects = NULL;
+
+	D3D12_VERTEX_BUFFER_VIEW m_d3dInstancingBufferView;
+
+	CGameObject* m_pObject = NULL;
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
 
 class CTerrainShader : public CShader {
 public:

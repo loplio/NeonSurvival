@@ -2141,7 +2141,28 @@ void MonsterObject::Conflicted(float damage)
 	std::cout << "Monster Life: " << HP << std::endl;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
+CRectTextureObject::CRectTextureObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CMaterial* pMaterial)
+{
+	SetMaterial(0, pMaterial);
+	m_pMesh = new CTexturedRectMesh(pd3dDevice, pd3dCommandList, XMFLOAT3(0.0f, 0.0f/*METER_PER_PIXEL(1.5)*/, 0.0f), METER_PER_PIXEL(6), METER_PER_PIXEL(0.15), 1.0f);
+}
+CRectTextureObject::~CRectTextureObject()
+{
+}
 
+void CRectTextureObject::Update(float fTimeElapsed)
+{
+}
+//-------------------------------------------------------------------------------
+CHPBarTextureObject::CHPBarTextureObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CMaterial* pMaterial, float hp, float maxhp) : CRectTextureObject(pd3dDevice, pd3dCommandList, pMaterial)
+{
+	HP = hp;
+	MAXHP = maxhp;
+}
+CHPBarTextureObject::~CHPBarTextureObject()
+{
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////
 CParticleObject::CParticleObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, XMFLOAT3 xmf3Position, XMFLOAT3 xmf3Velocity, float fLifetime, XMFLOAT3 xmf3Acceleration, XMFLOAT3 xmf3Color, XMFLOAT2 xmf2Size, UINT nMaxParticles)
 {
 }

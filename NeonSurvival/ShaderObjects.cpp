@@ -372,7 +372,7 @@ void CMonsterObjects::ReleaseUploadBuffers()
 		}
 	}
 	if (m_pHPMaterial) m_pHPMaterial->ReleaseUploadBuffers();
-	if (m_pHPObject)  m_pHPObject->ReleaseUploadBuffers();;
+	if (m_pHPObject)  m_pHPObject->ReleaseUploadBuffers();
 
 }
 void CMonsterObjects::ReleaseShaderVariables()
@@ -453,12 +453,12 @@ D3D12_SHADER_BYTECODE GeneralMonsterObjects::CreatePixelShader()
 
 void GeneralMonsterObjects::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
-	m_pd3dcbObjects = ::CreateBufferResource(pd3dDevice, pd3dCommandList, NULL, sizeof(MST_INSTANCE) * m_nMaxObjects, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, NULL);
+	m_pd3dcbObjects = ::CreateBufferResource(pd3dDevice, pd3dCommandList, NULL, sizeof(HP_INSTANCE) * m_nMaxObjects, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, NULL);
 	m_pd3dcbObjects->Map(0, NULL, (void**)&m_pcbMappedGameObjects);
 
 	m_d3dInstancingBufferView.BufferLocation = m_pd3dcbObjects->GetGPUVirtualAddress();
-	m_d3dInstancingBufferView.StrideInBytes = sizeof(MST_INSTANCE);
-	m_d3dInstancingBufferView.SizeInBytes = sizeof(MST_INSTANCE) * m_nMaxObjects;
+	m_d3dInstancingBufferView.StrideInBytes = sizeof(HP_INSTANCE);
+	m_d3dInstancingBufferView.SizeInBytes = sizeof(HP_INSTANCE) * m_nMaxObjects;
 }
 void GeneralMonsterObjects::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
 {
@@ -726,12 +726,12 @@ D3D12_SHADER_BYTECODE MonsterMetalonObjects::CreatePixelShader()
 
 void MonsterMetalonObjects::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
-	m_pd3dcbObjects = ::CreateBufferResource(pd3dDevice, pd3dCommandList, NULL, sizeof(MST_INSTANCE) * m_nMaxObjects, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, NULL);
+	m_pd3dcbObjects = ::CreateBufferResource(pd3dDevice, pd3dCommandList, NULL, sizeof(HP_INSTANCE) * m_nMaxObjects, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, NULL);
 	m_pd3dcbObjects->Map(0, NULL, (void**)&m_pcbMappedGameObjects);
 
 	m_d3dInstancingBufferView.BufferLocation = m_pd3dcbObjects->GetGPUVirtualAddress();
-	m_d3dInstancingBufferView.StrideInBytes = sizeof(MST_INSTANCE);
-	m_d3dInstancingBufferView.SizeInBytes = sizeof(MST_INSTANCE) * m_nMaxObjects;
+	m_d3dInstancingBufferView.StrideInBytes = sizeof(HP_INSTANCE);
+	m_d3dInstancingBufferView.SizeInBytes = sizeof(HP_INSTANCE) * m_nMaxObjects;
 }
 void MonsterMetalonObjects::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
 {

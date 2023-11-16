@@ -537,7 +537,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackEnable(0, 0);
 	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackSpeed(0, 4.0f);
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, 17.0f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
-	m_vHierarchicalGameObjects.back()->SetIsExistBoundingBox(false);
+	//m_vHierarchicalGameObjects.back()->SetIsExistBoundingBox(false);
 	m_NexusModelPos = m_vHierarchicalGameObjects.back()->GetPosition();
 	if (pNexusModel) delete pNexusModel;
 
@@ -943,7 +943,7 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 						{
 							PistolBulletTexturedObjects* pObjectsShader = (PistolBulletTexturedObjects*)m_ppShaders[k];
 							XMFLOAT3 rayDirection = m_pOtherPlayerData2[OtherId].RayDirection;
-							XMFLOAT3 startLocation = Vector3::Add(Vector3::Add(m_pOtherPlayerData2[OtherId].position, m_pPlayer.get()->GetOffset()), Vector3::ScalarProduct(Vector3::Normalize(rayDirection), ((PistolBulletTexturedObjects*)m_ppShaders[i])->OffsetLength, false));
+							XMFLOAT3 startLocation = Vector3::Add(Vector3::Add(m_pOtherPlayerData2[OtherId].position, m_pPlayer.get()->GetOffset()), Vector3::ScalarProduct(Vector3::Normalize(rayDirection), ((PistolBulletTexturedObjects*)m_ppShaders[k])->OffsetLength, false));
 							pObjectsShader->AppendBullet(startLocation, rayDirection,1);
 						}
 					}
@@ -1212,19 +1212,6 @@ void CPistolBulletObject::ReleaseUploadBuffers()
 	CGameObject::ReleaseUploadBuffers();
 }
 //-------------------------------------------------------------------------------
-CRectTextureObject::CRectTextureObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CMaterial* pMaterial)
-{
-	SetMaterial(0, pMaterial);
-	m_pMesh = new CTexturedRectMesh(pd3dDevice, pd3dCommandList, XMFLOAT3(0.0f, 0.0f/*METER_PER_PIXEL(1.5)*/, 0.0f), METER_PER_PIXEL(6), METER_PER_PIXEL(0.15), 1.0f);
-}
-CRectTextureObject::~CRectTextureObject()
-{
-}
-
-void CRectTextureObject::Update(float fTimeElapsed)
-{
-}
-//-------------------------------------------------------------------------------
 NexusObject::NexusObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks)
 {
 	CLoadedModelInfo* pNexusModel = pModel;
@@ -1232,10 +1219,45 @@ NexusObject::NexusObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd
 
 	SetChild(pNexusModel->m_pModelRootObject, true);
 	if(pNexusModel->m_pAnimationSets) m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimationTracks, pNexusModel);
+
+	//m_pHPMaterial = new CMaterial();
+	//m_pHPMaterial->AddRef();
+
+	CTexture* pHPBarTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0, 1);
+	pHPBarTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, (wchar_t*)L"UI/hpds.dds", 0);
+	//m_pHPMaterial->SetTexture(pHPBarTexture);
+	CScene::CreateSRVUAVs(pd3dDevice, pHPBarTexture, ROOT_PARAMETER_TEXTURE, true);
+
+	SetMaterial(0, new CMaterial());
+	m_ppMaterials[0]->SetShader(new CHPBarShader());
+	m_ppMaterials[0]->m_pShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
+	m_ppMaterials[0]->m_pShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
+	m_ppMaterials[0]->SetTexture(pHPBarTexture);
+
+	m_pHPObject = new CHPBarTextureObject(pd3dDevice, pd3dCommandList, m_ppMaterials[0], 1000.0f, 1000.0f);
+
+	((CHPBarShader*)m_ppMaterials[0]->m_pShader)->SetInstancingObject(this);
 }
 NexusObject::~NexusObject()
 {
+	if (m_pHPObject) m_pHPObject->Release();
 }
+
+void NexusObject::ReleaseUploadBuffers()
+{
+	CGameObject::ReleaseUploadBuffers();
+
+	if (m_pHPObject) m_pHPObject->ReleaseUploadBuffers();
+}
+
+void NexusObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
+{
+	CGameObject::Render(pd3dCommandList, pCamera);
+
+	m_ppMaterials[0]->m_pShader->Render(pd3dCommandList, pCamera);
+	m_pHPObject->Render(pd3dCommandList, pCamera, 1, ((CHPBarShader*)m_ppMaterials[0]->m_pShader)->GetInstancingBufferView());
+}
+
 //-------------------------------------------------------------------------------
 Crosshair::Crosshair(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, float fthickness, float flength, float interval, float radDot, bool bDot)
 {

@@ -147,18 +147,19 @@ public:
 	int Type;
 };
 
-class CRectTextureObject : public StaticObject {
-public:
-	CRectTextureObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CMaterial* pMaterial);
-	virtual ~CRectTextureObject();
-
-	void Update(float fTimeElapsed) override;
-};
-
 class NexusObject : public DynamicObject {
 public:
 	NexusObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks);
 	virtual ~NexusObject();
+
+	void ReleaseUploadBuffers() override;
+
+	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
+
+	float HP = 1000.0f;
+	float MAXHP = 1000.0f;
+
+	CGameObject* m_pHPObject = NULL;
 };
 
 class Crosshair : public CGameObject {

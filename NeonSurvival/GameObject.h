@@ -410,7 +410,7 @@ public:
 	virtual void UpdateShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList, CMaterial* pMaterial);
 	virtual void UpdateShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList, XMFLOAT4X4* pxmf4x4World);
 	virtual void ReleaseShaderVariables();
-	void ReleaseUploadBuffers();
+	virtual void ReleaseUploadBuffers();
 
 	void SetMesh(CMesh* pMesh);
 	void SetShader(CShader* pShader);
@@ -555,6 +555,23 @@ public:
 	
 	CGameObject* m_pHPObject = NULL;
 	CMaterial* m_pHPMaterial = NULL;
+};
+
+class CRectTextureObject : public StaticObject {
+public:
+	CRectTextureObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CMaterial* pMaterial);
+	virtual ~CRectTextureObject();
+
+	void Update(float fTimeElapsed) override;
+};
+
+class CHPBarTextureObject : public CRectTextureObject {
+public:
+	CHPBarTextureObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CMaterial* pMaterial, float HP, float MAXHP);
+	virtual ~CHPBarTextureObject();
+
+	float HP;
+	float MAXHP;
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
