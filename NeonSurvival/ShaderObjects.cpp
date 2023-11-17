@@ -627,7 +627,7 @@ void GeneralMonsterObjects::AnimateObjects(float fTimeElapsed)
 	for (auto monster : m_ppObjects)
 	{
 		int aniTrack = m_pMonsterData[n++].State;
-		if (aniTrack != 5)
+		if (0 <= aniTrack && aniTrack < 5)
 		{
 			monster->m_pSkinnedAnimationController->SetOneOfTrackEnable(aniTrack);
 			monster->m_pSkinnedAnimationController->SetTrackSpeed(aniTrack, 1.0f);
