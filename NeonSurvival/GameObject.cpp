@@ -1137,6 +1137,8 @@ void CGameObject::SetTransform(const XMFLOAT3& right, const XMFLOAT3& up, const 
 
 bool CGameObject::IsVisible(CCamera* pCamera)
 {
+	if (GetReafObjectType() == SkyBox) return true;
+
 	bool bIsVisible = false;
 	BoundingOrientedBox xmBoundingBox = m_pMesh->GetBoundingBox();
 
@@ -2259,7 +2261,6 @@ void CSkyBox::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamer
 {
 	XMFLOAT3 xmf3CameraPos = pCamera->GetPosition();
 	SetPosition(xmf3CameraPos.x, xmf3CameraPos.y, xmf3CameraPos.z);
-
 	CGameObject::Render(pd3dCommandList, pCamera);
 }
 

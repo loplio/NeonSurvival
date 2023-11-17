@@ -437,7 +437,8 @@ public:
 
 	enum ReafObjectType {
 		Object,
-		Player
+		Player,
+		SkyBox
 	};
 	virtual ReafObjectType GetReafObjectType() { return Object; }
 
@@ -603,6 +604,8 @@ public:
 	virtual ~CSkyBox();
 
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL);
+
+	ReafObjectType GetReafObjectType() override { return SkyBox; }
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CHeightMapTerrain : public CGameObject {
