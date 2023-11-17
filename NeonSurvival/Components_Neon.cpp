@@ -220,7 +220,12 @@ void Player_Neon::Update(float fTimeElapsed)
 
 	//서버로 위치 전송
 	//SERVER::getInstance().SendPosition(GetPosition());
-	SERVER::getInstance().SendPlayerData(*this, m_nGunType, ServerfLength, ServerInnResultAnimBundle);
+	SERVER::getInstance().AddFPSCount();
+	if (SERVER::getInstance().IsCount())
+	{
+		SERVER::getInstance().SendPlayerData(*this, m_nGunType, ServerfLength, ServerInnResultAnimBundle);
+
+	}
 	//if((*this).GetFire())std::cout << "Send!!! FireState: " << (*this).GetFire() << std::endl;
 
 }

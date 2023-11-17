@@ -155,7 +155,7 @@ void SERVER::AddFPSCount()
 
 bool SERVER::IsCount()
 {
-    if (FPSCount >= 60)
+    if (FPSCount >= 600)
     {
         FPSCount = 0;
         printf("IsCount\n");
