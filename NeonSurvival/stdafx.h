@@ -232,6 +232,13 @@ namespace Vector3
 			XMLoadFloat3(&xmf3Vector2));
 		return(xmf3Result);
 	}
+	inline XMFLOAT3 Subtract(XMFLOAT3& xmf3Vector1, const XMFLOAT3& xmf3Vector2)
+	{
+		XMFLOAT3 xmf3Result;
+		XMStoreFloat3(&xmf3Result, XMLoadFloat3(&xmf3Vector1) -
+			XMLoadFloat3(&xmf3Vector2));
+		return(xmf3Result);
+	}
 	inline XMFLOAT3 Subtract(XMFLOAT3&& xmf3Vector1, XMFLOAT3&& xmf3Vector2)
 	{
 		XMFLOAT3 xmf3Result;
@@ -345,6 +352,23 @@ namespace Vector3
 	{
 		return(TransformCoord(xmf3Vector, XMLoadFloat4x4(&xmmtx4x4Matrix)));
 	}
+	inline XMFLOAT3 OriginScale(XMFLOAT4X4& xmmtx4x4Matrix)
+	{
+		XMMATRIX rotationMatrix = XMMatrixSet(
+			xmmtx4x4Matrix._11, xmmtx4x4Matrix._12, xmmtx4x4Matrix._13, xmmtx4x4Matrix._14,
+			xmmtx4x4Matrix._21, xmmtx4x4Matrix._22, xmmtx4x4Matrix._23, xmmtx4x4Matrix._24,
+			xmmtx4x4Matrix._31, xmmtx4x4Matrix._32, xmmtx4x4Matrix._33, xmmtx4x4Matrix._34,
+			0.0f, 0.0f, 0.0f, 1.0f
+		);
+		XMMATRIX inverseRotationMatrix = XMMatrixTranspose(rotationMatrix);
+
+		XMFLOAT4X4 xmmtx4x4Result;
+		XMStoreFloat4x4(&xmmtx4x4Result, inverseRotationMatrix * XMLoadFloat4x4(&xmmtx4x4Matrix));
+
+		XMFLOAT3 xmf3Scale = XMFLOAT3(sqrt(xmmtx4x4Result._11), sqrt(xmmtx4x4Result._22), sqrt(xmmtx4x4Result._33));
+
+		return(xmf3Scale);
+	}
 }
 
 namespace Vector4
@@ -382,6 +406,38 @@ namespace Vector4
 		XMFLOAT4 xmf4Result;
 		XMStoreFloat4(&xmf4Result, fScalar * XMLoadFloat4(&xmf4Vector));
 		return(xmf4Result);
+	}
+	inline void Normalize(XMFLOAT4X4& mat)
+	{
+		DirectX::XMFLOAT4 vec1 = { mat._11, mat._12, mat._13, mat._14 }; // 열 벡터 1
+		DirectX::XMFLOAT4 vec2 = { mat._21, mat._22, mat._23, mat._24 }; // 열 벡터 2
+		DirectX::XMFLOAT4 vec3 = { mat._31, mat._32, mat._33, mat._34 }; // 열 벡터 3
+		DirectX::XMFLOAT4 vec4 = { mat._41, mat._42, mat._43, mat._44 }; // 열 벡터 4
+
+		DirectX::XMVECTOR xmVec1 = DirectX::XMLoadFloat4(&vec1);
+		DirectX::XMVECTOR xmVec2 = DirectX::XMLoadFloat4(&vec2);
+		DirectX::XMVECTOR xmVec3 = DirectX::XMLoadFloat4(&vec3);
+		DirectX::XMVECTOR xmVec4 = DirectX::XMLoadFloat4(&vec4);
+
+		XMStoreFloat4(&vec1, DirectX::XMVector3Normalize(xmVec1));
+		XMStoreFloat4(&vec2, DirectX::XMVector3Normalize(xmVec2));
+		XMStoreFloat4(&vec3, DirectX::XMVector3Normalize(xmVec3));
+		XMStoreFloat4(&vec4, DirectX::XMVector3Normalize(xmVec4));
+
+		mat._11 = vec1.x; mat._12 = vec1.y; mat._13 = vec1.z; mat._14 = vec1.w;
+		mat._21 = vec2.x; mat._22 = vec2.y; mat._23 = vec2.z; mat._24 = vec2.w;
+		mat._31 = vec3.x; mat._32 = vec3.y; mat._33 = vec3.z; mat._34 = vec3.w;
+		mat._41 = vec4.x; mat._42 = vec4.y; mat._43 = vec4.z; mat._44 = vec4.w;
+	}
+	inline XMFLOAT4 Orientation(XMFLOAT4& xmf4Quaternion, XMFLOAT4X4& xmmtx4x4Matrix1)
+	{
+		XMFLOAT4 xmf4Result;
+		XMFLOAT4X4 matrix = xmmtx4x4Matrix1;
+		Normalize(matrix);
+		XMVECTOR xmfvector = XMQuaternionRotationMatrix(XMLoadFloat4x4(&matrix));
+		XMVECTOR transformOrientation = XMQuaternionNormalize(XMQuaternionMultiply(XMLoadFloat4(&xmf4Quaternion), xmfvector));
+		XMStoreFloat4(&xmf4Result, transformOrientation);
+		return xmf4Result;
 	}
 }
 

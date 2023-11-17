@@ -369,13 +369,19 @@ private:
 public:
 	void AddRef();
 	void Release();
-
+	
 	bool IsVisible(CCamera* pCamera = NULL);
 	bool IsCollide(BoundingOrientedBox& box);
+	bool IsCrosshair();
 
 protected:
 	std::vector<CBoundingBoxMesh*> m_ppBoundingMeshes;
 	XMFLOAT3					m_xmf3BoundingScale;
+	XMFLOAT3					m_xmf3BoundingLocation;
+	float						m_nBoundingCylinderRadius;
+	bool						m_IsBoundingCylinder;
+	bool						m_IsExistBoundingBox;
+	bool						m_IsCrosshair;
 
 public:
 	char						m_pstrFrameName[64];
@@ -384,7 +390,6 @@ public:
 	XMFLOAT4X4					m_xmf4x4Transform;
 	XMFLOAT3					m_xmf3Scale;
 	XMFLOAT3					m_xmf3PrevScale;
-	XMFLOAT3					m_xmf3Direction;
 	float						m_Mass;
 
 	CGameObject*				m_pParent = NULL;
@@ -394,12 +399,10 @@ public:
 	int							m_nMaterials;
 	CMaterial**					m_ppMaterials;
 	CMesh*						m_pMesh;
+	CBoundingBoxMesh*			m_pTopBoundingMesh = NULL;
 
 	enum Mobility				{ Static, Moveable };
 	UINT						m_Mobility = Static;
-
-	enum MonsterType			{ Metalon, Dragon,Golem, Giant_Bee};
-	UINT						m_MonsterType;
 public:
 	// ShaderVariable.
 	virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
@@ -407,7 +410,7 @@ public:
 	virtual void UpdateShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList, CMaterial* pMaterial);
 	virtual void UpdateShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList, XMFLOAT4X4* pxmf4x4World);
 	virtual void ReleaseShaderVariables();
-	void ReleaseUploadBuffers();
+	virtual void ReleaseUploadBuffers();
 
 	void SetMesh(CMesh* pMesh);
 	void SetShader(CShader* pShader);
@@ -416,7 +419,9 @@ public:
 	void SetChild(CGameObject* pChild, bool bReferenceUpdate = false);
 
 	// processcompute..
-	virtual void Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects);
+	virtual bool Collide(FXMVECTOR Origin, FXMVECTOR Direction, float& Dist);
+	virtual bool Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects);
+	virtual bool Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects, UINT& nConflicted) { return false; };
 	virtual void OnPrepareAnimate();
 	virtual void Update(float fTimeElapsed);
 	virtual void Animate(float fTimeElapsed, XMFLOAT4X4* pxmf4x4Parent = NULL);
@@ -427,6 +432,15 @@ public:
 	virtual void OnPrepareRender();
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, UINT nInstances, D3D12_VERTEX_BUFFER_VIEW d3dInstancingBufferView);
+
+	virtual XMFLOAT3* GetDisplacement();
+
+	enum ReafObjectType {
+		Object,
+		Player,
+		SkyBox
+	};
+	virtual ReafObjectType GetReafObjectType() { return Object; }
 
 	XMFLOAT3 GetPosition();
 	XMFLOAT3 GetLook();
@@ -458,21 +472,31 @@ public:
 	void GenerateRayForPicking(XMFLOAT3& xmf3PickPosition, XMFLOAT4X4& xmf4x4View, XMFLOAT3* pxmf3PickRayOrigin, XMFLOAT3* pxmf3PickRayDirection);
 	int PickObjectByRayIntersection(XMFLOAT3& xmf3PickPosition, XMFLOAT4X4& xmf4x4View, float* pfHitDistance);
 
-	void SetMonsterType(UINT type) { m_MonsterType = type; }
-	UINT GetMonsterType() { return m_MonsterType; }
-
 public:
 	std::vector<CBoundingBoxMesh*>& GetMesh() { return m_ppBoundingMeshes; }
+	void CreateBoundingBoxMeshSet(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader);
 	void CreateBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader);
+	void CreateBoundingBoxInstSet(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGameObject* pGameObject, LPVOID BBShader);
 	void CreateBoundingBoxInst(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGameObject* pGameObject, LPVOID BBShader);
+	void CreateBoundingBoxObjectSet(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader);
 	void CreateBoundingBoxObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader);
+	void SetWorldTransformBoundingBox();
+	void UpdateWorldTransformBoundingBox();
 	void SetBoundingScale(XMFLOAT3& BoundingScale);
 	void SetBoundingScale(XMFLOAT3&& BoundingScale);
-	XMFLOAT3 GetBoundingScale() const { return m_xmf3BoundingScale; }
+	void SetBoundingLocation(XMFLOAT3& BoundingLocation);
+	void SetBoundingLocation(XMFLOAT3&& BoundingLocation);
 	XMFLOAT3& GetBoundingScale() { return m_xmf3BoundingScale; }
-	bool BeginOverlapBoundingBox(const BoundingOrientedBox& OtherOBB);
+	XMFLOAT3 GetBoundingScale() const { return m_xmf3BoundingScale; }
+	XMFLOAT3& GetBoundingLocation() { return m_xmf3BoundingLocation; }
+	XMFLOAT3 GetBoundingLocation() const { return m_xmf3BoundingLocation; }
+	bool GetIsExistBoundingBox() const { return m_IsExistBoundingBox; }
+	void SetIsExistBoundingBox(bool bIsExist) { m_IsExistBoundingBox = bIsExist; }
+	void SetIsBoundingCylinder(bool bIsCylinder, float fRadius = 0.0f);
+	bool BeginOverlapBoundingBox(const BoundingOrientedBox& OtherOBB, XMFLOAT3* displacement);
 
 	UINT GetMeshType() { return((m_pMesh) ? m_pMesh->GetType() : 0x00); }
+	CGameObject* GetTopParent();
 	CGameObject* GetParent() { return(m_pParent); }
 	CGameObject* FindFrame(const char* pstrFrameName);
 
@@ -519,16 +543,36 @@ public:
 	MonsterObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel);
 	virtual ~MonsterObject();
 	void UpdaetHP();
+	void Conflicted(float damage);
+
 public:
-	enum {IDLE,ATTACK,MOVE,DIE,TAKEDAMAGE};
-	enum {Dragon,Golem,KingCobra,Spider,TreasureChest,Giant_Bee};
+	enum MonsterState{IDLE,ATTACK,MOVE,DIE,TAKEDAMAGE};
+	enum MonsterType{Dragon, Giant_Bee, Golem, KingCobra, TreasureChest, Spider, Bat, Magma, Treant, Wolf};
 	int State = IDLE;
-	int HP;
-	int MAXHP;
+	float HP = 100.0f;
+	float MAXHP = 100.0f;
 	int Type;
+	bool bActivate = true;
 	
 	CGameObject* m_pHPObject = NULL;
 	CMaterial* m_pHPMaterial = NULL;
+};
+
+class CRectTextureObject : public StaticObject {
+public:
+	CRectTextureObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CMaterial* pMaterial);
+	virtual ~CRectTextureObject();
+
+	void Update(float fTimeElapsed) override;
+};
+
+class CHPBarTextureObject : public CRectTextureObject {
+public:
+	CHPBarTextureObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CMaterial* pMaterial, float HP, float MAXHP);
+	virtual ~CHPBarTextureObject();
+
+	float HP;
+	float MAXHP;
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -560,6 +604,8 @@ public:
 	virtual ~CSkyBox();
 
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL);
+
+	ReafObjectType GetReafObjectType() override { return SkyBox; }
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CHeightMapTerrain : public CGameObject {

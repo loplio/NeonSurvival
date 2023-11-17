@@ -25,6 +25,7 @@ protected:
 	float m_fRoll;
 
 	XMFLOAT3 m_xmf3Velocity;
+	XMFLOAT3 m_xmf3Displacement;
 	XMFLOAT3 m_xmf3Gravity;
 	float m_fMaxVelocityXZ;
 	float m_fMaxVelocityY;
@@ -36,8 +37,11 @@ protected:
 
 	CCamera* m_pCamera = NULL;
 	CShader* m_pShader = NULL;
-
+	
+	bool bReadyFire = false;
 	bool IsFire = false;
+
+
 public:
 	CPlayer();
 	virtual ~CPlayer();
@@ -64,6 +68,7 @@ public:
 	XMFLOAT4X4 GetViewMatrix(XMFLOAT3 xmfLook, XMFLOAT3 xmfRight);
 	XMFLOAT4X4& GetViewMatrix() { return m_xmf4x4View; }
 
+	XMFLOAT3* GetDisplacement() { return &m_xmf3Displacement; }
 	XMFLOAT3 GetOffset() const { return m_xmf3Offset; }
 	XMFLOAT3 GetPosition() const { return(m_xmf3Position); }
 	XMFLOAT3 GetLookVector() const { return(m_xmf3Look); }
@@ -85,6 +90,7 @@ public:
 	void SetRayDirection(XMFLOAT3 xmf3RayDirection) { m_xmf3RayDirection = xmf3RayDirection; }
 
 	void SetOffset(XMFLOAT3&& xmf3Offset) { m_xmf3Offset = xmf3Offset; }
+	void SetOnlyPlayerPosition(XMFLOAT3& xmf3Position) { m_xmf3Position = Vector3::Add(m_xmf3Position, xmf3Position); }
 	void SetPosition(XMFLOAT3&& xmf3Position) { Move(XMFLOAT3(xmf3Position.x - m_xmf3Position.x, xmf3Position.y - m_xmf3Position.y, xmf3Position.z - m_xmf3Position.z), false); }
 	void SetPosition(XMFLOAT3& xmf3Position) { Move(XMFLOAT3(xmf3Position.x - m_xmf3Position.x, xmf3Position.y - m_xmf3Position.y, xmf3Position.z - m_xmf3Position.z), false); }
 	XMFLOAT3& GetVelocity() { return(m_xmf3Velocity); }
@@ -95,11 +101,13 @@ public:
 	float GetRayLength() { return m_fRayLength; }
 	XMFLOAT3 GetRayDirection() { return m_xmf3RayDirection; }
 	bool GetFire() const { return IsFire; }
+	bool GetReadyFire() const { return bReadyFire; }
 
 	void SetYaw(float Yaw) { m_fYaw = Yaw; }
 	void SetPitch(float Pitch) { m_fPitch = Pitch; }
 	void SetRoll(float Roll) { m_fRoll = Roll; }
 	void SetFire(bool fire) { IsFire = fire; }
+	void SetReadyFire(bool fire) { bReadyFire = fire; }
 
 	CCamera* GetCamera() const { return(m_pCamera); }
 	void SetCamera(CCamera* pCamera) { m_pCamera = pCamera; }
@@ -114,6 +122,8 @@ public:
 	void SetCameraUpdatedContext(LPVOID pContext) { m_pCameraUpdatedContext = pContext; }
 
 	float GetCameraPitch();
+
+	ReafObjectType GetReafObjectType() override { return Player; }
 
 public:
 	const float fPitchThickness = 0.2f;

@@ -452,19 +452,35 @@ float4 PSCrosshairFrame(VS_POSITION_OUTPUT input) : SV_TARGET
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //// TextureToScreen
-VS_TEXTURED_OUTPUT VSTextureToScreen(VS_TEXTURED_INPUT input)
+struct VS_SCREEN_TEXTURE_INPUT
 {
-	VS_TEXTURED_OUTPUT output;
+	float3 position : POSITION;
+	float2 uv : TEXCOORD;
+	float gauge : NORMALGAUGE;
+	float2 temp : TEMPORARY;
+};
+
+struct VS_SCREEN_TEXTURED_OUTPUT
+{
+	float4 position : SV_POSITION;
+	float2 uv : TEXCOORD;
+	float gauge : NORMALGAUGE;
+};
+
+VS_SCREEN_TEXTURED_OUTPUT VSTextureToScreen(VS_SCREEN_TEXTURE_INPUT input)
+{
+	VS_SCREEN_TEXTURED_OUTPUT output;
 
 	output.position = float4(input.position, 1.0f);
 	output.uv = input.uv;
+	output.gauge = input.gauge;
 
 	return(output);
 }
 
-float4 PSTextureToScreen(VS_TEXTURED_OUTPUT input) : SV_TARGET
+float4 PSTextureToScreen(VS_SCREEN_TEXTURED_OUTPUT input) : SV_TARGET
 {
-	float4 cColor = gtxtTexture.Sample(gssClamp, input.uv);
+	float4 cColor = (input.uv.x > input.gauge) ? float4(0.0f, 0.0f, 0.0f, 0.0f) : gtxtTexture.Sample(gssClamp, input.uv);
 
 	return(cColor);
 }
@@ -491,6 +507,45 @@ VS_TEXTURED_OUTPUT VSBillboard(VS_BILLBOARD_INPUT input)
 float4 PSBillboard(VS_TEXTURED_OUTPUT input) : SV_TARGET
 {
 	float4 cColor = gtxtTexture.Sample(gssClamp, input.uv);
+
+	return(cColor);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//// HPBar
+struct VS_HPBAR_INPUT
+{
+	float3 position : POSITION;
+	float2 uv : TEXCOORD;
+	float  hp : HP;
+	float  maxhp : MAXHP;
+	matrix transform : WORLDMATRIX;
+};
+
+struct VS_HPBAR_OUTPUT
+{
+	float4 position : SV_POSITION;
+	float2 uv : TEXCOORD;
+	float  interpHp : INTERPHP;
+};
+
+VS_HPBAR_OUTPUT VSHPbar(VS_HPBAR_INPUT input)
+{
+	VS_HPBAR_OUTPUT output;
+
+	float InterpolationHP = input.maxhp / 1000.0f;	// Monster Max HP: 1000
+	float3 position = float3(input.position.x * InterpolationHP, input.position.y, input.position.z);
+	float3 positionW = mul(float4(position, 1.0f), (float3x3)gmtxInverseView) + input.transform[3].xyz;
+	output.position = mul(mul(float4(positionW, 1.0f), gmtxView), gmtxProjection);
+	output.uv = input.uv;
+	output.interpHp = input.hp / input.maxhp;
+
+	return(output);
+}
+
+float4 PSHPbar(VS_HPBAR_OUTPUT input) : SV_TARGET
+{
+	float4 cColor = (input.uv.x > input.interpHp) ? float4(1.0f, 1.0f, 1.0f, 1.0f) : gtxtTexture.Sample(gssClamp, input.uv);
 
 	return(cColor);
 }

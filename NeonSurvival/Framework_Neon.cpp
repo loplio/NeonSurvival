@@ -76,6 +76,7 @@ void CLobbyFramework_Neon::ReleaseObjects()
 
 void CLobbyFramework_Neon::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
 {
+	if (m_pScene) m_pScene->OnProcessingKeyboardMessage(hWnd, nMessageID, wParam, lParam);
 	switch (nMessageID) {
 	case WM_LBUTTONDOWN:
 	case WM_RBUTTONDOWN:
@@ -94,6 +95,7 @@ void CLobbyFramework_Neon::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, 
 }
 void CLobbyFramework_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
 {
+	if (m_pScene) m_pScene->OnProcessingKeyboardMessage(hWnd, nMessageID, wParam, lParam);
 	switch (nMessageID) {
 	case WM_KEYUP:
 		switch (wParam) {
@@ -144,8 +146,8 @@ void CGameFramework_Neon::FrameAdvance()
 
 	m_ProcessCompute->RayTrace();
 	m_ProcessCompute->Update();
-	m_ProcessCompute->Collide();
 	m_ProcessCompute->Animate();
+	m_ProcessCompute->Collide();
 
 	m_DisplayOutput->Render();
 	//m_pUILayer->Render(m_nSwapChainBufferIndex);
@@ -250,7 +252,7 @@ void CGameFramework_Neon::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, W
 	case WM_MOUSEMOVE:
 		if (!m_bReleaseCapture)
 		{
-			RECT rect;
+ 			RECT rect;
 			GetWindowRect(hWnd, &rect);
 			SetCapture(hWnd);
 			m_MouseInput->SetOldCursorPos(POINT((rect.right + rect.left) / 2, (rect.bottom + rect.top) / 2));
@@ -292,8 +294,13 @@ void CGameFramework_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID
 			m_Iframe.ChangeSwapChainState();
 			break;
 		case VK_F11:
-			m_bReleaseCapture = true;
-			ReleaseCapture();
+			if (!m_bReleaseCapture)
+			{
+				m_bReleaseCapture = true;
+				ReleaseCapture();
+			}
+			else
+				m_bReleaseCapture = false;
 			break;
 		default:
 			break;

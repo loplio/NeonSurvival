@@ -396,13 +396,8 @@ void CScene::CreateBoundingBox(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 
 	for (int i = 0; i < m_vHierarchicalGameObjects.size(); ++i)
 	{
-		m_vHierarchicalGameObjects[i]->CreateBoundingBoxMesh(pd3dDevice, pd3dCommandList, BBShader);
-	}
-
-	//몬스터
-	for (int i = 0; i < m_vMonsters.size(); ++i)
-	{
-		m_vMonsters[i]->CreateBoundingBoxMesh(pd3dDevice, pd3dCommandList, BBShader);
+		m_vHierarchicalGameObjects[i]->CreateBoundingBoxMeshSet(pd3dDevice, pd3dCommandList, BBShader);
+		m_vHierarchicalGameObjects[i]->UpdateWorldTransformBoundingBox();
 	}
 }
 void CScene::RunTimeBuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
@@ -427,8 +422,6 @@ void CScene::ReleaseUploadBuffers()
 	for (int i = 0; i < m_vGameObjects.size(); i++) m_vGameObjects[i]->ReleaseUploadBuffers();
 	for (int i = 0; i < m_vParticleObjects.size(); i++) m_vParticleObjects[i]->ReleaseUploadBuffers();
 	for (int i = 0; i < m_vOtherPlayer.size(); i++) m_vOtherPlayer[i]->ReleaseUploadBuffers();
-	//몬스터
-	for (int i = 0; i < m_vMonsters.size(); i++) m_vMonsters[i]->ReleaseUploadBuffers();
 }
 void CScene::ReleaseObjects()
 {
@@ -484,12 +477,6 @@ void CScene::ReleaseObjects()
 	if (!m_vOtherPlayer.empty())
 	{
 		for (int i = 0; i < m_vOtherPlayer.size(); ++i) m_vOtherPlayer[i]->Release();
-	}
-
-	//몬스터
-	if (!m_vMonsters.empty())
-	{
-		for (int i = 0; i < m_vMonsters.size(); ++i) m_vMonsters[i]->Release();
 	}
 
 	if (m_pTerrain) delete m_pTerrain;
@@ -649,12 +636,6 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 	for (int i = 0; i < m_vOtherPlayer.size(); ++i)
 	{
 		m_vOtherPlayer[i]->Render(pd3dCommandList, pCamera);
-	}
-	
-	//몬스터
-	for (int i = 0; i < m_vMonsters.size(); ++i)
-	{
-		m_vMonsters[i]->Render(pd3dCommandList, pCamera);
 	}
 }
 

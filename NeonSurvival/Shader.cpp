@@ -969,6 +969,84 @@ void CBulletShader::CreateGraphicsPipelineState(ID3D12Device* pd3dDevice, ID3D12
 }
 
 //-------------------------------------------------------------------------------
+/*	CHPBarShader : public CShader        									   */
+//-------------------------------------------------------------------------------
+CHPBarShader::CHPBarShader()
+{
+}
+CHPBarShader::~CHPBarShader()
+{
+}
+
+void CHPBarShader::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	m_pd3dcbObjects = ::CreateBufferResource(pd3dDevice, pd3dCommandList, NULL, sizeof(HP_INSTANCE), D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, NULL);
+	m_pd3dcbObjects->Map(0, NULL, (void**)&m_pcbMappedGameObjects);
+
+	m_d3dInstancingBufferView.BufferLocation = m_pd3dcbObjects->GetGPUVirtualAddress();
+	m_d3dInstancingBufferView.StrideInBytes = sizeof(HP_INSTANCE);
+	m_d3dInstancingBufferView.SizeInBytes = sizeof(HP_INSTANCE);
+}
+void CHPBarShader::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	if (((CHPBarTextureObject*)m_pObject)->GetIsExistBoundingBox())
+	{
+		XMFLOAT4X4 InstInfo = m_pObject->m_pTopBoundingMesh->CenterTransform;
+		XMFLOAT4X4 IncreseY = Matrix4x4::Identity();
+
+		float ExtentY = m_pObject->m_pTopBoundingMesh->GetAABBExtents().y;
+		float ScaleY = m_pObject->m_pTopBoundingMesh->CenterTransform._22;
+		IncreseY._42 = ExtentY * ScaleY;
+		InstInfo = Matrix4x4::Multiply(InstInfo, IncreseY);
+
+		m_pcbMappedGameObjects[0].m_fHP = ((CHPBarTextureObject*)m_pObject)->HP;
+		m_pcbMappedGameObjects[0].m_fMaxHP = ((CHPBarTextureObject*)m_pObject)->MAXHP;
+		XMStoreFloat4x4(&m_pcbMappedGameObjects[0].m_xmf4x4Transform, XMMatrixTranspose(XMLoadFloat4x4(&InstInfo)));
+	}
+}
+void CHPBarShader::ReleaseShaderVariables()
+{
+	if (m_pd3dcbObjects) m_pd3dcbObjects->Unmap(0, NULL);
+	if (m_pd3dcbObjects) m_pd3dcbObjects->Release();
+}
+
+D3D12_INPUT_LAYOUT_DESC CHPBarShader::CreateInputLayout()
+{
+	D3D12_INPUT_LAYOUT_DESC d3dInputLayoutDesc;
+	UINT nInputElementDescs = 8;
+	D3D12_INPUT_ELEMENT_DESC* pd3dInputElementDescs = new D3D12_INPUT_ELEMENT_DESC[nInputElementDescs];
+
+	pd3dInputElementDescs[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	pd3dInputElementDescs[1] = { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 1, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	pd3dInputElementDescs[2] = { "HP", 0, DXGI_FORMAT_R32G32_FLOAT, 2, 0, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 };
+	pd3dInputElementDescs[3] = { "MAXHP", 0, DXGI_FORMAT_R32G32_FLOAT, 2, 4, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 };
+	pd3dInputElementDescs[4] = { "WORLDMATRIX", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, 8, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 };
+	pd3dInputElementDescs[5] = { "WORLDMATRIX", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, 24, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 };
+	pd3dInputElementDescs[6] = { "WORLDMATRIX", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, 40, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 };
+	pd3dInputElementDescs[7] = { "WORLDMATRIX", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, 56, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 };
+
+	d3dInputLayoutDesc.pInputElementDescs = pd3dInputElementDescs;
+	d3dInputLayoutDesc.NumElements = nInputElementDescs;
+
+	return(d3dInputLayoutDesc);
+}
+D3D12_SHADER_BYTECODE CHPBarShader::CreateVertexShader()
+{
+	return(CShader::CompileShaderFromFile((wchar_t*)L"Shaders.hlsl", "VSHPbar", "vs_5_1", &m_pd3dVertexShaderBlob));
+}
+D3D12_SHADER_BYTECODE CHPBarShader::CreatePixelShader()
+{
+	return(CShader::CompileShaderFromFile((wchar_t*)L"Shaders.hlsl", "PSHPbar", "ps_5_1", &m_pd3dPixelShaderBlob));
+}
+
+void CHPBarShader::CreateGraphicsPipelineState(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dRootSignature)
+{
+	m_nPipelineStates = 1;
+	m_ppd3dPipelineStates = new ID3D12PipelineState * [m_nPipelineStates];
+	CShader::CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, pd3dRootSignature);
+}
+
+//-------------------------------------------------------------------------------
 /*	CTerrainShader : public CShader											   */
 //-------------------------------------------------------------------------------
 CTerrainShader::CTerrainShader()

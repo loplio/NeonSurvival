@@ -62,6 +62,7 @@ public:
 
 class CMesh {
 public:
+	CMesh() {};
 	CMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	CMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const CMesh& other);
 	virtual ~CMesh();
@@ -101,6 +102,7 @@ protected:
 	D3D12_PRIMITIVE_TOPOLOGY		m_d3dPrimitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 
 	BoundingOrientedBox				m_xmBoundingBox;
+	BoundingOrientedBox				m_TransformedBoundingBox;
 
 	UINT m_nIndices = 0;
 	UINT m_nStartIndex = 0;
@@ -136,6 +138,10 @@ public:
 	void SetBoundinBoxCenter(XMFLOAT3&& center) { SetBoundinBoxCenter(center); }
 	void SetBoundinBoxExtents(XMFLOAT3& extents) { m_xmBoundingBox.Extents = extents; m_xmf3AABBExtents = extents; }
 	void SetBoundinBoxExtents(XMFLOAT3&& extents) { SetBoundinBoxExtents(extents); }
+	BoundingOrientedBox& GetTransformedBoundingBox() { return m_TransformedBoundingBox; }
+	void SetTransformedBoundingBox(XMFLOAT3& center, XMFLOAT3& extents, XMFLOAT4& orientation) { m_TransformedBoundingBox.Center = center; m_TransformedBoundingBox.Extents = extents; m_TransformedBoundingBox.Orientation = orientation; }
+	void SetTransformedBoundingBoxCenter(XMFLOAT3& center) { m_TransformedBoundingBox.Center = center; }
+	void SetTransformedBoundingBoxOrientation(XMFLOAT4& orientation) { m_TransformedBoundingBox.Orientation = orientation; }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

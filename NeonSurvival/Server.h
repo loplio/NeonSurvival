@@ -16,7 +16,7 @@ using namespace DirectX;
 
 #define SERVERPORT	9000
 #define BUFSIZE		2048
-#define BUF2SIZE	3072
+#define BUF2SIZE	4000
 #define WM_SOCKET	(WM_USER+1)
 #define MAX_PLAYER	3
 #define MAX_MONSTER 3
@@ -84,10 +84,8 @@ typedef struct {
 	int			HP;
 	int			MAXHP;
 	int			State;
-	int			SpawnPotalNum;
-	int			PrevState;
 	XMFLOAT3	Pos;
-	int			TargetType;
+	int			SpawnPotal;
 }PACKET_MONSTERDATA;
 
 typedef struct {

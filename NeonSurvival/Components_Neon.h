@@ -68,9 +68,6 @@ public:
 	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
 	void DrawUI(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
 
-	void CreateMonsters(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,int x);
-	void CreateMonster(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,char* model,int x,int z);
-
 public:
 	PACKET_INGAME2* m_pOtherPlayerData2 = SERVER::getInstance().GetPlayersPosition2();
 	PACKET_MONSTERDATA* m_pMonsterData = SERVER::getInstance().GetMonsterData();
@@ -81,7 +78,8 @@ public:
 	XMFLOAT3 m_NexusModelPos;
 	XMFLOAT3 m_SpawnPotal_Pos[4];
 	MonsterMetalonObjects* pMetalonShader = new MonsterMetalonObjects(); //¸ó½ºÅÍ
-	PistolBulletTexturedObjects* pBullets = NULL;							//ÃÑ¾Ë
+	PistolBulletTexturedObjects* pBullets = NULL;		//ÃÑ¾Ë
+	bool MonsterRotate[30] = { false, };
 };
 
 //-------------------------------------------------------------------------------
@@ -94,6 +92,7 @@ public:
 	virtual ~CMonsterMetalon();
 
 	void RunTimeBuild(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) override;
+	void Conflicted(float damage);
 	void Update(float fTimeElapsed) override;
 	void Animate(float fTimeElapsed, XMFLOAT4X4* pxmf4x4Parent = NULL) override;
 	void ReleaseUploadBuffers();
@@ -137,28 +136,30 @@ public:
 
 	void RunTimeBuild(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) override;
 	void Update(float fTimeElapsed) override;
+	bool Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects, UINT& nConflicted) override;
 	void ReleaseUploadBuffers();
 
 public:
+	const float m_fDamege = 36.0f;
 	const float m_fSpeed = PIXEL_MPS(35);
 	float m_fLifeTime = 0.0f;
 	XMFLOAT3 m_fRayDriection;
 	int Type;
-	//CTexture* m_pRandowmValueTexture = NULL;
-};
-
-class CRectTextureObject : public StaticObject {
-public:
-	CRectTextureObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CMaterial* pMaterial);
-	virtual ~CRectTextureObject();
-
-	void Update(float fTimeElapsed) override;
 };
 
 class NexusObject : public DynamicObject {
 public:
 	NexusObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks);
 	virtual ~NexusObject();
+
+	void ReleaseUploadBuffers() override;
+
+	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
+
+	float HP = 1000.0f;
+	float MAXHP = 1000.0f;
+
+	CGameObject* m_pHPObject = NULL;
 };
 
 class Crosshair : public CGameObject {
@@ -196,4 +197,9 @@ public:
 	void OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
 	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
 	void DrawUI(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
+
+public:
+	bool on1 = false;
+	bool on2 = false;
+	bool on3 = false;
 };
