@@ -22,13 +22,8 @@ void SERVER::init(HWND hWnd)
     ZeroMemory(&serverAddr, sizeof(serverAddr));
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(SERVERPORT);
-<<<<<<< Updated upstream
     //serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
     serverAddr.sin_addr.s_addr = inet_addr("125.180.24.40");
-=======
-    serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    //serverAddr.sin_addr.s_addr = inet_addr("119.67.181.24");
->>>>>>> Stashed changes
 
     //네이클 알고리즘 OFF
     int DelayZeroOpt = 1;
@@ -248,20 +243,4 @@ void SERVER::printxmfloat4x4(const XMFLOAT4X4& p)
     //    p._21 << p._22 << p._23 << p._24 << std::endl <<
     //    p._31 << p._32 << p._33 << p._34 << std::endl <<
     //    p._41 << p._42 << p._43 << p._44 << std::endl << std::endl;
-}
-
-void SERVER::SendExit()
-{
-    printf("sendExit()\n");
-    m_Packet.MessageType = MESSAGETYPE::EXIT;
-    itoa(ClientNumId, m_Packet.buf, 10);
-    len = send(clientSocket, (char*)&m_Packet, 12, 0);
-}
-
-void SERVER::SendTest()
-{
-    printf("sendTest()\n");
-    m_Packet.MessageType = MESSAGETYPE::TEST;
-    itoa(ClientNumId, m_Packet.buf, 10);
-    len = send(clientSocket, (char*)&m_Packet, 12, 0);
 }
