@@ -350,11 +350,17 @@ public:
 //-------------------------------------------------------------------------------
 /*	CTextureToScreenShader												   */
 //-------------------------------------------------------------------------------
+struct SCREEN_TEXTURE_INSTANCE {
+	float m_fGauge;
+	XMFLOAT2 m_fTemp;
+};
+
 class CTextureToScreenShader : public CTexturedShader {
 public:
 	CTextureToScreenShader(wchar_t* texturePath);
 	virtual ~CTextureToScreenShader();
 
+	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
 	virtual D3D12_RASTERIZER_DESC CreateRasterizerState();
 	virtual D3D12_BLEND_DESC CreateBlendState();
 	virtual D3D12_DEPTH_STENCIL_DESC CreateDepthStencilState();
@@ -373,10 +379,20 @@ public:
 
 	void CreateRectTexture(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float fWidth, float fHeight, float fDepth, float fxPosition, float fyPosition, float fzPosition);
 
+protected:
+	ID3D12Resource* m_pd3dInstScreenTexture = NULL;
+	SCREEN_TEXTURE_INSTANCE* m_pcbMappedInstScreenTexture = NULL;
+
+	D3D12_VERTEX_BUFFER_VIEW m_d3dInstancingBufferView;
+
+	float m_fGauge = 1.0f;
+
 public:
 	CTexturedRectMesh* m_RectMesh = NULL;
 	CTexture* m_pTexture = NULL;
 	wchar_t* pszFileName = NULL;
+
+	void SetGauge(float fGauge) { m_fGauge = fGauge; }
 };
 
 //-------------------------------------------------------------------------------

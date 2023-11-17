@@ -435,6 +435,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/HP_line.dds");
 	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 200, 20, 0, 170, 40, 0);
 	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	pUITexture->SetGauge(0.5f);
 	m_UIShaders.back() = pUITexture;
 	
 	m_UIShaders.push_back(new CShader);
@@ -537,7 +538,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackEnable(0, 0);
 	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackSpeed(0, 4.0f);
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, 17.0f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
-	//m_vHierarchicalGameObjects.back()->SetIsExistBoundingBox(false);
+	m_vHierarchicalGameObjects.back()->SetIsExistBoundingBox(false);
 	m_NexusModelPos = m_vHierarchicalGameObjects.back()->GetPosition();
 	if (pNexusModel) delete pNexusModel;
 

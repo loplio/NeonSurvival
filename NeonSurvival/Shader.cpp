@@ -989,17 +989,20 @@ void CHPBarShader::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12Graphic
 }
 void CHPBarShader::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
 {
-	XMFLOAT4X4 InstInfo = m_pObject->m_pTopBoundingMesh->CenterTransform;
-	XMFLOAT4X4 IncreseY = Matrix4x4::Identity();
+	if (((CHPBarTextureObject*)m_pObject)->GetIsExistBoundingBox())
+	{
+		XMFLOAT4X4 InstInfo = m_pObject->m_pTopBoundingMesh->CenterTransform;
+		XMFLOAT4X4 IncreseY = Matrix4x4::Identity();
 
-	float ExtentY = m_pObject->m_pTopBoundingMesh->GetAABBExtents().y;
-	float ScaleY = m_pObject->m_pTopBoundingMesh->CenterTransform._22;
-	IncreseY._42 = ExtentY * ScaleY;
-	InstInfo = Matrix4x4::Multiply(InstInfo, IncreseY);
+		float ExtentY = m_pObject->m_pTopBoundingMesh->GetAABBExtents().y;
+		float ScaleY = m_pObject->m_pTopBoundingMesh->CenterTransform._22;
+		IncreseY._42 = ExtentY * ScaleY;
+		InstInfo = Matrix4x4::Multiply(InstInfo, IncreseY);
 
-	m_pcbMappedGameObjects[0].m_fHP = ((CHPBarTextureObject*)m_pObject)->HP;
-	m_pcbMappedGameObjects[0].m_fMaxHP = ((CHPBarTextureObject*)m_pObject)->MAXHP;
-	XMStoreFloat4x4(&m_pcbMappedGameObjects[0].m_xmf4x4Transform, XMMatrixTranspose(XMLoadFloat4x4(&InstInfo)));
+		m_pcbMappedGameObjects[0].m_fHP = ((CHPBarTextureObject*)m_pObject)->HP;
+		m_pcbMappedGameObjects[0].m_fMaxHP = ((CHPBarTextureObject*)m_pObject)->MAXHP;
+		XMStoreFloat4x4(&m_pcbMappedGameObjects[0].m_xmf4x4Transform, XMMatrixTranspose(XMLoadFloat4x4(&InstInfo)));
+	}
 }
 void CHPBarShader::ReleaseShaderVariables()
 {

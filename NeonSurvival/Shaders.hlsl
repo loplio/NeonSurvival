@@ -452,19 +452,35 @@ float4 PSCrosshairFrame(VS_POSITION_OUTPUT input) : SV_TARGET
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //// TextureToScreen
-VS_TEXTURED_OUTPUT VSTextureToScreen(VS_TEXTURED_INPUT input)
+struct VS_SCREEN_TEXTURE_INPUT
 {
-	VS_TEXTURED_OUTPUT output;
+	float3 position : POSITION;
+	float2 uv : TEXCOORD;
+	float gauge : NORMALGAUGE;
+	float2 temp : TEMPORARY;
+};
+
+struct VS_SCREEN_TEXTURED_OUTPUT
+{
+	float4 position : SV_POSITION;
+	float2 uv : TEXCOORD;
+	float gauge : NORMALGAUGE;
+};
+
+VS_SCREEN_TEXTURED_OUTPUT VSTextureToScreen(VS_SCREEN_TEXTURE_INPUT input)
+{
+	VS_SCREEN_TEXTURED_OUTPUT output;
 
 	output.position = float4(input.position, 1.0f);
 	output.uv = input.uv;
+	output.gauge = input.gauge;
 
 	return(output);
 }
 
-float4 PSTextureToScreen(VS_TEXTURED_OUTPUT input) : SV_TARGET
+float4 PSTextureToScreen(VS_SCREEN_TEXTURED_OUTPUT input) : SV_TARGET
 {
-	float4 cColor = gtxtTexture.Sample(gssClamp, input.uv);
+	float4 cColor = (input.uv.x > input.gauge) ? float4(0.0f, 0.0f, 0.0f, 0.0f) : gtxtTexture.Sample(gssClamp, input.uv);
 
 	return(cColor);
 }

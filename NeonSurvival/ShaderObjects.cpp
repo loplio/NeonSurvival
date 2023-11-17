@@ -1336,6 +1336,22 @@ CTextureToScreenShader::~CTextureToScreenShader()
 	if (m_pTexture) delete m_pTexture;
 }
 
+D3D12_INPUT_LAYOUT_DESC CTextureToScreenShader::CreateInputLayout()
+{
+	UINT nInputElementDescs = 4;
+	D3D12_INPUT_ELEMENT_DESC* pd3dInputElementDescs = new D3D12_INPUT_ELEMENT_DESC[nInputElementDescs];
+
+	pd3dInputElementDescs[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	pd3dInputElementDescs[1] = { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 1, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	pd3dInputElementDescs[2] = { "NORMALGAUGE", 0, DXGI_FORMAT_R32G32_FLOAT, 2, 0, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 };
+	pd3dInputElementDescs[3] = { "TEMPORARY", 0, DXGI_FORMAT_R32G32_FLOAT, 2, 4, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 };
+
+	D3D12_INPUT_LAYOUT_DESC d3dInputLayoutDesc;
+	d3dInputLayoutDesc.pInputElementDescs = pd3dInputElementDescs;
+	d3dInputLayoutDesc.NumElements = nInputElementDescs;
+
+	return(d3dInputLayoutDesc);
+}
 D3D12_RASTERIZER_DESC CTextureToScreenShader::CreateRasterizerState()
 {
 	D3D12_RASTERIZER_DESC d3dRasterizerDesc;
@@ -1413,21 +1429,34 @@ void CTextureToScreenShader::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3
 	m_pTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, (wchar_t*)pszFileName, 0, true);
 
 	CScene::CreateSRVUAVs(pd3dDevice, m_pTexture, ROOT_PARAMETER_TEXTURE, true);
+
+	// Screen Texture's instancing info.
+	m_pd3dInstScreenTexture = ::CreateBufferResource(pd3dDevice, pd3dCommandList, NULL, sizeof(SCREEN_TEXTURE_INSTANCE), D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, NULL);
+	m_pd3dInstScreenTexture->Map(0, NULL, (void**)&m_pcbMappedInstScreenTexture);
+
+	m_d3dInstancingBufferView.BufferLocation = m_pd3dInstScreenTexture->GetGPUVirtualAddress();
+	m_d3dInstancingBufferView.StrideInBytes = sizeof(SCREEN_TEXTURE_INSTANCE);
+	m_d3dInstancingBufferView.SizeInBytes = sizeof(SCREEN_TEXTURE_INSTANCE);
+}
+
+void CTextureToScreenShader::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	if (m_pTexture) m_pTexture->UpdateGraphicsSrvShaderVariable(pd3dCommandList, 0);
+
+	m_pcbMappedInstScreenTexture[0].m_fGauge = m_fGauge;
+	m_pcbMappedInstScreenTexture[0].m_fTemp = XMFLOAT2(0.0f, 0.0f);
 }
 
 void CTextureToScreenShader::ReleaseShaderVariables()
 {
+	if (m_pd3dInstScreenTexture) m_pd3dInstScreenTexture->Unmap(0, NULL);
+	if (m_pd3dInstScreenTexture) m_pd3dInstScreenTexture->Release();
 }
 
 void CTextureToScreenShader::ReleaseUploadBuffers()
 {
 	if (m_pTexture) m_pTexture->ReleaseUploadBuffers();
 	if (m_RectMesh) m_RectMesh->ReleaseUploadBuffers();
-}
-
-void CTextureToScreenShader::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
-{
-	if (m_pTexture) m_pTexture->UpdateGraphicsSrvShaderVariable(pd3dCommandList, 0);
 }
 
 void CTextureToScreenShader::CreateGraphicsPipelineState(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dRootSignature)
@@ -1446,7 +1475,7 @@ void CTextureToScreenShader::Render(ID3D12GraphicsCommandList* pd3dCommandList, 
 	OnPrepareRender(pd3dCommandList);
 	UpdateShaderVariables(pd3dCommandList);
 
-	m_RectMesh->Render(pd3dCommandList, 0);
+	m_RectMesh->Render(pd3dCommandList, 0, 1, m_d3dInstancingBufferView);
 }
 
 void CTextureToScreenShader::CreateRectTexture(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float fWidth, float fHeight, float fDepth, float fxPosition, float fyPosition, float fzPosition)
