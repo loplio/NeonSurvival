@@ -23,9 +23,10 @@ using namespace DirectX;
 
 enum MESSAGETYPE{
 	LOGIN = 100,
-
 	INGAME = 101,
 	MONSTER_DATA,
+	EXIT,
+	TEST,
 };
 
 enum MONSTER_STATE {
@@ -136,7 +137,7 @@ public:
 	//void UpdatePlayerPosition(const XMFLOAT4X4 &position);
 	void SendPosition(const XMFLOAT3& position);
 	void SendPlayerData(CPlayer& player,int GunType,float flength,int anibundle);
-
+	void SendTest();
 	//void SendPosition(const XMFLOAT4X4& woldpos);
 	void AddFPSCount();
 	bool IsCount();

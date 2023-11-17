@@ -247,3 +247,9 @@ void SERVER::printxmfloat4x4(const XMFLOAT4X4& p)
     //    p._31 << p._32 << p._33 << p._34 << std::endl <<
     //    p._41 << p._42 << p._43 << p._44 << std::endl << std::endl;
 }
+
+void SERVER::SendTest()
+{
+    m_Packet.MessageType = MESSAGETYPE::TEST;
+    len = send(clientSocket, (char*)&m_Packet, sizeof(m_Packet), 0);
+}
