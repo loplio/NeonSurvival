@@ -704,6 +704,7 @@ CGameObject::CGameObject(int nMaterials)
 	m_IsExistBoundingBox = true;
 	m_IsCrosshair = false;
 	m_NotUseTransform = false;
+	m_OnlyOneBoundingBox = false;
 	m_Mass = 0;
 
 	m_pMesh = NULL;
@@ -733,6 +734,7 @@ CGameObject::CGameObject(const CGameObject& pGameObject)
 	m_IsExistBoundingBox = pGameObject.m_IsExistBoundingBox;
 	m_IsCrosshair = pGameObject.m_IsExistBoundingBox;
 	m_NotUseTransform = pGameObject.m_NotUseTransform;
+	m_OnlyOneBoundingBox = pGameObject.m_OnlyOneBoundingBox;
 
 	m_nMaterials = 0;
 	m_ppMaterials = NULL;
@@ -1162,6 +1164,27 @@ bool CGameObject::IsCrosshair()
 	return m_IsCrosshair;
 }
 
+void CGameObject::SetOneBoundingBox(bool b, XMFLOAT3 Center, XMFLOAT3 Extent)
+{
+	m_OnlyOneBoundingBox = b;
+
+	SetBoundingBox(Center, Extent);
+}
+
+CGameObject* CGameObject::FindObjectWithMesh()
+{
+	CGameObject* object = NULL;
+	if (m_pMesh) return this;
+
+	if (m_pSibling) object = m_pSibling->FindObjectWithMesh();
+	if (object) return object;
+	
+	if (m_pChild) object = m_pChild->FindObjectWithMesh();
+	if (object) return object;
+
+	return NULL;
+}
+
 void CGameObject::GenerateRayForPicking(XMFLOAT3& xmf3PickPosition, XMFLOAT4X4& xmf4x4View, XMFLOAT3* pxmf3PickRayOrigin, XMFLOAT3* pxmf3PickRayDirection)
 {
 	XMFLOAT4X4 xmf4x4WorldView = Matrix4x4::Multiply(m_xmf4x4World, xmf4x4View);
@@ -1282,6 +1305,11 @@ void CGameObject::CreateBoundingBoxObject(ID3D12Device* pd3dDevice, ID3D12Graphi
 {
 	if (!m_IsExistBoundingBox) return;
 
+	if (m_OnlyOneBoundingBox) {
+		FindObjectWithMesh()->CreateBoundingBoxObject(pd3dDevice, pd3dCommandList, BBShader);
+		return;
+	}
+
 	XMFLOAT3 extents = m_pMesh->GetAABBExtents();
 	XMFLOAT3 center = m_pMesh->GetAABBCenter();
 	m_ppBoundingMeshes.push_back(new CBoundingBoxMesh(pd3dDevice, pd3dCommandList, extents, center, m_xmf3BoundingScale, m_xmf4x4World));
@@ -1289,7 +1317,7 @@ void CGameObject::CreateBoundingBoxObject(ID3D12Device* pd3dDevice, ID3D12Graphi
 	((CBoundingBoxObjects*)BBShader)->AppendBoundingObject(this);
 	((CBoundingBoxObjects*)BBShader)->bCreate = true;
 
-	if (m_pTopBoundingMesh) m_pTopBoundingMesh = m_ppBoundingMeshes.back();
+	if (!GetTopParent()->m_pTopBoundingMesh) GetTopParent()->m_pTopBoundingMesh = m_ppBoundingMeshes.back();
 
 	SetWorldTransformBoundingBox();
 }
@@ -1677,8 +1705,8 @@ bool CGameObject::BeginOverlapBoundingBox(const BoundingOrientedBox& OtherOBB, X
 			return true;
 		}
 	}
-	if (m_pSibling) retval = m_pSibling->BeginOverlapBoundingBox(OtherOBB, displacement);
-	if (m_pChild && !retval) retval = m_pChild->BeginOverlapBoundingBox(OtherOBB, displacement);
+	//if (m_pSibling) retval = m_pSibling->BeginOverlapBoundingBox(OtherOBB, displacement);
+	//if (m_pChild && !retval) retval = m_pChild->BeginOverlapBoundingBox(OtherOBB, displacement);
 
 	return retval;
 }
@@ -2163,6 +2191,21 @@ void MonsterObject::Conflicted(float damage)
 {
 	HP -= damage;
 	std::cout << "Monster Life: " << HP << std::endl;
+}
+
+bool MonsterObject::IsAttackAnimPosition() 
+{ 
+	float CurrentAnimPosition = m_pSkinnedAnimationController->GetTrackPosition();
+
+	if (AttackAnimPosition <= CurrentAnimPosition && AttackAnimToggle == false)
+	{
+		AttackAnimToggle = true;
+		return true;
+	}
+	if(CurrentAnimPosition < AttackAnimPosition && AttackAnimToggle)
+		AttackAnimToggle = false;
+
+	return false;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 CRectTextureObject::CRectTextureObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CMaterial* pMaterial)

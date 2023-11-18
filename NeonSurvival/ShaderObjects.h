@@ -186,6 +186,14 @@ public:
 public:
 	PACKET_MONSTERDATA* m_pMonsterData = SERVER::getInstance().GetMonsterData();
 	const int nMaxMonster = 30;
+
+	enum {
+		IDLE,
+		ATTACK,
+		MOVE,
+		DIE,
+		DAMAGED
+	};
 };
 
 class MonsterMetalonObjects : public CMonsterObjects {
@@ -378,6 +386,8 @@ public:
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int nPipelineState = 0);
 
 	void CreateRectTexture(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float fWidth, float fHeight, float fDepth, float fxPosition, float fyPosition, float fzPosition);
+
+	ReafShaderType GetReafShaderType() override { return TextureToScreenShader; }
 
 protected:
 	ID3D12Resource* m_pd3dInstScreenTexture = NULL;

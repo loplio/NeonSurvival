@@ -24,6 +24,9 @@ public:
 	CCamera* ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed) override;
 
 public:
+	float HP = 100.0f;
+	float MAXHP = 100.0f;
+
 	enum GunType {
 		Empty,
 		Pistol,
@@ -80,6 +83,14 @@ public:
 	MonsterMetalonObjects* pMetalonShader = new MonsterMetalonObjects(); //¸ó½ºÅÍ
 	PistolBulletTexturedObjects* pBullets = NULL;		//ÃÑ¾Ë
 	bool MonsterRotate[30] = { false, };
+
+	enum UI_LIST {
+		EXP_LINE,
+		HP_R,
+		HP_LINE,
+		ENERGE_LINE,
+		MAP_FRAME
+	};
 };
 
 //-------------------------------------------------------------------------------
@@ -155,6 +166,8 @@ public:
 	void ReleaseUploadBuffers() override;
 
 	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
+
+	ReafObjectType GetReafObjectType() override { return Nexus; }
 
 	float HP = 1000.0f;
 	float MAXHP = 1000.0f;

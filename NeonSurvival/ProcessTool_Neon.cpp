@@ -225,7 +225,7 @@ void GameCompute_Neon::RayTrace() const
 	std::vector<CGameObject*>& BoundingObjects = m_BoundingObjects.GetBoundingObjects();
 	for (int i = 0; i < BoundingObjects.size(); ++i)
 	{
-		if (BoundingObjects[i]->GetRootParentObject() == &m_Player) continue;
+		if (BoundingObjects[i]->GetReafObjectType() == CGameObject::Player) continue;
 
 		nIntersected = BoundingObjects[i]->PickObjectByRayIntersection(ClientPosition, xmfCameraViewMatrix, &fHitDistance);
 		accumulate += nIntersected;

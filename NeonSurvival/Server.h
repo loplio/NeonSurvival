@@ -86,6 +86,8 @@ typedef struct {
 	int			State;
 	XMFLOAT3	Pos;
 	int			SpawnPotal;
+	int			TargetID;
+	int			TargetType;
 }PACKET_MONSTERDATA;
 
 typedef struct {

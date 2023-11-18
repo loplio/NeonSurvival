@@ -41,7 +41,6 @@ protected:
 	bool bReadyFire = false;
 	bool IsFire = false;
 
-
 public:
 	CPlayer();
 	virtual ~CPlayer();
@@ -126,6 +125,7 @@ public:
 	ReafObjectType GetReafObjectType() override { return Player; }
 
 public:
+	int Player_ID = -1;
 	const float fPitchThickness = 0.2f;
 	bool IsDash = false;
 	DWORD m_dwDirection = 0;

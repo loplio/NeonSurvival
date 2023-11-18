@@ -621,10 +621,38 @@ void GeneralMonsterObjects::Update(float fTimeElapsed)
 }
 void GeneralMonsterObjects::Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects)
 {
+	int n = 0;
 	for (CGameObject* monster : m_ppObjects)
 	{
 		// Prepare Collision
 		if (monster) monster->UpdateWorldTransformBoundingBox();
+		if (m_pMonsterData[n].State == ATTACK && ((MonsterObject*)monster)->IsAttackAnimPosition())
+		{
+			if (m_pMonsterData[n].TargetType == CGameObject::TargetType::TagetNexus)
+			{
+				std::vector<CGameObject*> BoundingObjects = BoundingBoxObjects.GetBoundingObjects();
+				for (int i = 0; i < BoundingObjects.size(); ++i)
+				{
+					if (BoundingObjects[i]->GetTopParent()->GetReafObjectType() == CGameObject::Nexus)
+					{
+						((NexusObject*)BoundingObjects[i]->GetTopParent())->HP -= ((MonsterObject*)monster)->Damage;
+					}
+				}
+			}
+			else
+			{
+				std::vector<CGameObject*> BoundingObjects = BoundingBoxObjects.GetBoundingObjects();
+				for (int i = 0; i < BoundingObjects.size(); ++i)
+				{
+					if (BoundingObjects[i]->GetReafObjectType() == CGameObject::Player && 
+						m_pMonsterData[n].TargetID == ((CPlayer*)BoundingObjects[i])->Player_ID)
+					{
+						((Player_Neon*)BoundingObjects[i])->HP -= ((MonsterObject*)monster)->Damage;
+					}
+				}
+			}
+		}
+		n++;
 	}
 }
 void GeneralMonsterObjects::AnimateObjects(float fTimeElapsed)

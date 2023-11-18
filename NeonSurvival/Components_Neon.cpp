@@ -435,7 +435,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/HP_line.dds");
 	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 200, 20, 0, 170, 40, 0);
 	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	pUITexture->SetGauge(0.5f);
+	//pUITexture->SetGauge(0.5f);
 	m_UIShaders.back() = pUITexture;
 	
 	m_UIShaders.push_back(new CShader);
@@ -538,7 +538,8 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackEnable(0, 0);
 	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackSpeed(0, 4.0f);
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, 17.0f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
-	m_vHierarchicalGameObjects.back()->SetIsExistBoundingBox(false);
+	m_vHierarchicalGameObjects.back()->SetOneBoundingBox(true, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.15f, 0.8f, 0.15f));
+	//m_vHierarchicalGameObjects.back()->SetIsExistBoundingBox(false);
 	m_NexusModelPos = m_vHierarchicalGameObjects.back()->GetPosition();
 	if (pNexusModel) delete pNexusModel;
 
@@ -756,6 +757,15 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 
 	// BoundingBoxObjects Build.
 	m_pBoundingObjects->BuildObjects(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	for (int i = 0; i < m_vOtherPlayer.size(); ++i)
+	{
+		m_vOtherPlayer[i]->m_pMesh = new CMesh(pd3dDevice, pd3dCommandList);
+		m_vOtherPlayer[i]->m_pMesh->SetBoundinBoxCenter(XMFLOAT3(0.0f, 9.0f, 0.0f));
+		m_vOtherPlayer[i]->m_pMesh->SetBoundinBoxExtents(XMFLOAT3(2.5f, 9.0f, 1.5f));
+		m_vOtherPlayer[i]->SetWorldTransformBoundingBox();
+		m_vOtherPlayer[i]->SetBoundingScale(XMFLOAT3(1.0f, 1.0f, 1.0f));
+		m_vOtherPlayer[i]->CreateBoundingBoxObjectSet(pd3dDevice, pd3dCommandList, m_pBoundingObjects.get());
+	}
 }
 void Scene_Neon::BuildLightsAndMaterials()
 {
@@ -889,6 +899,20 @@ void Scene_Neon::Update(float fTimeElapsed)
 		}
 	}
 
+	for (int i = 0; i < m_UIShaders.size(); ++i)
+	{
+		if (m_UIShaders[i]->GetReafShaderType() != CShader::TextureToScreenShader) break;
+
+		switch (i)
+		{
+		case HP_LINE:
+			{
+				((CTextureToScreenShader*)m_UIShaders[i])->SetGauge(((Player_Neon*)m_pPlayer.get())->HP / ((Player_Neon*)m_pPlayer.get())->MAXHP);
+			}
+			break;
+		}
+	}
+
 	CScene::Update(fTimeElapsed);
 }
 void Scene_Neon::AnimateObjects(float fTimeElapsed)
@@ -900,6 +924,7 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 	if (m_MyId == -1)
 	{
 		m_MyId = SERVER::getInstance().GetClientNumId();
+		m_pPlayer.get()->Player_ID = m_MyId;
 		//printf("%d\n", m_MyId);
 	}
 	//다른 플레이어 위치 이동 및 애니메이션
@@ -910,6 +935,8 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 			int OtherId = m_pOtherPlayerData2[j].id;
 			if (m_MyId != OtherId && -1 != OtherId)
 			{
+				m_vOtherPlayer[i]->Player_ID = OtherId;
+
 				//애니메이션
 				if (m_vOtherPlayer[i]->m_pSkinnedAnimationController)
 				{

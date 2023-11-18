@@ -58,7 +58,8 @@ public:
 
 	enum ReafShaderType {
 		Shader,
-		PistolBulletShader
+		PistolBulletShader,
+		TextureToScreenShader
 	};
 	virtual ReafShaderType GetReafShaderType() { return Shader; }
 

@@ -172,6 +172,7 @@ public:
 	void SetHandOverPosition(int nAnimationTrack, bool bEnable);
 	void SetTrackEnable(int nAnimationTrack, bool bEnable);
 	void SetTrackPosition(int nAnimationTrack, float fPosition);
+	float GetTrackPosition() const { return m_pAnimationTracks[m_nCurrentTrack].m_fPosition; }
 	void SetTrackSpeed(int nAnimationTrack, float fSpeed);
 	void SetTrackWeight(int nAnimationTrack, float fWeight);
 
@@ -373,8 +374,11 @@ public:
 	bool IsVisible(CCamera* pCamera = NULL);
 	bool IsCollide(BoundingOrientedBox& box);
 	bool IsCrosshair();
-	void SetUseTransform(bool bUse) { m_NotUseTransform = !bUse; }
+	void SetUseTransform(bool b) { m_NotUseTransform = !b; }
 	bool bNotUseTransform() const { return m_NotUseTransform; }
+	void SetOneBoundingBox(bool b, XMFLOAT3 Center = XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3 Extent = XMFLOAT3(0.0f, 0.0f, 0.0f));
+	bool bOnlyOneBoundingBox() const { return m_OnlyOneBoundingBox; }
+	CGameObject* FindObjectWithMesh();
 
 protected:
 	std::vector<CBoundingBoxMesh*> m_ppBoundingMeshes;
@@ -385,6 +389,7 @@ protected:
 	bool						m_IsExistBoundingBox;
 	bool						m_IsCrosshair;
 	bool						m_NotUseTransform;
+	bool						m_OnlyOneBoundingBox;
 
 public:
 	char						m_pstrFrameName[64];
@@ -438,10 +443,15 @@ public:
 
 	virtual XMFLOAT3* GetDisplacement();
 
+	enum TargetType {
+		TagetNexus, 
+		TagetPlayer
+	};
 	enum ReafObjectType {
 		Object,
 		Player,
-		SkyBox
+		SkyBox,
+		Nexus
 	};
 	virtual ReafObjectType GetReafObjectType() { return Object; }
 
@@ -555,11 +565,16 @@ public:
 	int State = IDLE;
 	float HP = 100.0f;
 	float MAXHP = 100.0f;
+	float Damage = 10.0f;
 	int Type;
 	bool bActivate = true;
 	
 	CGameObject* m_pHPObject = NULL;
 	CMaterial* m_pHPMaterial = NULL;
+
+	bool IsAttackAnimPosition();
+	bool AttackAnimToggle = false;
+	float AttackAnimPosition = 0.1f;
 };
 
 class CRectTextureObject : public StaticObject {
