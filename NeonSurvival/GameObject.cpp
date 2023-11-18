@@ -703,6 +703,7 @@ CGameObject::CGameObject(int nMaterials)
 	m_IsBoundingCylinder = false;
 	m_IsExistBoundingBox = true;
 	m_IsCrosshair = false;
+	m_NotUseTransform = false;
 	m_Mass = 0;
 
 	m_pMesh = NULL;
@@ -731,6 +732,7 @@ CGameObject::CGameObject(const CGameObject& pGameObject)
 	m_IsBoundingCylinder = pGameObject.m_IsBoundingCylinder;
 	m_IsExistBoundingBox = pGameObject.m_IsExistBoundingBox;
 	m_IsCrosshair = pGameObject.m_IsExistBoundingBox;
+	m_NotUseTransform = pGameObject.m_NotUseTransform;
 
 	m_nMaterials = 0;
 	m_ppMaterials = NULL;
@@ -1206,7 +1208,11 @@ void CGameObject::CreateBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12Graphics
 		EPSILON < m_pMesh->GetAABBExtents().z) {
 		XMFLOAT3 extents = m_pMesh->GetAABBExtents();
 		XMFLOAT3 center = m_pMesh->GetAABBCenter();
-		CBoundingBoxMesh* BBMesh = new CBoundingBoxMesh(pd3dDevice, pd3dCommandList, extents, center, m_xmf3BoundingScale, m_xmf4x4World);
+		CBoundingBoxMesh* BBMesh;
+		if(GetTopParent()->m_NotUseTransform)
+			BBMesh = new CBoundingBoxMesh(pd3dDevice, pd3dCommandList, extents, center, m_xmf3BoundingScale, m_pParent->m_xmf4x4World);
+		else
+			BBMesh = new CBoundingBoxMesh(pd3dDevice, pd3dCommandList, extents, center, m_xmf3BoundingScale, m_xmf4x4World);
 		m_ppBoundingMeshes.push_back(BBMesh);
 		m_pMesh->SetBoundinBoxExtents(XMFLOAT3(extents.x * m_xmf3BoundingScale.x, extents.y * m_xmf3BoundingScale.y, extents.z * m_xmf3BoundingScale.z));
 		((CBoundingBoxObjects*)BBShader)->AppendBoundingObject(this);
@@ -1241,9 +1247,13 @@ void CGameObject::CreateBoundingBoxInst(ID3D12Device* pd3dDevice, ID3D12Graphics
 		if (EPSILON < pMesh->GetAABBExtents().x &&
 			EPSILON < pMesh->GetAABBExtents().y &&
 			EPSILON < pMesh->GetAABBExtents().z) {
-			XMFLOAT3 Extents = pMesh->GetAABBExtents();
+			XMFLOAT3 extents = pMesh->GetAABBExtents();
 			XMFLOAT3 center = pMesh->GetAABBCenter();
-			CBoundingBoxMesh* BBMesh = new CBoundingBoxMesh(pd3dDevice, pd3dCommandList, Extents, center, m_xmf3BoundingScale, m_xmf4x4World);
+			CBoundingBoxMesh* BBMesh;
+			if (GetTopParent()->m_NotUseTransform)
+				BBMesh = new CBoundingBoxMesh(pd3dDevice, pd3dCommandList, extents, center, m_xmf3BoundingScale, m_pParent->m_xmf4x4World);
+			else
+				BBMesh = new CBoundingBoxMesh(pd3dDevice, pd3dCommandList, extents, center, m_xmf3BoundingScale, m_xmf4x4World);
 			m_ppBoundingMeshes.push_back(BBMesh);
 			((CBoundingBoxObjects*)BBShader)->AppendBoundingObject(this);
 			((CBoundingBoxObjects*)BBShader)->bCreate = true;
@@ -1303,14 +1313,26 @@ void CGameObject::UpdateWorldTransformBoundingBox()
 	if (m_pMesh)
 	{
 		BoundingOrientedBox BoundingBox = m_pMesh->GetBoundingBox();
-		XMFLOAT3 center = Vector3::Add(Vector3::TransformCoord(BoundingBox.Center, m_xmf4x4World), m_xmf3BoundingLocation);
-		XMFLOAT4 orientation = Vector4::Orientation(BoundingBox.Orientation, m_xmf4x4World);
+		XMFLOAT4X4 world = (GetTopParent()->m_NotUseTransform) ? m_pParent->m_xmf4x4World : m_xmf4x4World;
+		XMFLOAT3 center = Vector3::Add(Vector3::TransformCoord(BoundingBox.Center, world), m_xmf3BoundingLocation);
+		XMFLOAT4 orientation = Vector4::Orientation(BoundingBox.Orientation, world);
 		m_pMesh->SetTransformedBoundingBoxCenter(center);
 		m_pMesh->SetTransformedBoundingBoxOrientation(orientation);
 	}
 
 	if (m_pSibling) m_pSibling->UpdateWorldTransformBoundingBox();
 	if (m_pChild) m_pChild->UpdateWorldTransformBoundingBox();
+}
+void CGameObject::SetBoundingBox(XMFLOAT3& Center, XMFLOAT3& Extent)
+{
+	if (m_pMesh)
+	{
+		m_pMesh->SetBoundinBoxCenter(Center);
+		m_pMesh->SetBoundinBoxExtents(Extent);
+	}
+
+	if (m_pSibling) m_pSibling->SetBoundingBox(Center, Extent);
+	if (m_pChild) m_pChild->SetBoundingBox(Center, Extent);
 }
 void CGameObject::SetBoundingScale(XMFLOAT3& BoundingScale)
 {

@@ -373,6 +373,8 @@ public:
 	bool IsVisible(CCamera* pCamera = NULL);
 	bool IsCollide(BoundingOrientedBox& box);
 	bool IsCrosshair();
+	void SetUseTransform(bool bUse) { m_NotUseTransform = !bUse; }
+	bool bNotUseTransform() const { return m_NotUseTransform; }
 
 protected:
 	std::vector<CBoundingBoxMesh*> m_ppBoundingMeshes;
@@ -382,6 +384,7 @@ protected:
 	bool						m_IsBoundingCylinder;
 	bool						m_IsExistBoundingBox;
 	bool						m_IsCrosshair;
+	bool						m_NotUseTransform;
 
 public:
 	char						m_pstrFrameName[64];
@@ -482,6 +485,7 @@ public:
 	void CreateBoundingBoxObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, LPVOID BBShader);
 	void SetWorldTransformBoundingBox();
 	void UpdateWorldTransformBoundingBox();
+	void SetBoundingBox(XMFLOAT3& Center, XMFLOAT3& Extent);
 	void SetBoundingScale(XMFLOAT3& BoundingScale);
 	void SetBoundingScale(XMFLOAT3&& BoundingScale);
 	void SetBoundingLocation(XMFLOAT3& BoundingLocation);

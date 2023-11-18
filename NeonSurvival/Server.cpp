@@ -24,9 +24,9 @@ void SERVER::init(HWND hWnd)
     serverAddr.sin_port = htons(SERVERPORT);
     //serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
     //serverAddr.sin_addr.s_addr = inet_addr("125.180.24.40");
-    //serverAddr.sin_addr.s_addr = inet_addr("119.67.181.24");
+    serverAddr.sin_addr.s_addr = inet_addr("119.67.181.24");
     //serverAddr.sin_addr.s_addr = inet_addr("192.168.0.5");
-    serverAddr.sin_addr.s_addr = inet_addr("125.180.29.106");
+    //serverAddr.sin_addr.s_addr = inet_addr("125.180.29.106");
 
     //네이클 알고리즘 OFF
     int DelayZeroOpt = 1;

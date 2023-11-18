@@ -26,7 +26,10 @@ void CBoundingBoxObjects::Update(float fTimeElapsed)
 			XMFLOAT4X4 CenterPosition = Matrix4x4::Identity();
 			CenterPosition._41 = boundingMeshes[n]->GetAABBCenter().x; CenterPosition._42 = boundingMeshes[n]->GetAABBCenter().y;  CenterPosition._43 = boundingMeshes[n]->GetAABBCenter().z;
 			CenterPosition._11 = Scale.x; CenterPosition._22 = Scale.y; CenterPosition._33 = Scale.z;
-			boundingMeshes[n]->CenterTransform = Matrix4x4::Multiply(CenterPosition, m_BoundingObjects[i]->m_xmf4x4World);
+			if (m_BoundingObjects[i]->GetTopParent()->bNotUseTransform())
+				boundingMeshes[n]->CenterTransform = Matrix4x4::Multiply(CenterPosition, m_BoundingObjects[i]->m_pParent->m_xmf4x4World);
+			else
+				boundingMeshes[n]->CenterTransform = Matrix4x4::Multiply(CenterPosition, m_BoundingObjects[i]->m_xmf4x4World);
 		}
 	}
 }
@@ -470,7 +473,7 @@ void GeneralMonsterObjects::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3
 		
 		float ExtentY = monster->m_pTopBoundingMesh->GetAABBExtents().y;
 		float ScaleY = monster->m_pTopBoundingMesh->CenterTransform._22;	
-		IncreseY._42 = ExtentY * ScaleY;
+		IncreseY._42 = ExtentY * ScaleY * 1.4f;
 		InstInfo = Matrix4x4::Multiply(InstInfo, IncreseY);
 
 		m_pcbMappedGameObjects[n].m_fHP = ((MonsterObject*)monster)->HP;
@@ -536,19 +539,19 @@ void GeneralMonsterObjects::CreateMonsters(ID3D12Device* pd3dDevice, ID3D12Graph
 	{
 		int Z = 0;
 
-		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Dragon/Polygonal_Dragon.bin", 1000.0f, i, Z++);
-		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Giant_Bee/Polygonal_Giant_Bee.bin", 150.0f, i, Z++);
-		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Golem/Polygonal_Golem.bin", 500.0f, i, Z++);
-		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/KingCobra/Polygonal_King_Cobra.bin", 400.0f, i, Z++);
-		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/TreasureChest/Polygonal_Treasure_Chest_Monster.bin", 250.0f, i, Z++);
-		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Spider/Polygonal_Spiderling_Venom.bin", 300.0f, i, Z++);
-		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Bat/Polygonal_One_Eyed_Bat.bin", 100.0f, i, Z++);
-		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Magma/Polygonal_Magma.bin", 400.0f, i, Z++);
-		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Treant/Polygonal_Treant.bin", 500.0f, i, Z++);
-		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Wolf/Polygonal_Wolf.bin", 300.0f, i, Z++);
+		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Dragon/Polygonal_Dragon.bin", 1000.0f, i, Z++, true, XMFLOAT3(0.0f,2.4f,0.2f), XMFLOAT3(0.6f,1.0f,2.0f));
+		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Giant_Bee/Polygonal_Giant_Bee.bin", 150.0f, i, Z++, true, XMFLOAT3(0.0f, 1.0f, 0.05f), XMFLOAT3(0.3f, 0.5f, 0.4f));
+		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Golem/Polygonal_Golem.bin", 500.0f, i, Z++, true, XMFLOAT3(0.0f, 1.0f, 0.05f), XMFLOAT3(1.f, 1.0f, 0.6f));
+		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/KingCobra/Polygonal_King_Cobra.bin", 400.0f, i, Z++, true, XMFLOAT3(-0.36f, 0.7f, -0.1f), XMFLOAT3(0.62f, 0.7f, 0.6f));
+		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/TreasureChest/Polygonal_Treasure_Chest_Monster.bin", 250.0f, i, Z++, true, XMFLOAT3(0.0f, 0.5f, 0.05f), XMFLOAT3(0.5f, 0.5f, 0.42f));
+		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Spider/Polygonal_Spiderling_Venom.bin", 300.0f, i, Z++, true, XMFLOAT3(0.0f, 0.5f, 0.0f), XMFLOAT3(0.7f, 0.5f, 0.7f));
+		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Bat/Polygonal_One_Eyed_Bat.bin", 100.0f, i, Z++, true, XMFLOAT3(0.0f, 1.1f, 0.0f), XMFLOAT3(0.44f, 0.25f, 0.15f));
+		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Magma/Polygonal_Magma.bin", 400.0f, i, Z++, true, XMFLOAT3(0.0f, 0.6f, 0.0f), XMFLOAT3(0.8f, 0.45f, 0.45f));
+		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Treant/Polygonal_Treant.bin", 500.0f, i, Z++, true, XMFLOAT3(0.0f, 1.0f, -0.1f), XMFLOAT3(1.f, 1.0f, 0.9f));
+		CreateMonster(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/Monster/Wolf/Polygonal_Wolf.bin", 300.0f, i, Z++, true, XMFLOAT3(0.0f, 0.4f, 0.05f), XMFLOAT3(0.3f, 0.4f, 1.0f));
 	}
 }
-void GeneralMonsterObjects::CreateMonster(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, char* model, float maxHP, int x, int z)
+void GeneralMonsterObjects::CreateMonster(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, char* model, float maxHP, int x, int z, bool bModifyBouondingBox, XMFLOAT3 Center, XMFLOAT3 Extent)
 {
 	CLoadedModelInfo* pModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, model, NULL);
 	//m_ppObjects.push_back(new MonsterObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pModel));
@@ -564,6 +567,9 @@ void GeneralMonsterObjects::CreateMonster(ID3D12Device* pd3dDevice, ID3D12Graphi
 	}
 	//m_ppObjects.back()->SetIsExistBoundingBox(false);
 	m_ppObjects.back()->SetPosition(2800.f + 30.f * x, 265.0f, 3000.f - 30.f * z);
+	m_ppObjects.back()->SetUseTransform(false);
+	if (bModifyBouondingBox) m_ppObjects.back()->SetBoundingBox(Center, Extent);
+
 	((MonsterObject*)m_ppObjects.back())->MAXHP = maxHP;
 	((MonsterObject*)m_ppObjects.back())->HP = maxHP;
 	if (pModel) delete pModel;
