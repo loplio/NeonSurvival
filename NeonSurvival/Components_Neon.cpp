@@ -220,7 +220,7 @@ void Player_Neon::Update(float fTimeElapsed)
 
 	//서버로 위치 전송
 	//SERVER::getInstance().SendPosition(GetPosition());
-	SERVER::getInstance().AddFPSCount();
+	SERVER::getInstance().AddFPSCount(fTimeElapsed);
 	if (SERVER::getInstance().IsCount())
 	{
 		SERVER::getInstance().SendPlayerData(*this, m_nGunType, ServerfLength, ServerInnResultAnimBundle);
@@ -928,7 +928,7 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetTrackSpeed(m_pOtherPlayerData2[OtherId].InnResultAnimBundle, m_pOtherPlayerData2[OtherId].fLength);
 					}
 				}
-				//방향 및 이동
+				//방향 및 이동 ###
 				m_vOtherPlayer[i]->SetPosition(m_pOtherPlayerData2[OtherId].position);
 				m_vOtherPlayer[i]->SetUpVector(m_pOtherPlayerData2[OtherId].UpVector);
 				m_vOtherPlayer[i]->SetRightVector(m_pOtherPlayerData2[OtherId].RightVector);

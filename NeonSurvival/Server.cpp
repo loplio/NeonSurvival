@@ -111,6 +111,11 @@ void SERVER::ProcessSocketMessage(HWND hWnd, UINT unit, WPARAM wParam, LPARAM lP
             }
             break;
         }
+        case MESSAGETYPE::TEST:
+        {
+            printf("test\n");
+            break;
+        }
         default:
             break;
         }
@@ -148,19 +153,29 @@ void SERVER::SendPosition(const XMFLOAT3& position)
     len = send(clientSocket, (char*)&m_Packet, sizeof(m_Packet), 0);
 }
 
-void SERVER::AddFPSCount()
+void SERVER::AddFPSCount(float dt)
 {
-    FPSCount++;
+    //FPSCount++;
+    FPS += dt;
+    //printf("%d\n", FPSCount);
 }
 
 bool SERVER::IsCount()
 {
-    if (FPSCount >= 600)
+    /*if (FPSCount >= 6)
     {
         FPSCount = 0;
         printf("IsCount\n");
         return true;
     }
+    */
+    if (FPS >= 0.1f)
+    {
+        FPS = 0.0f;
+
+        return true;
+    }
+    
     return false;
 }
 
@@ -213,6 +228,7 @@ PACKET_INGAME* SERVER::GetPlayersPosition()
 
 void SERVER::SendPlayerData(CPlayer& player,int GunType, float flength, int anibundle)
 {
+    // ###
     P_InGame2.id = ClientNumId;
     P_InGame2.position = player.GetPosition();
     P_InGame2.velocity = player.GetVelocity();

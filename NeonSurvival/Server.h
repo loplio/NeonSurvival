@@ -115,6 +115,7 @@ private:
 	int RecvByte = 0;
 	int FPSCount = 0;
 	int len = 0;
+	float FPS = 0.0f;
 	bool FirstConnect = false;
 	bool RecvDelayed = false;
 	SOCKET clientSocket;
@@ -139,7 +140,7 @@ public:
 	void SendPlayerData(CPlayer& player,int GunType,float flength,int anibundle);
 	void SendTest();
 	//void SendPosition(const XMFLOAT4X4& woldpos);
-	void AddFPSCount();
+	void AddFPSCount(float dt);
 	bool IsCount();
 
 	int GetClientNumId() { return ClientNumId; }
