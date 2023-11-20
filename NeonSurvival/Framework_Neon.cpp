@@ -283,10 +283,7 @@ void CGameFramework_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID
 		case VK_RETURN:
 			break;
 		case VK_F1:
-		{
-			SERVER::getInstance().SendTest();
 			break;
-		}
 		case VK_F2:
 		case VK_F3:
 		case VK_F4:

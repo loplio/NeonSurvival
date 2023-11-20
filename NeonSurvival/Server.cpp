@@ -111,9 +111,9 @@ void SERVER::ProcessSocketMessage(HWND hWnd, UINT unit, WPARAM wParam, LPARAM lP
             }
             break;
         }
-        case MESSAGETYPE::TEST:
+        case MESSAGETYPE::SHOT:
         {
-            printf("test\n");
+            printf("test = %d\n",m_Packet.byte);
             break;
         }
         default:
@@ -264,8 +264,8 @@ void SERVER::printxmfloat4x4(const XMFLOAT4X4& p)
     //    p._41 << p._42 << p._43 << p._44 << std::endl << std::endl;
 }
 
-void SERVER::SendTest()
+void SERVER::SendShot()
 {
-    m_Packet.MessageType = MESSAGETYPE::TEST;
-    len = send(clientSocket, (char*)&m_Packet, sizeof(m_Packet), 0);
+    int msg = MESSAGETYPE::SHOT;
+    len = send(clientSocket, (char*)&msg, sizeof(msg), 0);
 }

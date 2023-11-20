@@ -26,7 +26,7 @@ enum MESSAGETYPE{
 	INGAME = 101,
 	MONSTER_DATA,
 	EXIT,
-	TEST,
+	SHOT,
 };
 
 enum MONSTER_STATE {
@@ -138,7 +138,7 @@ public:
 	//void UpdatePlayerPosition(const XMFLOAT4X4 &position);
 	void SendPosition(const XMFLOAT3& position);
 	void SendPlayerData(CPlayer& player,int GunType,float flength,int anibundle);
-	void SendTest();
+	void SendShot();
 	//void SendPosition(const XMFLOAT4X4& woldpos);
 	void AddFPSCount(float dt);
 	bool IsCount();

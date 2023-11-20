@@ -220,10 +220,10 @@ void Player_Neon::Update(float fTimeElapsed)
 
 	//서버로 위치 전송
 	//SERVER::getInstance().SendPosition(GetPosition());
+	SERVER::getInstance().SendPlayerData(*this, m_nGunType, ServerfLength, ServerInnResultAnimBundle);
 	SERVER::getInstance().AddFPSCount(fTimeElapsed);
 	if (SERVER::getInstance().IsCount())
 	{
-		SERVER::getInstance().SendPlayerData(*this, m_nGunType, ServerfLength, ServerInnResultAnimBundle);
 
 	}
 	//if((*this).GetFire())std::cout << "Send!!! FireState: " << (*this).GetFire() << std::endl;
@@ -883,6 +883,9 @@ void Scene_Neon::Update(float fTimeElapsed)
 					
 					m_pPlayer->SetFire(true);
 					//std::cout << "Fire!!!" << std::endl;
+
+					//총알 발사 패킷 서버 전송
+					SERVER::getInstance().SendShot();
 				}
 				else
 				{
