@@ -2370,6 +2370,10 @@ CGroundObject::CGroundObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList
 {
 	CLoadedModelInfo* pGroundModel = pModel;
 	SetChild(pGroundModel->m_pModelRootObject, true);
+	if (pGroundModel->m_pModelRootObject->m_ppMaterials)
+	{
+		pGroundModel->m_pModelRootObject->m_ppMaterials[0]->m_xmf4AlbedoColor = XMFLOAT4(0.45f, 0.45f, 0.6f, 1.0f);
+	}
 
 	m_nWidth = nWidth;
 	m_nLength = nLength;

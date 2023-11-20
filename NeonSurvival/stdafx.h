@@ -101,7 +101,7 @@ using Microsoft::WRL::ComPtr;
 #define CROOT_PARAMETER_RWTEX2D_OUTPUT	1
 #define CROOT_PARAMETER_TEX2D_OUTPUT_A	4
 
-#define MAX_LIGHTS 8
+#define MAX_LIGHTS 12
 #define MAX_MATERIALS 8
 
 #define POINT_LIGHT 1

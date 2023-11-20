@@ -117,7 +117,7 @@ float GGX(float NoH, float roughness)
 	return roughnessSq / (pi * f * f);
 }
 
-float3 CookTorranceBRDF(float3 L, float3 V, float3 N, float3 albedo, float3 specular, float metallic, float roughness, float3 ambient)
+float3 CookTorranceBRDF(float4 Illumination, float3 L, float3 V, float3 N, float3 albedo, float3 specular, float metallic, float roughness, float3 ambient)
 {
 	float pi = 3.14159265358979323846;
 	// Half vector
@@ -147,7 +147,7 @@ float3 CookTorranceBRDF(float3 L, float3 V, float3 N, float3 albedo, float3 spec
 	float3 kD = (1.0 - metallic) * (1.0 - fresnel);
 	float3 diffuse = kD * albedo / pi;
 	float3 brdf = (fresnel * distribution * geometric) / (4 * NoL * NoV + 0.004);
-	float3 finalColor = (diffuse + brdf) * float3(0.9f, 0.4f, 0.6f) * NoL + ambient;
+	float3 finalColor = (diffuse + brdf) * Illumination.xyz * NoL + ambient;
 
 	return finalColor;
 }
@@ -231,7 +231,7 @@ float4 PSStandard(VS_STANDARD_OUTPUT input) : SV_TARGET
 	if (gnTexturesMask & MATERIAL_EMISSION_MAP) cEmissionColor = gtxtStandardTextures[4].Sample(gssWrap, input.uv);
 #endif
 
-	float4 cIllumination = float4(1.0f, 1.0f, 1.0f, 1.0f);
+	float4 cIllumination = float4(0.9f, 0.4f, 0.6f, 1.0f);
 	//float4 SpecularRatio = float4(0.1f, 0.1f, 0.1f, 1.0f);
 	//float4 cColor = cAlbedoColor + /*cSpecularColor * SpecularRatio +*/ cEmissionColor;
 	//if (gnTexturesMask & MATERIAL_NORMAL_MAP)
@@ -265,9 +265,24 @@ float4 PSStandard(VS_STANDARD_OUTPUT input) : SV_TARGET
 	//cColor = lerp(cColor, cIllumination, 0.5f);
 
 	//float3 L = GetLightDirection(2, input.positionW, normalW);
-	float3 L = -normalize(float3(5.0f, -3.0f, 0.0f));
+	//float3 L = -normalize(float3(5.0f, -3.0f, 0.0f));
 	float3 V = normalize(gvCameraPosition - input.positionW);
-	float3 reflected = CookTorranceBRDF(L, V, normalW, albedo, specular, metallic, roughness, ambient);
+
+
+	//float3 reflected = CookTorranceBRDF(cIllumination, L, V, normalW, albedo, specular, metallic, roughness, ambient);
+	float3 reflected = float3(0.0f, 0.0f, 0.0f);
+	for (int i = 0; i < gnLights; ++i)
+	{
+		float3 L = normalize(GetLightDirection(i, input.positionW));
+		cIllumination = SingleLighting(input.positionW, normalW, i);
+		ambient = float3(0.0f, 0.0f, 0.0f);
+		if (BoolReachLight(input.positionW, normalW, i))
+		{
+			ambient = gLights[i].m_cAmbient;
+		}
+		reflected += CookTorranceBRDF(cIllumination, L, V, normalW, albedo, specular, metallic, roughness, ambient);
+	}
+	reflected += gcGlobalAmbientLight;
 
 	// Gamma correction
 	float3 result = pow(reflected, 1.0 / 2.2) + emission;

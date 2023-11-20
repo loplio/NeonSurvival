@@ -1,4 +1,4 @@
-#define MAX_LIGHTS			8 
+#define MAX_LIGHTS			12 
 #define MAX_MATERIALS		512 
 #define POINT_LIGHT			1
 #define SPOT_LIGHT			2
@@ -165,15 +165,55 @@ float4 Lighting(float3 vPosition, float3 vNormal)
 	return(cColor);
 }
 
-float3 GetLightDirection(int nIndex, float3 vPosition, float3 vNormal)
+float4 SingleLighting(float3 vPosition, float3 vNormal, int nLight)
 {
 	float3 vCameraPosition = float3(gvCameraPosition.x, gvCameraPosition.y, gvCameraPosition.z);
 	float3 vToCamera = normalize(vCameraPosition - vPosition);
+	float4 cColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
 
+	if (gLights[nLight].m_bEnable)
+	{
+		if (gLights[nLight].m_nType == DIRECTIONAL_LIGHT)
+		{
+			cColor += DirectionalLight(nLight, vNormal, vToCamera);
+		}
+		else if (gLights[nLight].m_nType == POINT_LIGHT)
+		{
+			cColor += PointLight(nLight, vPosition, vNormal, vToCamera);
+		}
+		else if (gLights[nLight].m_nType == SPOT_LIGHT)
+		{
+			cColor += SpotLight(nLight, vPosition, vNormal, vToCamera);
+		}
+	}
+
+	cColor += (gcGlobalAmbientLight * gMaterial/*s[gnMaterial]*/.m_cAmbient);
+	cColor.a = gMaterial/*s[gnMaterial]*/.m_cDiffuse.a;
+	return(cColor);
+}
+
+float3 GetLightDirection(int nIndex, float3 vPosition)
+{
 	if (gLights[nIndex].m_nType == DIRECTIONAL_LIGHT)
 	{
-		return DirectionalLight(nIndex, vNormal, vToCamera);
-		//return (-gLights[nIndex].m_vDirection);
+		return (-gLights[nIndex].m_vDirection);
 	}
 	return (gLights[nIndex].m_vPosition - vPosition);
+}
+
+bool BoolReachLight(float3 vPosition, float3 vNormal, int nIndex)
+{
+	if (gLights[nIndex].m_nType == DIRECTIONAL_LIGHT)
+	{
+		float3 vToLight = -gLights[nIndex].m_vDirection;
+		float fDiffuseFactor = dot(vToLight, vNormal);
+
+		return (fDiffuseFactor > 0.0f) ? true : false;
+	}
+
+	float3 vToLight = gLights[nIndex].m_vPosition - vPosition;
+	float fDistance = length(vToLight);
+	float fDiffuseFactor = dot(vToLight, vNormal);
+
+	return (fDistance <= gLights[nIndex].m_fRange && fDiffuseFactor > 0.0f) ? true : false;
 }
