@@ -221,6 +221,11 @@ void Player_Neon::Update(float fTimeElapsed)
 	//서버로 위치 전송
 	//SERVER::getInstance().SendPosition(GetPosition());
 	SERVER::getInstance().SendPlayerData(*this, m_nGunType, ServerfLength, ServerInnResultAnimBundle);
+	SERVER::getInstance().AddFPSCount(fTimeElapsed);
+	if (SERVER::getInstance().IsCount())
+	{
+
+	}
 	//if((*this).GetFire())std::cout << "Send!!! FireState: " << (*this).GetFire() << std::endl;
 
 }
@@ -1465,6 +1470,9 @@ void Scene_Neon::Update(float fTimeElapsed)
 					
 					m_pPlayer->SetFire(true);
 					//std::cout << "Fire!!!" << std::endl;
+
+					//총알 발사 패킷 서버 전송
+					SERVER::getInstance().SendShot();
 				}
 				else
 				{
@@ -1527,7 +1535,7 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetTrackSpeed(m_pOtherPlayerData2[OtherId].InnResultAnimBundle, m_pOtherPlayerData2[OtherId].fLength);
 					}
 				}
-				//방향 및 이동
+				//방향 및 이동 ###
 				m_vOtherPlayer[i]->SetPosition(m_pOtherPlayerData2[OtherId].position);
 				m_vOtherPlayer[i]->SetUpVector(m_pOtherPlayerData2[OtherId].UpVector);
 				m_vOtherPlayer[i]->SetRightVector(m_pOtherPlayerData2[OtherId].RightVector);
@@ -1537,23 +1545,26 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 				++i;
 
 				//총알 발사
-				bool currfire = m_pOtherPlayerData2[OtherId].Fire;
+				//bool currfire = m_pOtherPlayerData2[OtherId].Fire;
 				//if(currfire) std::cout << "OtherPlayer ID: " << OtherId << ", FireState: " << currfire  << ", PrevState: " << m_OtherPlayerPrevFire[OtherId] << std::endl;
 				//if(!currfire && m_OtherPlayerPrevFire[OtherId]) std::cout << "PrevOtherPlayer ID: " << OtherId << ", FireState: " << currfire  << ", PrevState: " << m_OtherPlayerPrevFire[OtherId] << std::endl;
-				if (currfire && m_OtherPlayerPrevFire[OtherId] == false)
+				int shoterId = SERVER::getInstance().GetShotClinetId();
+				if (shoterId != -1)
 				{
 					for (int k = 0; k < m_ppShaders.size(); ++k)
 					{
 						if (m_ppShaders[k]->GetReafShaderType() == CShader::ReafShaderType::PistolBulletShader)
 						{
 							PistolBulletTexturedObjects* pObjectsShader = (PistolBulletTexturedObjects*)m_ppShaders[k];
-							XMFLOAT3 rayDirection = m_pOtherPlayerData2[OtherId].RayDirection;
-							XMFLOAT3 startLocation = Vector3::Add(Vector3::Add(m_pOtherPlayerData2[OtherId].position, m_pPlayer.get()->GetOffset()), Vector3::ScalarProduct(Vector3::Normalize(rayDirection), ((PistolBulletTexturedObjects*)m_ppShaders[k])->OffsetLength, false));
+							XMFLOAT3 rayDirection = m_pOtherPlayerData2[shoterId].RayDirection;
+							XMFLOAT3 startLocation = Vector3::Add(Vector3::Add(m_pOtherPlayerData2[shoterId].position, m_pPlayer.get()->GetOffset()), Vector3::ScalarProduct(Vector3::Normalize(rayDirection), ((PistolBulletTexturedObjects*)m_ppShaders[k])->OffsetLength, false));
 							pObjectsShader->AppendBullet(startLocation, rayDirection,1);
+							SERVER::getInstance().SetShotClinetId(-1);
+							break;
 						}
 					}
 				}
-				m_OtherPlayerPrevFire[OtherId] = currfire;
+				//m_OtherPlayerPrevFire[OtherId] = currfire;
 			}
 		}
 	}

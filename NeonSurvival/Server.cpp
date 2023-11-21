@@ -22,10 +22,12 @@ void SERVER::init(HWND hWnd)
     ZeroMemory(&serverAddr, sizeof(serverAddr));
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(SERVERPORT);
-    //serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+   // serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
     //serverAddr.sin_addr.s_addr = inet_addr("125.180.24.40");
-    serverAddr.sin_addr.s_addr = inet_addr("119.67.181.24");
-    //serverAddr.sin_addr.s_addr = inet_addr("192.168.0.5");
+    //serverAddr.sin_addr.s_addr = inet_addr("119.67.181.24");
+    char ip[14];
+    scanf("%s", ip);
+    serverAddr.sin_addr.s_addr = inet_addr(ip);
     //serverAddr.sin_addr.s_addr = inet_addr("125.180.29.106");
 
     //네이클 알고리즘 OFF
@@ -111,6 +113,12 @@ void SERVER::ProcessSocketMessage(HWND hWnd, UINT unit, WPARAM wParam, LPARAM lP
             }
             break;
         }
+        case MESSAGETYPE::SHOT:
+        {
+            printf("shot = %d\n",m_Packet.byte);
+            ShotClinetId = m_Packet.byte;
+            break;
+        }
         default:
             break;
         }
@@ -148,19 +156,29 @@ void SERVER::SendPosition(const XMFLOAT3& position)
     len = send(clientSocket, (char*)&m_Packet, sizeof(m_Packet), 0);
 }
 
-void SERVER::AddFPSCount()
+void SERVER::AddFPSCount(float dt)
 {
-    FPSCount++;
+    //FPSCount++;
+    FPS += dt;
+    //printf("%d\n", FPSCount);
 }
 
 bool SERVER::IsCount()
 {
-    if (FPSCount >= 60)
+    /*if (FPSCount >= 6)
     {
         FPSCount = 0;
         printf("IsCount\n");
         return true;
     }
+    */
+    if (FPS >= 0.1f)
+    {
+        FPS = 0.0f;
+
+        return true;
+    }
+    
     return false;
 }
 
@@ -213,6 +231,7 @@ PACKET_INGAME* SERVER::GetPlayersPosition()
 
 void SERVER::SendPlayerData(CPlayer& player,int GunType, float flength, int anibundle)
 {
+    // ###
     P_InGame2.id = ClientNumId;
     P_InGame2.position = player.GetPosition();
     P_InGame2.velocity = player.GetVelocity();
@@ -246,4 +265,10 @@ void SERVER::printxmfloat4x4(const XMFLOAT4X4& p)
     //    p._21 << p._22 << p._23 << p._24 << std::endl <<
     //    p._31 << p._32 << p._33 << p._34 << std::endl <<
     //    p._41 << p._42 << p._43 << p._44 << std::endl << std::endl;
+}
+
+void SERVER::SendShot()
+{
+    int msg = MESSAGETYPE::SHOT;
+    len = send(clientSocket, (char*)&msg, sizeof(msg), 0);
 }

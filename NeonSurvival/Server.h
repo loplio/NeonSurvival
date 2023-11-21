@@ -23,9 +23,10 @@ using namespace DirectX;
 
 enum MESSAGETYPE{
 	LOGIN = 100,
-
 	INGAME = 101,
 	MONSTER_DATA,
+	EXIT,
+	SHOT,
 };
 
 enum MONSTER_STATE {
@@ -116,6 +117,8 @@ private:
 	int RecvByte = 0;
 	int FPSCount = 0;
 	int len = 0;
+	float FPS = 0.0f;
+	int ShotClinetId = -1;
 	bool FirstConnect = false;
 	bool RecvDelayed = false;
 	SOCKET clientSocket;
@@ -138,15 +141,17 @@ public:
 	//void UpdatePlayerPosition(const XMFLOAT4X4 &position);
 	void SendPosition(const XMFLOAT3& position);
 	void SendPlayerData(CPlayer& player,int GunType,float flength,int anibundle);
-
+	void SendShot();
 	//void SendPosition(const XMFLOAT4X4& woldpos);
-	void AddFPSCount();
+	void AddFPSCount(float dt);
 	bool IsCount();
 
 	int GetClientNumId() { return ClientNumId; }
 	PACKET_INGAME* GetPlayersPosition();
 	PACKET_INGAME2* GetPlayersPosition2() { return PlayersPosition2; }
 	PACKET_MONSTERDATA* GetMonsterData() { return MonsterData; }
+	int	GetShotClinetId() { return ShotClinetId; }
+	void SetShotClinetId(int id) { ShotClinetId = id; }
 	//void SetOtherPlayerPosition(std::vector<CGameObject*> &m_OtherPlayers);
 	//void SetOtherPlayerPosition(std::vector<CGameObject**>& m_OtherPlayers);
 
