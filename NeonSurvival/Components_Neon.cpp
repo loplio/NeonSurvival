@@ -941,23 +941,26 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 				++i;
 
 				//ÃÑ¾Ë ¹ß»ç
-				bool currfire = m_pOtherPlayerData2[OtherId].Fire;
+				//bool currfire = m_pOtherPlayerData2[OtherId].Fire;
 				//if(currfire) std::cout << "OtherPlayer ID: " << OtherId << ", FireState: " << currfire  << ", PrevState: " << m_OtherPlayerPrevFire[OtherId] << std::endl;
 				//if(!currfire && m_OtherPlayerPrevFire[OtherId]) std::cout << "PrevOtherPlayer ID: " << OtherId << ", FireState: " << currfire  << ", PrevState: " << m_OtherPlayerPrevFire[OtherId] << std::endl;
-				if (currfire && m_OtherPlayerPrevFire[OtherId] == false)
+				int shoterId = SERVER::getInstance().GetShotClinetId();
+				if (shoterId != -1)
 				{
 					for (int k = 0; k < m_ppShaders.size(); ++k)
 					{
 						if (m_ppShaders[k]->GetReafShaderType() == CShader::ReafShaderType::PistolBulletShader)
 						{
 							PistolBulletTexturedObjects* pObjectsShader = (PistolBulletTexturedObjects*)m_ppShaders[k];
-							XMFLOAT3 rayDirection = m_pOtherPlayerData2[OtherId].RayDirection;
-							XMFLOAT3 startLocation = Vector3::Add(Vector3::Add(m_pOtherPlayerData2[OtherId].position, m_pPlayer.get()->GetOffset()), Vector3::ScalarProduct(Vector3::Normalize(rayDirection), ((PistolBulletTexturedObjects*)m_ppShaders[k])->OffsetLength, false));
+							XMFLOAT3 rayDirection = m_pOtherPlayerData2[shoterId].RayDirection;
+							XMFLOAT3 startLocation = Vector3::Add(Vector3::Add(m_pOtherPlayerData2[shoterId].position, m_pPlayer.get()->GetOffset()), Vector3::ScalarProduct(Vector3::Normalize(rayDirection), ((PistolBulletTexturedObjects*)m_ppShaders[k])->OffsetLength, false));
 							pObjectsShader->AppendBullet(startLocation, rayDirection,1);
+							SERVER::getInstance().SetShotClinetId(-1);
+							break;
 						}
 					}
 				}
-				m_OtherPlayerPrevFire[OtherId] = currfire;
+				//m_OtherPlayerPrevFire[OtherId] = currfire;
 			}
 		}
 	}

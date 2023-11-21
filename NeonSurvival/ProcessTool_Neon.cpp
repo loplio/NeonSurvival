@@ -311,7 +311,7 @@ void GameRenderDisplay_Neon::Render()
 	if (time > 0.5f)
 	{
 		time = 0.0f;
-		std::cout << m_Player.GetPosition().x << ", " << m_Player.GetPosition().y << ", " << m_Player.GetPosition().z << std::endl;
+		//std::cout << m_Player.GetPosition().x << ", " << m_Player.GetPosition().y << ", " << m_Player.GetPosition().z << std::endl;
 	}
 	time += m_Scene.m_fElapsedTime;
 	// Player Render
