@@ -621,7 +621,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 
 	CLoadedModelInfo* pUpperWallModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Wall/UpperWall.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pUpperWallModel));
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + 73.0f, 8.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, -32.0f + m_pTerrain->GetLength() * 0.5f);
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + 73.0f, 8.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, -29.0f + m_pTerrain->GetLength() * 0.5f);
 	if (pUpperWallModel) delete pUpperWallModel;
 
 	CLoadedModelInfo* pUpperWall2Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Wall/UpperWall.bin", NULL);
@@ -660,17 +660,17 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.back()->SetIsExistBoundingBox(false);
 	if (pCylinder3PillarModel) delete pCylinder3PillarModel;
 
-	CLoadedModelInfo* pCylinder4PillarModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/CylinderPillar/CylinderBase4.bin", NULL);
-	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pCylinder4PillarModel));
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + 73.5f, 8.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, -15.f + m_pTerrain->GetLength() * 0.5f);
-	m_vHierarchicalGameObjects.back()->SetIsExistBoundingBox(false);
-	if (pCylinder4PillarModel) delete pCylinder4PillarModel;
+	//CLoadedModelInfo* pCylinder4PillarModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/CylinderPillar/CylinderBase4.bin", NULL);
+	//m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pCylinder4PillarModel));
+	//m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + 73.5f, 8.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, -15.f + m_pTerrain->GetLength() * 0.5f);
+	//m_vHierarchicalGameObjects.back()->SetIsExistBoundingBox(false);
+	//if (pCylinder4PillarModel) delete pCylinder4PillarModel;
 
-	CLoadedModelInfo* pCylinder4Pillar2Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/CylinderPillar/CylinderBase4.bin", NULL);
-	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pCylinder4Pillar2Model));
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - 20.0f, 10.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, -177.f + m_pTerrain->GetLength() * 0.5f);
-	m_vHierarchicalGameObjects.back()->SetIsExistBoundingBox(false);
-	if (pCylinder4Pillar2Model) delete pCylinder4Pillar2Model;
+	//CLoadedModelInfo* pCylinder4Pillar2Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/CylinderPillar/CylinderBase4.bin", NULL);
+	//m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pCylinder4Pillar2Model));
+	//m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - 20.0f, 10.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, -177.f + m_pTerrain->GetLength() * 0.5f);
+	//m_vHierarchicalGameObjects.back()->SetIsExistBoundingBox(false);
+	//if (pCylinder4Pillar2Model) delete pCylinder4Pillar2Model;
 
 	CLoadedModelInfo* pCylinder5PillarModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/CylinderPillar/CylinderBase5.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pCylinder5PillarModel));
@@ -815,6 +815,46 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, -60.0f, 0.0f);
 
 	if (pConcreteBarrier4Model) delete pConcreteBarrier4Model;
+
+	CLoadedModelInfo* pConcreteBarrier13Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/ConcreteBarrier/ConcreteBarrier.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pConcreteBarrier13Model));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(49.5), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(-40));
+	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
+	m_vHierarchicalGameObjects.back()->Rotate(0.0f, -67.5f, 0.0f);
+
+	if (pConcreteBarrier13Model) delete pConcreteBarrier13Model;
+
+	CLoadedModelInfo* pConcreteBarrier14Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/ConcreteBarrier/ConcreteBarrier.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pConcreteBarrier14Model));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(40), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(-49.5));
+	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
+	m_vHierarchicalGameObjects.back()->Rotate(0.0f, -22.5f, 0.0f);
+
+	if (pConcreteBarrier14Model) delete pConcreteBarrier14Model;
+
+	CLoadedModelInfo* pConcreteBarrier21Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/ConcreteBarrier/ConcreteBarrier.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pConcreteBarrier21Model));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(38), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(-50.3));
+	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
+	m_vHierarchicalGameObjects.back()->Rotate(0.0f, -22.5f, 0.0f);
+
+	if (pConcreteBarrier21Model) delete pConcreteBarrier21Model;
+
+	CLoadedModelInfo* pConcreteBarrier15Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/ConcreteBarrier/ConcreteBarrier.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pConcreteBarrier15Model));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(49.5), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(40));
+	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
+	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 67.5f, 0.0f);
+
+	if (pConcreteBarrier15Model) delete pConcreteBarrier15Model;
+
+	CLoadedModelInfo* pConcreteBarrier16Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/ConcreteBarrier/ConcreteBarrier.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pConcreteBarrier16Model));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(40), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(49.5));
+	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
+	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 22.5f, 0.0f);
+
+	if (pConcreteBarrier16Model) delete pConcreteBarrier16Model;
 	/////////////////////////////////////////////////////////////
 	// left
 	CLoadedModelInfo* pConcreteBarrier5Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/ConcreteBarrier/ConcreteBarrier.bin", NULL);
@@ -848,6 +888,46 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 60.0f, 0.0f);
 
 	if (pConcreteBarrier8Model) delete pConcreteBarrier8Model;
+
+	CLoadedModelInfo* pConcreteBarrier17Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/ConcreteBarrier/ConcreteBarrier.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pConcreteBarrier17Model));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - METER_PER_PIXEL(49.5), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(-40));
+	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
+	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 67.5f, 0.0f);
+
+	if (pConcreteBarrier17Model) delete pConcreteBarrier17Model;
+
+	CLoadedModelInfo* pConcreteBarrier18Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/ConcreteBarrier/ConcreteBarrier.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pConcreteBarrier18Model));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - METER_PER_PIXEL(40), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(-49.5));
+	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
+	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 22.5f, 0.0f);
+
+	if (pConcreteBarrier18Model) delete pConcreteBarrier18Model;
+
+	CLoadedModelInfo* pConcreteBarrier22Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/ConcreteBarrier/ConcreteBarrier.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pConcreteBarrier22Model));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - METER_PER_PIXEL(38), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(-50.3));
+	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
+	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 22.5f, 0.0f);
+
+	if (pConcreteBarrier22Model) delete pConcreteBarrier22Model;
+
+	CLoadedModelInfo* pConcreteBarrier19Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/ConcreteBarrier/ConcreteBarrier.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pConcreteBarrier19Model));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - METER_PER_PIXEL(49.5), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(40));
+	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
+	m_vHierarchicalGameObjects.back()->Rotate(0.0f, -67.5f, 0.0f);
+
+	if (pConcreteBarrier19Model) delete pConcreteBarrier19Model;
+
+	CLoadedModelInfo* pConcreteBarrier20Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/ConcreteBarrier/ConcreteBarrier.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pConcreteBarrier20Model));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - METER_PER_PIXEL(40), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(49.5));
+	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
+	m_vHierarchicalGameObjects.back()->Rotate(0.0f, -22.5f, 0.0f);
+
+	if (pConcreteBarrier20Model) delete pConcreteBarrier20Model;
 	/////////////////////////////////////////////////////////////
 	// front
 	CLoadedModelInfo* pConcreteBarrier9Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/ConcreteBarrier/ConcreteBarrier.bin", NULL);
@@ -936,199 +1016,159 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 
 	/// LongFence //////////////////////////////////////////
 	// right
-	CLoadedModelInfo* pLongFence1Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1.bin", NULL);
-	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence1Model));
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(50), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(17));
+	CLoadedModelInfo* pLongFence1_4Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1_4.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence1_4Model));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(50), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(21));
 	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 90.0f, 0.0f);
 
-	if (pLongFence1Model) delete pLongFence1Model;
+	if (pLongFence1_4Model) delete pLongFence1_4Model;
 
-	CLoadedModelInfo* pLongFence2Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1.bin", NULL);
-	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence2Model));
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(50), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(20));
+	CLoadedModelInfo* pLongFence1_4Model2 = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1_4.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence1_4Model2));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(50), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(-21));
 	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 90.0f, 0.0f);
 
-	if (pLongFence2Model) delete pLongFence2Model;
+	if (pLongFence1_4Model2) delete pLongFence1_4Model2;
 
-	CLoadedModelInfo* pLongFence3Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1.bin", NULL);
-	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence3Model));
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(50), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f - METER_PER_PIXEL(17));
+	CLoadedModelInfo* pLongFence1_4Model5 = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1_4.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence1_4Model5));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(50), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(33.5));
 	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 90.0f, 0.0f);
 
-	if (pLongFence3Model) delete pLongFence3Model;
+	if (pLongFence1_4Model5) delete pLongFence1_4Model5;
 
-	CLoadedModelInfo* pLongFence4Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1.bin", NULL);
-	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence4Model));
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(50), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f - METER_PER_PIXEL(20));
+	CLoadedModelInfo* pLongFence1_4Model6 = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1_4.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence1_4Model6));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(50), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(-33.5));
 	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 90.0f, 0.0f);
 
-	if (pLongFence4Model) delete pLongFence4Model;
+	if (pLongFence1_4Model6) delete pLongFence1_4Model6;
+
+
+	CLoadedModelInfo* pLongFence1_4Model13 = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1_4.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence1_4Model13));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(45), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(45));
+	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
+	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 45.0f, 0.0f);
+
+	if (pLongFence1_4Model13) delete pLongFence1_4Model13;
+
+	CLoadedModelInfo* pLongFence1_4Model14 = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1_4.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence1_4Model14));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(45), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(-45));
+	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
+	m_vHierarchicalGameObjects.back()->Rotate(0.0f, -45.0f, 0.0f);
+
+	if (pLongFence1_4Model14) delete pLongFence1_4Model14;
+
 	/////////////////////////////////////////////////////////////
 	// left
-	CLoadedModelInfo* pLongFence5Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1.bin", NULL);
-	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence5Model));
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - METER_PER_PIXEL(50), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(17));
+	CLoadedModelInfo* pLongFence1_4Model3 = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1_4.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence1_4Model3));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - METER_PER_PIXEL(50), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(21));
 	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 90.0f, 0.0f);
 
-	if (pLongFence5Model) delete pLongFence5Model;
+	if (pLongFence1_4Model3) delete pLongFence1_4Model3;
 
-	CLoadedModelInfo* pLongFence6Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1.bin", NULL);
-	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence6Model));
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - METER_PER_PIXEL(50), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(20));
+	CLoadedModelInfo* pLongFence1_4Model4 = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1_4.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence1_4Model4));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - METER_PER_PIXEL(50), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(-21));
 	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 90.0f, 0.0f);
 
-	if (pLongFence6Model) delete pLongFence6Model;
+	if (pLongFence1_4Model4) delete pLongFence1_4Model4;
 
-	CLoadedModelInfo* pLongFence7Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1.bin", NULL);
-	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence7Model));
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - METER_PER_PIXEL(50), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f - METER_PER_PIXEL(17));
+	CLoadedModelInfo* pLongFence1_4Model11 = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1_4.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence1_4Model11));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - METER_PER_PIXEL(50), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(21));
 	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 90.0f, 0.0f);
 
-	if (pLongFence7Model) delete pLongFence7Model;
+	if (pLongFence1_4Model11) delete pLongFence1_4Model11;
 
-	CLoadedModelInfo* pLongFence8Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1.bin", NULL);
-	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence8Model));
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - METER_PER_PIXEL(50), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f - METER_PER_PIXEL(20));
+	CLoadedModelInfo* pLongFence1_4Model12 = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1_4.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence1_4Model12));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - METER_PER_PIXEL(50), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(-21));
 	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 90.0f, 0.0f);
 
-	if (pLongFence8Model) delete pLongFence8Model;
+	if (pLongFence1_4Model12) delete pLongFence1_4Model12;
+
+	CLoadedModelInfo* pLongFence1_4Model15 = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1_4.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence1_4Model15));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - METER_PER_PIXEL(45), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(45));
+	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
+	m_vHierarchicalGameObjects.back()->Rotate(0.0f, -45.0f, 0.0f);
+
+	if (pLongFence1_4Model15) delete pLongFence1_4Model15;
+
+	CLoadedModelInfo* pLongFence1_4Model16 = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1_4.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence1_4Model16));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - METER_PER_PIXEL(45), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(-45));
+	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
+	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 45.0f, 0.0f);
+
+	if (pLongFence1_4Model16) delete pLongFence1_4Model16;
+
+	CLoadedModelInfo* pLongFence1_4Model17 = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1_4.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence1_4Model17));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - METER_PER_PIXEL(50), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(33.5));
+	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
+	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 90.0f, 0.0f);
+
+	if (pLongFence1_4Model17) delete pLongFence1_4Model17;
+
+	CLoadedModelInfo* pLongFence1_4Model18 = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1_4.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence1_4Model18));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - METER_PER_PIXEL(50), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(-33.5));
+	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
+	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 90.0f, 0.0f);
+
+	if (pLongFence1_4Model18) delete pLongFence1_4Model18;
+
 	/////////////////////////////////////////////////////////////
 	// front
-	CLoadedModelInfo* pLongFence9Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1.bin", NULL);
-	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence9Model));
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(17), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(50));
+	CLoadedModelInfo* pLongFence1_4Model7 = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1_4.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence1_4Model7));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(-21), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(50));
 	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
 
-	if (pLongFence9Model) delete pLongFence9Model;
+	if (pLongFence1_4Model7) delete pLongFence1_4Model7;
 
-	CLoadedModelInfo* pLongFence10Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1.bin", NULL);
-	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence10Model));
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(20), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(50));
+	CLoadedModelInfo* pLongFence1_4Model8 = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1_4.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence1_4Model8));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(21), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(50));
 	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
 
-	if (pLongFence10Model) delete pLongFence10Model;
+	if (pLongFence1_4Model8) delete pLongFence1_4Model8;
 
-	CLoadedModelInfo* pLongFence11Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1.bin", NULL);
-	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence11Model));
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - METER_PER_PIXEL(17), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(50));
+	CLoadedModelInfo* pLongFence1_4Model9 = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1_4.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence1_4Model9));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(-33.5), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(50));
 	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
 
-	if (pLongFence11Model) delete pLongFence11Model;
+	if (pLongFence1_4Model9) delete pLongFence1_4Model9;
 
-	CLoadedModelInfo* pLongFence12Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1.bin", NULL);
-	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence12Model));
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - METER_PER_PIXEL(20), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(50));
+	CLoadedModelInfo* pLongFence1_4Model10 = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1_4.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence1_4Model10));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(33.5), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(50));
 	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
 
-	if (pLongFence12Model) delete pLongFence12Model;
+	if (pLongFence1_4Model10) delete pLongFence1_4Model10;
+
 	/////////////////////////////////////////////////////////////
 	// back
-	CLoadedModelInfo* pLongFence13Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1.bin", NULL);
-	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence13Model));
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(1.5), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f - METER_PER_PIXEL(50));
+	CLoadedModelInfo* pLongFence1_24Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1_24.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence1_24Model));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f - METER_PER_PIXEL(50.6));
 	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
 
-	if (pLongFence13Model) delete pLongFence13Model;
-
-	CLoadedModelInfo* pLongFence14Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1.bin", NULL);
-	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence14Model));
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(4.5), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f - METER_PER_PIXEL(50));
-	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
-
-	if (pLongFence14Model) delete pLongFence14Model;
-
-	CLoadedModelInfo* pLongFence15Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1.bin", NULL);
-	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence15Model));
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(7.5), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f - METER_PER_PIXEL(50));
-	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
-
-	if (pLongFence15Model) delete pLongFence15Model;
-
-	CLoadedModelInfo* pLongFence16Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1.bin", NULL);
-	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence16Model));
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(10.5), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f - METER_PER_PIXEL(50));
-	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
-
-	if (pLongFence16Model) delete pLongFence16Model;
-
-	CLoadedModelInfo* pLongFence17Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1.bin", NULL);
-	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence17Model));
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(13.5), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f - METER_PER_PIXEL(50));
-	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
-
-	if (pLongFence17Model) delete pLongFence17Model;
-
-	CLoadedModelInfo* pLongFence18Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1.bin", NULL);
-	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence18Model));
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(16.5), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f - METER_PER_PIXEL(50));
-	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
-
-
-	if (pLongFence18Model) delete pLongFence18Model;
-
-	CLoadedModelInfo* pLongFence19Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1.bin", NULL);
-	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence19Model));
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - METER_PER_PIXEL(1.5), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f - METER_PER_PIXEL(50));
-	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
-
-	if (pLongFence19Model) delete pLongFence19Model;
-
-	CLoadedModelInfo* pLongFence20Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1.bin", NULL);
-	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence20Model));
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - METER_PER_PIXEL(4.5), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f - METER_PER_PIXEL(50));
-	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
-
-	if (pLongFence20Model) delete pLongFence20Model;
-
-	CLoadedModelInfo* pLongFence21Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1.bin", NULL);
-	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence21Model));
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - METER_PER_PIXEL(7.5), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f - METER_PER_PIXEL(50));
-	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
-
-	if (pLongFence21Model) delete pLongFence21Model;
-
-	CLoadedModelInfo* pLongFence22Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1.bin", NULL);
-	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence22Model));
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - METER_PER_PIXEL(10.5), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f - METER_PER_PIXEL(50));
-	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
-
-	if (pLongFence22Model) delete pLongFence22Model;
-
-	CLoadedModelInfo* pLongFence23Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1.bin", NULL);
-	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence23Model));
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - METER_PER_PIXEL(13.5), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f - METER_PER_PIXEL(50));
-	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
-
-	if (pLongFence23Model) delete pLongFence23Model;
-
-	CLoadedModelInfo* pLongFence24Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1.bin", NULL);
-	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence24Model));
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - METER_PER_PIXEL(16.5), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f - METER_PER_PIXEL(50));
-	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
-
-	if (pLongFence24Model) delete pLongFence24Model;
-
-	CLoadedModelInfo* pLongFence25Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1.bin", NULL);
-	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence25Model));
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(19.5), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f - METER_PER_PIXEL(50));
-	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
-
-	if (pLongFence25Model) delete pLongFence25Model;
-
-	CLoadedModelInfo* pLongFence26Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Fence1/Fence1.bin", NULL);
-	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLongFence26Model));
-	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - METER_PER_PIXEL(19.5), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f - METER_PER_PIXEL(50));
-	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
-
-	if (pLongFence26Model) delete pLongFence26Model;
+	if (pLongFence1_24Model) delete pLongFence1_24Model;
 
 
 	//ShortFence
@@ -1138,7 +1178,6 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	//m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
 
 	//if (pShortFence1Model) delete pShortFence1Model;
-
 
 	/// Barrel //////////////////////////////////////////
 	// right
@@ -1176,6 +1215,22 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
 
 	if (pBarrel5Model) delete pBarrel5Model;
+
+
+	CLoadedModelInfo* pBarrel16Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Barrel/Barrel.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pBarrel16Model));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(49.7), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(40.2));
+	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
+
+	if (pBarrel16Model) delete pBarrel16Model;
+
+	CLoadedModelInfo* pBarrel17Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Barrel/Barrel.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pBarrel17Model));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(40.2), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) + METER_PER_PIXEL(0.2), m_pTerrain->GetLength() * 0.5f + METER_PER_PIXEL(49.7));
+	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
+
+	if (pBarrel17Model) delete pBarrel17Model;
+
 	/////////////////////////////////////////////////////////////
 	// left
 	CLoadedModelInfo* pBarrel6Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Barrel/Barrel.bin", NULL);
@@ -1212,6 +1267,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
 
 	if (pBarrel10Model) delete pBarrel10Model;
+
 	/////////////////////////////////////////////////////////////
 	// front
 	CLoadedModelInfo* pBarrel11Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/StreetAsset/Barrel/Barrel.bin", NULL);
