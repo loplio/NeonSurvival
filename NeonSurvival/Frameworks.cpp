@@ -51,7 +51,8 @@ LRESULT CALLBACK FrameworkController::OnProcessingWindowMessage(HWND hWnd, UINT 
 	case WM_LBUTTONUP:
 	case WM_RBUTTONUP:
 	case WM_MOUSEMOVE:
-		OnProcessingMouseMessage(hWnd, nMessageID, wParam, lParam);
+		if (OnProcessingMouseMessage(hWnd, nMessageID, wParam, lParam))
+			return 1;
 		break;
 	case WM_KEYDOWN:
 	case WM_KEYUP:

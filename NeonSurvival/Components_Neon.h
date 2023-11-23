@@ -212,7 +212,22 @@ public:
 	void DrawUI(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) override;
 
 public:
-	bool on1 = false;
-	bool on2 = false;
-	bool on3 = false;
+	bool bGameStart = false;
+	bool bSetting = false;
+	bool bGameQuit = false;
+
+	enum {
+		GAMESTART_R = 2,
+		GAMESTART_RL = 3,
+		GAMESTART_B = 4,
+		GAMESTART_BL = 5,
+		SETTING_R = 6,
+		SETTING_RL = 7,
+		SETTING_B = 8,
+		SETTING_BL = 9,
+		GAMEQUIT_R = 10,
+		GAMEQUIT_RL = 11,
+		GAMEQUIT_B = 12,
+		GAMEQUIT_BL = 13
+	};
 };

@@ -74,9 +74,10 @@ void CLobbyFramework_Neon::ReleaseObjects()
 {
 }
 
-void CLobbyFramework_Neon::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
+bool CLobbyFramework_Neon::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
 {
-	if (m_pScene) m_pScene->OnProcessingKeyboardMessage(hWnd, nMessageID, wParam, lParam);
+	int retval = 0;
+	if (m_pScene) retval = m_pScene->OnProcessingMouseMessage(hWnd, nMessageID, wParam, lParam);
 	switch (nMessageID) {
 	case WM_LBUTTONDOWN:
 	case WM_RBUTTONDOWN:
@@ -92,10 +93,13 @@ void CLobbyFramework_Neon::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, 
 	default:
 		break;
 	}
+
+	return retval;
 }
-void CLobbyFramework_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
+bool CLobbyFramework_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
 {
-	if (m_pScene) m_pScene->OnProcessingKeyboardMessage(hWnd, nMessageID, wParam, lParam);
+	int retval = 0;
+	if (m_pScene) retval = m_pScene->OnProcessingKeyboardMessage(hWnd, nMessageID, wParam, lParam);
 	switch (nMessageID) {
 	case WM_KEYUP:
 		switch (wParam) {
@@ -120,6 +124,8 @@ void CLobbyFramework_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageI
 	default:
 		break;
 	}
+
+	return retval;
 }
 
 //-------------------------------------------------------------------------------
@@ -224,9 +230,10 @@ void CGameFramework_Neon::ProcessSelectedObject(DWORD dwDirection, float cxDelta
 	}
 }
 
-void CGameFramework_Neon::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
+bool CGameFramework_Neon::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
 {
-	if (m_pScene) m_pScene->OnProcessingMouseMessage(hWnd, nMessageID, wParam, lParam);
+	int retval = 0;
+	if (m_pScene) retval = m_pScene->OnProcessingMouseMessage(hWnd, nMessageID, wParam, lParam);
 	switch (nMessageID) {
 	case WM_LBUTTONDOWN:
 		break;
@@ -261,10 +268,13 @@ void CGameFramework_Neon::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, W
 	default:
 		break;
 	}
+
+	return retval;
 }
-void CGameFramework_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
+bool CGameFramework_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
 {
-	if (m_pScene) m_pScene->OnProcessingKeyboardMessage(hWnd, nMessageID, wParam, lParam);
+	int retval = 0;
+	if (m_pScene) retval = m_pScene->OnProcessingKeyboardMessage(hWnd, nMessageID, wParam, lParam);
 	switch (nMessageID) {
 	case WM_KEYUP:
 		switch (wParam) {
@@ -310,4 +320,6 @@ void CGameFramework_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID
 	default:
 		break;
 	}
+
+	return retval;
 }

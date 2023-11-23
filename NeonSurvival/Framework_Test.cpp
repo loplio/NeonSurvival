@@ -66,7 +66,7 @@ void CLobbyFramework_Test::ReleaseObjects()
 {
 }
 
-void CLobbyFramework_Test::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
+bool CLobbyFramework_Test::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
 {
 	switch (nMessageID) {
 	case WM_LBUTTONDOWN:
@@ -83,8 +83,10 @@ void CLobbyFramework_Test::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, 
 	default:
 		break;
 	}
+
+	return 0;
 }
-void CLobbyFramework_Test::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
+bool CLobbyFramework_Test::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
 {
 	switch (nMessageID) {
 	case WM_KEYUP:
@@ -110,6 +112,8 @@ void CLobbyFramework_Test::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageI
 	default:
 		break;
 	}
+
+	return 0;
 }
 
 
@@ -213,7 +217,7 @@ void CGameFramework_Test::ProcessSelectedObject(DWORD dwDirection, float cxDelta
 	}
 }
 
-void CGameFramework_Test::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
+bool CGameFramework_Test::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
 {
 	if (m_pScene) m_pScene->OnProcessingMouseMessage(hWnd, nMessageID, wParam, lParam);
 	switch (nMessageID) {
@@ -233,8 +237,10 @@ void CGameFramework_Test::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, W
 	default:
 		break;
 	}
+
+	return 0;
 }
-void CGameFramework_Test::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
+bool CGameFramework_Test::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
 {
 	if (m_pScene) m_pScene->OnProcessingKeyboardMessage(hWnd, nMessageID, wParam, lParam);
 	switch (nMessageID) {
@@ -264,5 +270,7 @@ void CGameFramework_Test::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID
 	default:
 		break;
 	}
+
+	return 0;
 }
 

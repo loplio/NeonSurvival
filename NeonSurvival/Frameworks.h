@@ -122,8 +122,8 @@ public:
 	virtual void BuildToolCreator() = 0;
 	virtual void ReleaseObjects() = 0;
 
-	virtual void OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam) = 0;
-	virtual void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam) = 0;
+	virtual bool OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam) = 0;
+	virtual bool OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam) = 0;
 
 	InterfaceFramework& GetInterfaceFramework() const { return m_Iframe; }
 	CGameSource& GetGameSource() const { return *m_GameSource; }
@@ -149,8 +149,8 @@ private:
 	void BuildToolCreator() override {};
 	void ReleaseObjects() override {};
 
-	void OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam) override {};
-	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam) override {};
+	bool OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam) override { return 0; };
+	bool OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam) override { return 0; };
 };
 //-------------------------------------------------------------------------------
 /*	CGameFramework : BaseFramework											   */
@@ -174,8 +174,8 @@ private:
 	void BuildToolCreator() override {};
 	void ReleaseObjects() override {};
 
-	void OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam) override {};
-	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam) override {};
+	bool OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam) override { return 0; };
+	bool OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam) override { return 0; };
 };
 
 //-------------------------------------------------------------------------------
@@ -195,8 +195,8 @@ public:
 	void FrameAdvance() { m_state->FrameAdvance(); };
 	void OnDestroy();
 
-	void OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam) { m_state->OnProcessingMouseMessage(hWnd, nMessageID, wParam, lParam); }
-	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam) { m_state->OnProcessingKeyboardMessage(hWnd, nMessageID, wParam, lParam); }
+	bool OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam) { return m_state->OnProcessingMouseMessage(hWnd, nMessageID, wParam, lParam); }
+	bool OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam) { return m_state->OnProcessingKeyboardMessage(hWnd, nMessageID, wParam, lParam); }
 	LRESULT CALLBACK OnProcessingWindowMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
 
 	void BuildObjects() { m_state->BuildObjects(); }

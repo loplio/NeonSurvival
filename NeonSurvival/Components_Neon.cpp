@@ -660,11 +660,11 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.back()->SetIsExistBoundingBox(false);
 	if (pCylinder3PillarModel) delete pCylinder3PillarModel;
 
-	//CLoadedModelInfo* pCylinder4PillarModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/CylinderPillar/CylinderBase4.bin", NULL);
-	//m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pCylinder4PillarModel));
-	//m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + 73.5f, 8.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, -15.f + m_pTerrain->GetLength() * 0.5f);
-	//m_vHierarchicalGameObjects.back()->SetIsExistBoundingBox(false);
-	//if (pCylinder4PillarModel) delete pCylinder4PillarModel;
+	CLoadedModelInfo* pCylinder4PillarModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/CylinderPillar/CylinderBase4.bin", NULL);
+	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pCylinder4PillarModel));
+	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + 73.5f, 8.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, -15.f + m_pTerrain->GetLength() * 0.5f);
+	m_vHierarchicalGameObjects.back()->SetIsExistBoundingBox(false);
+	if (pCylinder4PillarModel) delete pCylinder4PillarModel;
 
 	//CLoadedModelInfo* pCylinder4Pillar2Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/CylinderPillar/CylinderBase4.bin", NULL);
 	//m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pCylinder4Pillar2Model));
@@ -1976,92 +1976,80 @@ void SceneLobby_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 	m_UIShaders.back() = pUITexture;
 
-
-
 	m_UIShaders.push_back(new CShader);
 	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/title.dds");
 	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 400, 400, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 0.7 / 2, 0);
 	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 	m_UIShaders.back() = pUITexture;
 
-	if (!on1)
-	{
-		m_UIShaders.push_back(new CShader);
-		pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/line_r.dds");
-		pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 35, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 1.2 / 2, 0);
-		pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-		m_UIShaders.back() = pUITexture;
-		m_UIShaders.push_back(new CShader);
-		pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/gamestart_r.dds");
-		pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 40, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 1.2 / 2, 0);
-		pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-		m_UIShaders.back() = pUITexture;
-	}
-	else
-	{
-		m_UIShaders.push_back(new CShader);
-		pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/line.dds");
-		pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 35, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 1.2 / 2, 0);
-		pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-		m_UIShaders.back() = pUITexture;
-		m_UIShaders.push_back(new CShader);
-		pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/gamestart_b.dds");
-		pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 40, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 1.2 / 2, 0);
-		pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-		m_UIShaders.back() = pUITexture;
-	}
-	if (!on2)
-	{
-		m_UIShaders.push_back(new CShader);
-		pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/line_r.dds");
-		pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 35, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 1.4 / 2, 0);
-		pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-		m_UIShaders.back() = pUITexture;
-		m_UIShaders.push_back(new CShader);
-		pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/setting_r.dds");
-		pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 40, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 1.4 / 2, 0);
-		pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-		m_UIShaders.back() = pUITexture;
-	}
-	else
-	{
-		m_UIShaders.push_back(new CShader);
-		pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/line.dds");
-		pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 35, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 1.4 / 2, 0);
-		pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-		m_UIShaders.back() = pUITexture;
-		m_UIShaders.push_back(new CShader);
-		pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/setting_b.dds");
-		pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 40, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 1.4 / 2, 0);
-		pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-		m_UIShaders.back() = pUITexture;
-	}
-	if (!on3)
-	{
-		m_UIShaders.push_back(new CShader);
-		pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/line_r.dds");
-		pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 35, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 1.6 / 2, 0);
-		pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-		m_UIShaders.back() = pUITexture;
-		m_UIShaders.push_back(new CShader);
-		pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/quit_r.dds");
-		pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 40, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 1.6 / 2, 0);
-		pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-		m_UIShaders.back() = pUITexture;
-	}
-	else
-	{
-		m_UIShaders.push_back(new CShader);
-		pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/line.dds");
-		pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 35, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 1.6 / 2, 0);
-		pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-		m_UIShaders.back() = pUITexture;
-		m_UIShaders.push_back(new CShader);
-		pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/quit_b.dds");
-		pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 40, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 1.6 / 2, 0);
-		pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-		m_UIShaders.back() = pUITexture;
-	}
+	// GameStart
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/gamestart_r.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 40, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 0.6, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/line_r.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 35, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 0.6, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/gamestart_b.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 40, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 0.6, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/line.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 35, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 0.6, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+
+	// Configuration Settings
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/setting_r.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 40, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 0.7, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/line_r.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 35, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 0.7, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/setting_b.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 40, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 0.7, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/line.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 35, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 0.7, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+
+	// Game Exit
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/quit_r.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 40, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 0.8, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/line_r.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 35, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 0.8, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/quit_b.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 40, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 0.8, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/line.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 35, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 0.8, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
 	
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }
@@ -2099,13 +2087,51 @@ bool SceneLobby_Neon::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARA
 	int mouseX = LOWORD(lParam);
 	int mouseY = HIWORD(lParam);
 
-	if (mouseX >= 250 && mouseX <= 550 && mouseY >= 380 && mouseY <= 420)
-	{
-		on1 = true;
-	}
-	else
-	{
-		on1 = false;
+	switch (nMessageID) {
+	case WM_LBUTTONDOWN:
+		if (bGameStart)
+		{
+			return true;
+		}
+		else if (bSetting)
+		{
+
+		}
+		else if(bGameQuit)
+		{
+			::PostQuitMessage(0);
+		}
+		break;
+	case WM_MOUSEMOVE:
+		if (FRAME_BUFFER_WIDTH / 2 - 150 <= mouseX && mouseX <= FRAME_BUFFER_WIDTH / 2 + 150 && FRAME_BUFFER_HEIGHT * 0.6 - 20 <= mouseY && mouseY <= FRAME_BUFFER_HEIGHT * 0.6 + 20)
+		{
+			bGameStart = true;
+		}
+		else
+		{
+			bGameStart = false;
+		}
+
+		if (FRAME_BUFFER_WIDTH / 2 - 150 <= mouseX && mouseX <= FRAME_BUFFER_WIDTH / 2 + 150 && FRAME_BUFFER_HEIGHT * 0.7 - 20 <= mouseY && mouseY <= FRAME_BUFFER_HEIGHT * 0.7 + 20)
+		{
+			bSetting = true;
+		}
+		else
+		{
+			bSetting = false;
+		}
+
+		if (FRAME_BUFFER_WIDTH / 2 - 150 <= mouseX && mouseX <= FRAME_BUFFER_WIDTH / 2 + 150 && FRAME_BUFFER_HEIGHT * 0.8 - 20 <= mouseY && mouseY <= FRAME_BUFFER_HEIGHT * 0.8 + 20)
+		{
+			bGameQuit = true;
+		}
+		else
+		{
+			bGameQuit = false;
+		}
+		break;
+	default:
+		break;
 	}
 
 	return false;
@@ -2117,9 +2143,6 @@ bool SceneLobby_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WP
 	case WM_KEYDOWN:
 		switch (wParam)
 		{
-		case VK_CONTROL:
-			on1 = true;
-			break;
 		default:
 			break;
 		}
@@ -2147,5 +2170,43 @@ void SceneLobby_Neon::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera
 }
 void SceneLobby_Neon::DrawUI(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
-	CScene::DrawUI(pd3dCommandList, pCamera);
+	for (int i = 0; i < m_UIShaders.size(); ++i)
+	{
+		switch (i)
+		{
+		case GAMESTART_R:
+		case GAMESTART_RL:
+			if(!bGameStart)
+				m_UIShaders[i]->Render(pd3dCommandList, pCamera);
+			break;
+		case GAMESTART_B:
+		case GAMESTART_BL:
+			if(bGameStart)
+				m_UIShaders[i]->Render(pd3dCommandList, pCamera);
+			break;
+		case SETTING_R:
+		case SETTING_RL:
+			if (!bSetting)
+				m_UIShaders[i]->Render(pd3dCommandList, pCamera);
+			break;
+		case SETTING_B:
+		case SETTING_BL:
+			if (bSetting)
+				m_UIShaders[i]->Render(pd3dCommandList, pCamera);
+			break;
+		case GAMEQUIT_R:
+		case GAMEQUIT_RL:
+			if (!bGameQuit)
+				m_UIShaders[i]->Render(pd3dCommandList, pCamera);
+			break;
+		case GAMEQUIT_B:
+		case GAMEQUIT_BL:
+			if (bGameQuit)
+				m_UIShaders[i]->Render(pd3dCommandList, pCamera);
+			break;
+		default:
+			m_UIShaders[i]->Render(pd3dCommandList, pCamera);
+			break;
+		}
+	}
 }
