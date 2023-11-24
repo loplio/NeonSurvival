@@ -215,6 +215,7 @@ public:
 	bool bGameStart = false;
 	bool bSetting = false;
 	bool bGameQuit = false;
+	bool bLodding = false;
 
 	enum {
 		GAMESTART_R = 2,
@@ -228,6 +229,7 @@ public:
 		GAMEQUIT_R = 10,
 		GAMEQUIT_RL = 11,
 		GAMEQUIT_B = 12,
-		GAMEQUIT_BL = 13
+		GAMEQUIT_BL = 13,
+		GAME_LODDING = 14
 	};
 };

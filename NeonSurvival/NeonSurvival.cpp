@@ -131,7 +131,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    UpdateWindow(hWnd);
 
    //서버
-   SERVER::getInstance().init(hWnd);
+   //SERVER::getInstance().init(hWnd, (char*)"127.0.0.1");
 
    return TRUE;
 }
@@ -152,7 +152,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
     case WM_SOCKET:
     {
-        SERVER::getInstance().ProcessSocketMessage(hWnd, message, wParam, lParam);
+		SERVER::getInstance().ProcessSocketMessage(hWnd, message, wParam, lParam);
         break;
     }
     case WM_SIZE:

@@ -2050,6 +2050,12 @@ void SceneLobby_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 35, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 0.8, 0);
 	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 	m_UIShaders.back() = pUITexture;
+
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/Pop_up_02.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 35, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 0.525, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
 	
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }
@@ -2202,6 +2208,10 @@ void SceneLobby_Neon::DrawUI(ID3D12GraphicsCommandList* pd3dCommandList, CCamera
 		case GAMEQUIT_B:
 		case GAMEQUIT_BL:
 			if (bGameQuit)
+				m_UIShaders[i]->Render(pd3dCommandList, pCamera);
+			break;
+		case GAME_LODDING:
+			if(bLodding)
 				m_UIShaders[i]->Render(pd3dCommandList, pCamera);
 			break;
 		default:

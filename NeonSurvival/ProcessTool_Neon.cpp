@@ -346,7 +346,8 @@ void LobbyRenderDisplay_Neon::Render()
 	m_InterfaceFramework.ClearDisplay();
 
 	// Update
-	((CGameFramework_Neon*)&gBaseFramework)->UpdateUI();
+	((CLobbyFramework_Neon*)&gBaseFramework)->UpdateUI();
+
 	// Render
 	m_Scene.OnPrepareRender(&m_pd3dCommandList, &m_Camera);
 	m_Scene.DrawUI(&m_pd3dCommandList, &m_Camera);
@@ -375,14 +376,12 @@ void UILayerLobby_Neon::BuildUI()
 	ID2D1SolidColorBrush* pd2dBrush;
 	IDWriteTextFormat* pdwTextFormat;
 	D2D1_RECT_F d2dRect;
-	WCHAR pstrOutputText[256];
 
-	wcscpy_s(pstrOutputText, 256, L"NeonSign Survival Lobby\n");
 	pd2dBrush = CreateBrush(D2D1::ColorF(D2D1::ColorF::BlanchedAlmond, 1.0f));
 	pdwTextFormat = CreateTextFormat((wchar_t*)L"Arial", m_fHeight / 20.0f);
-	d2dRect = D2D1::RectF(0.0f, m_fHeight - 90.0f, m_fWidth, m_fHeight);
+	d2dRect = D2D1::RectF(0.0f, m_fHeight - 300.0f, m_fWidth, m_fHeight);
 
-	UpdateTextOutputs(0, pstrOutputText, &d2dRect, pdwTextFormat, pd2dBrush);
+	UpdateTextOutputs(0, NULL, &d2dRect, pdwTextFormat, pd2dBrush);
 }
 //-------------------------------------------------------------------------------
 UILayerGame_Neon::UILayerGame_Neon(InterfaceFramework& Iframe, UINT nTextBlocks) : UILayer(Iframe, nTextBlocks)

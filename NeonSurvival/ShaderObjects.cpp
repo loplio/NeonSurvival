@@ -228,7 +228,7 @@ void TexturedObjects_1::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 
 	CTexture* ppTextures[1];
 	ppTextures[0] = new CTexture(1, RESOURCE_TEXTURE2D, 0, 1);
-	ppTextures[0]->LoadTextureFromFile(pd3dDevice, pd3dCommandList, (wchar_t*)L"Image/Ceiling.dds", 0, true);
+	ppTextures[0]->LoadTextureFromFile(pd3dDevice, pd3dCommandList, (wchar_t*)L"GameTexture/neon_tile4_1.dds", 0, true);
 
 	CScene::CreateSRVUAVs(pd3dDevice, ppTextures[0], 4, true);
 
@@ -644,7 +644,7 @@ void GeneralMonsterObjects::Collide(const CGameSource& GameSource, CBoundingBoxO
 				std::vector<CGameObject*> BoundingObjects = BoundingBoxObjects.GetBoundingObjects();
 				for (int i = 0; i < BoundingObjects.size(); ++i)
 				{
-					if (BoundingObjects[i]->GetReafObjectType() == CGameObject::Player && 
+					if (BoundingObjects[i]->GetReafObjectType() == CGameObject::Player &&
 						m_pMonsterData[n].TargetID == ((CPlayer*)BoundingObjects[i])->Player_ID)
 					{
 						((Player_Neon*)BoundingObjects[i])->HP -= ((MonsterObject*)monster)->Damage;

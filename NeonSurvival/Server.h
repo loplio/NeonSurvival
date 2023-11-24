@@ -134,7 +134,7 @@ public:
 		static SERVER s;
 		return s;
 	}
-	void init(HWND);
+	void init(HWND, char*);
 	void ProcessSocketMessage(HWND, UINT, WPARAM, LPARAM);
 	int SendMessageType(SOCKET& socket, MESSAGETYPE type);
 	void UpdatePlayerPosition(const XMFLOAT3 &position);

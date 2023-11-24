@@ -216,8 +216,8 @@ Scene_Test::Scene_Test(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 	XMFLOAT4 xmf4Color(0.0f, 0.1f, 0.0f, 0.0f);
 	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, 
 		_T("Image/terrain.raw"), 
-		(wchar_t*)L"GameTexture/Ground2.dds",
-		(wchar_t*)L"GameTexture/Ground2.dds",
+		(wchar_t*)L"GameTexture/neon_tile4_1.dds",
+		(wchar_t*)L"GameTexture/neon_tile4_1.dds",
 		257, 257, xmf3Scale, xmf4Color);
 }
 Scene_Test::~Scene_Test()
@@ -260,7 +260,7 @@ void Scene_Test::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
 	// BoundingBoxObjects Build.
-	m_pBoundingObjects->BuildObjects(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	//m_pBoundingObjects->BuildObjects(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 }
 void Scene_Test::BuildLightsAndMaterials()
 {

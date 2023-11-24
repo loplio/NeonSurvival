@@ -2,7 +2,7 @@
 #include "Server.h"
 #include "Player.h"
 
-void SERVER::init(HWND hWnd)
+void SERVER::init(HWND hWnd, char* IP)
 {
     WSADATA wsaData;
     int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -22,12 +22,10 @@ void SERVER::init(HWND hWnd)
     ZeroMemory(&serverAddr, sizeof(serverAddr));
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(SERVERPORT);
-   // serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    //serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
     //serverAddr.sin_addr.s_addr = inet_addr("125.180.24.40");
     //serverAddr.sin_addr.s_addr = inet_addr("119.67.181.24");
-    char ip[14];
-    scanf("%s", ip);
-    serverAddr.sin_addr.s_addr = inet_addr(ip);
+    serverAddr.sin_addr.s_addr = inet_addr(IP);
     //serverAddr.sin_addr.s_addr = inet_addr("125.180.29.106");
 
     //네이클 알고리즘 OFF
@@ -106,6 +104,7 @@ void SERVER::ProcessSocketMessage(HWND hWnd, UINT unit, WPARAM wParam, LPARAM lP
         }
         case MESSAGETYPE::MONSTER_DATA:
         {
+            std::cout << "Monster Data" << std::endl;
             memcpy(MonsterData, m_Packet.buf2, sizeof(MonsterData));
             if (len == SOCKET_ERROR) {
                 printf("MONSTER_DATA error : %d\n", WSAGetLastError());

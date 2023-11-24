@@ -56,9 +56,10 @@ LRESULT CALLBACK FrameworkController::OnProcessingWindowMessage(HWND hWnd, UINT 
 		break;
 	case WM_KEYDOWN:
 	case WM_KEYUP:
-		if(nMessageID == WM_KEYUP && wParam == VK_F5)
+		//if(nMessageID == WM_KEYUP && wParam == VK_F5)
+		//	return 1;
+		if (OnProcessingKeyboardMessage(hWnd, nMessageID, wParam, lParam))
 			return 1;
-		OnProcessingKeyboardMessage(hWnd, nMessageID, wParam, lParam);
 		break;
 	}
 	return(0);

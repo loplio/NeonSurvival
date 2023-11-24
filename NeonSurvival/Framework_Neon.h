@@ -9,6 +9,12 @@ public:
 	CLobbyFramework_Neon(InterfaceFramework& Iframe);
 	virtual ~CLobbyFramework_Neon();
 
+	void UpdateUI() const;
+
+	std::string IPBuffer;
+
+	bool bLodding = false;
+
 private:
 	void OnCreate(HINSTANCE hInstance, HWND hMainWnd) override;
 	void FrameAdvance() override;

@@ -25,7 +25,7 @@ void CLobbyFramework_Neon::FrameAdvance()
 	m_MouseInput->DataProcessing();
 
 	m_DisplayOutput->Render();
-	//m_pUILayer->Render(m_nSwapChainBufferIndex);
+	if(bLodding) m_pUILayer->Render(m_nSwapChainBufferIndex);
 
 	m_pdxgiSwapChain.Present(0, 0);
 
@@ -74,10 +74,29 @@ void CLobbyFramework_Neon::ReleaseObjects()
 {
 }
 
+void CLobbyFramework_Neon::UpdateUI() const
+{
+	if (bLodding)
+	{
+		wchar_t text[128];
+		for (int i = 0; i < IPBuffer.size(); ++i)
+		{
+			text[i] = IPBuffer[i];
+		}
+		memset(text + IPBuffer.size(), 0, sizeof(char) * (128 - IPBuffer.size()));
+		m_pUILayer->UpdateTextOutputs(0, (_TCHAR*)text, NULL, NULL, NULL);
+	}
+}
+
 bool CLobbyFramework_Neon::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
 {
 	int retval = 0;
 	if (m_pScene) retval = m_pScene->OnProcessingMouseMessage(hWnd, nMessageID, wParam, lParam);
+	if (retval) {
+		bLodding = true;
+		((SceneLobby_Neon*)m_pScene.get())->bLodding = true;
+		retval = 0;
+	}
 	switch (nMessageID) {
 	case WM_LBUTTONDOWN:
 	case WM_RBUTTONDOWN:
@@ -103,6 +122,35 @@ bool CLobbyFramework_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageI
 	switch (nMessageID) {
 	case WM_KEYUP:
 		switch (wParam) {
+		case  0x30:
+		case  0x31:
+		case  0x32:
+		case  0x33:
+		case  0x34:
+		case  0x35:
+		case  0x36:
+		case  0x37:
+		case  0x38:
+		case  0x39:
+			if (bLodding)
+			{
+				char text[2];
+				_itoa_s(wParam - 0x30, text, 10);
+				IPBuffer = IPBuffer + text[0];
+			}
+			break;
+		case 0xBE:
+			if (bLodding)
+			{
+				IPBuffer.append(".");
+			}
+			break;
+		case 0x08:
+			if (bLodding && !IPBuffer.empty())
+			{
+				IPBuffer.pop_back();
+			}
+			break;
 		case VK_F1:
 		case VK_F2:
 		case VK_F3:
@@ -111,6 +159,12 @@ bool CLobbyFramework_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageI
 			::PostQuitMessage(0);
 			break;
 		case VK_RETURN:
+			if (IPBuffer.size())
+			{
+				retval = 1;
+				SERVER::getInstance().init(hWnd, (char*)IPBuffer.c_str());
+				Sleep(1);
+			}
 			break;
 		case VK_F8:
 			break;
