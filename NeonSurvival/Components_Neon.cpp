@@ -219,14 +219,7 @@ void Player_Neon::Update(float fTimeElapsed)
 	//std::cout << "Offset : " << m_xmf3Offset.x << ", " << m_xmf3Offset.y << ", " << m_xmf3Offset.z << std::endl;
 
 	//서버로 위치 전송
-	//SERVER::getInstance().SendPosition(GetPosition());
 	SERVER::getInstance().SendPlayerData(*this, m_nGunType, ServerfLength, ServerInnResultAnimBundle);
-	SERVER::getInstance().AddFPSCount(fTimeElapsed);
-	if (SERVER::getInstance().IsCount())
-	{
-
-	}
-	//if((*this).GetFire())std::cout << "Send!!! FireState: " << (*this).GetFire() << std::endl;
 
 }
 

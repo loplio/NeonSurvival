@@ -342,7 +342,10 @@ bool CGameFramework_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID
 			}
 			break;
 		case VK_ESCAPE:
+		{
+			SERVER::getInstance().SendExit();
 			::PostQuitMessage(0);
+		}
 			break;
 		case VK_RETURN:
 			break;

@@ -114,7 +114,6 @@ void SERVER::ProcessSocketMessage(HWND hWnd, UINT unit, WPARAM wParam, LPARAM lP
         }
         case MESSAGETYPE::SHOT:
         {
-            printf("shot = %d\n",m_Packet.byte);
             ShotClinetId = m_Packet.byte;
             break;
         }
@@ -270,4 +269,10 @@ void SERVER::SendShot()
 {
     int msg = MESSAGETYPE::SHOT;
     len = send(clientSocket, (char*)&msg, sizeof(msg), 0);
+}
+
+void SERVER::SendExit()
+{
+    PACKET_EXIT pExit = { MESSAGETYPE::EXIT ,ClientNumId };
+    len = send(clientSocket, (char*)&pExit, sizeof(PACKET_EXIT), 0);
 }

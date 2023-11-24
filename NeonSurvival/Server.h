@@ -37,7 +37,6 @@ enum MONSTER_STATE {
 	DIE = 203,
 	TargetPlayer = 204,
 	TargetNexus,
-
 };
 
 typedef struct{
@@ -93,6 +92,11 @@ typedef struct {
 
 typedef struct {
 	int MessageType;
+	int id;
+}PACKET_EXIT;
+
+typedef struct {
+	int MessageType;
 	int byte;
 	char buf[BUFSIZE];
 	char buf2[BUF2SIZE];
@@ -142,6 +146,7 @@ public:
 	void SendPosition(const XMFLOAT3& position);
 	void SendPlayerData(CPlayer& player,int GunType,float flength,int anibundle);
 	void SendShot();
+	void SendExit();
 	//void SendPosition(const XMFLOAT4X4& woldpos);
 	void AddFPSCount(float dt);
 	bool IsCount();
