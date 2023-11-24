@@ -610,17 +610,13 @@ void GeneralMonsterObjects::Update(float fTimeElapsed)
 		XMFLOAT3 up = XMFLOAT3(world._21, world._22, world._23);
 		XMFLOAT3 look = XMFLOAT3(world._31, world._32, world._33);
 		int hp = m_pMonsterData[count].HP;
-		((MonsterObject*)monster)->HP = hp;
-		((MonsterObject*)monster)->id = m_pMonsterData[count].id;
+		//((MonsterObject*)monster)->HP = hp;
 
-		if (isnan(world._11) == 0) //서버에서 온 값이 nan이 아닐경우 위치 값 적용
-		{
-			if (world._11 < EPSILON && world._22 < EPSILON && world._33 < EPSILON)
-				monster->SetPosition(pos);
-			else
-				monster->SetTransform(right, up, look, pos);
-		}
-		
+		if (world._11 < EPSILON && world._22 < EPSILON && world._33 < EPSILON)
+			monster->SetPosition(pos);
+		else
+			monster->SetTransform(right, up, look, pos);
+
 		count++;
 	}
 
@@ -1089,16 +1085,8 @@ void PistolBulletTexturedObjects::Collide(const CGameSource& GameSource, CBoundi
 			{
 				if (BoundingBoxObjects.m_StartIndex[i] <= nConflicted && nConflicted < BoundingBoxObjects.m_StartIndex[i] + BoundingBoxObjects.m_nObjects[i])
 				{
-					bool IsmineBullet = ((CPistolBulletObject*)(*bullet))->IsMine;
 					float damage = ((CPistolBulletObject*)(*bullet))->m_fDamege;
 					((MonsterObject*)BoundingBoxObjects.m_ParentObjects[i])->Conflicted(damage);
-					
-					//if (IsmineBullet)
-					//{
-					//	printf("mine hit\n");
-					//	int monsterId = ((MonsterObject*)BoundingBoxObjects.m_ParentObjects[i])->id;
-					//	SERVER::getInstance().SendHit(monsterId,damage); //총알 데미지 서버로 송출
-					//}
 					break;
 				}
 			}
@@ -1115,15 +1103,11 @@ void PistolBulletTexturedObjects::Collide(const CGameSource& GameSource, CBoundi
 		}
 	}
 }
+
 void PistolBulletTexturedObjects::AppendBullet(XMFLOAT3& startLocation, XMFLOAT3& rayDirection, int type)
 {
 	m_nBuildIndex++;
 	m_ppObjects.push_back(new CPistolBulletObject(m_pMaterial, startLocation, rayDirection, type));
-}
-void PistolBulletTexturedObjects::AppendBullet(XMFLOAT3& startLocation, XMFLOAT3& rayDirection, int type,bool ismine)
-{
-	m_nBuildIndex++;
-	m_ppObjects.push_back(new CPistolBulletObject(m_pMaterial, startLocation, rayDirection, type, ismine));
 }
 void PistolBulletTexturedObjects::EventRemove()
 {

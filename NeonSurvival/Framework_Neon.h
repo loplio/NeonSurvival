@@ -17,6 +17,8 @@ public:
 
 private:
 	void OnCreate(HINSTANCE hInstance, HWND hMainWnd) override;
+	void EnterFrameAdvance() override;
+	void ExitFrameAdvance() override;
 	void FrameAdvance() override;
 	void OnDestroy() override;
 
@@ -40,6 +42,8 @@ public:
 
 private:
 	void OnCreate(HINSTANCE hInstance, HWND hMainWnd) override;
+	void EnterFrameAdvance() override;
+	void ExitFrameAdvance() override;
 	void FrameAdvance() override;
 	void OnDestroy() override;
 

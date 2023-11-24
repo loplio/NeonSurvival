@@ -3,6 +3,7 @@
 #include "Camera.h"
 #include "Player.h"
 #include "Timer.h"
+#include "SoundManager.h"
 
 #include "GameSource.h"
 
@@ -93,6 +94,7 @@ class BaseFramework {
 protected:
 	CGameSource*				m_GameSource;
 
+	SoundManager*				m_pSoundManager;
 	UILayer*					m_pUILayer;
 	KeyboardInput*				m_KeyboardInput;
 	MouseInput*					m_MouseInput;
@@ -115,6 +117,8 @@ public:
 	virtual ~BaseFramework();
 
 	virtual void OnCreate(HINSTANCE hInstance, HWND hMainWnd) = 0;
+	virtual void EnterFrameAdvance() = 0;
+	virtual void ExitFrameAdvance() = 0;
 	virtual void FrameAdvance() = 0;
 	virtual void OnDestroy() = 0;
 
@@ -142,7 +146,9 @@ public:
 
 private:
 	void OnCreate(HINSTANCE hInstance, HWND hMainWnd) override {};
+	void EnterFrameAdvance() override {};
 	void FrameAdvance() override {};
+	void ExitFrameAdvance() override {};
 	void OnDestroy() override {};
 
 	void BuildObjects() override {};
@@ -167,7 +173,9 @@ public:
 
 private:
 	void OnCreate(HINSTANCE hInstance, HWND hMainWnd) override {};
+	void EnterFrameAdvance() override {};
 	void FrameAdvance() override {};
+	void ExitFrameAdvance() override {};
 	void OnDestroy() override {};
 
 	void BuildObjects() override {};
@@ -193,6 +201,8 @@ public:
 
 	void OnCreate(HINSTANCE hInstance, HWND hMainWnd);
 	void FrameAdvance() { m_state->FrameAdvance(); };
+	void EnterFrameAdvance() { m_state->EnterFrameAdvance(); }
+	void ExitFrameAdvance() { m_state->ExitFrameAdvance(); }
 	void OnDestroy();
 
 	bool OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam) { return m_state->OnProcessingMouseMessage(hWnd, nMessageID, wParam, lParam); }

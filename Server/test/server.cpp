@@ -700,6 +700,10 @@ void MonstersUpdate(double Elapsedtime)
 						Monsters[i].m_TargetId = j;
 						TargetPos = pPos;
 					}
+					else
+					{
+						Monsters[i].m_TargetType = CGameObject::Nexus;
+					}
 				}
 			}
 

@@ -7,9 +7,6 @@
 GameScene::GameScene()
 {
 	gFrameworkController = new FrameworkController();
-
-	// Determines the initial state.
-	ChangeState(new GameLobby());
 }
 
 GameScene::~GameScene()
@@ -28,7 +25,9 @@ GameScene::~GameScene()
 void GameScene::OnCreate(HINSTANCE hInstance, HWND hMainWnd)
 {
 	gFrameworkController->OnCreate(hInstance, hMainWnd);
-	gGameState->Enter();
+
+	// Determines the initial state.
+	ChangeState(new GameLobby());
 }
 
 void GameScene::FrameAdvance() const
@@ -93,6 +92,7 @@ GameLobby::~GameLobby()
 void GameLobby::Enter() const
 {
 	gGameScene->GetFrameworkController()->SetStateLobbyFramework();
+	gGameScene->GetFrameworkController()->EnterFrameAdvance();
 }
 
 void GameLobby::Execute() const
@@ -102,6 +102,7 @@ void GameLobby::Execute() const
 
 void GameLobby::Exit() const
 {
+	gGameScene->GetFrameworkController()->ExitFrameAdvance();
 	gGameScene->ChangeState(new GamePlay());
 }
 
@@ -119,6 +120,7 @@ GamePlay::~GamePlay()
 void GamePlay::Enter() const
 {
 	gGameScene->GetFrameworkController()->SetStateGameFramework();
+	gGameScene->GetFrameworkController()->EnterFrameAdvance();
 }
 
 void GamePlay::Execute() const
@@ -128,6 +130,7 @@ void GamePlay::Execute() const
 
 void GamePlay::Exit() const
 {
+	gGameScene->GetFrameworkController()->ExitFrameAdvance();
 	gGameScene->ChangeState(new GameLobby());
 }
 
