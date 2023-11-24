@@ -17,6 +17,14 @@ void CLobbyFramework_Neon::OnCreate(HINSTANCE hInstance, HWND hMainWnd)
 	BuildObjects();
 	BuildToolCreator();
 }
+void CLobbyFramework_Neon::EnterFrameAdvance()
+{
+	m_pSoundManager->PlayBg("play ", "Sound/bg.wav");
+}
+void CLobbyFramework_Neon::ExitFrameAdvance()
+{
+	m_pSoundManager->PlayBg("stop ", "Sound/bg.wav");
+}
 void CLobbyFramework_Neon::FrameAdvance()
 {
 	m_GameTimer.Tick(0.0f);
@@ -197,6 +205,14 @@ void CGameFramework_Neon::OnCreate(HINSTANCE hInstance, HWND hMainWnd)
 	BuildObjects();
 	BuildToolCreator();
 }
+void CGameFramework_Neon::EnterFrameAdvance()
+{
+	//m_pSoundManager->PlayBg("play ", "Sound/bg.wav");
+}
+void CGameFramework_Neon::ExitFrameAdvance()
+{
+	//m_pSoundManager->PlayBg("stop ", "Sound/bg.wav");
+}
 void CGameFramework_Neon::FrameAdvance()
 {
 	m_GameTimer.Tick(60.0f);
@@ -204,10 +220,13 @@ void CGameFramework_Neon::FrameAdvance()
 	m_KeyboardInput->DataProcessing();
 	m_MouseInput->DataProcessing();
 
+
 	m_ProcessCompute->RayTrace();
 	m_ProcessCompute->Update();
 	m_ProcessCompute->Animate();
 	m_ProcessCompute->Collide();
+
+	m_pSoundManager->SoundUpdate(m_GameSource);
 
 	m_DisplayOutput->Render();
 	//m_pUILayer->Render(m_nSwapChainBufferIndex);
@@ -252,6 +271,7 @@ void CGameFramework_Neon::BuildObjects()
 }
 void CGameFramework_Neon::BuildToolCreator()
 {
+	m_pSoundManager = new SoundManager();
 	m_pUILayer = new UILayerGame_Neon(m_Iframe, 1);
 
 	m_KeyboardInput = new GameKeyInput_Neon(*this);

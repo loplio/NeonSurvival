@@ -389,6 +389,7 @@ m_pd3dCommandList(Iframe.GetGraphicsCommandList())
 {
 	m_GameSource = NULL;
 
+	m_pSoundManager = NULL;
 	m_pUILayer = NULL;
 	m_KeyboardInput = NULL;
 	m_MouseInput = NULL;
@@ -397,6 +398,7 @@ m_pd3dCommandList(Iframe.GetGraphicsCommandList())
 }
 BaseFramework::~BaseFramework()
 {
+	if (m_pSoundManager) delete m_pSoundManager;
 	if (m_pUILayer) delete m_pUILayer;
 	if (m_KeyboardInput) delete m_KeyboardInput;
 	if (m_MouseInput) delete m_MouseInput;
