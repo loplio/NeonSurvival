@@ -1513,7 +1513,7 @@ void Scene_Neon::Update(float fTimeElapsed)
 					PistolBulletTexturedObjects* pObjectsShader = (PistolBulletTexturedObjects*)m_ppShaders[i];
 					XMFLOAT3 rayDirection = m_pPlayer.get()->GetRayDirection();
 					XMFLOAT3 startLocation = Vector3::Add(Vector3::Add(m_pPlayer.get()->GetPosition(), m_pPlayer.get()->GetOffset()), Vector3::ScalarProduct(Vector3::Normalize(rayDirection), ((PistolBulletTexturedObjects*)m_ppShaders[i])->OffsetLength, false));
-					pObjectsShader->AppendBullet(startLocation, rayDirection, 0); //ÃÑ¾Ë
+					pObjectsShader->AppendBullet(startLocation, rayDirection, 0,true); //ÃÑ¾Ë
 					((PistolBulletTexturedObjects*)m_ppShaders[i])->m_fCoolTime = ((PistolBulletTexturedObjects*)m_ppShaders[i])->m_fMaxCoolTime;
 					((PistolBulletTexturedObjects*)m_ppShaders[i])->m_fLastTime = 0.0f;
 					
@@ -1607,7 +1607,7 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 							PistolBulletTexturedObjects* pObjectsShader = (PistolBulletTexturedObjects*)m_ppShaders[k];
 							XMFLOAT3 rayDirection = m_pOtherPlayerData2[shoterId].RayDirection;
 							XMFLOAT3 startLocation = Vector3::Add(Vector3::Add(m_pOtherPlayerData2[shoterId].position, m_pPlayer.get()->GetOffset()), Vector3::ScalarProduct(Vector3::Normalize(rayDirection), ((PistolBulletTexturedObjects*)m_ppShaders[k])->OffsetLength, false));
-							pObjectsShader->AppendBullet(startLocation, rayDirection,1); //ÃÑ¾Ë
+							pObjectsShader->AppendBullet(startLocation, rayDirection,1,false); //ÃÑ¾Ë
 							SERVER::getInstance().SetShotClinetId(-1);
 							break;
 						}
