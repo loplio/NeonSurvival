@@ -1086,7 +1086,13 @@ void PistolBulletTexturedObjects::Collide(const CGameSource& GameSource, CBoundi
 				if (BoundingBoxObjects.m_StartIndex[i] <= nConflicted && nConflicted < BoundingBoxObjects.m_StartIndex[i] + BoundingBoxObjects.m_nObjects[i])
 				{
 					float damage = ((CPistolBulletObject*)(*bullet))->m_fDamege;
-					((MonsterObject*)BoundingBoxObjects.m_ParentObjects[i])->Conflicted(damage);
+					bool IsmineBullet = ((CPistolBulletObject*)(*bullet))->IsMine;
+					//((MonsterObject*)BoundingBoxObjects.m_ParentObjects[i])->Conflicted(damage);
+					if (IsmineBullet)
+					{
+						int monsterid = ((MonsterObject*)BoundingBoxObjects.m_ParentObjects[i])->id;
+						SERVER::getInstance().SendHit(monsterid, damage);
+					}
 					break;
 				}
 			}
@@ -1102,6 +1108,12 @@ void PistolBulletTexturedObjects::Collide(const CGameSource& GameSource, CBoundi
 				break;
 		}
 	}
+}
+
+void PistolBulletTexturedObjects::AppendBullet(XMFLOAT3& startLocation, XMFLOAT3& rayDirection, int type,bool ismine)
+{
+	m_nBuildIndex++;
+	m_ppObjects.push_back(new CPistolBulletObject(m_pMaterial, startLocation, rayDirection, type,ismine));
 }
 
 void PistolBulletTexturedObjects::AppendBullet(XMFLOAT3& startLocation, XMFLOAT3& rayDirection, int type)

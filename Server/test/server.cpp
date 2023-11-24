@@ -369,7 +369,7 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			m_Packet.byte = sizeof(GameData);
 			memcpy(m_Packet.buf, &GameData.PlayersPostion2 , sizeof(GameData.PlayersPostion2)); //플레이어 데이터
 			memcpy(m_Packet.buf2, &GameData.MonsterData , sizeof(GameData.MonsterData)); //몬스터 데이터
-			printf("%d\n%d\n", sizeof(GameData.PlayersPostion2), sizeof(GameData.MonsterData));
+			//printf("%d\n%d\n", sizeof(GameData.PlayersPostion2), sizeof(GameData.MonsterData));
 			////////////////////////////////////////////////	PACKET 2
 
 			//if (ptr->recvbytes <= ptr->sendbytes)

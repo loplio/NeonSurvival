@@ -1837,6 +1837,7 @@ CPistolBulletObject::CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLo
 	m_fRayDriection = Vector3::Normalize(rayDirection);
 	IsMine = ismine;
 }
+
 CPistolBulletObject::CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection, int type)
 {
 	Type = type;
