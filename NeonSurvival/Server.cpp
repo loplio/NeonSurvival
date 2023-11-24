@@ -53,6 +53,11 @@ void SERVER::init(HWND hWnd, char* IP)
         PlayersPosition[i].id = -1;
         PlayersPosition2[i].id = -1;
     }
+    
+    for (int i = 0; i < 30; ++i)
+    {
+        MonsterData[i].HP = 1;
+    }
 }
 
 void SERVER::ProcessSocketMessage(HWND hWnd, UINT unit, WPARAM wParam, LPARAM lParam)
@@ -275,4 +280,14 @@ void SERVER::SendExit()
 {
     PACKET_EXIT pExit = { MESSAGETYPE::EXIT ,ClientNumId };
     len = send(clientSocket, (char*)&pExit, sizeof(PACKET_EXIT), 0);
+}
+
+void SERVER::SendHit(int monsterId,int dmg)
+{
+    PACKET_HIT pHit;
+    pHit.MessageType = MESSAGETYPE::HIT;
+    pHit.id = ClientNumId;
+    pHit.info[0] = monsterId;
+    pHit.info[1] = dmg;
+    len = send(clientSocket, (char*)&pHit, sizeof(PACKET_HIT), 0);
 }

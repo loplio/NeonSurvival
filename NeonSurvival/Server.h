@@ -27,6 +27,7 @@ enum MESSAGETYPE{
 	MONSTER_DATA,
 	EXIT,
 	SHOT,
+	HIT,
 };
 
 enum MONSTER_STATE {
@@ -80,6 +81,7 @@ typedef struct {
 }PACKET_MONSTER_DATA;
 
 typedef struct {
+	int			id;
 	XMFLOAT4X4	m_xmf4x4World;
 	int			HP;
 	int			MAXHP;
@@ -94,6 +96,12 @@ typedef struct {
 	int MessageType;
 	int id;
 }PACKET_EXIT;
+
+typedef struct {
+	int MessageType;
+	int id;
+	int info[2];
+}PACKET_HIT;
 
 typedef struct {
 	int MessageType;
@@ -147,6 +155,7 @@ public:
 	void SendPlayerData(CPlayer& player,int GunType,float flength,int anibundle);
 	void SendShot();
 	void SendExit();
+	void SendHit(int monsterId, int dmg);
 	//void SendPosition(const XMFLOAT4X4& woldpos);
 	void AddFPSCount(float dt);
 	bool IsCount();

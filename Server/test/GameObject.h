@@ -21,6 +21,7 @@ public:
 	XMFLOAT3					m_xmf3Scale;
 	XMFLOAT3					m_xmf3PrevScale;
 	float						m_Mass;
+	int							m_Id;
 	int							m_MAXHP;
 	int							m_HP;
 	int							m_State;
@@ -42,7 +43,8 @@ public:
 
 	enum						{ IDLE, ATTACK, MOVE, DIE, TAKEDAMAGE,NONE };
 	enum                        {Nexus,Player};
-	enum						{ Dragon, Giant_Bee,Golem, KingCobra, TreasureChest, Spider, Bat, Magama,Treant,Wolf };
+	enum						{ Dragon, Giant_Bee, Golem, KingCobra, TreasureChest, Spider, Bat, Magama, Treant, Wolf};
+	int MonsterHPs[10] =		{   1000,	    150,   500,	      400,		     250,    300, 100,    400,    500,	300};
 	enum Mobility				{ Static, Moveable };
 
 public:

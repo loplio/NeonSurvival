@@ -48,8 +48,10 @@ enum MESSAGETYPE {
 	MONSTER_DATA = 102,
 	EXIT,
 	SHOT,
+	HIT
 };
 
+CRITICAL_SECTION cs;
 SOCKETINFO* SocketInfoList;
 
 // 윈도우 메세지 처리 함수
@@ -108,6 +110,7 @@ typedef struct {
 }PACKET_MONSTER_DATA;
 
 typedef struct {
+	int			id;
 	XMFLOAT4X4	m_xmf4x4World;
 	int			HP;
 	int			MAXHP;
@@ -155,6 +158,8 @@ XMFLOAT3 PotalPos[3] = { XMFLOAT3(3575, 255, 3065) ,XMFLOAT3(3056 , 255, 3685) ,
 
 void UpdateConnectNum();
 bool GameStart = true;
+void UpdateMonsterData();
+
 int main(int argc, char** argv)
 {
 	int retval;
@@ -226,9 +231,10 @@ int main(int argc, char** argv)
 		for (int j = 0; j < 10; ++j)
 		{
 			int randomPotalNum = rand() % 3;
+			Monsters[i * 10 + j].m_Id = i * 10 + j;
 			Monsters[i * 10 + j].m_State = CGameObject::NONE;
-			Monsters[i * 10 + j].m_HP = 1000;
-			Monsters[i * 10 + j].m_MAXHP = 100;
+			Monsters[i * 10 + j].m_HP = Monsters[j].MonsterHPs[j];
+			Monsters[i * 10 + j].m_MAXHP = Monsters[j].MonsterHPs[j];
 			Monsters[i * 10 + j].m_PrevState = NULL;
 			Monsters[i * 10 + j].m_TargetType = CGameObject::Nexus;
 			Monsters[i * 10 + j].m_Type = j;
@@ -236,6 +242,7 @@ int main(int argc, char** argv)
 			Monsters[i * 10 + j].SetPosition(pos);
 		}
 	}
+	UpdateMonsterData();
 
 	hMonsterThread = CreateThread(NULL, 0, MonsterThread, NULL, 0, NULL);
 	if (hMonsterThread != NULL) {
@@ -362,6 +369,7 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			m_Packet.byte = sizeof(GameData);
 			memcpy(m_Packet.buf, &GameData.PlayersPostion2 , sizeof(GameData.PlayersPostion2)); //플레이어 데이터
 			memcpy(m_Packet.buf2, &GameData.MonsterData , sizeof(GameData.MonsterData)); //몬스터 데이터
+			printf("%d\n%d\n", sizeof(GameData.PlayersPostion2), sizeof(GameData.MonsterData));
 			////////////////////////////////////////////////	PACKET 2
 
 			//if (ptr->recvbytes <= ptr->sendbytes)
@@ -414,6 +422,16 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				}
 				ptrlist = ptrlist->next;
 			}
+			break;
+		}
+		case MESSAGETYPE::HIT:
+		{
+			int info[2];
+			memcpy(&info, m_Packet.buf, sizeof(info));
+			printf("id = %d dmg = %d\n", info[0], info[1]);
+			int monsterid = info[0];
+			int dmg = info[1];
+			Monsters[monsterid].m_HP -= dmg;
 			break;
 		}
 		default:
@@ -597,7 +615,6 @@ void err_display(int errcode)
 
 void SpawnMonster();
 void MonstersUpdate(double Elapsedtime);
-void UpdateMonsterData();
 int dist(XMFLOAT3& v1, XMFLOAT3& v2);
 int SpawnCount = 0;
 DWORD WINAPI MonsterThread(LPVOID arg)
@@ -608,7 +625,7 @@ DWORD WINAPI MonsterThread(LPVOID arg)
 	auto prev_time = std::chrono::high_resolution_clock::now();
 	
 	double SpwanCoolTime = 0.0f;
-	double SpawnTime = 10.0f;
+	double SpawnTime = 5.0f;
 	
 	while (true) {
 		auto start_time = std::chrono::high_resolution_clock::now();  // 현재 시간 기록
@@ -737,6 +754,7 @@ void UpdateMonsterData()
 {
 	for (int i = 0; i < MAX_MONSTER * 10; ++i)
 	{
+		GameData.MonsterData[i].id = Monsters[i].m_Id;
 		GameData.MonsterData[i].HP = Monsters[i].m_HP;
 		GameData.MonsterData[i].MAXHP = Monsters[i].m_MAXHP;
 		GameData.MonsterData[i].m_xmf4x4World = Monsters[i].m_xmf4x4World;

@@ -142,6 +142,7 @@ public:
 
 class CPistolBulletObject : public DynamicObject {
 public:
+	CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection,int type,bool ismine);
 	CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection,int type);
 	virtual ~CPistolBulletObject();
 
@@ -156,6 +157,7 @@ public:
 	float m_fLifeTime = 0.0f;
 	XMFLOAT3 m_fRayDriection;
 	int Type;
+	bool IsMine;
 };
 
 class NexusObject : public DynamicObject {

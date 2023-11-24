@@ -1513,7 +1513,7 @@ void Scene_Neon::Update(float fTimeElapsed)
 					PistolBulletTexturedObjects* pObjectsShader = (PistolBulletTexturedObjects*)m_ppShaders[i];
 					XMFLOAT3 rayDirection = m_pPlayer.get()->GetRayDirection();
 					XMFLOAT3 startLocation = Vector3::Add(Vector3::Add(m_pPlayer.get()->GetPosition(), m_pPlayer.get()->GetOffset()), Vector3::ScalarProduct(Vector3::Normalize(rayDirection), ((PistolBulletTexturedObjects*)m_ppShaders[i])->OffsetLength, false));
-					pObjectsShader->AppendBullet(startLocation, rayDirection, 0);
+					pObjectsShader->AppendBullet(startLocation, rayDirection, 0); //ÃÑ¾Ë
 					((PistolBulletTexturedObjects*)m_ppShaders[i])->m_fCoolTime = ((PistolBulletTexturedObjects*)m_ppShaders[i])->m_fMaxCoolTime;
 					((PistolBulletTexturedObjects*)m_ppShaders[i])->m_fLastTime = 0.0f;
 					
@@ -1607,7 +1607,7 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 							PistolBulletTexturedObjects* pObjectsShader = (PistolBulletTexturedObjects*)m_ppShaders[k];
 							XMFLOAT3 rayDirection = m_pOtherPlayerData2[shoterId].RayDirection;
 							XMFLOAT3 startLocation = Vector3::Add(Vector3::Add(m_pOtherPlayerData2[shoterId].position, m_pPlayer.get()->GetOffset()), Vector3::ScalarProduct(Vector3::Normalize(rayDirection), ((PistolBulletTexturedObjects*)m_ppShaders[k])->OffsetLength, false));
-							pObjectsShader->AppendBullet(startLocation, rayDirection,1);
+							pObjectsShader->AppendBullet(startLocation, rayDirection,1); //ÃÑ¾Ë
 							SERVER::getInstance().SetShotClinetId(-1);
 							break;
 						}
@@ -1829,6 +1829,14 @@ CParticleObject_Neon::~CParticleObject_Neon()
 {
 }
 //-------------------------------------------------------------------------------
+CPistolBulletObject::CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection, int type,bool ismine)
+{
+	Type = type;
+	SetMaterial(0, pMaterial);
+	SetPosition(startLocation);
+	m_fRayDriection = Vector3::Normalize(rayDirection);
+	IsMine = ismine;
+}
 CPistolBulletObject::CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection, int type)
 {
 	Type = type;
@@ -1862,7 +1870,6 @@ bool CPistolBulletObject::Collide(const CGameSource& GameSource, CBoundingBoxObj
 			if (BoundingObjects[i]->Collide(XMLoadFloat3(&RayOrigin), XMLoadFloat3(&m_fRayDriection), distance))
 			{
 				nConflicted = i;
-
 				return true;
 			}
 		}
@@ -2045,7 +2052,7 @@ void SceneLobby_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 	m_UIShaders.back() = pUITexture;
 
 	m_UIShaders.push_back(new CShader);
-	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/Pop_up_02.dds");
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/chip_b.dds");
 	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 300, 35, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT * 0.525, 0);
 	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 	m_UIShaders.back() = pUITexture;

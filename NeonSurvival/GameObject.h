@@ -563,6 +563,7 @@ public:
 	enum MonsterState{IDLE,ATTACK,MOVE,DIE,TAKEDAMAGE};
 	enum MonsterType{Dragon, Giant_Bee, Golem, KingCobra, TreasureChest, Spider, Bat, Magma, Treant, Wolf};
 	int State = IDLE;
+	int id;
 	float HP = 100.0f;
 	float MAXHP = 100.0f;
 	float Damage = 10.0f;
