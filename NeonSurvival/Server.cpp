@@ -286,8 +286,7 @@ void SERVER::SendHit(int monsterId,int dmg)
 {
     PACKET_HIT pHit;
     pHit.MessageType = MESSAGETYPE::HIT;
-    pHit.id = ClientNumId;
-    pHit.info[0] = monsterId;
-    pHit.info[1] = dmg;
+    pHit.id = monsterId;
+    pHit.dmg = dmg;
     len = send(clientSocket, (char*)&pHit, sizeof(PACKET_HIT), 0);
 }

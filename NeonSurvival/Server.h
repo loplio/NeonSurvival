@@ -100,12 +100,13 @@ typedef struct {
 typedef struct {
 	int MessageType;
 	int id;
-	int info[2];
+	int dmg;
 }PACKET_HIT;
 
 typedef struct {
 	int MessageType;
 	int byte;
+	int hit;
 	char buf[BUFSIZE];
 	char buf2[BUF2SIZE];
 }PACKET;

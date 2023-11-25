@@ -129,6 +129,7 @@ typedef struct {
 typedef struct {
 	int MessageType;
 	int byte;
+	int hit;
 	char buf[BUFSIZE];
 	char buf2[BUF2SIZE];
 }PACKET;
@@ -242,6 +243,7 @@ int main(int argc, char** argv)
 			Monsters[i * 10 + j].SetPosition(pos);
 		}
 	}
+
 	UpdateMonsterData();
 
 	hMonsterThread = CreateThread(NULL, 0, MonsterThread, NULL, 0, NULL);
@@ -426,11 +428,9 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		case MESSAGETYPE::HIT:
 		{
-			int info[2];
-			memcpy(&info, m_Packet.buf, sizeof(info));
-			printf("id = %d dmg = %d\n", info[0], info[1]);
-			int monsterid = info[0];
-			int dmg = info[1];
+			printf("id = %d dmg = %d\n", m_Packet.byte, m_Packet.hit);
+			int monsterid = m_Packet.byte;
+			int dmg = m_Packet.hit;
 			Monsters[monsterid].m_HP -= dmg;
 			break;
 		}
