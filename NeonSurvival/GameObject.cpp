@@ -2193,7 +2193,25 @@ void MonsterObject::Conflicted(float damage)
 	std::cout << "Monster Life: " << HP << std::endl;
 }
 
-bool MonsterObject::IsAttackAnimPosition() 
+void MonsterObject::InitAnimPosition(int nAnimationTrack)
+{
+	m_pSkinnedAnimationController->SetTrackPosition(nAnimationTrack, 0.0f);
+}
+
+bool MonsterObject::IsEndAnimPosition()
+{
+	float CurrentAnimPosition = m_pSkinnedAnimationController->GetTrackPosition();
+
+	if (0.95f < CurrentAnimPosition)
+	{
+		bActivate = false;
+		return true;
+	}
+
+	return false;
+}
+
+bool MonsterObject::IsAttackAnimPosition()
 { 
 	float CurrentAnimPosition = m_pSkinnedAnimationController->GetTrackPosition();
 

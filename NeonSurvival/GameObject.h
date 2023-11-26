@@ -569,10 +569,13 @@ public:
 	float Damage = 10.0f;
 	int Type;
 	bool bActivate = true;
+	bool bDieAnim = false;
 	
 	CGameObject* m_pHPObject = NULL;
 	CMaterial* m_pHPMaterial = NULL;
 
+	void InitAnimPosition(int nAnimationTrack);
+	bool IsEndAnimPosition();
 	bool IsAttackAnimPosition();
 	bool AttackAnimToggle = false;
 	float AttackAnimPosition = 0.1f;

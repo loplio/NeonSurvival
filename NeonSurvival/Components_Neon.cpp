@@ -528,6 +528,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	if (pGroundModel) delete pGroundModel;
 
 	m_pPlayer.get()->SetGroundUpdatedContext(&m_vGroundObjects);
+	pMonsterShader->SetGroundUpdatedContext(&m_vGroundObjects);
 
 	// HierarchicalGameObjects.
 	CLoadedModelInfo* pNexusModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Nexus/Nexus.bin", NULL);

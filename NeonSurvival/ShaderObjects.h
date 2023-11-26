@@ -183,7 +183,11 @@ public:
 	void EventRemove();
 	void OnPostReleaseUploadBuffers() override;
 
+	void SetGroundUpdatedContext(std::vector<CGroundObject*>* vGroundObjects) { m_vGroundObjects = vGroundObjects; }
+	void OnGroundUpdateCallback(float fTimeElapsed);
+
 public:
+	std::vector<CGroundObject*>* m_vGroundObjects;
 	PACKET_MONSTERDATA* m_pMonsterData = SERVER::getInstance().GetMonsterData();
 	const int nMaxMonster = 30;
 

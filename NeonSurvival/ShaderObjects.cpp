@@ -605,7 +605,7 @@ void GeneralMonsterObjects::Update(float fTimeElapsed)
 	for (auto monster : m_ppObjects)
 	{
 		XMFLOAT4X4 world = m_pMonsterData[count].m_xmf4x4World;
-		XMFLOAT3 pos = m_pMonsterData[count].Pos;
+		XMFLOAT3 pos = (((MonsterObject*)(monster))->bDieAnim) ? ((MonsterObject*)(monster))->GetPosition() : m_pMonsterData[count].Pos;
 		XMFLOAT3 right = XMFLOAT3(world._11, world._12, world._13);
 		XMFLOAT3 up = XMFLOAT3(world._21, world._22, world._23);
 		XMFLOAT3 look = XMFLOAT3(world._31, world._32, world._33);
@@ -620,6 +620,8 @@ void GeneralMonsterObjects::Update(float fTimeElapsed)
 
 		count++;
 	}
+	
+	OnGroundUpdateCallback(fTimeElapsed);
 
 	EventRemove();
 }
@@ -664,7 +666,11 @@ void GeneralMonsterObjects::AnimateObjects(float fTimeElapsed)
 	int n = 0;
 	for (auto monster : m_ppObjects)
 	{
-		int aniTrack = m_pMonsterData[n++].State;
+		int aniTrack =  m_pMonsterData[n++].State;
+
+		if (((MonsterObject*)(monster))->bDieAnim)
+			aniTrack = MonsterObject::DIE;
+
 		if (0 <= aniTrack && aniTrack < 5)
 		{
 			monster->m_pSkinnedAnimationController->SetOneOfTrackEnable(aniTrack);
@@ -690,13 +696,27 @@ void GeneralMonsterObjects::AppendMonster(ID3D12Device* pd3dDevice, ID3D12Graphi
 }
 void GeneralMonsterObjects::EventRemove()
 {
+	int n = 0;
 	for (auto monster : m_ppObjects)
 	{
 		if (((MonsterObject*)(monster))->HP <= 0.0f)
 		{
-			((MonsterObject*)(monster))->bActivate = false;
-			monster->SetPosition(0.0f, 0.0f, 0.0f);
+			if (((MonsterObject*)(monster))->bDieAnim == false)
+			{
+				((MonsterObject*)(monster))->bDieAnim = true;
+				((MonsterObject*)(monster))->State = MonsterObject::DIE;
+				((MonsterObject*)monster)->InitAnimPosition(m_pMonsterData[n].State);
+			}
+			else if(((MonsterObject*)(monster))->bActivate)
+			{
+				((MonsterObject*)monster)->IsEndAnimPosition();
+			}
+			else
+			{
+				monster->SetPosition(0.0f, 0.0f, 0.0f);
+			}
 		}
+		n++;
 	}
 }
 
@@ -705,6 +725,20 @@ void GeneralMonsterObjects::OnPostReleaseUploadBuffers()
 	CMonsterObjects::ReleaseUploadBuffers();
 }
 
+void GeneralMonsterObjects::OnGroundUpdateCallback(float fTimeElapsed)
+{
+	for (int i = 0; i < m_ppObjects.size(); ++i)
+	{
+		XMFLOAT3 xmf3MonsterPosition = m_ppObjects[i]->GetPosition();
+		float fHeight = m_vGroundObjects->back()->GetHeight(xmf3MonsterPosition.x, xmf3MonsterPosition.z);
+
+		if (xmf3MonsterPosition.y < fHeight)
+		{
+			xmf3MonsterPosition.y = fHeight;
+			m_ppObjects[i]->SetPosition(xmf3MonsterPosition);
+		}
+	}
+}
 //--Concrete_2-------------------------------------------------------------------
 MonsterMetalonObjects::MonsterMetalonObjects()
 {
