@@ -2198,11 +2198,6 @@ void MonsterObject::InitAnimPosition(int nAnimationTrack)
 	m_pSkinnedAnimationController->SetTrackPosition(nAnimationTrack, 0.0f);
 }
 
-void MonsterObject::SetAnimPosition(int nAnimationTrack, float fPosition)
-{
-	m_pSkinnedAnimationController->SetTrackPosition(nAnimationTrack, fPosition);
-}
-
 bool MonsterObject::IsEndAnimPosition()
 {
 	float CurrentAnimPosition = m_pSkinnedAnimationController->GetTrackPosition();

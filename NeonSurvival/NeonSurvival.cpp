@@ -6,8 +6,6 @@
 #include "GameScene.h"
 #include "Server.h"
 
-#pragma comment(linker, "/entry:wWinMainCRTStartup /subsystem:console") //콘솔창 띄우기
-
 #define MAX_LOADSTRING 100
 
 // 전역 변수:
