@@ -575,6 +575,7 @@ public:
 	CMaterial* m_pHPMaterial = NULL;
 
 	void InitAnimPosition(int nAnimationTrack);
+	void SetAnimPosition(int nAnimationTrack, float fPosition);
 	bool IsEndAnimPosition();
 	bool IsAttackAnimPosition();
 	bool AttackAnimToggle = false;

@@ -86,6 +86,7 @@ typedef struct {
 	int			HP;
 	int			MAXHP;
 	int			State;
+	float		AnimPosition;
 	XMFLOAT3	Pos;
 	int			SpawnPotal;
 	int			TargetID;

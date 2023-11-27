@@ -115,6 +115,7 @@ typedef struct {
 	int			HP;
 	int			MAXHP;
 	int			State;
+	float		AnimPosition;
 	XMFLOAT3	Pos;
 	int			SpawnPotal;
 	int			TargetID;
@@ -158,7 +159,7 @@ XMFLOAT3 NexusPos = XMFLOAT3(3072, 255, 3072);
 XMFLOAT3 PotalPos[3] = { XMFLOAT3(3575, 255, 3065) ,XMFLOAT3(3056 , 255, 3685) ,XMFLOAT3(2297 , 255, 3043) };
 
 void UpdateConnectNum();
-bool GameStart = true;
+bool GameStart = false;
 void UpdateMonsterData();
 
 int main(int argc, char** argv)
@@ -234,6 +235,7 @@ int main(int argc, char** argv)
 			int randomPotalNum = rand() % 3;
 			Monsters[i * 10 + j].m_Id = i * 10 + j;
 			Monsters[i * 10 + j].m_State = CGameObject::NONE;
+			Monsters[i * 10 + j].m_AnimPosition = 0.0f;
 			Monsters[i * 10 + j].m_HP = Monsters[j].MonsterHPs[j];
 			Monsters[i * 10 + j].m_MAXHP = Monsters[j].MonsterHPs[j];
 			Monsters[i * 10 + j].m_PrevState = NULL;
@@ -670,6 +672,9 @@ void MonstersUpdate(double Elapsedtime)
 {	
 	for (int i = 0; i < MAX_MONSTER * 10; ++i)
 	{
+		Monsters[i].m_AnimPosition += Elapsedtime;
+		if (Monsters[i].m_AnimPosition > 1.0f) Monsters[i].m_AnimPosition = 0.0f;
+
 		switch (Monsters[i].m_State)
 		{
 		case CGameObject::IDLE: //½ºÆù
@@ -712,6 +717,7 @@ void MonstersUpdate(double Elapsedtime)
 				TargetPos = NexusPos;
 				if (dist(NexusPos, pos) <= 50)
 				{
+					Monsters[i].m_AnimPosition = 0.0f;
 					Monsters[i].m_PrevState = GameData.MonsterData[i].State;
 					Monsters[i].m_State = CGameObject::ATTACK;
 				}
@@ -720,11 +726,13 @@ void MonstersUpdate(double Elapsedtime)
 			{
 				if (dist(TargetPos, pos) <= 20)
 				{
+					Monsters[i].m_AnimPosition = 0.0f;
 					Monsters[i].m_PrevState = GameData.MonsterData[i].State;
 					Monsters[i].m_State = CGameObject::ATTACK;
 				}
 				else if (dist(TargetPos, pos) > 70)
 				{
+					Monsters[i].m_AnimPosition = 0.0f;
 					Monsters[i].m_TargetType = CGameObject::Nexus;
 				}
 			}
@@ -741,6 +749,7 @@ void MonstersUpdate(double Elapsedtime)
 				XMFLOAT3 pPos = GameData.PlayersPostion2[Monsters[i].m_TargetId].position;
 				if (dist(pPos, pos) > 20)
 				{
+					Monsters[i].m_AnimPosition = 0.0f;
 					Monsters[i].m_PrevState = GameData.MonsterData[i].State;
 					Monsters[i].m_State = CGameObject::MOVE;
 				}
@@ -763,6 +772,7 @@ void UpdateMonsterData()
 		GameData.MonsterData[i].MAXHP = Monsters[i].m_MAXHP;
 		GameData.MonsterData[i].m_xmf4x4World = Monsters[i].m_xmf4x4World;
 		GameData.MonsterData[i].State = Monsters[i].m_State;
+		GameData.MonsterData[i].AnimPosition = Monsters[i].m_AnimPosition;
 		GameData.MonsterData[i].Pos = Monsters[i].GetPosition();
 		GameData.MonsterData[i].SpawnPotal = Monsters[i].m_SpawnPotalNum;
 		GameData.MonsterData[i].TargetID = Monsters[i].m_TargetId;

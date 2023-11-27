@@ -25,6 +25,7 @@ public:
 	int							m_MAXHP;
 	int							m_HP;
 	int							m_State;
+	float						m_AnimPosition;
 	int							m_PrevState;
 	float						m_Speed;
 	double						m_SpawnToMoveDelay;

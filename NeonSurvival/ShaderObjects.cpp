@@ -666,7 +666,8 @@ void GeneralMonsterObjects::AnimateObjects(float fTimeElapsed)
 	int n = 0;
 	for (auto monster : m_ppObjects)
 	{
-		int aniTrack =  m_pMonsterData[n++].State;
+		int aniTrack =  m_pMonsterData[n].State;
+		float aniPosition =  m_pMonsterData[n++].AnimPosition;
 
 		if (((MonsterObject*)(monster))->bDieAnim)
 			aniTrack = MonsterObject::DIE;
@@ -675,6 +676,7 @@ void GeneralMonsterObjects::AnimateObjects(float fTimeElapsed)
 		{
 			monster->m_pSkinnedAnimationController->SetOneOfTrackEnable(aniTrack);
 			monster->m_pSkinnedAnimationController->SetTrackSpeed(aniTrack, 1.0f);
+			monster->m_pSkinnedAnimationController->SetTrackPosition(aniTrack, aniPosition);
 			monster->Animate(fTimeElapsed);
 		}
 	}
