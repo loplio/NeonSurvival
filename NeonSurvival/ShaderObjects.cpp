@@ -238,38 +238,38 @@ void TexturedObjects_1::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 
 	CCubeMeshTextured* pCubeMesh = new CCubeMeshTextured(pd3dDevice, pd3dCommandList, 12.0f, 12.0f, 12.0f);
 
-	XMFLOAT3 xmf3RotateAxis, xmf3SurfaceNormal;
-	CRotatingObject* pRotatingObject = NULL;
-	for (int i = 0, x = 0; x < xObjects; x++)
-	{
-		for (int z = 0; z < zObjects; z++)
-		{
-			for (int y = 0; y < yObjects; y++)
-			{
-				pRotatingObject = new CRotatingObject();
-				pRotatingObject->SetMaterial(0, ppMaterials[0]);
-				pRotatingObject->SetMesh(pCubeMesh);
-				float xPosition = x * fxPitch;
-				float zPosition = z * fzPitch;
-				float fHeight = pTerrain->GetHeight(xPosition, zPosition);
-				pRotatingObject->SetPosition(xPosition, fHeight + (y * 10.0f * fyPitch) + 6.0f, zPosition);
-				if (y == 0)
-				{
-					xmf3SurfaceNormal = pTerrain->GetIntervalNormal(xPosition, zPosition);
-					xmf3RotateAxis = Vector3::CrossProduct(XMFLOAT3(0.0f, 1.0f, 0.0f),
-						xmf3SurfaceNormal);
-					if (Vector3::IsZero(xmf3RotateAxis)) xmf3RotateAxis = XMFLOAT3(0.0f, 1.0f,
-						0.0f);
-					float fAngle = acos(Vector3::DotProduct(XMFLOAT3(0.0f, 1.0f, 0.0f),
-						xmf3SurfaceNormal));
-					pRotatingObject->Rotate(&xmf3RotateAxis, XMConvertToDegrees(fAngle));
-				}
-				pRotatingObject->SetRotationAxis(XMFLOAT3(0.0f, 1.0f, 0.0f));
-				pRotatingObject->SetRotationSpeed(36.0f * (i % 10) + 36.0f);
-				m_ppObjects[i++] = pRotatingObject;
-			}
-		}
-	}
+	//XMFLOAT3 xmf3RotateAxis, xmf3SurfaceNormal;
+	//CRotatingObject* pRotatingObject = NULL;
+	//for (int i = 0, x = 0; x < xObjects; x++)
+	//{
+	//	for (int z = 0; z < zObjects; z++)
+	//	{
+	//		for (int y = 0; y < yObjects; y++)
+	//		{
+	//			pRotatingObject = new CRotatingObject();
+	//			pRotatingObject->SetMaterial(0, ppMaterials[0]);
+	//			pRotatingObject->SetMesh(pCubeMesh);
+	//			float xPosition = x * fxPitch;
+	//			float zPosition = z * fzPitch;
+	//			float fHeight = pTerrain->GetHeight(xPosition, zPosition);
+	//			pRotatingObject->SetPosition(xPosition, fHeight + (y * 10.0f * fyPitch) + 6.0f, zPosition);
+	//			if (y == 0)
+	//			{
+	//				xmf3SurfaceNormal = pTerrain->GetIntervalNormal(xPosition, zPosition);
+	//				xmf3RotateAxis = Vector3::CrossProduct(XMFLOAT3(0.0f, 1.0f, 0.0f),
+	//					xmf3SurfaceNormal);
+	//				if (Vector3::IsZero(xmf3RotateAxis)) xmf3RotateAxis = XMFLOAT3(0.0f, 1.0f,
+	//					0.0f);
+	//				float fAngle = acos(Vector3::DotProduct(XMFLOAT3(0.0f, 1.0f, 0.0f),
+	//					xmf3SurfaceNormal));
+	//				pRotatingObject->Rotate(&xmf3RotateAxis, XMConvertToDegrees(fAngle));
+	//			}
+	//			pRotatingObject->SetRotationAxis(XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//			pRotatingObject->SetRotationSpeed(36.0f * (i % 10) + 36.0f);
+	//			m_ppObjects[i++] = pRotatingObject;
+	//		}
+	//	}
+	//}
 }
 
 //-------------------------------------------------------------------------------

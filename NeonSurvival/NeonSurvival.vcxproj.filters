@@ -46,9 +46,6 @@
     <Filter Include="NeonSurvival_Module">
       <UniqueIdentifier>{4ebb1de3-0070-4de9-9b6d-be30797cbb11}</UniqueIdentifier>
     </Filter>
-    <Filter Include="TestGame_Module">
-      <UniqueIdentifier>{86f33cf7-8188-458d-954c-3afd09e59fad}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Server">
       <UniqueIdentifier>{a07f364b-566e-4b37-aec7-7331bfc5d82a}</UniqueIdentifier>
     </Filter>
@@ -117,23 +114,14 @@
     <ClInclude Include="UILayer.h">
       <Filter>헤더 파일\Process</Filter>
     </ClInclude>
-    <ClInclude Include="Framework_Test.h">
-      <Filter>TestGame_Module</Filter>
-    </ClInclude>
     <ClInclude Include="Framework_Neon.h">
       <Filter>NeonSurvival_Module</Filter>
-    </ClInclude>
-    <ClInclude Include="ProcessTool_Test.h">
-      <Filter>TestGame_Module</Filter>
     </ClInclude>
     <ClInclude Include="ProcessTool_Neon.h">
       <Filter>NeonSurvival_Module</Filter>
     </ClInclude>
     <ClInclude Include="Components_Neon.h">
       <Filter>NeonSurvival_Module</Filter>
-    </ClInclude>
-    <ClInclude Include="Components_Test.h">
-      <Filter>TestGame_Module</Filter>
     </ClInclude>
     <ClInclude Include="WICTextureLoader12.h">
       <Filter>헤더 파일\LibraryFile</Filter>
@@ -200,23 +188,14 @@
     <ClCompile Include="UILayer.cpp">
       <Filter>소스 파일\Process</Filter>
     </ClCompile>
-    <ClCompile Include="Framework_Test.cpp">
-      <Filter>TestGame_Module</Filter>
-    </ClCompile>
     <ClCompile Include="Framework_Neon.cpp">
       <Filter>NeonSurvival_Module</Filter>
-    </ClCompile>
-    <ClCompile Include="ProcessTool_Test.cpp">
-      <Filter>TestGame_Module</Filter>
     </ClCompile>
     <ClCompile Include="ProcessTool_Neon.cpp">
       <Filter>NeonSurvival_Module</Filter>
     </ClCompile>
     <ClCompile Include="Components_Neon.cpp">
       <Filter>NeonSurvival_Module</Filter>
-    </ClCompile>
-    <ClCompile Include="Components_Test.cpp">
-      <Filter>TestGame_Module</Filter>
     </ClCompile>
     <ClCompile Include="WICTextureLoader12.cpp">
       <Filter>소스 파일\LibraryFile</Filter>

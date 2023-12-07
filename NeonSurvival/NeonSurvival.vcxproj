@@ -137,12 +137,10 @@
   <ItemGroup>
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Components_Neon.h" />
-    <ClInclude Include="Components_Test.h" />
     <ClInclude Include="Frameworks.h" />
     <ClInclude Include="d3dx12.h" />
     <ClInclude Include="DDSTextureLoader12.h" />
     <ClInclude Include="Framework_Neon.h" />
-    <ClInclude Include="Framework_Test.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="GameScene.h" />
     <ClInclude Include="GameSource.h" />
@@ -152,7 +150,6 @@
     <ClInclude Include="ProcessInput.h" />
     <ClInclude Include="ProcessOutput.h" />
     <ClInclude Include="ProcessTool_Neon.h" />
-    <ClInclude Include="ProcessTool_Test.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="Server.h" />
     <ClInclude Include="Shader.h" />
@@ -169,11 +166,9 @@
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Components_Neon.cpp" />
-    <ClCompile Include="Components_Test.cpp" />
     <ClCompile Include="Frameworks.cpp" />
     <ClCompile Include="DDSTextureLoader12.cpp" />
     <ClCompile Include="Framework_Neon.cpp" />
-    <ClCompile Include="Framework_Test.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="GameScene.cpp" />
     <ClCompile Include="GameSource.cpp" />
@@ -184,7 +179,6 @@
     <ClCompile Include="ProcessInput.cpp" />
     <ClCompile Include="ProcessOutput.cpp" />
     <ClCompile Include="ProcessTool_Neon.cpp" />
-    <ClCompile Include="ProcessTool_Test.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="Server.cpp" />
     <ClCompile Include="Shader.cpp" />

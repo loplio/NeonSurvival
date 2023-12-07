@@ -1,7 +1,6 @@
 #pragma once
 #include "Camera.h"
 #include "Components_Neon.h"
-#include "Components_Test.h"
 #include "UILayer.h"
 #include "Shader.h"
 #include "ShaderObjects.h"
@@ -27,15 +26,6 @@ public:
 	CBoundingBoxObjects& GetRefBBShader() const { return *m_pBoundingObjects; }
 
 	CCamera& GetRefCamera() const { return *m_pCamera; }
-};
-
-class TestGameSource : public CGameSource {
-public:
-	TestGameSource(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) : CGameSource(pd3dDevice, pd3dCommandList) {
-		m_pScene = std::make_shared<Scene_Test>(pd3dDevice, pd3dCommandList);
-		m_pPlayer = m_pScene->m_pPlayer = std::make_shared<Player_Test>(pd3dDevice, pd3dCommandList, m_pScene->GetGraphicsRootSignature(), m_pScene->m_pTerrain, 1);
-		m_pBoundingObjects = m_pScene->m_pBoundingObjects = std::make_shared<BoundingBoxObjects_1>(*m_pScene, *m_pPlayer);
-	}
 };
 
 class NeonGameSource : public CGameSource {

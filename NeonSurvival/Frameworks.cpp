@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "Frameworks.h"
 #include "Framework_Neon.h"
-#include "Framework_Test.h"
 #include "ProcessInput.h"
 #include "ProcessCompute.h"
 #include "ProcessOutput.h"
