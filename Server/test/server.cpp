@@ -159,7 +159,7 @@ XMFLOAT3 NexusPos = XMFLOAT3(3072, 255, 3072);
 XMFLOAT3 PotalPos[3] = { XMFLOAT3(3575, 255, 3065) ,XMFLOAT3(3056 , 255, 3685) ,XMFLOAT3(2297 , 255, 3043) };
 
 void UpdateConnectNum();
-bool GameStart = false;
+bool GameStart = true;
 void UpdateMonsterData();
 
 int main(int argc, char** argv)
