@@ -256,7 +256,7 @@ void CGameFramework_Neon::BuildObjects()
 	m_pPlayer = m_GameSource->GetSharedPtrPlayer();
 	m_pCamera = m_pPlayer->GetCamera();
 	
-	if (m_pScene) m_pScene->BuildObjects(&m_pd3dDevice, &m_pd3dCommandList, m_Iframe.GetRenderTargetDescriptorHeap());
+	if (m_pScene) m_pScene->BuildObjects(&m_pd3dDevice, &m_pd3dCommandList, m_Iframe.GetRenderTargetDescriptorHeap(), m_Iframe.GetDepthStencilBuffer());
 
 	m_pd3dCommandList.Close();
 	ID3D12CommandList* ppd3dCommandLists[] = { &m_pd3dCommandList };

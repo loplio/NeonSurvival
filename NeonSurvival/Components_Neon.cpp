@@ -405,7 +405,7 @@ void Scene_Neon::RunTimeBuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 	}
 	CScene::RunTimeBuildObjects(pd3dDevice, pd3dCommandList);
 }
-void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12DescriptorHeap* d3dRtvCPUDescriptorHeap)
+void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12DescriptorHeap* d3dRtvCPUDescriptorHeap, ID3D12Resource* d3dDepthStencilBuffer)
 {
 	BuildLightsAndMaterials();
 
@@ -413,11 +413,13 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	D3D12_CPU_DESCRIPTOR_HANDLE d3dRtvCPUDescriptorHandle = d3dRtvCPUDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	d3dRtvCPUDescriptorHandle.ptr += (::gnRtvDescriptorIncrementSize * 2); // nSwapChainBuffer's num => 2
 
-	DXGI_FORMAT pdxgiResourceFormats[BACKBUFFER_NUM] = { DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_R32_FLOAT };
+	DXGI_FORMAT pdxgiResourceFormats[BACKBUFFER_NUM] = { DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_R8G8B8A8_UNORM };
+	DXGI_FORMAT pdxgiDepthSrvFormats[1] = { DXGI_FORMAT_R32_FLOAT };
 	m_pPostProcessingShader = new CPostProcessingShader(pd3dDevice, pd3dCommandList, BACKBUFFER_NUM, pdxgiResourceFormats, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT, d3dRtvCPUDescriptorHandle);
 	m_pPostProcessingShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 	m_pPostProcessingShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
 	CScene::CreateSRVUAVs(pd3dDevice, m_pPostProcessingShader->m_pTexture, ROOT_PARAMETER_TEXTURE_2D_ARRAY, false);
+	m_pPostProcessingShader->CreateShaderResourceViews(pd3dDevice, 1, &d3dDepthStencilBuffer, pdxgiDepthSrvFormats, m_d3dSrvCPUDescriptorNextHandle, m_d3dSrvGPUDescriptorNextHandle);
 
 	// SkyBox Build.
 	m_pSkyBox = new CSkyBox(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (wchar_t*)L"SkyBox/NeonCity.dds");
@@ -428,7 +430,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 
 	/// UI ///
 	m_UIShaders.push_back(new CShader);
-	CTextureToScreenShader* pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/map_frame.dds");
+	CTextureToScreenShader* pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/exp_line.dds");
 	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, FRAME_BUFFER_WIDTH, 10, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT - 5, 0);
 	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 	m_UIShaders.back() = pUITexture;
@@ -1502,7 +1504,9 @@ bool Scene_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM 
 		case 'E': //69
 		case 'L': //76
 		case 'R':
+		case 'M':
 		case 'Z': //90
+		case 'Q':
 		{
 			m_nDrawOptions = (int)wParam;
 			break;
@@ -1988,7 +1992,7 @@ void SceneLobby_Neon::ReleaseShaderVariables()
 }
 
 //--Build : SceneLobby_Neon---------------------------------------------------------------
-void SceneLobby_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12DescriptorHeap* d3dRtvCPUDescriptorHeap)
+void SceneLobby_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12DescriptorHeap* d3dRtvCPUDescriptorHeap, ID3D12Resource* d3dDepthStencilBuffer)
 {
 	BuildLightsAndMaterials();
 

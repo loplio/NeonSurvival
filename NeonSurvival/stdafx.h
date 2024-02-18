@@ -100,6 +100,7 @@ using Microsoft::WRL::ComPtr;
 #define ROOT_PARAMETER_TEXTURE_2D_ARRAY	21
 #define ROOT_PARAMETER_DRAW_OPTION		22
 
+#define DRAW_SCENE_STANDARD				'Q'
 #define DRAW_SCENE_COLOR				'B'
 #define DRAW_SCENE_TEXTURE				'T'
 #define DRAW_SCENE_EMISSIVE				'E'

@@ -65,7 +65,8 @@ public:
 
 	UINT			m_nRenderTargets = 1;
 	DXGI_FORMAT		m_dxgiRtvFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
-	DXGI_FORMAT		m_dxgiDsvFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	DXGI_FORMAT		m_dxgiDsvFormat = DXGI_FORMAT_D32_FLOAT;
+	//DXGI_FORMAT		m_dxgiDsvFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
 protected:
 	ID3DBlob*							m_pd3dVertexShaderBlob = NULL;
@@ -163,6 +164,8 @@ public:
 	virtual D3D12_SHADER_BYTECODE CreatePixelShader();
 	
 	virtual void CreateGraphicsPipelineState(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature);
+
+	void CreateShaderResourceViews(ID3D12Device* pd3dDevice, int nResources, ID3D12Resource** ppd3dResources, DXGI_FORMAT* pdxgiSrvFormats, D3D12_CPU_DESCRIPTOR_HANDLE& m_d3dSrvCPUDescriptorNextHandle, D3D12_GPU_DESCRIPTOR_HANDLE& m_d3dSrvGPUDescriptorNextHandle);
 
 	virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList, void* pContext);

@@ -137,7 +137,7 @@ float4 GetColorFromDepth(float fDepth)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Texture2D gtxtInputTextures[6] : register(t17); // BaseColor, World Normal, Texture, Emissive, Shading Model, [Specular], Roughness, Metallic
+Texture2D gtxtInputTextures[7] : register(t17); // BaseColor, World Normal, Texture, Emissive, Shading Model, Roughness/Metallic, Depth
 
 struct VS_SCREEN_RECT_TEXTURED_OUTPUT
 {
@@ -202,27 +202,29 @@ float4 PSPostProcessing(VS_SCREEN_RECT_TEXTURED_OUTPUT input) : SV_Target
 	case 82: //'R'
 	{
 		//cColor = gtxtInputTextures[6].Sample(gssWrap, input.uv);
-		float fDepth = gtxtInputTextures[5].Load(uint3((uint)input.position.x, (uint)input.position.y, 0)).r;
-		cColor = GetColorFromDepth(1.0f - fDepth);
+		//float fDepth = gtxtInputTextures[5].Load(uint3((uint)input.position.x, (uint)input.position.y, 0)).g;
+		//cColor = GetColorFromDepth(1.0f - fDepth);
+		cColor = GetColorFromDepth(1.0f - gtxtInputTextures[5].Sample(gssWrap, input.uv).r);
 		break;
 	}
-	//case 77: //'M'
-	//{
-	//	cColor = gtxtInputTextures[7].Sample(gssWrap, input.uv);
-	//	break;
-	//}
+	case 77: //'M'
+	{
+		cColor = GetColorFromDepth(1.0f - gtxtInputTextures[5].Sample(gssWrap, input.uv).g);
+		break;
+	}
 	//case 68: //'D'
 	//{
 	//	float fDepth = gtxtInputTextures[6].Load(uint3((uint)input.position.x, (uint)input.position.y, 0)).r;
 	//	cColor = GetColorFromDepth(1.0f - fDepth);
 	//	break;
 	//}
-	//case 90: //'Z' 
-	//{
-	//	float fDepth = gtxtInputTextures[5].Load(uint3((uint)input.position.x, (uint)input.position.y, 0)).r;
-	//	cColor = GetColorFromDepth(fDepth);
-	//	break;
-	//}
+	case 90: //'Z' 
+	{
+		float fDepth = gtxtInputTextures[6].Load(uint3((uint)input.position.x, (uint)input.position.y, 0)).r;
+		cColor = GetColorFromDepth(1.0f - fDepth) * 20;
+		//cColor = GetColorFromDepth(fDepth);
+		break;
+	}
 	//case 69: //'E'
 	//{
 	//	cColor = LaplacianEdge(input.position);
@@ -343,7 +345,7 @@ struct PS_MULTIPLE_RENDER_TARGETS_OUTPUT
 	float4 f4Emissive : SV_TARGET4;
 	float4 f4Illumination : SV_TARGET5;
 	//float4 f4Specular : SV_TARGET5;
-	float2 f2Roughness : SV_TARGET6;
+	float4 f4RoughMetal : SV_TARGET6;
 	//float2 f2Metallic : SV_TARGET7;
 };
 
@@ -371,6 +373,7 @@ PS_MULTIPLE_RENDER_TARGETS_OUTPUT PSStandard(VS_STANDARD_OUTPUT input) : SV_TARG
 #endif
 
 	float4 cIllumination = float4(0.9f, 0.4f, 0.6f, 1.0f);
+	float4 All_Illumination = float4(0.0f, 0.0f, 0.0f, 1.0f);
 	//float4 SpecularRatio = float4(0.1f, 0.1f, 0.1f, 1.0f);
 	//float4 cColor = cAlbedoColor + /*cSpecularColor * SpecularRatio +*/ cEmissionColor;
 	//if (gnTexturesMask & MATERIAL_NORMAL_MAP)
@@ -420,6 +423,8 @@ PS_MULTIPLE_RENDER_TARGETS_OUTPUT PSStandard(VS_STANDARD_OUTPUT input) : SV_TARG
 			ambient = gLights[i].m_cAmbient;
 		}
 		reflected += CookTorranceBRDF(cIllumination, L, V, normalW, albedo, specular, metallic, roughness, ambient);
+
+		All_Illumination += float4(cIllumination.xyz, 1.0f);
 	}
 	reflected += gcGlobalAmbientLight;
 
@@ -434,9 +439,9 @@ PS_MULTIPLE_RENDER_TARGETS_OUTPUT PSStandard(VS_STANDARD_OUTPUT input) : SV_TARG
 	output.f4Normal = float4(normalW, 1.0f);
 	output.f4Texture = float4(albedo, 1.0f);
 	output.f4Emissive = float4(emission, 1.0f);
-	output.f4Illumination = cIllumination;
+	output.f4Illumination = All_Illumination;
 	//output.f4Specular = float4(specular, 1.0f);
-	output.f2Roughness = float2(roughness, roughness);
+	output.f4RoughMetal = float4(roughness, metallic, 0.0f, 1.0f);
 	//output.f2Metallic = float2(metallic, metallic);
 	
 	//output.f4Scene = output.f4Emissive;

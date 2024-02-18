@@ -81,6 +81,7 @@ public:
 	ID3D12GraphicsCommandList& GetGraphicsCommandList() const { return *m_pd3dCommandList; }
 	ID3D12Resource** GetRenderTargetBuffers() { return m_ppd3dRenderTargetBuffers; }
 	ID3D12DescriptorHeap* GetRenderTargetDescriptorHeap() { return m_pd3dRtvDescriptorHeap; }
+	ID3D12Resource* GetDepthStencilBuffer() { return m_pd3dDepthStencilBuffer; }
 
 private:
 	void CreateSwapChain();	
