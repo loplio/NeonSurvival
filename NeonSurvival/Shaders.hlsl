@@ -7,6 +7,11 @@ struct MATERIAL
 	float4 m_cEmissive;
 };
 
+cbuffer cbDrawOptions : register(b0)
+{
+	int4 gvDrawOptions : packoffset(c0);
+};
+
 //카메라 객체의 데이터를 위한 상수 버퍼(스펙큘러 조명 계산을 위하여 카메라의 위치 벡터를 추가)
 cbuffer cbCameraInfo : register(b1)
 {
@@ -109,6 +114,125 @@ float4 PSBlend(VS_TEXTURED_OUTPUT input) : SV_TARGET
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+float4 GetColorFromDepth(float fDepth)
+{
+	float4 cColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
+
+	//if (fDepth > 1.0f) cColor = float4(1.0f, 1.0f, 1.0f, 1.0f);
+	//else if (fDepth < 0.00625f) cColor = float4(1.0f, 0.0f, 0.0f, 1.0f);
+	//else if (fDepth < 0.0125f) cColor = float4(0.0f, 1.0f, 0.0f, 1.0f);
+	//else if (fDepth < 0.025f) cColor = float4(0.0f, 0.0f, 1.0f, 1.0f);
+	//else if (fDepth < 0.05f) cColor = float4(1.0f, 1.0f, 0.0f, 1.0f);
+	//else if (fDepth < 0.075f) cColor = float4(0.0f, 1.0f, 1.0f, 1.0f);
+	//else if (fDepth < 0.1f) cColor = float4(1.0f, 0.5f, 0.5f, 1.0f);
+	//else if (fDepth < 0.4f) cColor = float4(0.5f, 1.0f, 1.0f, 1.0f);
+	//else if (fDepth < 0.6f) cColor = float4(1.0f, 0.0f, 1.0f, 1.0f);
+	//else if (fDepth < 0.8f) cColor = float4(0.5f, 0.5f, 1.0f, 1.0f);
+	//else if (fDepth < 0.9f) cColor = float4(0.5f, 1.0f, 0.5f, 1.0f);
+	//else cColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
+	cColor = float4(fDepth, fDepth, fDepth, 1.0f);
+
+	return(cColor);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Texture2D gtxtInputTextures[6] : register(t17); // BaseColor, World Normal, Texture, Emissive, Shading Model, [Specular], Roughness, Metallic
+
+struct VS_SCREEN_RECT_TEXTURED_OUTPUT
+{
+	float4 position : SV_POSITION;
+	float2 uv : TEXCOORD0;
+	float3 viewSpaceDir : TEXCOORD1;
+};
+
+VS_SCREEN_RECT_TEXTURED_OUTPUT VSPostProcessing(uint nVertexID : SV_VertexID)
+{
+	VS_SCREEN_RECT_TEXTURED_OUTPUT output = (VS_SCREEN_RECT_TEXTURED_OUTPUT)0;
+
+	if (nVertexID == 0) { output.position = float4(-1.0f, +1.0f, 0.0f, 1.0f); output.uv = float2(0.0f, 0.0f); }
+	else if (nVertexID == 1) { output.position = float4(+1.0f, +1.0f, 0.0f, 1.0f); output.uv = float2(1.0f, 0.0f); }
+	else if (nVertexID == 2) { output.position = float4(+1.0f, -1.0f, 0.0f, 1.0f); output.uv = float2(1.0f, 1.0f); }
+
+	else if (nVertexID == 3) { output.position = float4(-1.0f, +1.0f, 0.0f, 1.0f); output.uv = float2(0.0f, 0.0f); }
+	else if (nVertexID == 4) { output.position = float4(+1.0f, -1.0f, 0.0f, 1.0f); output.uv = float2(1.0f, 1.0f); }
+	else if (nVertexID == 5) { output.position = float4(-1.0f, -1.0f, 0.0f, 1.0f); output.uv = float2(0.0f, 1.0f); }
+
+	//output.viewSpaceDir = mul(output.position, gmtxInverseView).xyz;
+
+	return(output);
+}
+
+float4 PSPostProcessing(VS_SCREEN_RECT_TEXTURED_OUTPUT input) : SV_Target
+{
+	float4 cColor = float4(1.0f, 1.0f, 1.0f, 1.0f);
+
+	switch (gvDrawOptions.x)
+	{
+	case 66: //'B'
+	{
+		cColor = gtxtInputTextures[0].Sample(gssWrap, input.uv);
+		break;
+	}
+	case 78: //'N'
+	{
+		cColor = gtxtInputTextures[1].Sample(gssWrap, input.uv);
+		break;
+	}
+	case 84: //'T'
+	{
+		cColor = gtxtInputTextures[2].Sample(gssWrap, input.uv);
+		break;
+	}
+	case 69: //'E'
+	{
+		cColor = gtxtInputTextures[3].Sample(gssWrap, input.uv);
+		break;
+	}
+	case 76: //'L'
+	{
+		cColor = gtxtInputTextures[4].Sample(gssWrap, input.uv);
+		break;
+	}
+	//case 83: //'S'
+	//{
+	//	cColor = gtxtInputTextures[5].Sample(gssWrap, input.uv);
+	//	break;
+	//}
+	case 82: //'R'
+	{
+		//cColor = gtxtInputTextures[6].Sample(gssWrap, input.uv);
+		float fDepth = gtxtInputTextures[5].Load(uint3((uint)input.position.x, (uint)input.position.y, 0)).r;
+		cColor = GetColorFromDepth(1.0f - fDepth);
+		break;
+	}
+	//case 77: //'M'
+	//{
+	//	cColor = gtxtInputTextures[7].Sample(gssWrap, input.uv);
+	//	break;
+	//}
+	//case 68: //'D'
+	//{
+	//	float fDepth = gtxtInputTextures[6].Load(uint3((uint)input.position.x, (uint)input.position.y, 0)).r;
+	//	cColor = GetColorFromDepth(1.0f - fDepth);
+	//	break;
+	//}
+	//case 90: //'Z' 
+	//{
+	//	float fDepth = gtxtInputTextures[5].Load(uint3((uint)input.position.x, (uint)input.position.y, 0)).r;
+	//	cColor = GetColorFromDepth(fDepth);
+	//	break;
+	//}
+	//case 69: //'E'
+	//{
+	//	cColor = LaplacianEdge(input.position);
+	//	//			cColor = Outline(input);
+	//	break;
+	//}
+	}
+	return(cColor);
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 float GGX(float NoH, float roughness)
 {
 	float pi = 3.14159265358979323846;
@@ -209,7 +333,22 @@ VS_STANDARD_OUTPUT VSStandard(VS_STANDARD_INPUT input)
 	return(output);
 }
 
-float4 PSStandard(VS_STANDARD_OUTPUT input) : SV_TARGET
+struct PS_MULTIPLE_RENDER_TARGETS_OUTPUT
+{
+	float4 f4Scene : SV_TARGET0; //Swap Chain Back Buffer
+
+	float4 f4Color : SV_TARGET1;
+	float4 f4Normal : SV_TARGET2;
+	float4 f4Texture : SV_TARGET3;
+	float4 f4Emissive : SV_TARGET4;
+	float4 f4Illumination : SV_TARGET5;
+	//float4 f4Specular : SV_TARGET5;
+	float2 f2Roughness : SV_TARGET6;
+	//float2 f2Metallic : SV_TARGET7;
+};
+
+//float4 PSStandard(VS_STANDARD_OUTPUT input) : SV_TARGET
+PS_MULTIPLE_RENDER_TARGETS_OUTPUT PSStandard(VS_STANDARD_OUTPUT input) : SV_TARGET
 {
 	float4 cAlbedoColor = float4(1.0f, 1.0f, 1.0f, 1.0f);
 	float4 cSpecularColor = float4(0.5f, 0.5f, 0.5f, 1.0f);
@@ -287,7 +426,22 @@ float4 PSStandard(VS_STANDARD_OUTPUT input) : SV_TARGET
 	// Gamma correction
 	float3 result = pow(reflected, 1.0 / 2.2) + emission;
 
-	return float4(result, 1.0);
+	//return float4(result, 1.0);
+
+	PS_MULTIPLE_RENDER_TARGETS_OUTPUT output;
+
+	output.f4Scene = output.f4Color = float4(result, 1.0f);
+	output.f4Normal = float4(normalW, 1.0f);
+	output.f4Texture = float4(albedo, 1.0f);
+	output.f4Emissive = float4(emission, 1.0f);
+	output.f4Illumination = cIllumination;
+	//output.f4Specular = float4(specular, 1.0f);
+	output.f2Roughness = float2(roughness, roughness);
+	//output.f2Metallic = float2(metallic, metallic);
+	
+	//output.f4Scene = output.f4Emissive;
+
+	return output;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

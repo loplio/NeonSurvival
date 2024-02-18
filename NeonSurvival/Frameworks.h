@@ -63,10 +63,10 @@ public:
 	virtual void OnDestroy();
 
 	void ChangeSwapChainState();
-	void ClearDisplay(XMFLOAT4 xmfloat4 = XMFLOAT4(0.f, 0.f, 0.f, 0.f));
+	void ClearDisplay(CScene& m_pScene, XMFLOAT4 xmfloat4 = XMFLOAT4(0.f, 0.f, 0.f, 0.f));
 	void ResetCommand();
 	void ExecuteCommand();
-	void SynchronizeResourceTransition(D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after);
+	void SynchronizeResourceTransition(D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after, CTexture* m_pTexture = NULL);
 	void WaitForGpuComplete();	
 	void MoveToNextFrame();
 
@@ -80,6 +80,7 @@ public:
 	ID3D12CommandAllocator& GetCommandAllocator() const { return *m_pd3dCommandAllocator; }
 	ID3D12GraphicsCommandList& GetGraphicsCommandList() const { return *m_pd3dCommandList; }
 	ID3D12Resource** GetRenderTargetBuffers() { return m_ppd3dRenderTargetBuffers; }
+	ID3D12DescriptorHeap* GetRenderTargetDescriptorHeap() { return m_pd3dRtvDescriptorHeap; }
 
 private:
 	void CreateSwapChain();	

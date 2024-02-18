@@ -58,7 +58,7 @@ public:
 	// Build.
 	virtual void CreateBoundingBox(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CBoundingBoxObjects* BBShader);
 	virtual void RunTimeBuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
-	virtual void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
+	virtual void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12DescriptorHeap* d3dRtvCPUDescriptorHeap = NULL);
 	virtual void BuildLightsAndMaterials();
 	virtual void ReleaseUploadBuffers();
 	virtual void ReleaseObjects();
@@ -122,6 +122,9 @@ public:
 		XMFLOAT3 xmf3Position, XMFLOAT3 xmf3Direction, XMFLOAT3 xmf3Attenuation,
 		float fFalloff, float fTheta, float fPhi, bool bEnable, int nType, float fRange, float padding);
 
+	int										m_nDrawOptions = DRAW_SCENE_COLOR;
+
+
 	float									m_fElapsedTime = 0.0f;
 	float									m_fCurrentTime = 0.0f;
 
@@ -145,6 +148,7 @@ public:
 
 	// Objects.
 	CSkyBox*								m_pSkyBox = NULL;
+	CPostProcessingShader*					m_pPostProcessingShader = NULL;
 	CHeightMapTerrain*						m_pTerrain = NULL;
 	std::shared_ptr<CPlayer>				m_pPlayer = NULL;
 	std::shared_ptr<CBoundingBoxObjects>	m_pBoundingObjects = NULL;

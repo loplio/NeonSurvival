@@ -296,7 +296,7 @@ void GameRenderDisplay_Neon::Render()
 {
 	CCamera* Camera = m_Player.GetCamera();
 
-	m_InterfaceFramework.ClearDisplay();
+	m_InterfaceFramework.ClearDisplay(m_Scene);
 
 	// Runtime Build.
 	m_Scene.RunTimeBuildObjects(&m_pd3dDevice, &m_pd3dCommandList);
@@ -307,25 +307,28 @@ void GameRenderDisplay_Neon::Render()
 	// Scene Render
 	m_Scene.OnPrepareRender(&m_pd3dCommandList, Camera);
 	m_Scene.Render(&m_pd3dCommandList, Camera);
-	static float time = 0.0f;
-	if (time > 0.5f)
-	{
-		time = 0.0f;
-		//std::cout << m_Player.GetPosition().x << ", " << m_Player.GetPosition().y << ", " << m_Player.GetPosition().z << std::endl;
-	}
-	time += m_Scene.m_fElapsedTime;
+	//static float time = 0.0f;
+	//if (time > 0.5f)
+	//{
+	//	time = 0.0f;
+	//	//std::cout << m_Player.GetPosition().x << ", " << m_Player.GetPosition().y << ", " << m_Player.GetPosition().z << std::endl;
+	//}
+	//time += m_Scene.m_fElapsedTime;
 	// Player Render
 	m_Player.Render(&m_pd3dCommandList, Camera);
 
 	// UI Draw
 	m_Scene.DrawUI(&m_pd3dCommandList, Camera);
 
+	// PostProcessing
+	m_Scene.m_pPostProcessingShader->Render(&m_pd3dCommandList, Camera, &m_Scene.m_nDrawOptions);
+
 	// BoundingBox Render
 	m_BoundingBox.Render(&m_pd3dCommandList, Camera);
 	
 	m_Scene.PostRenderParticle(&m_pd3dCommandList);
 
-	m_InterfaceFramework.SynchronizeResourceTransition(D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+	m_InterfaceFramework.SynchronizeResourceTransition(D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT, m_Scene.m_pPostProcessingShader->m_pTexture);
 	m_InterfaceFramework.ExecuteCommand();
 
 	m_Scene.OnPostRenderParticle();
@@ -343,7 +346,7 @@ LobbyRenderDisplay_Neon::~LobbyRenderDisplay_Neon()
 
 void LobbyRenderDisplay_Neon::Render()
 {
-	m_InterfaceFramework.ClearDisplay();
+	m_InterfaceFramework.ClearDisplay(m_Scene);
 
 	// Update
 	((CLobbyFramework_Neon*)&gBaseFramework)->UpdateUI();

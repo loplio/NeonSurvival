@@ -53,7 +53,7 @@ public:
 	// Build..
 	void CreateBoundingBox(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CBoundingBoxObjects* BBShader) override;
 	void RunTimeBuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) override;
-	void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) override;
+	void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12DescriptorHeap* d3dRtvCPUDescriptorHeap = NULL) override;
 	void BuildLightsAndMaterials() override;
 	void ReleaseUploadBuffers() override;
 	void ReleaseObjects() override;
@@ -196,7 +196,7 @@ public:
 	void ReleaseShaderVariables() override;
 
 	// Build..
-	void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) override;
+	void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12DescriptorHeap* d3dRtvCPUDescriptorHeap = NULL) override;
 	void BuildLightsAndMaterials() override;
 	void ReleaseUploadBuffers() override;
 	void ReleaseObjects() override;

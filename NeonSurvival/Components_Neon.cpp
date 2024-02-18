@@ -361,7 +361,7 @@ CCamera* Player_Neon::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 //-------------------------------------------------------------------------------
 Scene_Neon::Scene_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) : CScene(pd3dDevice, pd3dCommandList)
 {
-	CreateCbvSrvDescriptorHeaps(pd3dDevice, 10, 500, 10);
+	CreateCbvSrvDescriptorHeaps(pd3dDevice, 10, 520, 10);
 
 	// Terrain Build.
 	XMFLOAT3 xmf3Scale(12.0f, 1.0f, 12.0f);
@@ -405,9 +405,19 @@ void Scene_Neon::RunTimeBuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 	}
 	CScene::RunTimeBuildObjects(pd3dDevice, pd3dCommandList);
 }
-void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12DescriptorHeap* d3dRtvCPUDescriptorHeap)
 {
 	BuildLightsAndMaterials();
+
+	// PostProcessing Shader.
+	D3D12_CPU_DESCRIPTOR_HANDLE d3dRtvCPUDescriptorHandle = d3dRtvCPUDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	d3dRtvCPUDescriptorHandle.ptr += (::gnRtvDescriptorIncrementSize * 2); // nSwapChainBuffer's num => 2
+
+	DXGI_FORMAT pdxgiResourceFormats[BACKBUFFER_NUM] = { DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_R32_FLOAT };
+	m_pPostProcessingShader = new CPostProcessingShader(pd3dDevice, pd3dCommandList, BACKBUFFER_NUM, pdxgiResourceFormats, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT, d3dRtvCPUDescriptorHandle);
+	m_pPostProcessingShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_pPostProcessingShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
+	CScene::CreateSRVUAVs(pd3dDevice, m_pPostProcessingShader->m_pTexture, ROOT_PARAMETER_TEXTURE_2D_ARRAY, false);
 
 	// SkyBox Build.
 	m_pSkyBox = new CSkyBox(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (wchar_t*)L"SkyBox/NeonCity.dds");
@@ -418,7 +428,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 
 	/// UI ///
 	m_UIShaders.push_back(new CShader);
-	CTextureToScreenShader* pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/exp_line.dds");
+	CTextureToScreenShader* pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/map_frame.dds");
 	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, FRAME_BUFFER_WIDTH, 10, 0, FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT - 5, 0);
 	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 	m_UIShaders.back() = pUITexture;
@@ -449,11 +459,11 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_UIShaders.back() = pUITexture;
 
 
-	//m_UIShaders.push_back(new CShader);
-	//pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/minimap.dds");
-	//pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 185, 185, 0.5f, FRAME_BUFFER_WIDTH - 95, 100,0);
-	//pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
-	//m_UIShaders.back() = pUITexture;
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/minimap.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 185, 185, 0.5f, FRAME_BUFFER_WIDTH - 95, 100,0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
 	/// background ///
 	//m_ppComputeShaders.push_back(new CComputeShader);
 	//CBrightAreaComputeShader* pBrightAreaComputeShader = new CBrightAreaComputeShader((wchar_t*)L"Image/Light3.dds");
@@ -1486,6 +1496,17 @@ bool Scene_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM 
 			if (m_pBoundingObjects && !m_pBoundingObjects->m_bCollisionBoxWireFrame) m_pBoundingObjects->m_bCollisionBoxWireFrame = true;
 			else if (m_pBoundingObjects && m_pBoundingObjects->m_bCollisionBoxWireFrame) m_pBoundingObjects->m_bCollisionBoxWireFrame = false;
 			break;
+		case 'B':
+		case 'N': //78
+		case 'T': //84
+		case 'E': //69
+		case 'L': //76
+		case 'R':
+		case 'Z': //90
+		{
+			m_nDrawOptions = (int)wParam;
+			break;
+		}
 		default:
 			break;
 		}
@@ -1967,7 +1988,7 @@ void SceneLobby_Neon::ReleaseShaderVariables()
 }
 
 //--Build : SceneLobby_Neon---------------------------------------------------------------
-void SceneLobby_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+void SceneLobby_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12DescriptorHeap* d3dRtvCPUDescriptorHeap)
 {
 	BuildLightsAndMaterials();
 

@@ -203,7 +203,7 @@ void InterfaceFramework::CreateRtvAndDsvDescriptorHeaps()
 {
 	D3D12_DESCRIPTOR_HEAP_DESC d3dDescriptorHeapDesc;
 	ZeroMemory(&d3dDescriptorHeapDesc, sizeof(D3D12_DESCRIPTOR_HEAP_DESC));
-	d3dDescriptorHeapDesc.NumDescriptors = m_nSwapChainBuffers;
+	d3dDescriptorHeapDesc.NumDescriptors = m_nSwapChainBuffers + BACKBUFFER_NUM;
 	d3dDescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	d3dDescriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	d3dDescriptorHeapDesc.NodeMask = 0;
@@ -334,16 +334,45 @@ void InterfaceFramework::CreateDepthstencilView()
 	m_pd3dDevice->CreateDepthStencilView(m_pd3dDepthStencilBuffer, NULL, m_d3dDsvDescriptorCPUHandle);
 }
 
-void InterfaceFramework::ClearDisplay(XMFLOAT4 xmfloat4)
+void InterfaceFramework::ClearDisplay(CScene& m_pScene, XMFLOAT4 xmfloat4)
 {
 	ResetCommand();
 
 	::SynchronizeResourceTransition(m_pd3dCommandList, m_ppd3dRenderTargetBuffers[m_nSwapChainBufferIndex], D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-
-	float pfClearColor[4] = { xmfloat4.x, xmfloat4.y, xmfloat4.z, xmfloat4.w };
-	m_pd3dCommandList->ClearRenderTargetView(m_pd3dSwapChainBackBufferRTVCPUHandles[m_nSwapChainBufferIndex], pfClearColor, 0, NULL);
+	
 	m_pd3dCommandList->ClearDepthStencilView(m_d3dDsvDescriptorCPUHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, NULL);
-	m_pd3dCommandList->OMSetRenderTargets(1, &m_pd3dSwapChainBackBufferRTVCPUHandles[m_nSwapChainBufferIndex], TRUE, &m_d3dDsvDescriptorCPUHandle);
+
+	FLOAT pfClearColor[4] = { xmfloat4.x, xmfloat4.y, xmfloat4.z, xmfloat4.w };
+	if (!m_pScene.m_pPostProcessingShader)
+	{
+		m_pd3dCommandList->ClearRenderTargetView(m_pd3dSwapChainBackBufferRTVCPUHandles[m_nSwapChainBufferIndex], pfClearColor, 0, NULL);
+		m_pd3dCommandList->OMSetRenderTargets(1, &m_pd3dSwapChainBackBufferRTVCPUHandles[m_nSwapChainBufferIndex], TRUE, &m_d3dDsvDescriptorCPUHandle);
+	}
+	else
+	{
+		CPostProcessingShader& m_pPostProcessingShader = *m_pScene.m_pPostProcessingShader;
+
+		const UINT nRenderTargets = 1;
+		D3D12_CPU_DESCRIPTOR_HANDLE* pd3dAllRtvCPUHandles = new D3D12_CPU_DESCRIPTOR_HANDLE[nRenderTargets + BACKBUFFER_NUM];
+
+		for (int i = 0; i < nRenderTargets; i++)
+		{
+			pd3dAllRtvCPUHandles[i] = m_pd3dSwapChainBackBufferRTVCPUHandles[m_nSwapChainBufferIndex];
+			m_pd3dCommandList->ClearRenderTargetView(m_pd3dSwapChainBackBufferRTVCPUHandles[m_nSwapChainBufferIndex], pfClearColor, 0, NULL);
+		}
+
+		for (int i = 0; i < BACKBUFFER_NUM; i++)
+		{
+			::SynchronizeResourceTransition(m_pd3dCommandList, m_pPostProcessingShader.m_pTexture->GetTexture(i), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+			D3D12_CPU_DESCRIPTOR_HANDLE d3dRtvCPUDescriptorHandle = m_pPostProcessingShader.m_pd3dRtvCPUDescriptorHandles[i];
+			m_pd3dCommandList->ClearRenderTargetView(d3dRtvCPUDescriptorHandle, pfClearColor, 0, NULL);
+			pd3dAllRtvCPUHandles[nRenderTargets + i] = d3dRtvCPUDescriptorHandle;
+		}
+		m_pd3dCommandList->OMSetRenderTargets(nRenderTargets + BACKBUFFER_NUM, pd3dAllRtvCPUHandles, FALSE, &m_d3dDsvDescriptorCPUHandle);
+
+		if (pd3dAllRtvCPUHandles) delete[] pd3dAllRtvCPUHandles;
+	}
 }
 void InterfaceFramework::ResetCommand()
 {
@@ -354,8 +383,16 @@ void InterfaceFramework::ExecuteCommand()
 {
 	::ExecuteCommandList(m_pd3dCommandList, m_pd3dCommandQueue, m_pd3dFence, ++m_nFenceValues[m_nSwapChainBufferIndex], m_hFenceEvent);
 }
-void InterfaceFramework::SynchronizeResourceTransition(D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after)
+void InterfaceFramework::SynchronizeResourceTransition(D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after, CTexture* m_pTexture)
 {
+	if(m_pTexture)
+	{
+		for (int i = 0; i < BACKBUFFER_NUM; i++)
+		{
+			::SynchronizeResourceTransition(m_pd3dCommandList, m_pTexture->GetTexture(i), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON);
+		}
+	}
+
 	::SynchronizeResourceTransition(m_pd3dCommandList, m_ppd3dRenderTargetBuffers[m_nSwapChainBufferIndex], before, after);
 }
 void InterfaceFramework::WaitForGpuComplete()
