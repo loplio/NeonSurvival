@@ -619,6 +619,18 @@ void SpawnMonster();
 void MonstersUpdate(double Elapsedtime);
 int dist(XMFLOAT3& v1, XMFLOAT3& v2);
 int SpawnCount = 0;
+
+//플레이어 위치 값 보기
+void PrintPlayerPosition()
+{
+	for (int i = 0; i < MAX_PLAYER; ++i)
+	{
+		printf("P%d X : %f, Y : %f, Z : %f\n", i, GameData.PlayersPostion2[i].position.x,
+			GameData.PlayersPostion2[i].position.y,
+			GameData.PlayersPostion2[i].position.z);
+	}
+}
+
 DWORD WINAPI MonsterThread(LPVOID arg)
 {
 	const std::chrono::duration<double> frame_rate = std::chrono::duration<double>(1.0 / 60.0);
@@ -647,6 +659,8 @@ DWORD WINAPI MonsterThread(LPVOID arg)
 			}
 			//dt
 			MonstersUpdate(elapsed_time.count());
+
+			PrintPlayerPosition();
 		}
 	}
 	return 0;
