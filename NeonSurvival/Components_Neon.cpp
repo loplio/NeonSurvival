@@ -427,6 +427,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	// ShaderObjects Build.
 	m_ppShaders.reserve(5);
 	m_ppComputeShaders.reserve(10);
+	m_ppRtvComputeShaders.reserve(3);
 
 	/// UI ///
 	m_UIShaders.push_back(new CShader);
@@ -479,14 +480,31 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	//m_ppComputeShaders.back() = pBlurComputeShader;
 
 	//m_ppShaders.push_back(new CShader);
-	//CTextureToFullScreenShader* pGraphicsShader = new CTextureToFullScreenShader(pBlurComputeShader->m_pTexture);
+	//CTextureToFullScreenShader* pGraphicsShader = new CTextureToFullScreenShader(NULL);
 	//pGraphicsShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 	//m_ppShaders.back() = pGraphicsShader;
+	//---------------------------------------------------------------------------------------------------//
+	// RtvComputeShader //
+	m_ppRtvComputeShaders.push_back(new CComputeShader);
+	CBrightAreaComputeShader* pBrightAreaComputeShader = new CBrightAreaComputeShader((wchar_t*)L"Image/Light3.dds");
+	pBrightAreaComputeShader->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
+	m_ppRtvComputeShaders.back() = pBrightAreaComputeShader;
+
+	m_ppRtvComputeShaders.push_back(new CComputeShader);
+	CGaussian2DBlurComputeShader* pBlurComputeShader = new CGaussian2DBlurComputeShader((wchar_t*)L"Image/Light3.dds");
+	pBlurComputeShader->SetSourceResource(pBrightAreaComputeShader->m_pTexture->GetTexture(1));
+	pBlurComputeShader->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
+	m_ppRtvComputeShaders.back() = pBlurComputeShader;
+
+	m_ppRtvComputeShaders.push_back(new CComputeShader);
+	CAddTexturesComputeShader* pAddTexturesComputeShader = new CAddTexturesComputeShader();
+	pAddTexturesComputeShader->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
+	m_ppRtvComputeShaders.back() = pAddTexturesComputeShader;
 	//---------------------------------------------------------------------------------------------------//
 
 	/// Particle1 ///
 	m_ppComputeShaders.push_back(new CComputeShader);
-	CBrightAreaComputeShader* pBrightAreaComputeShader = new CBrightAreaComputeShader((wchar_t*)L"Image/Particle/RoundSoftParticle.dds");
+	/*CBrightAreaComputeShader* */pBrightAreaComputeShader = new CBrightAreaComputeShader((wchar_t*)L"Image/Particle/RoundSoftParticle.dds");
 	pBrightAreaComputeShader->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
 	m_ppComputeShaders.back() = pBrightAreaComputeShader;
 

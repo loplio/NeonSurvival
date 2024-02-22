@@ -426,6 +426,59 @@ void CScene::CreateBoundingBox(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 void CScene::RunTimeBuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
 }
+void CScene::CopyRenderScene(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12Resource* pSourceResource)
+{
+	ID3D12Resource* BaseResource = m_pPostProcessingShader->m_pTexture->GetTexture(0);
+
+	::SynchronizeResourceTransition(pd3dCommandList, BaseResource, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST);
+	::SynchronizeResourceTransition(pd3dCommandList, pSourceResource, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_SOURCE);
+	pd3dCommandList->CopyResource(BaseResource, pSourceResource);
+	::SynchronizeResourceTransition(pd3dCommandList, BaseResource, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	::SynchronizeResourceTransition(pd3dCommandList, pSourceResource, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
+}
+void CScene::OnPreparePostProcessing(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	int BrightShaderIndex = -1;
+	int Gaussian2DBlurShaderIndex = -1;
+	int AddTextureShaderIndex = -1;
+
+	for (int i = 0; i < m_ppRtvComputeShaders.size(); ++i)
+	{
+		if (m_ppRtvComputeShaders[i]->GetReafShaderType() == CShader::ReafShaderType::BrightAreaComputeShader) BrightShaderIndex = i;
+		if (m_ppRtvComputeShaders[i]->GetReafShaderType() == CShader::ReafShaderType::Gaussian2DBlurComputeShader)  Gaussian2DBlurShaderIndex = i;
+		if (m_ppRtvComputeShaders[i]->GetReafShaderType() == CShader::ReafShaderType::AddTextureComputeShader)
+		{
+			AddTextureShaderIndex = i; 
+			continue;
+		}
+
+		m_ppRtvComputeShaders[i]->ChangeTexture(pd3dDevice, pd3dCommandList, m_pPostProcessingShader->m_pTexture);
+		//m_ppComputeShaders[i]->ChangeTexture(pd3dDevice, pd3dCommandList, NULL, false, (wchar_t*)L"Image/Particle/RoundSoftParticle.dds");
+	}
+	if (0 <= BrightShaderIndex && 0 <= Gaussian2DBlurShaderIndex)
+	{
+		((CGaussian2DBlurComputeShader*)m_ppRtvComputeShaders[Gaussian2DBlurShaderIndex])->SetSourceResource(((CBrightAreaComputeShader*)m_ppRtvComputeShaders[BrightShaderIndex])->m_pTexture->GetTexture(1));
+	}
+
+	//((CTextureToFullScreenShader*)m_ppShaders[0])->ChangeTexture(pd3dDevice, pd3dCommandList, 
+	//	((CGaussian2DBlurComputeShader*)m_ppRtvComputeShaders[Gaussian2DBlurShaderIndex])->m_pTexture);
+
+	for (int i = 0; i < m_ppRtvComputeShaders.size(); ++i)
+	{
+		if (AddTextureShaderIndex == i) continue;
+		m_ppRtvComputeShaders[i]->Dispatch(pd3dCommandList);
+	}
+
+	((CAddTexturesComputeShader*)m_ppRtvComputeShaders[AddTextureShaderIndex])->ChangeTexture(pd3dDevice, pd3dCommandList,
+		((CGaussian2DBlurComputeShader*)m_ppRtvComputeShaders[Gaussian2DBlurShaderIndex])->m_pTexture, false);
+
+	m_ppRtvComputeShaders[AddTextureShaderIndex]->Dispatch(pd3dCommandList);
+
+	m_pPostProcessingShader->ChangeTexture(pd3dDevice, pd3dCommandList, ((CAddTexturesComputeShader*)m_ppRtvComputeShaders[AddTextureShaderIndex])->m_pTexture);
+
+	//Scene Copy
+
+}
 void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12DescriptorHeap* d3dRtvCPUDescriptorHeap, ID3D12Resource* d3dDepthStencilBuffer)
 {
 }
@@ -441,6 +494,7 @@ void CScene::ReleaseUploadBuffers()
 	for (int i = 0; i < m_ppShaders.size(); ++i) m_ppShaders[i]->ReleaseUploadBuffers();
 	for (int i = 0; i < m_UIShaders.size(); ++i) m_UIShaders[i]->ReleaseUploadBuffers();
 	for (int i = 0; i < m_ppComputeShaders.size(); ++i) m_ppComputeShaders[i]->ReleaseUploadBuffers();
+	for (int i = 0; i < m_ppRtvComputeShaders.size(); ++i) m_ppRtvComputeShaders[i]->ReleaseUploadBuffers();
 	for (int i = 0; i < m_vHierarchicalGameObjects.size(); i++) m_vHierarchicalGameObjects[i]->ReleaseUploadBuffers();
 	for (int i = 0; i < m_vGroundObjects.size(); i++) m_vGroundObjects[i]->ReleaseUploadBuffers();
 	for (int i = 0; i < m_vGameObjects.size(); i++) m_vGameObjects[i]->ReleaseUploadBuffers();
@@ -480,6 +534,14 @@ void CScene::ReleaseObjects()
 		{
 			m_ppComputeShaders[i]->ReleaseShaderVariables();
 			m_ppComputeShaders[i]->Release();
+		}
+	}
+	if (!m_ppRtvComputeShaders.empty())
+	{
+		for (int i = 0; i < m_ppRtvComputeShaders.size(); i++)
+		{
+			m_ppRtvComputeShaders[i]->ReleaseShaderVariables();
+			m_ppRtvComputeShaders[i]->Release();
 		}
 	}
 	if (!m_vHierarchicalGameObjects.empty())
@@ -615,9 +677,11 @@ void CScene::PostRenderParticle(ID3D12GraphicsCommandList* pd3dCommandList)
 }
 void CScene::OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
+	static int b = 0;
 	if (m_pd3dGraphicsRootSignature) pd3dCommandList->SetGraphicsRootSignature(m_pd3dGraphicsRootSignature);
 	if (m_pd3dComputeRootSignature) pd3dCommandList->SetComputeRootSignature(m_pd3dComputeRootSignature);
 	if (m_pd3dCbvSrvUavDescriptorHeap) pd3dCommandList->SetDescriptorHeaps(1, &m_pd3dCbvSrvUavDescriptorHeap);
+
 	for (int i = 0; i < m_ppComputeShaders.size(); ++i)
 	{
 		m_ppComputeShaders[i]->Dispatch(pd3dCommandList);
@@ -852,4 +916,64 @@ D3D12_GPU_DESCRIPTOR_HANDLE CScene::CreateSRVUAVs(ID3D12Device* pd3dDevice, CTex
 		}
 	}
 	return(d3dSrvGPUDescriptorHandle);
+}
+
+void CScene::ChangeSRVUAVs(ID3D12Device* pd3dDevice, CTexture* pTexture, UINT nRootParameter, D3D12_CPU_DESCRIPTOR_HANDLE CpuDescriptorHandle, D3D12_GPU_DESCRIPTOR_HANDLE GpuDescriptorHandle, bool bAutoIncrement, bool IsGraphics, bool IsSrv, UINT startIndex, UINT nViews, UINT nRepetition)
+{
+	if (pTexture)
+	{
+		int nTextures = pTexture->GetTextures();
+		int nTextureType = pTexture->GetTextureType();
+		DXGI_FORMAT nBufferFormat = pTexture->GetBufferFormat();
+		int nBufferElement = pTexture->GetBufferElement();
+		int nBufferStride = pTexture->GetBufferStride();
+		int lastIndex = (nViews) ? startIndex + nViews : nTextures;
+		for (int i = startIndex; i < lastIndex; i++)
+		{
+			ID3D12Resource* pShaderResource = pTexture->GetTexture(i);
+			D3D12_RESOURCE_DESC d3dResourceDesc = pShaderResource->GetDesc();
+
+			int argumentIndex = i - startIndex;
+			if (IsSrv)
+			{
+				D3D12_SHADER_RESOURCE_VIEW_DESC d3dShaderResourceViewDesc = GetShaderResourceViewDesc(d3dResourceDesc, nTextureType, nBufferElement, nBufferStride, nBufferFormat);
+				pd3dDevice->CreateShaderResourceView(pShaderResource, &d3dShaderResourceViewDesc, CpuDescriptorHandle);
+				CpuDescriptorHandle.ptr += ::gnCbvSrvDescriptorIncrementSize;
+
+				if (IsGraphics)
+					pTexture->SetGraphicsSrvRootArgument(argumentIndex + nRepetition, (bAutoIncrement) ? (nRootParameter + argumentIndex) : nRootParameter, GpuDescriptorHandle);
+				else
+					pTexture->SetComputeSrvRootArgument(argumentIndex + nRepetition, (bAutoIncrement) ? (nRootParameter + argumentIndex) : nRootParameter, GpuDescriptorHandle);
+				GpuDescriptorHandle.ptr += ::gnCbvSrvDescriptorIncrementSize;
+			}
+			else
+			{
+				D3D12_UNORDERED_ACCESS_VIEW_DESC d3dUnorderedAccessViewDesc = GetUnorderedAccessViewDesc(d3dResourceDesc, nTextureType, nBufferElement, nBufferStride, nBufferFormat);
+				pd3dDevice->CreateUnorderedAccessView(pShaderResource, NULL, &d3dUnorderedAccessViewDesc, CpuDescriptorHandle);
+				CpuDescriptorHandle.ptr += ::gnCbvSrvDescriptorIncrementSize;
+
+				pTexture->SetComputeUavRootArgument(argumentIndex + nRepetition, (bAutoIncrement) ? (nRootParameter + argumentIndex) : nRootParameter, GpuDescriptorHandle);
+				GpuDescriptorHandle.ptr += ::gnCbvSrvDescriptorIncrementSize;
+			}
+		}
+	}
+}
+
+void CScene::GetDescriptorNextHandle(D3D12_CPU_DESCRIPTOR_HANDLE& CpuDescriptorHandle, D3D12_GPU_DESCRIPTOR_HANDLE& GpuDescriptorHandle, bool IsSrv, bool IsUav, bool IsCbv)
+{
+	if (IsSrv)
+	{
+		CpuDescriptorHandle = m_d3dSrvCPUDescriptorNextHandle;
+		GpuDescriptorHandle = m_d3dSrvGPUDescriptorNextHandle;
+	}
+	else if (IsUav)
+	{
+		CpuDescriptorHandle = m_d3dUavCPUDescriptorNextHandle;
+		GpuDescriptorHandle = m_d3dUavGPUDescriptorNextHandle;
+	}
+	else if (IsCbv)
+	{
+		CpuDescriptorHandle = m_d3dCbvCPUDescriptorNextHandle;
+		GpuDescriptorHandle = m_d3dCbvGPUDescriptorNextHandle;
+	}
 }

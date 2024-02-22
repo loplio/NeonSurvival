@@ -74,6 +74,8 @@ public:
 	virtual void AnimateObjects(float fTimeElapsed);
 
 	// ProcessOutput.
+	void CopyRenderScene(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12Resource* pSourceResource);
+	void OnPreparePostProcessing(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	void RenderParticle(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
 	void OnPostRenderParticle();
 	void OnPostReleaseUploadBuffers();
@@ -107,6 +109,8 @@ public:
 
 	static D3D12_GPU_DESCRIPTOR_HANDLE CreateConstantBufferViews(ID3D12Device* pd3dDevice, int nConstantBufferViews, ID3D12Resource* pd3dConstantBuffers, UINT nStride);
 	static D3D12_GPU_DESCRIPTOR_HANDLE CreateSRVUAVs(ID3D12Device* pd3dDevice, CTexture* pTexture, UINT nRootParameter, bool bAutoIncrement, bool IsGraphics = true, bool IsSrv = true, UINT startIndex = 0, UINT nViews = 0, UINT nRepetition = 0);
+	static void ChangeSRVUAVs(ID3D12Device* pd3dDevice, CTexture* pTexture, UINT nRootParameter, D3D12_CPU_DESCRIPTOR_HANDLE CpuDescriptorHandle, D3D12_GPU_DESCRIPTOR_HANDLE GpuDescriptorHandle, bool bAutoIncrement, bool IsGraphics = true, bool IsSrv = true, UINT startIndex = 0, UINT nViews = 0, UINT nRepetition = 0);
+	static void GetDescriptorNextHandle(D3D12_CPU_DESCRIPTOR_HANDLE& CpuDescriptorHandle, D3D12_GPU_DESCRIPTOR_HANDLE& GpuDescriptorHandle, bool IsSrv = false, bool IsUav = false, bool IsCbv = false);
 
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUCbvDescriptorStartHandle() { return(m_d3dCbvCPUDescriptorStartHandle); }
 	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUCbvDescriptorStartHandle() { return(m_d3dCbvGPUDescriptorStartHandle); }
@@ -144,6 +148,7 @@ public:
 	std::vector<CShader*>					m_ppShaders;
 	std::vector<CShader*>					m_UIShaders;
 	std::vector<CComputeShader*>			m_ppComputeShaders;
+	std::vector<CComputeShader*>			m_ppRtvComputeShaders;
 	//CInstancingShader*					m_pShaders = NULL;
 
 	// Objects.

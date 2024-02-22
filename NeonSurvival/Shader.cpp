@@ -251,6 +251,10 @@ void CComputeShader::CreateComputePipelineState(ID3D12Device* pd3dDevice, ID3D12
 	m_czThreadGroups = czThreadGroups;
 }
 
+void CComputeShader::ChangeTexture(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CTexture* pTexture, bool bRtvTexture, wchar_t* texturePath)
+{
+}
+
 void CComputeShader::Dispatch(ID3D12GraphicsCommandList* pd3dCommandList, int nPipelineState)
 {
 	UpdateShaderVariables(pd3dCommandList);
@@ -507,6 +511,21 @@ void CPostProcessingShader::CreateGraphicsPipelineState(ID3D12Device* pd3dDevice
 	SetDSVFormat(DXGI_FORMAT_D32_FLOAT);
 
 	CShader::CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
+}
+
+void CPostProcessingShader::ChangeTexture(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CTexture* pTexture)
+{
+	ID3D12Resource* BlurTexture = pTexture->GetTexture(2);	//Blur Resource
+	ID3D12Resource* EmissiveTexture = m_pTexture->GetTexture(3);	//Emissive Resource
+
+	::SynchronizeResourceTransition(pd3dCommandList, BlurTexture, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
+	::SynchronizeResourceTransition(pd3dCommandList, EmissiveTexture, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST);
+
+	pd3dCommandList->CopyResource(EmissiveTexture, BlurTexture);
+
+	::SynchronizeResourceTransition(pd3dCommandList, BlurTexture, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	::SynchronizeResourceTransition(pd3dCommandList, EmissiveTexture, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
 }
 
 void CPostProcessingShader::CreateShaderResourceViews(ID3D12Device* pd3dDevice, int nResources, ID3D12Resource** ppd3dResources, DXGI_FORMAT* pdxgiSrvFormats, D3D12_CPU_DESCRIPTOR_HANDLE& m_d3dSrvCPUDescriptorNextHandle, D3D12_GPU_DESCRIPTOR_HANDLE& m_d3dSrvGPUDescriptorNextHandle)

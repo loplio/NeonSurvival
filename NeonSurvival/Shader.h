@@ -59,7 +59,10 @@ public:
 	enum ReafShaderType {
 		Shader,
 		PistolBulletShader,
-		TextureToScreenShader
+		TextureToScreenShader,
+		BrightAreaComputeShader,
+		Gaussian2DBlurComputeShader,
+		AddTextureComputeShader
 	};
 	virtual ReafShaderType GetReafShaderType() { return Shader; }
 
@@ -92,6 +95,8 @@ public:
 	virtual D3D12_SHADER_BYTECODE CreateComputeShader();
 
 	virtual void CreateComputePipelineState(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dRootSignature, UINT cxThreadGroups, UINT cyThreadGroups, UINT czThreadGroups);
+
+	virtual void ChangeTexture(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CTexture* pTexture, bool bRtvTexture = true, wchar_t* texturePath = NULL);
 
 	virtual void Dispatch(ID3D12GraphicsCommandList* pd3dCommandList, int nPipelineState = 0);
 	virtual void Dispatch(ID3D12GraphicsCommandList* pd3dCommandList, UINT cxThreadGroups, UINT cyThreadGroups, UINT czThreadGroups, int nPipelineState = 0);
@@ -164,6 +169,8 @@ public:
 	virtual D3D12_SHADER_BYTECODE CreatePixelShader();
 	
 	virtual void CreateGraphicsPipelineState(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature);
+
+	void ChangeTexture(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CTexture* pTexture);
 
 	void CreateShaderResourceViews(ID3D12Device* pd3dDevice, int nResources, ID3D12Resource** ppd3dResources, DXGI_FORMAT* pdxgiSrvFormats, D3D12_CPU_DESCRIPTOR_HANDLE& m_d3dSrvCPUDescriptorNextHandle, D3D12_GPU_DESCRIPTOR_HANDLE& m_d3dSrvGPUDescriptorNextHandle);
 

@@ -269,6 +269,9 @@ public:
 	
 	ReafShaderType GetReafShaderType() override { return PistolBulletShader; }
 
+	D3D12_CPU_DESCRIPTOR_HANDLE m_d3dSrvCPUDescriptorStartHandle;
+	D3D12_GPU_DESCRIPTOR_HANDLE m_d3dSrvGPUDescriptorStartHandle;
+
 public:
 	const int nMaxBullet = 100;
 	const float OffsetLength = METER_PER_PIXEL(0.8);
@@ -424,6 +427,8 @@ public:
 
 	virtual void CreateGraphicsPipelineState(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dRootSignature);
 
+	void ChangeTexture(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CTexture* pTexture);
+
 	virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void ReleaseShaderVariables();
@@ -432,8 +437,12 @@ public:
 
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int nPipelineState = 0);
 
+	D3D12_CPU_DESCRIPTOR_HANDLE m_d3dSrvCPUDescriptorStartHandle;
+	D3D12_GPU_DESCRIPTOR_HANDLE m_d3dSrvGPUDescriptorStartHandle;
+
 public:
 	CTexture* m_pTexture = NULL;
+	bool bFirst = true;
 };
 
 //-------------------------------------------------------------------------------
@@ -455,7 +464,17 @@ public:
 
 	virtual void ReleaseUploadBuffers();
 
+	virtual void ChangeTexture(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CTexture* pTexture, bool bRtvTexture = true, wchar_t* texturePath = NULL);
+
 	virtual void Dispatch(ID3D12GraphicsCommandList* pd3dCommandList, int nPipelineState = 0);
+
+	D3D12_CPU_DESCRIPTOR_HANDLE m_d3dSrvCPUDescriptorStartHandle;
+	D3D12_GPU_DESCRIPTOR_HANDLE m_d3dSrvGPUDescriptorStartHandle;
+
+	D3D12_CPU_DESCRIPTOR_HANDLE m_d3dUavCPUDescriptorStartHandle;
+	D3D12_GPU_DESCRIPTOR_HANDLE m_d3dUavGPUDescriptorStartHandle;
+
+	ReafShaderType GetReafShaderType() override { return AddTextureComputeShader; }
 
 public:
 	CTexture* m_pTexture = NULL;
@@ -479,9 +498,19 @@ public:
 	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void ReleaseShaderVariables();
 
+	virtual void ChangeTexture(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CTexture* pTexture, bool bRtvTexture = true, wchar_t* texturePath = NULL);
+
 	virtual void ReleaseUploadBuffers();
 
 	virtual void Dispatch(ID3D12GraphicsCommandList* pd3dCommandList, int nPipelineState = 0);
+
+	D3D12_CPU_DESCRIPTOR_HANDLE m_d3dSrvCPUDescriptorStartHandle;
+	D3D12_GPU_DESCRIPTOR_HANDLE m_d3dSrvGPUDescriptorStartHandle;
+
+	D3D12_CPU_DESCRIPTOR_HANDLE m_d3dUavCPUDescriptorStartHandle;
+	D3D12_GPU_DESCRIPTOR_HANDLE m_d3dUavGPUDescriptorStartHandle;
+
+	ReafShaderType GetReafShaderType() override { return BrightAreaComputeShader; }
 
 public:
 	CTexture* m_pTexture = NULL;
@@ -507,9 +536,19 @@ public:
 	virtual void ReleaseShaderVariables();
 	virtual void ReleaseUploadBuffers();
 
+	virtual void ChangeTexture(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CTexture* pTexture, bool bRtvTexture = true, wchar_t* texturePath = NULL);
+
 	virtual void Dispatch(ID3D12GraphicsCommandList* pd3dCommandList, int nPipelineState = 0);
 
 	void SetSourceResource(ID3D12Resource* pSourceResource) { m_pSourceResource = pSourceResource; }
+
+	D3D12_CPU_DESCRIPTOR_HANDLE m_d3dSrvCPUDescriptorStartHandle;
+	D3D12_GPU_DESCRIPTOR_HANDLE m_d3dSrvGPUDescriptorStartHandle;
+
+	D3D12_CPU_DESCRIPTOR_HANDLE m_d3dUavCPUDescriptorStartHandle;
+	D3D12_GPU_DESCRIPTOR_HANDLE m_d3dUavGPUDescriptorStartHandle;
+
+	ReafShaderType GetReafShaderType() override { return Gaussian2DBlurComputeShader; }
 
 public:
 	CTexture* m_pTexture = NULL;

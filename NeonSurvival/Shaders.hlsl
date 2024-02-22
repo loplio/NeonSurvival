@@ -212,12 +212,11 @@ float4 PSPostProcessing(VS_SCREEN_RECT_TEXTURED_OUTPUT input) : SV_Target
 		cColor = GetColorFromDepth(1.0f - gtxtInputTextures[5].Sample(gssWrap, input.uv).g);
 		break;
 	}
-	//case 68: //'D'
-	//{
-	//	float fDepth = gtxtInputTextures[6].Load(uint3((uint)input.position.x, (uint)input.position.y, 0)).r;
-	//	cColor = GetColorFromDepth(1.0f - fDepth);
-	//	break;
-	//}
+	case 81: //'Q'
+	{
+		cColor = gtxtInputTextures[0].Sample(gssWrap, input.uv) + gtxtInputTextures[3].Sample(gssWrap, input.uv);
+		break;
+	}
 	case 90: //'Z' 
 	{
 		float fDepth = gtxtInputTextures[6].Load(uint3((uint)input.position.x, (uint)input.position.y, 0)).r;
@@ -429,7 +428,7 @@ PS_MULTIPLE_RENDER_TARGETS_OUTPUT PSStandard(VS_STANDARD_OUTPUT input) : SV_TARG
 	reflected += gcGlobalAmbientLight;
 
 	// Gamma correction
-	float3 result = pow(reflected, 1.0 / 2.2) + emission;
+	float3 result = pow(reflected, 1.0 / 2.2)/* + emission*/;
 
 	//return float4(result, 1.0);
 
@@ -1094,20 +1093,25 @@ RWTexture2D<float4> gtxtRWOutput : register(u0);
 void CSBrightArea(int3 nDispatchID : SV_DispatchThreadID)
 {
 	// Blur only the bright parts
-	float4 BrightColor = pow(gtxtInputA[nDispatchID.xy], 16.0f);
-	float4 BrightColor2 = pow(gtxtInputA[nDispatchID.xy], 8.0f);
+	float4 BrightColor = pow(gtxtInputA[nDispatchID.xy], 5.0f);
+	float4 CenterBrightColor = pow(gtxtInputA[nDispatchID.xy], 1.0f);
+
 	float maxValue = max(max(gtxtInputA[nDispatchID.xy].r, gtxtInputA[nDispatchID.xy].g), gtxtInputA[nDispatchID.xy].b);
-	BrightColor.r *= pow(maxValue / gtxtInputA[nDispatchID.xy].r, 10.0f);
-	BrightColor.g *= pow(maxValue / gtxtInputA[nDispatchID.xy].g, 10.0f);
-	BrightColor.b *= pow(maxValue / gtxtInputA[nDispatchID.xy].b, 10.0f);
-	gtxtRWOutput[nDispatchID.xy] = BrightColor*1.0 + BrightColor2 * 0.3;
+	//float maxValue = gtxtInputA[nDispatchID.xy].r + gtxtInputA[nDispatchID.xy].g + gtxtInputA[nDispatchID.xy].b / 3.0;
+	//maxValue = (maxValue + 0.05f) / 1.05f;
+
+	BrightColor.r *= pow(maxValue / gtxtInputA[nDispatchID.xy].r, 5.0f);
+	BrightColor.g *= pow(maxValue / gtxtInputA[nDispatchID.xy].g, 5.0f);
+	BrightColor.b *= pow(maxValue / gtxtInputA[nDispatchID.xy].b, 5.0f);
+	gtxtRWOutput[nDispatchID.xy] = BrightColor + CenterBrightColor;
 }
 
 [numthreads(32, 32, 1)]
 void CSAddTextures(int3 nDispatchID : SV_DispatchThreadID)
 {
-	//	gtxtRWOutput[nDispatchID.xy] = gtxtInputA[nDispatchID.xy] + gtxtInputB[nDispatchID.xy];
-	gtxtRWOutput[nDispatchID.xy] = lerp(gtxtInputA[nDispatchID.xy], gtxtInputB[nDispatchID.xy], 0.35f);
+	gtxtRWOutput[nDispatchID.xy] = gtxtInputA[nDispatchID.xy] + gtxtInputB[nDispatchID.xy] * 1.5f;
+	//gtxtRWOutput[nDispatchID.xy] = gtxtInputA[nDispatchID.xy] + gtxtInputB[nDispatchID.xy];
+	//gtxtRWOutput[nDispatchID.xy] = lerp(gtxtInputA[nDispatchID.xy], gtxtInputB[nDispatchID.xy], 0.35f);
 }
 
 VS_TEXTURED_OUTPUT VSTextureToFullScreen(uint nVertexID : SV_VertexID)

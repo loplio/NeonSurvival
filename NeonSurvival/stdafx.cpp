@@ -207,13 +207,13 @@ inline UINT64 UpdateSubresources(ID3D12Device* pd3dDevice, ID3D12GraphicsCommand
 	return(UpdateSubresources(pd3dCommandList, pd3dResource, pd3dIntermediate, nFirstSubresource, nSubresources, nRequiredSize, pnd3dLayouts, pnRows, pnRowSizesInBytes, pd3dSrcData));
 }
 
-ID3D12Resource* CreateTextureResource(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, void* pData, UINT nBytes, D3D12_RESOURCE_DIMENSION d3dResourceDimension, UINT nWidth, UINT nHeight, UINT nDepthOrArraySize, UINT nMipLevels, D3D12_RESOURCE_FLAGS d3dResourceFlags, DXGI_FORMAT dxgiFormat, D3D12_HEAP_TYPE d3dHeapType, D3D12_RESOURCE_STATES d3dResourceStates, ID3D12Resource** ppd3dUploadBuffer)
+ID3D12Resource* CreateTextureResource(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, void* pData, UINT nBytes, D3D12_RESOURCE_DIMENSION d3dResourceDimension, UINT nWidth, UINT nHeight, UINT nDepthOrArraySize, UINT nMipLevels, D3D12_RESOURCE_FLAGS d3dResourceFlags, DXGI_FORMAT dxgiFormat, D3D12_HEAP_TYPE d3dHeapType, D3D12_RESOURCE_STATES d3dResourceStates, ID3D12Resource** ppd3dUploadBuffer, ID3D12Resource* d3dRtvResource)
 {
 	ID3D12Resource* pd3dBuffer = NULL;
 
 	D3D12_HEAP_PROPERTIES d3dHeapPropertiesDesc;
 	::ZeroMemory(&d3dHeapPropertiesDesc, sizeof(D3D12_HEAP_PROPERTIES));
-	d3dHeapPropertiesDesc.Type = d3dHeapType;
+	d3dHeapPropertiesDesc.Type = d3dHeapType; //D3D12_HEAP_TYPE_DEFAULT
 	d3dHeapPropertiesDesc.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
 	d3dHeapPropertiesDesc.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
 	d3dHeapPropertiesDesc.CreationNodeMask = 1;
@@ -237,7 +237,7 @@ ID3D12Resource* CreateTextureResource(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 	{
 	case D3D12_HEAP_TYPE_DEFAULT:
 	{
-		D3D12_RESOURCE_STATES d3dResourceInitialStates = (ppd3dUploadBuffer && pData) ? D3D12_RESOURCE_STATE_COPY_DEST : d3dResourceStates;
+		D3D12_RESOURCE_STATES d3dResourceInitialStates = (ppd3dUploadBuffer && pData) ? /*D3D12_RESOURCE_STATE_COPY_DEST*/D3D12_RESOURCE_STATE_COMMON : d3dResourceStates;
 		HRESULT hResult = pd3dDevice->CreateCommittedResource(&d3dHeapPropertiesDesc, D3D12_HEAP_FLAG_NONE, &d3dResourceDesc, d3dResourceInitialStates, NULL, __uuidof(ID3D12Resource), (void**)&pd3dBuffer);
 		if (ppd3dUploadBuffer && pData)
 		{
@@ -280,6 +280,24 @@ ID3D12Resource* CreateTextureResource(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 			d3dResourceBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 			pd3dCommandList->ResourceBarrier(1, &d3dResourceBarrier);
 		}
+		else if (d3dRtvResource)
+		{
+			D3D12_RESOURCE_BARRIER d3dResourceBarrier;
+			::ZeroMemory(&d3dResourceBarrier, sizeof(D3D12_RESOURCE_BARRIER));
+			d3dResourceBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+			d3dResourceBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+			d3dResourceBarrier.Transition.pResource = d3dRtvResource;
+			d3dResourceBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+			d3dResourceBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_SOURCE;
+			d3dResourceBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+			pd3dCommandList->ResourceBarrier(1, &d3dResourceBarrier);
+
+			pd3dCommandList->CopyResource(pd3dBuffer, d3dRtvResource);
+
+			d3dResourceBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_SOURCE;
+			d3dResourceBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+			pd3dCommandList->ResourceBarrier(1, &d3dResourceBarrier);
+		}
 		break;
 	}
 	case D3D12_HEAP_TYPE_UPLOAD:
@@ -311,6 +329,7 @@ ID3D12Resource* CreateTextureResource(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 		break;
 	}
 	}
+
 	return(pd3dBuffer);
 }
 
@@ -433,8 +452,8 @@ ID3D12Resource* CreateTexture2DResource(ID3D12Device* pd3dDevice, ID3D12Graphics
 	d3dTextureResourceDesc.Alignment = 0;
 	d3dTextureResourceDesc.Width = nWidth;
 	d3dTextureResourceDesc.Height = nHeight;
-	d3dTextureResourceDesc.DepthOrArraySize = nElements;
-	d3dTextureResourceDesc.MipLevels = nMipLevels;
+	d3dTextureResourceDesc.DepthOrArraySize = nElements; //1
+	d3dTextureResourceDesc.MipLevels = nMipLevels; // 0
 	d3dTextureResourceDesc.Format = dxgiFormat;
 	d3dTextureResourceDesc.SampleDesc.Count = 1;
 	d3dTextureResourceDesc.SampleDesc.Quality = 0;
