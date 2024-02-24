@@ -215,14 +215,17 @@ void GameCompute_Neon::Animate() const
 void GameCompute_Neon::RayTrace() const
 {
 	m_Player.SetViewMatrix();
+	CCamera* pCamera = m_Player.GetCamera();
+	XMFLOAT3 FirePosition = Vector3::Add(m_Player.GetPosition(), m_Player.GetOffset());
 
 	// Crosshair's Ray Trace.
-	int nIntersected = 0, accumulate = 0, bSelected = -1;
-	float fHitDistance = FLT_MAX, fNearestHitDistance = FLT_MAX;
+	int nIntersected = 0, accumulate = 0, nSelected = -1;
+	float fHitDistance = FLT_MAX, fNearestHitDistance = FLT_MAX, fNearestMuzzleToObject = FLT_MAX;
 	CGameObject* pSelectedObject = NULL;
 	XMFLOAT3 ClientPosition = XMFLOAT3(0.0f, 0.0f, 1.0f);
-	XMFLOAT4X4 xmfCameraViewMatrix = m_Player.GetCamera()->GetViewMatrix();
+	XMFLOAT4X4 xmfCameraViewMatrix = pCamera->GetViewMatrix();
 	std::vector<CGameObject*>& BoundingObjects = m_BoundingObjects.GetBoundingObjects();
+
 	for (int i = 0; i < BoundingObjects.size(); ++i)
 	{
 		if (BoundingObjects[i]->GetReafObjectType() == CGameObject::Player) continue;
@@ -232,7 +235,7 @@ void GameCompute_Neon::RayTrace() const
 		if (nIntersected > 0)
 		{
 			pSelectedObject = BoundingObjects[i];
-			if (m_Player.GetCamera()->GetMode() == FIRST_PERSON_CAMERA || m_Player.GetCamera()->GetMode() == SHOULDER_HOLD_CAMERA)
+			if (pCamera->GetMode() == FIRST_PERSON_CAMERA || pCamera->GetMode() == SHOULDER_HOLD_CAMERA)
 			{
 				float distance = FLT_MAX;
 				XMFLOAT3 xmf3PickRayOrigin, xmf3PickRayDirection;
@@ -242,25 +245,69 @@ void GameCompute_Neon::RayTrace() const
 					if (fNearestHitDistance > distance)
 					{
 						fNearestHitDistance = distance;
-						bSelected = i;
+						nSelected = i;
 					}
 				}
 			}
 		}
 	}
 
-	if (bSelected > 0)
+	XMFLOAT3 TargetPosition = Vector3::Add(Vector3::ScalarProduct(pCamera->GetLookVector(), fNearestHitDistance), pCamera->GetPosition());
+	if (nSelected >= 0)
 	{
-		m_Player.SetRayDirection(Vector3::Subtract(Vector3::Add(Vector3::ScalarProduct(m_Player.GetCamera()->GetLookVector(), fNearestHitDistance), m_Player.GetCamera()->GetPosition()), Vector3::Add(m_Player.GetPosition(), m_Player.GetOffset())));
-		m_Player.GetCamera()->SetRayDirection(Vector3::ScalarProduct(m_Player.GetCamera()->GetLookVector(), fNearestHitDistance));
-		m_Player.GetCamera()->SetRayLength(fNearestHitDistance);
+		m_Player.bSelectedObject = true;
+		m_Player.fDistanceAtObject = Vector3::Length(Vector3::Subtract(TargetPosition, FirePosition));
+		m_Player.SetRayDirection(Vector3::Subtract(TargetPosition, Vector3::Add(m_Player.GetPosition(), m_Player.GetOffset())));
+		pCamera->SetRayDirection(Vector3::ScalarProduct(pCamera->GetLookVector(), fNearestHitDistance));
+		pCamera->SetRayLength(fNearestHitDistance);
 		//std::cout << "" << "Index - " << bSelected << ", Intersect Num: " << nIntersected << ", Length: " << float(fNearestHitDistance) << std::endl;
 	}
-	else
+
+
+	bool bGunRayIntersection = false;
+	XMFLOAT3 DefualtTargetPosition = Vector3::Add(pCamera->GetPosition(), Vector3::ScalarProduct(pCamera->GetLookVector(), METER_PER_PIXEL(80)));
+	XMFLOAT3 DefualtDirection = Vector3::Normalize(Vector3::Subtract(DefualtTargetPosition, FirePosition));
+	for (int i = 0; i < BoundingObjects.size(); ++i)
 	{
-		m_Player.SetRayDirection(m_Player.GetCamera()->GetLookVector());
-		m_Player.GetCamera()->SetRayDirection(m_Player.GetCamera()->GetLookVector());
+		if (BoundingObjects[i]->GetReafObjectType() == CGameObject::Player) continue;
+
+		if (BoundingObjects[i]->m_pMesh)
+		{
+			XMFLOAT4X4 inverseWorldMatrix = Matrix4x4::Inverse(BoundingObjects[i]->m_xmf4x4World);
+			XMFLOAT3 vLocalPosition = Vector3::TransformCoord(FirePosition, inverseWorldMatrix);
+			XMFLOAT3 vLocalDirection = (nSelected > 0) ? Vector3::Normalize(Vector3::Subtract(TargetPosition, FirePosition)) : DefualtDirection;
+
+			nIntersected = BoundingObjects[i]->m_pMesh->CheckRayIntersection(vLocalPosition, vLocalDirection, &fHitDistance, BoundingObjects[i]->m_xmf4x4World);
+			if (nIntersected > 0)
+			{
+				pSelectedObject = BoundingObjects[i];
+				if (pCamera->GetMode() == FIRST_PERSON_CAMERA || pCamera->GetMode() == SHOULDER_HOLD_CAMERA)
+				{
+					float distance = FLT_MAX;
+					if (pSelectedObject->RayIntersectsTriangle(vLocalPosition, vLocalDirection, distance))
+					{
+						if (fNearestMuzzleToObject > distance)
+						{
+							fNearestMuzzleToObject = distance;
+							//std::cout << "index - " << i << ", distance - " << fNearestMuzzleToObject << std::endl;
+							bGunRayIntersection = true;
+						}
+					}
+				}
+			}
+		}
 	}
+	if(nSelected < 0)
+	{
+		if (bGunRayIntersection)
+		{
+			m_Player.bSelectedObject = true;
+			m_Player.fDistanceAtObject = fNearestMuzzleToObject;
+		}
+		m_Player.SetRayDirection(DefualtDirection);
+		pCamera->SetRayDirection(pCamera->GetLookVector());
+	}
+
 }
 
 

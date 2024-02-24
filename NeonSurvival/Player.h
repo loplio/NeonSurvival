@@ -128,5 +128,7 @@ public:
 	int Player_ID = -1;
 	const float fPitchThickness = 0.2f;
 	bool IsDash = false;
+	bool bSelectedObject = false;
+	float fDistanceAtObject = 0.0f;
 	DWORD m_dwDirection = 0;
 };

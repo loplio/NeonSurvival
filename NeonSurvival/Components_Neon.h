@@ -142,8 +142,8 @@ public:
 
 class CPistolBulletObject : public DynamicObject {
 public:
-	CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection,int type,bool ismine);
-	CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection,int type);
+	CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection,int type,bool ismine, float fDistanceAtObject);
+	CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection,int type, float fDistanceAtObject);
 	virtual ~CPistolBulletObject();
 
 	void RunTimeBuild(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) override;
@@ -155,6 +155,8 @@ public:
 	const float m_fDamege = 36.0f;
 	const float m_fSpeed = PIXEL_MPS(40);
 	float m_fLifeTime = 0.0f;
+	float m_fMaxLifeTime = 2.0f;
+	float m_fDistanceAtObject = 0.0f;
 	XMFLOAT3 m_fRayDriection;
 	int Type;
 	bool IsMine;

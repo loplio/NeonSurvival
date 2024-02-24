@@ -82,6 +82,9 @@ void Player_Neon::Move(ULONG dwDirection, float fDistance, bool bUpdateVelocity)
 }
 void Player_Neon::Update(float fTimeElapsed)
 {
+	// Variables init
+	bSelectedObject = false;
+
 	// Gravity operation
 	m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, Vector3::ScalarProduct(m_xmf3Gravity, fTimeElapsed, false));
 
@@ -343,7 +346,7 @@ CCamera* Player_Neon::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 		SetMaxVelocityY(PIXEL_KPH(200));
 		m_pCamera = OnChangeCamera(SHOULDER_HOLD_CAMERA, nCurrentCameraMode);
 		m_pCamera->SetTimeLag(0.05f);
-		m_pCamera->SetOffset(XMFLOAT3(METER_PER_PIXEL(0.8), METER_PER_PIXEL(1.55), METER_PER_PIXEL(-1)));
+		m_pCamera->SetOffset(XMFLOAT3(METER_PER_PIXEL(0.5), METER_PER_PIXEL(1.55), METER_PER_PIXEL(-1.5)));
 		m_pCamera->GenerateProjectionMatrix(1.01f, 5000.0f, ASPECT_RATIO, 60.0f);
 		m_pCamera->SetViewport(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT, 0.0f, 1.0f);
 		m_pCamera->SetScissorRect(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT);
@@ -1469,11 +1472,13 @@ bool Scene_Neon::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wPa
 	case WM_LBUTTONDOWN:
 		if (m_pPlayer->GetCamera()->GetMode() == THIRD_PERSON_CAMERA) break;
 
+		if (m_pPlayer->IsDash) break;
+
 		// Change the animation while shooting
 		if (((Player_Neon*)m_pPlayer.get())->GetReafObjectType() == CGameObject::Player)
 		{
-			if (m_pPlayer->m_pSkinnedAnimationController->m_nCurrentTrack == m_pPlayer->m_pSkinnedAnimationController->m_nAnimationBundle[CAnimationController::RUN])
-				break;
+			//if (m_pPlayer->m_pSkinnedAnimationController->m_nCurrentTrack == m_pPlayer->m_pSkinnedAnimationController->m_nAnimationBundle[CAnimationController::RUN])
+			//	break;
 
 			if (((Player_Neon*)m_pPlayer.get())->m_nGunType == Player_Neon::Empty)
 			{
@@ -1552,12 +1557,15 @@ void Scene_Neon::Update(float fTimeElapsed)
 
 			if (m_pPlayer->GetReadyFire())
 			{
-				if (((PistolBulletTexturedObjects*)m_ppShaders[i])->m_fCoolTime <= 0.0f)
+				if (((PistolBulletTexturedObjects*)m_ppShaders[i])->m_fCoolTime <= 0.0f && !m_pPlayer->IsDash)
 				{
 					PistolBulletTexturedObjects* pObjectsShader = (PistolBulletTexturedObjects*)m_ppShaders[i];
 					XMFLOAT3 rayDirection = m_pPlayer.get()->GetRayDirection();
 					XMFLOAT3 startLocation = Vector3::Add(Vector3::Add(m_pPlayer.get()->GetPosition(), m_pPlayer.get()->GetOffset()), Vector3::ScalarProduct(Vector3::Normalize(rayDirection), ((PistolBulletTexturedObjects*)m_ppShaders[i])->OffsetLength, false));
-					pObjectsShader->AppendBullet(startLocation, rayDirection, 0,true); //ÃÑ¾Ë
+					if (m_pPlayer.get()->bSelectedObject)
+						pObjectsShader->AppendBullet(startLocation, rayDirection, 0, true, m_pPlayer.get()->fDistanceAtObject); //ÃÑ¾Ë
+					else
+						pObjectsShader->AppendBullet(startLocation, rayDirection, 0, true); //ÃÑ¾Ë
 					((PistolBulletTexturedObjects*)m_ppShaders[i])->m_fCoolTime = ((PistolBulletTexturedObjects*)m_ppShaders[i])->m_fMaxCoolTime;
 					((PistolBulletTexturedObjects*)m_ppShaders[i])->m_fLastTime = 0.0f;
 					
@@ -1651,7 +1659,12 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 							PistolBulletTexturedObjects* pObjectsShader = (PistolBulletTexturedObjects*)m_ppShaders[k];
 							XMFLOAT3 rayDirection = m_pOtherPlayerData2[shoterId].RayDirection;
 							XMFLOAT3 startLocation = Vector3::Add(Vector3::Add(m_pOtherPlayerData2[shoterId].position, m_pPlayer.get()->GetOffset()), Vector3::ScalarProduct(Vector3::Normalize(rayDirection), ((PistolBulletTexturedObjects*)m_ppShaders[k])->OffsetLength, false));
-							pObjectsShader->AppendBullet(startLocation, rayDirection,1,false); //ÃÑ¾Ë
+
+							if (m_pPlayer.get()->bSelectedObject)
+								pObjectsShader->AppendBullet(startLocation, rayDirection, 1, false, m_pPlayer.get()->fDistanceAtObject); //ÃÑ¾ËÀÌ ¿ÀºêÁ§Æ®¿¡ ´ê´Â ½Ã°£À» ³Ñ±è.
+							else
+								pObjectsShader->AppendBullet(startLocation, rayDirection, 1, false); //ÃÑ¾Ë
+
 							SERVER::getInstance().SetShotClinetId(-1);
 							break;
 						}
@@ -1873,21 +1886,31 @@ CParticleObject_Neon::~CParticleObject_Neon()
 {
 }
 //-------------------------------------------------------------------------------
-CPistolBulletObject::CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection, int type,bool ismine)
+CPistolBulletObject::CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection, int type, bool ismine, float fDistanceAtObject)
 {
 	Type = type;
 	SetMaterial(0, pMaterial);
 	SetPosition(startLocation);
 	m_fRayDriection = Vector3::Normalize(rayDirection);
 	IsMine = ismine;
+	if (fDistanceAtObject > 0.0f)
+	{
+		m_fDistanceAtObject = fDistanceAtObject;
+		m_fMaxLifeTime = m_fDistanceAtObject / m_fSpeed;
+	}
 }
 
-CPistolBulletObject::CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection, int type)
+CPistolBulletObject::CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection, int type, float fDistanceAtObject)
 {
 	Type = type;
 	SetMaterial(0, pMaterial);
 	SetPosition(startLocation);
 	m_fRayDriection = Vector3::Normalize(rayDirection);
+	if (m_fDistanceAtObject > 0.0f)
+	{
+		m_fDistanceAtObject = fDistanceAtObject;
+		m_fMaxLifeTime = m_fDistanceAtObject / m_fSpeed;
+	}
 }
 CPistolBulletObject::~CPistolBulletObject()
 {

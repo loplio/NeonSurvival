@@ -1149,22 +1149,22 @@ void PistolBulletTexturedObjects::Collide(const CGameSource& GameSource, CBoundi
 	}
 }
 
-void PistolBulletTexturedObjects::AppendBullet(XMFLOAT3& startLocation, XMFLOAT3& rayDirection, int type,bool ismine)
+void PistolBulletTexturedObjects::AppendBullet(XMFLOAT3& startLocation, XMFLOAT3& rayDirection, int type,bool ismine, float fDistanceAtObject)
 {
 	m_nBuildIndex++;
-	m_ppObjects.push_back(new CPistolBulletObject(m_pMaterial, startLocation, rayDirection, type,ismine));
+	m_ppObjects.push_back(new CPistolBulletObject(m_pMaterial, startLocation, rayDirection, type,ismine, fDistanceAtObject));
 }
 
-void PistolBulletTexturedObjects::AppendBullet(XMFLOAT3& startLocation, XMFLOAT3& rayDirection, int type)
+void PistolBulletTexturedObjects::AppendBullet(XMFLOAT3& startLocation, XMFLOAT3& rayDirection, int type, float fDistanceAtObject)
 {
 	m_nBuildIndex++;
-	m_ppObjects.push_back(new CPistolBulletObject(m_pMaterial, startLocation, rayDirection, type));
+	m_ppObjects.push_back(new CPistolBulletObject(m_pMaterial, startLocation, rayDirection, type, fDistanceAtObject));
 }
 void PistolBulletTexturedObjects::EventRemove()
 {
 	for (std::list<CGameObject*>::iterator bullet = m_ppObjects.begin(); bullet != m_ppObjects.end(); ++bullet)
 	{
-		if (((CPistolBulletObject*)(*bullet))->m_fLifeTime > 2.0f)
+		if (((CPistolBulletObject*)(*bullet))->m_fLifeTime > ((CPistolBulletObject*)(*bullet))->m_fMaxLifeTime)
 		{
 			(*bullet)->Release();
 			std::list<CGameObject*>::iterator iter = m_ppObjects.erase(bullet);
