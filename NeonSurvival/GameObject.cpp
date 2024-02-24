@@ -878,9 +878,14 @@ void CGameObject::SetChild(CGameObject* pChild, bool bReferenceUpdate)
 	}
 }
 
-//void CGameObject::Conflicted(LPVOID CollisionInfo)
-//{
-//}
+bool CGameObject::RayIntersectsTriangle(const XMFLOAT3& Origin, const XMFLOAT3& Direction, float& Distance)
+{
+	bool bIntersect = false;
+	
+	if (m_pMesh) bIntersect = m_pMesh->RayIntersectsTriangle(Origin, Direction, Distance, Vector3::Length(m_xmf3PrevScale) * sqrt(3) / 3);
+
+	return bIntersect;
+}
 bool CGameObject::Collide(FXMVECTOR Origin, FXMVECTOR Direction, float& Dist)
 {
 	bool bHit = false;
@@ -1211,7 +1216,7 @@ int CGameObject::PickObjectByRayIntersection(XMFLOAT3& xmf3PickPosition, XMFLOAT
 		XMFLOAT3 xmf3PickRayOrigin, xmf3PickRayDirection;
 		GenerateRayForPicking(xmf3PickPosition, xmf4x4View, &xmf3PickRayOrigin, &xmf3PickRayDirection);
 
-		nIntersected += m_pMesh->CheckRayIntersection(xmf3PickRayOrigin, xmf3PickRayDirection, pfHitDistance, m_xmf4x4World, Vector3::Length(m_xmf3PrevScale) * sqrt(3) / 3);
+		nIntersected += m_pMesh->CheckRayIntersection(xmf3PickRayOrigin, xmf3PickRayDirection, pfHitDistance, m_xmf4x4World);
 	}
 	return nIntersected;
 }

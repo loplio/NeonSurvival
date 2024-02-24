@@ -429,6 +429,7 @@ public:
 	void SetChild(CGameObject* pChild, bool bReferenceUpdate = false);
 
 	// processcompute..
+	bool RayIntersectsTriangle(const XMFLOAT3& Origin, const XMFLOAT3& Direction, float& Distance);
 	virtual bool Collide(FXMVECTOR Origin, FXMVECTOR Direction, float& Dist);
 	virtual bool Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects);
 	virtual bool Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects, UINT& nConflicted) { return false; };

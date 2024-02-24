@@ -126,7 +126,8 @@ public:
 	virtual void PostRender(ID3D12GraphicsCommandList* pd3dCommandList, int nPipelineState) { };
 	virtual void OnPostRender(int nPipelineState) { };
 
-	int CheckRayIntersection(XMFLOAT3& xmRayPosition, XMFLOAT3& xmRayDirection, float* pfNearHitDistance, XMFLOAT4X4& xmf4x4World, float ReduceScale);
+	int CheckRayIntersection(XMFLOAT3& xmRayPosition, XMFLOAT3& xmRayDirection, float* pfNearHitDistance, XMFLOAT4X4& xmf4x4World);
+	bool RayIntersectsTriangle(const XMFLOAT3& Origin, const XMFLOAT3& Direction, float& Distance, float ReduceScale);
 
 	UINT GetType() { return(m_nType); }
 	XMFLOAT3& GetAABBExtents() { return m_xmf3AABBExtents; }

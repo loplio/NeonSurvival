@@ -88,7 +88,7 @@ void CMesh::Render(ID3D12GraphicsCommandList* pd3dCommandList, int nSubSet, UINT
 	}
 }
 
-int CMesh::CheckRayIntersection(XMFLOAT3& xmf3RayOrigin, XMFLOAT3& xmf3RayDirection, float* pfNearHitDistance, XMFLOAT4X4& xmf4x4World, float ReduceScale)
+int CMesh::CheckRayIntersection(XMFLOAT3& xmf3RayOrigin, XMFLOAT3& xmf3RayDirection, float* pfNearHitDistance, XMFLOAT4X4& xmf4x4World)
 {
 	int nIntersections = 0;
 	BYTE* pbPositions = (BYTE*)m_pxmf3Positions;
@@ -106,37 +106,50 @@ int CMesh::CheckRayIntersection(XMFLOAT3& xmf3RayOrigin, XMFLOAT3& xmf3RayDirect
 	bool bIntersected = m_xmBoundingBox.Intersects(xmRayOrigin, xmRayDirection, *pfNearHitDistance);
 	if (bIntersected)
 	{
-		*pfNearHitDistance = *pfNearHitDistance * ReduceScale * sqrt(xmRayDirection.m128_f32[0] * xmRayDirection.m128_f32[0] + xmRayDirection.m128_f32[1] * xmRayDirection.m128_f32[1] + xmRayDirection.m128_f32[2] * xmRayDirection.m128_f32[2]);
+		//*pfNearHitDistance = *pfNearHitDistance * ReduceScale * sqrt(xmRayDirection.m128_f32[0] * xmRayDirection.m128_f32[0] + xmRayDirection.m128_f32[1] * xmRayDirection.m128_f32[1] + xmRayDirection.m128_f32[2] * xmRayDirection.m128_f32[2]);
 		return bIntersected;
-
-		// primitive's collide test. (a lot of overload!!)
-		
-		//float fNearHitDistance = FLT_MAX;
-		//for (int i = 0, k = 0; i < nPrimitives; i++)
-		//{
-		//	if (m_ppnSubSetIndices && m_ppnSubSetIndices[k] && i >= m_pnSubSetIndices[k]) k++;
-		//	
-		//	XMVECTOR v0 = XMLoadFloat3((XMFLOAT3*)(pbPositions + ((m_ppnSubSetIndices && m_ppnSubSetIndices[k]) ?
-		//		(m_ppnSubSetIndices[k][(i * nOffset) + 0]) : ((i * nOffset) + 0)) * sizeof(XMFLOAT3)));
-		//	XMVECTOR v1 = XMLoadFloat3((XMFLOAT3*)(pbPositions + ((m_ppnSubSetIndices && m_ppnSubSetIndices[k]) ?
-		//		(m_ppnSubSetIndices[k][(i * nOffset) + 1]) : ((i * nOffset) + 1)) * sizeof(XMFLOAT3)));
-		//	XMVECTOR v2 = XMLoadFloat3((XMFLOAT3*)(pbPositions + ((m_ppnSubSetIndices && m_ppnSubSetIndices[k]) ?
-		//		(m_ppnSubSetIndices[k][(i * nOffset) + 2]) : ((i * nOffset) + 2)) * sizeof(XMFLOAT3)));
-
-		//	float fHitDistance;
-		//	BOOL bIntersected = TriangleTests::Intersects(xmRayOrigin, xmRayDirection, v0, v1, v2, fHitDistance);
-		//	if (bIntersected)
-		//	{
-		//		if (fHitDistance < fNearHitDistance)
-		//		{
-		//			*pfNearHitDistance = fNearHitDistance = fHitDistance;
-		//		}
-		//		nIntersections++;
-		//	}
-		//}
 	}
 
 	return nIntersections;
+}
+bool CMesh::RayIntersectsTriangle(const XMFLOAT3& Origin, const XMFLOAT3& Direction, float& Distance, float ReduceScale)
+{
+	FXMVECTOR xmOrigin = XMLoadFloat3(&Origin);
+	FXMVECTOR xmDirection = XMLoadFloat3(&Direction);
+	// 광선과 삼각형의 충돌 검사
+	if (m_pxmf3Positions)
+	{
+		if (0 < m_nSubMeshes)
+		{
+			const UINT SubMesh0 = 0;	// 현재 프로젝트에서는 0번 SubMesh밖에 없음.
+			int nSubIndices = m_pnSubSetIndices[SubMesh0];
+			for (int i = 0; i < nSubIndices / 3; ++i)
+			{
+				float distance;
+
+				UINT iTriangle = i * 3;
+				UINT SubIndex0 = m_ppnSubSetIndices[SubMesh0][iTriangle];
+				UINT SubIndex1 = m_ppnSubSetIndices[SubMesh0][iTriangle + 1];
+				UINT SubIndex2 = m_ppnSubSetIndices[SubMesh0][iTriangle + 2];
+
+				bool intersect = TriangleTests::Intersects(XMLoadFloat3(&Origin), XMLoadFloat3(&Direction),
+					XMLoadFloat3(&m_pxmf3Positions[SubIndex0]), XMLoadFloat3(&m_pxmf3Positions[SubIndex1]), XMLoadFloat3(&m_pxmf3Positions[SubIndex2]), distance);
+
+				if (intersect && distance < Distance)
+				{
+					XMVECTOR xmRayDirection = XMLoadFloat3(&Direction);
+					Distance = distance * ReduceScale * 
+						sqrt(xmRayDirection.m128_f32[0] * xmRayDirection.m128_f32[0] + 
+							xmRayDirection.m128_f32[1] * xmRayDirection.m128_f32[1] + 
+							xmRayDirection.m128_f32[2] * xmRayDirection.m128_f32[2]);
+					
+					//std::cout << "Primitive Index: " << i << std::endl;
+					return true;
+				}
+			}
+		}
+	}
+	return false;
 }
 
 //-------------------------------------------------------------------------------

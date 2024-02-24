@@ -217,7 +217,7 @@ void GameCompute_Neon::RayTrace() const
 	m_Player.SetViewMatrix();
 
 	// Crosshair's Ray Trace.
-	int nIntersected = 0, accumulate = 0;
+	int nIntersected = 0, accumulate = 0, bSelected = -1;
 	float fHitDistance = FLT_MAX, fNearestHitDistance = FLT_MAX;
 	CGameObject* pSelectedObject = NULL;
 	XMFLOAT3 ClientPosition = XMFLOAT3(0.0f, 0.0f, 1.0f);
@@ -229,23 +229,34 @@ void GameCompute_Neon::RayTrace() const
 
 		nIntersected = BoundingObjects[i]->PickObjectByRayIntersection(ClientPosition, xmfCameraViewMatrix, &fHitDistance);
 		accumulate += nIntersected;
-		if ((nIntersected > 0) && (fHitDistance < fNearestHitDistance))
+		if (nIntersected > 0)
 		{
-			fNearestHitDistance = fHitDistance;
 			pSelectedObject = BoundingObjects[i];
 			if (m_Player.GetCamera()->GetMode() == FIRST_PERSON_CAMERA || m_Player.GetCamera()->GetMode() == SHOULDER_HOLD_CAMERA)
 			{
-				if (fNearestHitDistance > METER_PER_PIXEL(0))
+				float distance = FLT_MAX;
+				XMFLOAT3 xmf3PickRayOrigin, xmf3PickRayDirection;
+				pSelectedObject->GenerateRayForPicking(ClientPosition, xmfCameraViewMatrix, &xmf3PickRayOrigin, &xmf3PickRayDirection);
+				if (pSelectedObject->RayIntersectsTriangle(xmf3PickRayOrigin, xmf3PickRayDirection, distance))
 				{
-					m_Player.SetRayDirection(Vector3::Subtract(Vector3::Add(Vector3::ScalarProduct(m_Player.GetCamera()->GetLookVector(), fNearestHitDistance), m_Player.GetCamera()->GetPosition()), Vector3::Add(m_Player.GetPosition(), m_Player.GetOffset())));
-					m_Player.GetCamera()->SetRayDirection(Vector3::ScalarProduct(m_Player.GetCamera()->GetLookVector(), fNearestHitDistance));
-					m_Player.GetCamera()->SetRayLength(fNearestHitDistance);
-					//std::cout << "" << "Index - " << i << ", Intersect Num: " << nIntersected << ", Length: " << float(fHitDistance) << std::endl;
+					if (fNearestHitDistance > distance)
+					{
+						fNearestHitDistance = distance;
+						bSelected = i;
+					}
 				}
 			}
 		}
 	}
-	if (accumulate == 0)
+
+	if (bSelected > 0)
+	{
+		m_Player.SetRayDirection(Vector3::Subtract(Vector3::Add(Vector3::ScalarProduct(m_Player.GetCamera()->GetLookVector(), fNearestHitDistance), m_Player.GetCamera()->GetPosition()), Vector3::Add(m_Player.GetPosition(), m_Player.GetOffset())));
+		m_Player.GetCamera()->SetRayDirection(Vector3::ScalarProduct(m_Player.GetCamera()->GetLookVector(), fNearestHitDistance));
+		m_Player.GetCamera()->SetRayLength(fNearestHitDistance);
+		//std::cout << "" << "Index - " << bSelected << ", Intersect Num: " << nIntersected << ", Length: " << float(fNearestHitDistance) << std::endl;
+	}
+	else
 	{
 		m_Player.SetRayDirection(m_Player.GetCamera()->GetLookVector());
 		m_Player.GetCamera()->SetRayDirection(m_Player.GetCamera()->GetLookVector());
@@ -321,9 +332,9 @@ void GameRenderDisplay_Neon::Render()
 	m_Scene.DrawUI(&m_pd3dCommandList, Camera);
 
 	// PostProcessing
-	//m_Scene.CopyRenderScene(&m_pd3dDevice, &m_pd3dCommandList, m_InterfaceFramework.GetRenderTargetBuffers()[m_InterfaceFramework.GetSwapChainBufferIndex()]);
-	//m_Scene.OnPreparePostProcessing(&m_pd3dDevice, &m_pd3dCommandList);
-	//m_Scene.m_pPostProcessingShader->Render(&m_pd3dCommandList, Camera, &m_Scene.m_nDrawOptions);
+	m_Scene.CopyRenderScene(&m_pd3dDevice, &m_pd3dCommandList, m_InterfaceFramework.GetRenderTargetBuffers()[m_InterfaceFramework.GetSwapChainBufferIndex()]);
+	m_Scene.OnPreparePostProcessing(&m_pd3dDevice, &m_pd3dCommandList);
+	m_Scene.m_pPostProcessingShader->Render(&m_pd3dCommandList, Camera, &m_Scene.m_nDrawOptions);
 
 	// BoundingBox Render
 	m_BoundingBox.Render(&m_pd3dCommandList, Camera);
