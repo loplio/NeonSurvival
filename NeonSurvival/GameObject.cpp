@@ -593,6 +593,7 @@ void CMaterial::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList
 	pd3dCommandList->SetGraphicsRoot32BitConstants(2, 4, &m_xmf4SpecularColor, 24);
 	pd3dCommandList->SetGraphicsRoot32BitConstants(2, 4, &m_xmf4EmissiveColor, 28);
 	pd3dCommandList->SetGraphicsRoot32BitConstants(2, 1, &m_nType, 32);
+	pd3dCommandList->SetGraphicsRoot32BitConstants(2, 1, &m_nObjectTypeID, 33);
 
 	if (m_pShader) m_pShader->UpdateShaderVariables(pd3dCommandList);
 
@@ -1060,6 +1061,23 @@ void CGameObject::MoveForward(float fDistance)
 	XMFLOAT3 xmf3Look = GetLook();
 	xmf3Position = Vector3::Add(xmf3Position, xmf3Look, fDistance);
 	CGameObject::SetPosition(xmf3Position);
+}
+
+void CGameObject::SetObjectTypeID(UINT type)
+{
+	if (m_nMaterials > 0)
+	{
+		for (int i = 0; i < m_nMaterials; ++i)
+		{
+			if (m_ppMaterials[i])
+			{
+				m_ppMaterials[i]->m_nObjectTypeID = type;
+			}
+		}
+	}
+
+	if (m_pSibling) m_pSibling->SetObjectTypeID(type);
+	if (m_pChild) m_pChild->SetObjectTypeID(type);
 }
 
 void CGameObject::UpdateTransform(XMFLOAT4X4* pxmf4x4Parent)

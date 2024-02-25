@@ -504,6 +504,11 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	CAddTexturesComputeShader* pAddTexturesComputeShader = new CAddTexturesComputeShader();
 	pAddTexturesComputeShader->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
 	m_ppRtvComputeShaders.back() = pAddTexturesComputeShader;
+
+	//m_ppRtvComputeShaders.push_back(new CComputeShader);
+	//pAddTexturesComputeShader = new CAddTexturesComputeShader();
+	//pAddTexturesComputeShader->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
+	//m_ppRtvComputeShaders.back() = pAddTexturesComputeShader;
 	//---------------------------------------------------------------------------------------------------//
 
 	/// Particle1 ///
@@ -567,6 +572,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	// HierarchicalGameObjects.
 	CLoadedModelInfo* pNexusModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Nexus/Nexus.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new NexusObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pNexusModel, 1));
+	m_vHierarchicalGameObjects.back()->SetObjectTypeID(CMaterial::ObjectTypeID::Nexus);
 	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
 	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackEnable(0, 0);
 	m_vHierarchicalGameObjects.back()->m_pSkinnedAnimationController->SetTrackSpeed(0, 4.0f);
@@ -578,6 +584,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 
 	CLoadedModelInfo* pBaseModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Mana/Base.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pBaseModel));
+	m_vHierarchicalGameObjects.back()->SetObjectTypeID(CMaterial::ObjectTypeID::Base);
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, 10.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
 	m_vHierarchicalGameObjects.back()->SetIsBoundingCylinder(true);
 	//m_vHierarchicalGameObjects.back()->Rotate(0.0f, 45.0f, 0.0f);
@@ -585,6 +592,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 
 	CLoadedModelInfo* pGroundBrickModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/BrickForGround/BricksForGround.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pGroundBrickModel));
+	m_vHierarchicalGameObjects.back()->SetObjectTypeID(CMaterial::ObjectTypeID::Ground);
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + 14.0f, 11.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
 	m_vHierarchicalGameObjects.back()->SetIsExistBoundingBox(false);
 	if (pGroundBrickModel) delete pGroundBrickModel;
@@ -605,6 +613,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 
 	CLoadedModelInfo* pTreeModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Tree/Tree.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pTreeModel));
+	m_vHierarchicalGameObjects.back()->SetObjectTypeID(CMaterial::ObjectTypeID::Tree);
 	//m_vHierarchicalGameObjects.back()->SetBoundingScale(XMFLOAT3(0.14f, 1.0f, 0.1f));
 	//m_vHierarchicalGameObjects.back()->SetBoundingLocation(XMFLOAT3(-8.0f, 0.0f, 12.0f));
 	m_vHierarchicalGameObjects.back()->SetOneBoundingBox(true, XMFLOAT3(-0.3f, 0.0f, 0.25f), XMFLOAT3(0.35f, 4.0f, 0.35f));
@@ -616,6 +625,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 
 	CLoadedModelInfo* pTree2Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Tree/Tree.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pTree2Model));
+	m_vHierarchicalGameObjects.back()->SetObjectTypeID(CMaterial::ObjectTypeID::Tree);
 	//m_vHierarchicalGameObjects.back()->SetBoundingScale(XMFLOAT3(0.14f, 1.0f, 0.1f));
 	//m_vHierarchicalGameObjects.back()->SetBoundingLocation(XMFLOAT3(-8.0f, 0.0f, 12.0f));
 	m_vHierarchicalGameObjects.back()->SetOneBoundingBox(true, XMFLOAT3(-0.3f, 0.0f, 0.25f), XMFLOAT3(0.35f, 4.0f, 0.35f));
@@ -627,6 +637,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 
 	CLoadedModelInfo* pTree3Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Tree/Tree.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pTree3Model));
+	m_vHierarchicalGameObjects.back()->SetObjectTypeID(CMaterial::ObjectTypeID::Tree);
 	//m_vHierarchicalGameObjects.back()->SetBoundingScale(XMFLOAT3(0.14f, 1.0f, 0.1f));
 	//m_vHierarchicalGameObjects.back()->SetBoundingLocation(XMFLOAT3(-8.0f, 0.0f, 12.0f));
 	m_vHierarchicalGameObjects.back()->SetOneBoundingBox(true, XMFLOAT3(-0.3f, 0.0f, 0.25f), XMFLOAT3(0.35f, 4.0f, 0.35f));
@@ -637,23 +648,27 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 
 	CLoadedModelInfo* pLowerWallModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Wall/LowerWall2.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLowerWallModel));
+	m_vHierarchicalGameObjects.back()->SetObjectTypeID(CMaterial::ObjectTypeID::Wall);
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - 81.0f, 9.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, 20.0f + m_pTerrain->GetLength() * 0.5f);
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 180.0f, 0.0f);
 	if (pLowerWallModel) delete pLowerWallModel;
 
 	CLoadedModelInfo* pLowerWall2Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Wall/LowerWall2.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLowerWall2Model));
+	m_vHierarchicalGameObjects.back()->SetObjectTypeID(CMaterial::ObjectTypeID::Wall);
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + 73.0f, 8.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, 30.0f + m_pTerrain->GetLength() * 0.5f);
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 180.0f, 0.0f);
 	if (pLowerWall2Model) delete pLowerWall2Model;
 
 	CLoadedModelInfo* pUpperWallModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Wall/UpperWall.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pUpperWallModel));
+	m_vHierarchicalGameObjects.back()->SetObjectTypeID(CMaterial::ObjectTypeID::Wall);
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + 73.0f, 8.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, -29.0f + m_pTerrain->GetLength() * 0.5f);
 	if (pUpperWallModel) delete pUpperWallModel;
 
 	CLoadedModelInfo* pUpperWall2Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Wall/UpperWall.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pUpperWall2Model));
+	m_vHierarchicalGameObjects.back()->SetObjectTypeID(CMaterial::ObjectTypeID::Wall);
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - 45.0f, 9.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, 104.0f + m_pTerrain->GetLength() * 0.5f);
 	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 90.0f, 0.0f);
@@ -661,6 +676,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 
 	CLoadedModelInfo* pUpperWall3Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Wall/UpperWall.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pUpperWall3Model));
+	m_vHierarchicalGameObjects.back()->SetObjectTypeID(CMaterial::ObjectTypeID::Wall);
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + 30.0f, 9.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, 106.0f + m_pTerrain->GetLength() * 0.5f);
 	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, -90.0f, 0.0f);
@@ -724,11 +740,13 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 
 	CLoadedModelInfo* pSpawnObjectModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Mana/Spawn.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pSpawnObjectModel));
+	m_vHierarchicalGameObjects.back()->SetObjectTypeID(CMaterial::ObjectTypeID::Spawn);
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + 2.0f, 13.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, -220.f + m_pTerrain->GetLength() * 0.5f);
 	if (pSpawnObjectModel) delete pSpawnObjectModel;
 
 	CLoadedModelInfo* pPortalModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Portal/Portal.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pPortalModel));
+	m_vHierarchicalGameObjects.back()->SetObjectTypeID(CMaterial::ObjectTypeID::Portal);
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + METER_PER_PIXEL(250), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
 	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, -90.0f, 0.0f);
@@ -739,6 +757,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 
 	CLoadedModelInfo* pPortal2Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Portal/Portal.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pPortal2Model));
+	m_vHierarchicalGameObjects.back()->SetObjectTypeID(CMaterial::ObjectTypeID::Portal);
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f - METER_PER_PIXEL(250), m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
 	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 90.0f, 0.0f);
@@ -749,6 +768,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 
 	CLoadedModelInfo* pPortal3Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Portal/Portal.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pPortal3Model));
+	m_vHierarchicalGameObjects.back()->SetObjectTypeID(CMaterial::ObjectTypeID::Portal);
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, METER_PER_PIXEL(250) + m_pTerrain->GetLength() * 0.5f);
 	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 180.0f, 0.0f);
@@ -1366,6 +1386,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 
 	CLoadedModelInfo* pLevelUpTableModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/LevelUpTable/Stylized_Table2.bin", NULL);
 	m_vHierarchicalGameObjects.push_back(new StaticObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLevelUpTableModel));
+	m_vHierarchicalGameObjects.back()->SetObjectTypeID(CMaterial::ObjectTypeID::LevelUpTable);
 	m_vHierarchicalGameObjects.back()->SetPosition(m_pTerrain->GetWidth() * 0.5f + 63.f, 10.f + m_pTerrain->GetHeight(m_pTerrain->GetWidth() * 0.5f, m_pTerrain->GetLength() * 0.5f) - 1, m_pTerrain->GetLength() * 0.5f);
 	m_vHierarchicalGameObjects.back()->SetWorldTransformBoundingBox();
 	m_vHierarchicalGameObjects.back()->Rotate(0.0f, 90.0f, 0.0f);
@@ -1527,9 +1548,10 @@ bool Scene_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM 
 		case 'T': //84
 		case 'E': //69
 		case 'L': //76
-		case 'R':
-		case 'M':
+		//case 'R':
+		//case 'M':
 		case 'Z': //90
+		case 'O':
 		case 'Q':
 		{
 			m_nDrawOptions = (int)wParam;

@@ -464,7 +464,7 @@ public:
 
 	virtual void ReleaseUploadBuffers();
 
-	virtual void ChangeTexture(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CTexture* pTexture, bool bRtvTexture = true, wchar_t* texturePath = NULL);
+	void ChangeTexture(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CTexture* pTexture, CTexture* pSubTexture = NULL, bool bRtvTexture = true);
 
 	virtual void Dispatch(ID3D12GraphicsCommandList* pd3dCommandList, int nPipelineState = 0);
 
