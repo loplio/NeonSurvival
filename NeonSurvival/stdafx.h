@@ -62,6 +62,7 @@ using Microsoft::WRL::ComPtr;
 #include <vector>
 #include <list>
 #include <iostream>
+
 #ifdef _DEBUG
 #pragma comment(linker,"/entry:wWinMainCRTStartup /subsystem:console")
 #endif

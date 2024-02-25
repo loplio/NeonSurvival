@@ -111,6 +111,7 @@ void SERVER::ProcessSocketMessage(HWND hWnd, UINT unit, WPARAM wParam, LPARAM lP
         {
             std::cout << "Monster Data" << std::endl;
             memcpy(MonsterData, m_Packet.buf2, sizeof(MonsterData));
+
             if (len == SOCKET_ERROR) {
                 printf("MONSTER_DATA error : %d\n", WSAGetLastError());
                 return;

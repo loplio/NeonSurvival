@@ -625,9 +625,12 @@ void PrintPlayerPosition()
 {
 	for (int i = 0; i < MAX_PLAYER; ++i)
 	{
-		printf("P%d X : %f, Y : %f, Z : %f\n", i, GameData.PlayersPostion2[i].position.x,
-			GameData.PlayersPostion2[i].position.y,
-			GameData.PlayersPostion2[i].position.z);
+		if (GameData.PlayersPostion2[i].id != -1)
+		{
+			printf("P%d X : %f, Y : %f, Z : %f\n", i, GameData.PlayersPostion2[i].position.x,
+				GameData.PlayersPostion2[i].position.y,
+				GameData.PlayersPostion2[i].position.z);
+		}
 	}
 }
 
@@ -660,7 +663,7 @@ DWORD WINAPI MonsterThread(LPVOID arg)
 			//dt
 			MonstersUpdate(elapsed_time.count());
 
-			PrintPlayerPosition();
+			//PrintPlayerPosition();
 		}
 	}
 	return 0;
@@ -706,66 +709,75 @@ void MonstersUpdate(double Elapsedtime)
 		}
 		case CGameObject::MOVE:
 		{
-			XMFLOAT3 TargetPos;
 			XMFLOAT3 pos = Monsters[i].GetPosition();
-			for (int j = 0; j < 3; ++j)
+			// 적의 어그로를 초기화 및 어그로 최소 거리 설정
+			float closestDistance = 30.0f;
+			int closestPlayerId = -1;
+
+			// 모든 플레이어의 위치를 확인하여 가장 가까운 플레이어 탐색
+			for (int j = 0; j < MAX_PLAYER; ++j)
 			{
 				if (GameData.PlayersPostion2[j].id != -1)
 				{
 					XMFLOAT3 pPos = GameData.PlayersPostion2[j].position;
-					if (dist(pPos, pos) <= 30)
+					float distance = dist(pPos, pos);
+					if (distance < closestDistance)
 					{
-						Monsters[i].m_TargetType = CGameObject::Player;
-						Monsters[i].m_TargetId = j;
-						TargetPos = pPos;
-					}
-					else
-					{
-						Monsters[i].m_TargetType = CGameObject::Nexus;
+						closestDistance = distance;
+						closestPlayerId = j;
 					}
 				}
 			}
 
-			if (Monsters[i].m_TargetType == CGameObject::Nexus)
+			// 가장 가까운 플레이어를 어그로 대상으로 설정
+			if (closestPlayerId != -1)
 			{
-				TargetPos = NexusPos;
-				if (dist(NexusPos, pos) <= 50)
+				XMFLOAT3 pPos = GameData.PlayersPostion2[closestPlayerId].position;
+				Monsters[i].m_TargetType = CGameObject::Player;
+				Monsters[i].m_TargetId = closestPlayerId;
+				Monsters[i].m_TargetPos = pPos;
+
+				// 어그로 범위에 있는 경우 공격
+				if (closestDistance <= 20.0f)
 				{
-					Monsters[i].m_AnimPosition = 0.0f;
+					//Monsters[i].m_AnimPosition = 0.0f;
+					Monsters[i].m_TargetId = closestPlayerId;
+					Monsters[i].m_TargetPos = pPos;
 					Monsters[i].m_PrevState = GameData.MonsterData[i].State;
 					Monsters[i].m_State = CGameObject::ATTACK;
 				}
 			}
-			else if (Monsters[i].m_TargetType == CGameObject::Player)
+			else
 			{
-				if (dist(TargetPos, pos) <= 20)
+				// 어그로 대상이 없으면 넥서스를 향해 이동
+				Monsters[i].m_TargetType = CGameObject::Nexus;
+				Monsters[i].m_TargetPos = NexusPos;
+				if (dist(NexusPos, pos) <= 50.0f)
 				{
-					Monsters[i].m_AnimPosition = 0.0f;
+					//Monsters[i].m_AnimPosition = 0.0f;
 					Monsters[i].m_PrevState = GameData.MonsterData[i].State;
 					Monsters[i].m_State = CGameObject::ATTACK;
 				}
-				else if (dist(TargetPos, pos) > 70)
-				{
-					Monsters[i].m_AnimPosition = 0.0f;
-					Monsters[i].m_TargetType = CGameObject::Nexus;
-				}
 			}
-			Monsters[i].m_TargetPos = TargetPos;
+
 			Monsters[i].MoveForward(METER_PER_PIXEL(Monsters[i].m_Speed) * Elapsedtime);
-			Monsters[i].SetLookAt(TargetPos);
+			Monsters[i].SetLookAt(Monsters[i].m_TargetPos);
 			break;
 		}
 		case CGameObject::ATTACK:
 		{
+
 			XMFLOAT3 pos = Monsters[i].GetPosition();
+
 			if (Monsters[i].m_TargetType == CGameObject::Player)
 			{
 				XMFLOAT3 pPos = GameData.PlayersPostion2[Monsters[i].m_TargetId].position;
-				if (dist(pPos, pos) > 20)
+				if (dist(pPos, pos) > 21.0f)
 				{
 					Monsters[i].m_AnimPosition = 0.0f;
 					Monsters[i].m_PrevState = GameData.MonsterData[i].State;
 					Monsters[i].m_State = CGameObject::MOVE;
+					Monsters[i].m_TargetType = CGameObject::Nexus;
 				}
 			}
 			break;

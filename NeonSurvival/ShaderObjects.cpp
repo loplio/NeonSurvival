@@ -612,7 +612,7 @@ void GeneralMonsterObjects::Update(float fTimeElapsed)
 		int hp = m_pMonsterData[count].HP;
 		((MonsterObject*)monster)->HP = hp;
 		((MonsterObject*)monster)->id = m_pMonsterData[count].id;
-
+		
 		if (world._11 < EPSILON && world._22 < EPSILON && world._33 < EPSILON)
 			monster->SetPosition(pos);
 		else
