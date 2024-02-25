@@ -22,6 +22,7 @@ Player_Neon::Player_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd
 	CLoadedModelInfo* pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, (char*)"Model/NeonHuman/NeonHuman.bin", NULL);
 	SetChild(pPlayerModel->m_pModelRootObject, true);
 	UpdateMobility(Moveable);
+	UpdateBoolAlwaysDraw(true);
 
 	m_pMesh = new CMesh(pd3dDevice, pd3dCommandList);
 	m_pMesh->SetBoundinBoxCenter(XMFLOAT3(0.0f, 9.0f, 0.0f));
@@ -309,8 +310,8 @@ CCamera* Player_Neon::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 		SetMaxVelocityY(PIXEL_KPH(200));
 		m_pCamera = OnChangeCamera(FIRST_PERSON_CAMERA, nCurrentCameraMode);
 		m_pCamera->SetTimeLag(0.0f);
-		m_pCamera->SetOffset(XMFLOAT3(0.0f, METER_PER_PIXEL(1.55), METER_PER_PIXEL(0.3)));
-		m_pCamera->GenerateProjectionMatrix(1.01f, 5000.0f, ASPECT_RATIO, 60.0f);
+		m_pCamera->SetOffset(XMFLOAT3(0.0f, METER_PER_PIXEL(1.5), METER_PER_PIXEL(0.19)));
+		m_pCamera->GenerateProjectionMatrix(1.01f, 5000.0f, ASPECT_RATIO, 75.0f);
 		m_pCamera->SetViewport(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT, 0.0f, 1.0f);
 		m_pCamera->SetScissorRect(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT);
 		break;
@@ -1918,7 +1919,7 @@ CPistolBulletObject::~CPistolBulletObject()
 }
 void CPistolBulletObject::RunTimeBuild(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
-	m_pMesh = new CPistolBulletMesh(pd3dDevice, pd3dCommandList, XMFLOAT2(8.0f, 8.0f));
+	m_pMesh = new CPistolBulletMesh(pd3dDevice, pd3dCommandList, XMFLOAT2(3.0f, 3.0f));
 }
 void CPistolBulletObject::Update(float fTimeElapsed)
 {

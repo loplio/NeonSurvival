@@ -411,6 +411,8 @@ public:
 	CMesh*						m_pMesh;
 	CBoundingBoxMesh*			m_pTopBoundingMesh = NULL;
 
+	bool						m_bAlwaysDraw = false;
+
 	enum Mobility				{ Static, Moveable };
 	UINT						m_Mobility = Static;
 public:
@@ -467,6 +469,7 @@ public:
 
 	void UpdateTransform(XMFLOAT4X4* pxmf4x4Parent = NULL);
 	void UpdateMobility(Mobility mobility);
+	void UpdateBoolAlwaysDraw(bool bDraw);
 	void SetPrevScale(XMFLOAT4X4* pxmf4x4Parent = NULL);
 	
 	void MoveStrafe(float fDistance = 1.0f);

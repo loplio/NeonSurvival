@@ -274,7 +274,7 @@ public:
 
 public:
 	const int nMaxBullet = 100;
-	const float OffsetLength = METER_PER_PIXEL(0.8);
+	const float OffsetLength = METER_PER_PIXEL(1.2);
 
 	float m_fCoolTime = 0.0f;
 	float m_fLastTime = 0.2f;

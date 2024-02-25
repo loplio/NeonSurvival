@@ -220,7 +220,7 @@ void GameCompute_Neon::RayTrace() const
 
 	// Crosshair's Ray Trace.
 	int nIntersected = 0, accumulate = 0, nSelected = -1;
-	float fHitDistance = FLT_MAX, fNearestHitDistance = FLT_MAX, fNearestMuzzleToObject = FLT_MAX;
+	float fHitDistance = FLT_MAX, fNearestHitDistance = FLT_MAX, fNearestStaticObjectDistance = METER_PER_PIXEL(80), fNearestMuzzleToObject = FLT_MAX;
 	CGameObject* pSelectedObject = NULL;
 	XMFLOAT3 ClientPosition = XMFLOAT3(0.0f, 0.0f, 1.0f);
 	XMFLOAT4X4 xmfCameraViewMatrix = pCamera->GetViewMatrix();
@@ -246,6 +246,8 @@ void GameCompute_Neon::RayTrace() const
 					{
 						fNearestHitDistance = distance;
 						nSelected = i;
+						if (BoundingObjects[i]->m_Mobility == CGameObject::Mobility::Static)
+							fNearestStaticObjectDistance = distance;
 					}
 				}
 			}
@@ -255,27 +257,39 @@ void GameCompute_Neon::RayTrace() const
 	XMFLOAT3 TargetPosition = Vector3::Add(Vector3::ScalarProduct(pCamera->GetLookVector(), fNearestHitDistance), pCamera->GetPosition());
 	if (nSelected >= 0)
 	{
-		m_Player.bSelectedObject = true;
-		m_Player.fDistanceAtObject = Vector3::Length(Vector3::Subtract(TargetPosition, FirePosition));
+		if (BoundingObjects[nSelected]->m_Mobility == CGameObject::Mobility::Static)
+		{
+			m_Player.bSelectedObject = true;
+			m_Player.fDistanceAtObject = Vector3::Length(Vector3::Subtract(TargetPosition, FirePosition));
+		}
+		else
+		{
+			XMFLOAT3 NearestStaticObjectPosition = Vector3::Add(Vector3::ScalarProduct(pCamera->GetLookVector(), fNearestStaticObjectDistance), pCamera->GetPosition());
+			m_Player.bSelectedObject = true;
+			m_Player.fDistanceAtObject = Vector3::Length(Vector3::Subtract(NearestStaticObjectPosition, FirePosition));
+		}
 		m_Player.SetRayDirection(Vector3::Subtract(TargetPosition, Vector3::Add(m_Player.GetPosition(), m_Player.GetOffset())));
 		pCamera->SetRayDirection(Vector3::ScalarProduct(pCamera->GetLookVector(), fNearestHitDistance));
 		pCamera->SetRayLength(fNearestHitDistance);
-		//std::cout << "" << "Index - " << bSelected << ", Intersect Num: " << nIntersected << ", Length: " << float(fNearestHitDistance) << std::endl;
+		//std::cout << "" << "Index - " << nSelected << ", Length: " << float(fNearestHitDistance) << std::endl;
 	}
-
 
 	bool bGunRayIntersection = false;
 	XMFLOAT3 DefualtTargetPosition = Vector3::Add(pCamera->GetPosition(), Vector3::ScalarProduct(pCamera->GetLookVector(), METER_PER_PIXEL(80)));
 	XMFLOAT3 DefualtDirection = Vector3::Normalize(Vector3::Subtract(DefualtTargetPosition, FirePosition));
 	for (int i = 0; i < BoundingObjects.size(); ++i)
 	{
-		if (BoundingObjects[i]->GetReafObjectType() == CGameObject::Player) continue;
+		if (BoundingObjects[i]->GetReafObjectType() == CGameObject::Player ||
+			BoundingObjects[i]->m_Mobility == CGameObject::Mobility::Moveable) continue;
 
-		if (BoundingObjects[i]->m_pMesh)
+		if (BoundingObjects[i]->m_pMesh && pCamera->GetMode() == SHOULDER_HOLD_CAMERA)
 		{
 			XMFLOAT4X4 inverseWorldMatrix = Matrix4x4::Inverse(BoundingObjects[i]->m_xmf4x4World);
 			XMFLOAT3 vLocalPosition = Vector3::TransformCoord(FirePosition, inverseWorldMatrix);
-			XMFLOAT3 vLocalDirection = (nSelected > 0) ? Vector3::Normalize(Vector3::Subtract(TargetPosition, FirePosition)) : DefualtDirection;
+			inverseWorldMatrix._41 = 0.0f; inverseWorldMatrix._42 = 0.0f; inverseWorldMatrix._43 = 0.0f;
+			XMFLOAT3 vLocalDirection = (nSelected > 0) ?
+				Vector3::Normalize(Vector3::TransformCoord(Vector3::Subtract(TargetPosition, FirePosition), inverseWorldMatrix)) :
+				Vector3::Normalize(Vector3::TransformCoord(DefualtDirection, inverseWorldMatrix));
 
 			nIntersected = BoundingObjects[i]->m_pMesh->CheckRayIntersection(vLocalPosition, vLocalDirection, &fHitDistance, BoundingObjects[i]->m_xmf4x4World);
 			if (nIntersected > 0)

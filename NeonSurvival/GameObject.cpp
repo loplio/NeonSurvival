@@ -1076,6 +1076,13 @@ void CGameObject::UpdateMobility(Mobility mobility)
 	if (m_pSibling) m_pSibling->UpdateMobility(mobility);
 	if (m_pChild) m_pChild->UpdateMobility(mobility);
 }
+void CGameObject::UpdateBoolAlwaysDraw(bool bDraw)
+{
+	m_bAlwaysDraw = bDraw;
+
+	if (m_pSibling) m_pSibling->UpdateBoolAlwaysDraw(bDraw);
+	if (m_pChild) m_pChild->UpdateBoolAlwaysDraw(bDraw);
+}
 void CGameObject::SetPrevScale(XMFLOAT4X4* pxmf4x4Parent)
 {
 	m_xmf3PrevScale.x = m_xmf4x4World._11;
@@ -1154,7 +1161,7 @@ void CGameObject::SetTransform(const XMFLOAT3& right, const XMFLOAT3& up, const 
 
 bool CGameObject::IsVisible(CCamera* pCamera)
 {
-	if (GetReafObjectType() == SkyBox) return true;
+	if (GetReafObjectType() == SkyBox || m_bAlwaysDraw) return true;
 
 	bool bIsVisible = false;
 	BoundingOrientedBox xmBoundingBox = m_pMesh->GetBoundingBox();
