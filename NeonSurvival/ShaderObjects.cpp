@@ -1149,16 +1149,16 @@ void PistolBulletTexturedObjects::Collide(const CGameSource& GameSource, CBoundi
 	}
 }
 
-void PistolBulletTexturedObjects::AppendBullet(XMFLOAT3& startLocation, XMFLOAT3& rayDirection, int type,bool ismine, float fDistanceAtObject)
+void PistolBulletTexturedObjects::AppendBullet(XMFLOAT3& startLocation, XMFLOAT3& rayDirection, int type,bool ismine, float PlayerDmg, float fDistanceAtObject)
 {
 	m_nBuildIndex++;
-	m_ppObjects.push_back(new CPistolBulletObject(m_pMaterial, startLocation, rayDirection, type,ismine, fDistanceAtObject));
+	m_ppObjects.push_back(new CPistolBulletObject(m_pMaterial, startLocation, rayDirection, type,ismine, fDistanceAtObject, PlayerDmg));
 }
 
-void PistolBulletTexturedObjects::AppendBullet(XMFLOAT3& startLocation, XMFLOAT3& rayDirection, int type, float fDistanceAtObject)
+void PistolBulletTexturedObjects::AppendBullet(XMFLOAT3& startLocation, XMFLOAT3& rayDirection, int type, float PlayerDmg, float fDistanceAtObject)
 {
 	m_nBuildIndex++;
-	m_ppObjects.push_back(new CPistolBulletObject(m_pMaterial, startLocation, rayDirection, type, fDistanceAtObject));
+	m_ppObjects.push_back(new CPistolBulletObject(m_pMaterial, startLocation, rayDirection, type, fDistanceAtObject, PlayerDmg));
 }
 void PistolBulletTexturedObjects::EventRemove()
 {

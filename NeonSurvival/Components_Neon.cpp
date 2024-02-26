@@ -359,6 +359,28 @@ CCamera* Player_Neon::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 
 	return m_pCamera;
 }
+void Player_Neon::AddExp(float exp)
+{
+	EXP += exp;
+}
+
+void Player_Neon::UpgradeDmg()
+{
+	Damge += 20;
+}
+void Player_Neon::UpgradeSpeed()
+{
+	printf("UpgradeSpeed\n");
+}
+void Player_Neon::RecoveryHP()
+{
+	HP += 30;
+
+	if (HP > 100)
+	{
+		HP = 100;
+	}
+}
 
 //-------------------------------------------------------------------------------
 /*	Scene																	   */
@@ -465,12 +487,34 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 	m_UIShaders.back() = pUITexture;
 
-
 	m_UIShaders.push_back(new CShader);
 	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/minimap.dds");
 	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 185, 185, 0.5f, FRAME_BUFFER_WIDTH - 95, 100,0);
 	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 	m_UIShaders.back() = pUITexture;
+
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/Pick_frame.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 200, 350, 0, FRAME_BUFFER_WIDTH * 0.2f, FRAME_BUFFER_HEIGHT * 0.5f, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/Pick_frame_g.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 200, 350, 0, FRAME_BUFFER_WIDTH * 0.5f, FRAME_BUFFER_HEIGHT * 0.5f, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/Pick_frame_r.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 200, 350, 0, FRAME_BUFFER_WIDTH * 0.8f, FRAME_BUFFER_HEIGHT * 0.5f, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+
+	((CTextureToScreenShader*)m_UIShaders[Pick_Frame])->SetIsRender(false);
+	((CTextureToScreenShader*)m_UIShaders[Pick_Frame_g])->SetIsRender(false);
+	((CTextureToScreenShader*)m_UIShaders[Pick_Frame_r])->SetIsRender(false);
+
 	/// background ///
 	//m_ppComputeShaders.push_back(new CComputeShader);
 	//CBrightAreaComputeShader* pBrightAreaComputeShader = new CBrightAreaComputeShader((wchar_t*)L"Image/Light3.dds");
@@ -1518,6 +1562,37 @@ bool Scene_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM 
 	case WM_KEYDOWN:
 		switch (wParam)
 		{
+		case '1':
+		case '2':
+		case '3':
+		{
+			printf("%d\n", (int(wParam) - 48));
+			switch ((int(wParam) - 48))
+			{
+			case 1:
+				((Player_Neon*)m_pPlayer.get())->UpgradeDmg();
+				break;
+			case 2:
+				((Player_Neon*)m_pPlayer.get())->UpgradeSpeed();
+				break;
+			case 3:
+				((Player_Neon*)m_pPlayer.get())->RecoveryHP();
+				break;
+			default:
+				break;
+			}
+
+			bool temp = !((CTextureToScreenShader*)m_UIShaders[Pick_Frame])->GetIsRender();
+			((CTextureToScreenShader*)m_UIShaders[Pick_Frame])->SetIsRender(false);
+			((CTextureToScreenShader*)m_UIShaders[Pick_Frame_g])->SetIsRender(false);
+			((CTextureToScreenShader*)m_UIShaders[Pick_Frame_r])->SetIsRender(false);
+			break;
+		}
+		case '4':
+		{
+			((Player_Neon*)m_pPlayer.get())->AddExp(0.6f);
+			break;
+		}
 		case 'C':
 			if (m_pBoundingObjects && !m_pBoundingObjects->m_bCollisionBoxWireFrame) m_pBoundingObjects->m_bCollisionBoxWireFrame = true;
 			else if (m_pBoundingObjects && m_pBoundingObjects->m_bCollisionBoxWireFrame) m_pBoundingObjects->m_bCollisionBoxWireFrame = false;
@@ -1563,10 +1638,12 @@ void Scene_Neon::Update(float fTimeElapsed)
 					PistolBulletTexturedObjects* pObjectsShader = (PistolBulletTexturedObjects*)m_ppShaders[i];
 					XMFLOAT3 rayDirection = m_pPlayer.get()->GetRayDirection();
 					XMFLOAT3 startLocation = Vector3::Add(Vector3::Add(m_pPlayer.get()->GetPosition(), m_pPlayer.get()->GetOffset()), Vector3::ScalarProduct(Vector3::Normalize(rayDirection), ((PistolBulletTexturedObjects*)m_ppShaders[i])->OffsetLength, false));
+					float Player_Dmg = ((Player_Neon*)m_pPlayer.get())->GetDmg();
+
 					if (m_pPlayer.get()->bSelectedObject)
-						pObjectsShader->AppendBullet(startLocation, rayDirection, 0, true, m_pPlayer.get()->fDistanceAtObject); //ÃÑ¾Ë
+						pObjectsShader->AppendBullet(startLocation, rayDirection, 0, true, Player_Dmg, m_pPlayer.get()->fDistanceAtObject); //ÃÑ¾Ë
 					else
-						pObjectsShader->AppendBullet(startLocation, rayDirection, 0, true); //ÃÑ¾Ë
+						pObjectsShader->AppendBullet(startLocation, rayDirection, 0, true, Player_Dmg); //ÃÑ¾Ë
 					((PistolBulletTexturedObjects*)m_ppShaders[i])->m_fCoolTime = ((PistolBulletTexturedObjects*)m_ppShaders[i])->m_fMaxCoolTime;
 					((PistolBulletTexturedObjects*)m_ppShaders[i])->m_fLastTime = 0.0f;
 					
@@ -1586,6 +1663,17 @@ void Scene_Neon::Update(float fTimeElapsed)
 		}
 	}
 
+	int EXP = ((Player_Neon*)m_pPlayer.get())->GetExp();
+	if ( EXP >= 1.0f)
+	{
+		float tempExp = EXP - 1.0f;
+		((Player_Neon*)m_pPlayer.get())->SetExp(tempExp);
+
+		((CTextureToScreenShader*)m_UIShaders[Pick_Frame])->SetIsRender(true);
+		((CTextureToScreenShader*)m_UIShaders[Pick_Frame_g])->SetIsRender(true);
+		((CTextureToScreenShader*)m_UIShaders[Pick_Frame_r])->SetIsRender(true);
+	}
+
 	for (int i = 0; i < m_UIShaders.size(); ++i)
 	{
 		if (m_UIShaders[i]->GetReafShaderType() != CShader::TextureToScreenShader) break;
@@ -1597,6 +1685,13 @@ void Scene_Neon::Update(float fTimeElapsed)
 				((CTextureToScreenShader*)m_UIShaders[i])->SetGauge(((Player_Neon*)m_pPlayer.get())->HP / ((Player_Neon*)m_pPlayer.get())->MAXHP);
 			}
 			break;
+		case EXP_LINE:
+		{
+			//EXP bar
+			float PlayerEXP = ((Player_Neon*)m_pPlayer.get())->GetExp();
+			((CTextureToScreenShader*)m_UIShaders[i])->SetGauge(PlayerEXP);
+			break;
+		}
 		}
 	}
 
@@ -1887,8 +1982,9 @@ CParticleObject_Neon::~CParticleObject_Neon()
 {
 }
 //-------------------------------------------------------------------------------
-CPistolBulletObject::CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection, int type, bool ismine, float fDistanceAtObject)
+CPistolBulletObject::CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection, int type, bool ismine, float fDistanceAtObject, float dmg)
 {
+	m_fDamege = dmg;
 	Type = type;
 	SetMaterial(0, pMaterial);
 	SetPosition(startLocation);
@@ -1901,8 +1997,9 @@ CPistolBulletObject::CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLo
 	}
 }
 
-CPistolBulletObject::CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection, int type, float fDistanceAtObject)
+CPistolBulletObject::CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection, int type, float fDistanceAtObject,float dmg)
 {
+	m_fDamege = dmg;
 	Type = type;
 	SetMaterial(0, pMaterial);
 	SetPosition(startLocation);

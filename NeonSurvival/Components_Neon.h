@@ -26,6 +26,8 @@ public:
 public:
 	float HP = 100.0f;
 	float MAXHP = 100.0f;
+	float EXP = 0.0f;
+	float Damge = 30.0f;
 
 	enum GunType {
 		Empty,
@@ -36,6 +38,16 @@ public:
 
 	UINT m_nGunType = Empty;
 	void SetTypeDefine(UINT nType) override { m_nGunType = nType; };
+	
+	void AddExp(float exp);
+	void SetExp(float exp) {EXP = exp; }
+	float GetExp() { return EXP; }
+
+	float GetDmg() { return Damge; }
+
+	void UpgradeDmg();
+	void UpgradeSpeed();
+	void RecoveryHP();
 };
 
 //-------------------------------------------------------------------------------
@@ -89,7 +101,11 @@ public:
 		HP_R,
 		HP_LINE,
 		ENERGE_LINE,
-		MAP_FRAME
+		MAP_FRAME,
+		Mini_Map,
+		Pick_Frame,
+		Pick_Frame_g,
+		Pick_Frame_r,
 	};
 };
 
@@ -142,8 +158,8 @@ public:
 
 class CPistolBulletObject : public DynamicObject {
 public:
-	CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection,int type,bool ismine, float fDistanceAtObject);
-	CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection,int type, float fDistanceAtObject);
+	CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection,int type,bool ismine, float fDistanceAtObject, float dmg);
+	CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection,int type, float fDistanceAtObject, float dmg);
 	virtual ~CPistolBulletObject();
 
 	void RunTimeBuild(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) override;
@@ -152,7 +168,7 @@ public:
 	void ReleaseUploadBuffers();
 
 public:
-	const float m_fDamege = 36.0f;
+	float m_fDamege = 0.0f;
 	const float m_fSpeed = PIXEL_MPS(40);
 	float m_fLifeTime = 0.0f;
 	float m_fMaxLifeTime = 2.0f;

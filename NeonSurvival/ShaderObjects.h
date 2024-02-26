@@ -261,8 +261,8 @@ public:
 	void BuildComponents(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CTexture* pTexture = NULL) override;
 	void Update(float fTimeElapsed) override;
 	void Collide(const CGameSource& GameSource, CBoundingBoxObjects& BoundingBoxObjects) override;
-	void AppendBullet(XMFLOAT3& startLocation, XMFLOAT3& rayDirection, int type,bool ismine, float fDistanceAtObject = 0.0f);
-	void AppendBullet(XMFLOAT3& startLocation, XMFLOAT3& rayDirection, int type, float fDistanceAtObject = 0.0f);
+	void AppendBullet(XMFLOAT3& startLocation, XMFLOAT3& rayDirection, int type,bool ismine, float PlayerDmg, float fDistanceAtObject = 0.0f);
+	void AppendBullet(XMFLOAT3& startLocation, XMFLOAT3& rayDirection, int type, float PlayerDmg, float fDistanceAtObject = 0.0f);
 	void EventRemove();
 	void ReleaseUploadBuffers() override;
 	void OnPostReleaseUploadBuffers() override;
@@ -409,8 +409,11 @@ public:
 	CTexturedRectMesh* m_RectMesh = NULL;
 	CTexture* m_pTexture = NULL;
 	wchar_t* pszFileName = NULL;
+	bool	IsRender = true;
 
 	void SetGauge(float fGauge) { m_fGauge = fGauge; }
+	void SetIsRender(bool render) { IsRender = render; }
+	bool GetIsRender() { return IsRender; }
 };
 
 //-------------------------------------------------------------------------------

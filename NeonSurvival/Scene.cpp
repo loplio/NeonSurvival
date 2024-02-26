@@ -732,7 +732,10 @@ void CScene::DrawUI(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 {
 	for (int i = 0; i < m_UIShaders.size(); ++i)
 	{
-		m_UIShaders[i]->Render(pd3dCommandList, pCamera);
+		if (((CTextureToScreenShader*)m_UIShaders[i])->IsRender)
+		{
+			m_UIShaders[i]->Render(pd3dCommandList, pCamera);
+		}
 	}
 }
 

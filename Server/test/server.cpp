@@ -430,7 +430,7 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		case MESSAGETYPE::HIT:
 		{
-			printf("id = %d dmg = %d\n", m_Packet.byte, m_Packet.hit);
+			printf("Pid = %d,Mid = %d,dmg = %d\n",ptr->id, m_Packet.byte, m_Packet.hit);
 			int monsterid = m_Packet.byte;
 			int dmg = m_Packet.hit;
 			Monsters[monsterid].m_HP -= dmg;
@@ -766,7 +766,6 @@ void MonstersUpdate(double Elapsedtime)
 		}
 		case CGameObject::ATTACK:
 		{
-
 			XMFLOAT3 pos = Monsters[i].GetPosition();
 
 			if (Monsters[i].m_TargetType == CGameObject::Player)
