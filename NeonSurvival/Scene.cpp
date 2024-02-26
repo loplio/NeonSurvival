@@ -184,7 +184,7 @@ ID3D12RootSignature* CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevic
 			break;
 		case ROOT_PARAMETER_OBJECT:
 			pd3dRootParameters[ROOT_PARAMETER_OBJECT].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
-			pd3dRootParameters[ROOT_PARAMETER_OBJECT].Constants.Num32BitValues = 33;
+			pd3dRootParameters[ROOT_PARAMETER_OBJECT].Constants.Num32BitValues = 34;
 			pd3dRootParameters[ROOT_PARAMETER_OBJECT].Constants.ShaderRegister = 2; //GameObject
 			pd3dRootParameters[ROOT_PARAMETER_OBJECT].Constants.RegisterSpace = 0;
 			pd3dRootParameters[ROOT_PARAMETER_OBJECT].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
@@ -448,7 +448,7 @@ void CScene::OnPreparePostProcessing(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 		if (m_ppRtvComputeShaders[i]->GetReafShaderType() == CShader::ReafShaderType::Gaussian2DBlurComputeShader)  Gaussian2DBlurShaderIndex = i;
 		if (m_ppRtvComputeShaders[i]->GetReafShaderType() == CShader::ReafShaderType::AddTextureComputeShader)
 		{
-			AddTextureShaderIndex = i; 
+			if(AddTextureShaderIndex < 0) AddTextureShaderIndex = i;
 			continue;
 		}
 
@@ -465,14 +465,19 @@ void CScene::OnPreparePostProcessing(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 
 	for (int i = 0; i < m_ppRtvComputeShaders.size(); ++i)
 	{
-		if (AddTextureShaderIndex == i) continue;
+		if (AddTextureShaderIndex == i) break;
 		m_ppRtvComputeShaders[i]->Dispatch(pd3dCommandList);
 	}
 
 	((CAddTexturesComputeShader*)m_ppRtvComputeShaders[AddTextureShaderIndex])->ChangeTexture(pd3dDevice, pd3dCommandList,
-		((CGaussian2DBlurComputeShader*)m_ppRtvComputeShaders[Gaussian2DBlurShaderIndex])->m_pTexture, false);
+		((CGaussian2DBlurComputeShader*)m_ppRtvComputeShaders[Gaussian2DBlurShaderIndex])->m_pTexture, NULL, false);
 
 	m_ppRtvComputeShaders[AddTextureShaderIndex]->Dispatch(pd3dCommandList);
+
+	//((CAddTexturesComputeShader*)m_ppRtvComputeShaders[AddTextureShaderIndex + 1])->ChangeTexture(pd3dDevice, pd3dCommandList,
+	//	m_pPostProcessingShader->m_pTexture, ((CAddTexturesComputeShader*)m_ppRtvComputeShaders[AddTextureShaderIndex])->m_pTexture, true);
+
+	//m_ppRtvComputeShaders[AddTextureShaderIndex + 1]->Dispatch(pd3dCommandList);
 
 	m_pPostProcessingShader->ChangeTexture(pd3dDevice, pd3dCommandList, ((CAddTexturesComputeShader*)m_ppRtvComputeShaders[AddTextureShaderIndex])->m_pTexture);
 

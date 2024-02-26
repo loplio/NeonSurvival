@@ -334,12 +334,26 @@ public:
 
 	UINT							m_nReflection = 0;
 	UINT							m_nType = 0x00;
+	UINT							m_nObjectTypeID = None;
 
 	float							m_fGlossiness = 0.0f;
 	float							m_fSmoothness = 0.0f;
 	float							m_fSpecularHighlight = 0.0f;
 	float							m_fMetallic = 0.0f;
 	float							m_fGlossyReflection = 0.0f;
+
+	enum ObjectTypeID{
+		None,
+		Monster,
+		Nexus,
+		Base,
+		Ground,
+		Tree,
+		Wall,
+		Portal,
+		Spawn,
+		LevelUpTable
+	};
 
 public:
 	int 							m_nTextures = 0;
@@ -467,6 +481,7 @@ public:
 
 	CGameObject* GetRootParentObject();
 
+	void SetObjectTypeID(UINT type);
 	void UpdateTransform(XMFLOAT4X4* pxmf4x4Parent = NULL);
 	void UpdateMobility(Mobility mobility);
 	void UpdateBoolAlwaysDraw(bool bDraw);

@@ -568,6 +568,7 @@ void GeneralMonsterObjects::CreateMonster(ID3D12Device* pd3dDevice, ID3D12Graphi
 	//m_ppObjects.back()->SetIsExistBoundingBox(false);
 	m_ppObjects.back()->SetPosition(2800.f + 30.f * x, 265.0f, 3000.f - 30.f * z);
 	m_ppObjects.back()->SetUseTransform(false);
+	m_ppObjects.back()->SetObjectTypeID(CMaterial::ObjectTypeID::Monster);
 	if (bModifyBouondingBox) m_ppObjects.back()->SetBoundingBox(Center, Extent);
 
 	((MonsterObject*)m_ppObjects.back())->MAXHP = maxHP;
@@ -1698,7 +1699,7 @@ void CAddTexturesComputeShader::ReleaseUploadBuffers()
 	if (m_pTexture) m_pTexture->ReleaseUploadBuffers();
 }
 
-void CAddTexturesComputeShader::ChangeTexture(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CTexture* pTexture, bool bRtvTexture, wchar_t* texturePath)
+void CAddTexturesComputeShader::ChangeTexture(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CTexture* pTexture, CTexture* pSubTexture, bool bRtvTexture)
 {
 	if (m_pTexture) m_pTexture->ReleaseUploadBuffers();
 	if (m_pTexture) m_pTexture->Release();
@@ -1707,10 +1708,30 @@ void CAddTexturesComputeShader::ChangeTexture(ID3D12Device* pd3dDevice, ID3D12Gr
 
 	if (bRtvTexture)
 	{
-		D3D12_RESOURCE_DESC d3dTextureDesc = pTexture->GetTexture(3)->GetDesc();	//RenderTarget Emissive index 3
-		m_pTexture->CreateTexture(pd3dDevice, pd3dCommandList, NULL, 0, RESOURCE_TEXTURE2D, d3dTextureDesc.Width, d3dTextureDesc.Height, 1, d3dTextureDesc.MipLevels, D3D12_RESOURCE_FLAG_NONE, D3D12_RESOURCE_STATE_COPY_DEST, DXGI_FORMAT_R8G8B8A8_UNORM, 0, pTexture->GetTexture(3)); //??
-		m_pTexture->CreateTexture(pd3dDevice, pd3dCommandList, NULL, 0, RESOURCE_TEXTURE2D, d3dTextureDesc.Width, d3dTextureDesc.Height, 1, d3dTextureDesc.MipLevels, D3D12_RESOURCE_FLAG_NONE, D3D12_RESOURCE_STATE_COPY_DEST, DXGI_FORMAT_R8G8B8A8_UNORM, 1);
-		m_pTexture->CreateTexture(pd3dDevice, pd3dCommandList, NULL, 0, RESOURCE_TEXTURE2D, d3dTextureDesc.Width, d3dTextureDesc.Height, 1, d3dTextureDesc.MipLevels, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, d3dTextureDesc.Format, 2);
+		//D3D12_RESOURCE_DESC d3dTextureDesc = pTexture->GetTexture(5)->GetDesc();	//RenderTarget ObjectTypeID index 5
+		//m_pTexture->CreateTexture(pd3dDevice, pd3dCommandList, NULL, 0, RESOURCE_TEXTURE2D, d3dTextureDesc.Width, d3dTextureDesc.Height, 1, d3dTextureDesc.MipLevels, D3D12_RESOURCE_FLAG_NONE, D3D12_RESOURCE_STATE_COPY_DEST, DXGI_FORMAT_R8G8B8A8_UNORM, 0, pTexture->GetTexture(5)); //??
+		//m_pTexture->CreateTexture(pd3dDevice, pd3dCommandList, NULL, 0, RESOURCE_TEXTURE2D, d3dTextureDesc.Width, d3dTextureDesc.Height, 1, d3dTextureDesc.MipLevels, D3D12_RESOURCE_FLAG_NONE, D3D12_RESOURCE_STATE_COPY_DEST, DXGI_FORMAT_R8G8B8A8_UNORM, 1);
+
+		m_pTexture->CreateTexture(pd3dDevice, pd3dCommandList, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT, DXGI_FORMAT_R8G8B8A8_UNORM, D3D12_RESOURCE_FLAG_NONE, D3D12_RESOURCE_STATE_COPY_DEST, NULL, RESOURCE_TEXTURE2D, 0);
+		m_pTexture->CreateTexture(pd3dDevice, pd3dCommandList, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT, DXGI_FORMAT_R8G8B8A8_UNORM, D3D12_RESOURCE_FLAG_NONE, D3D12_RESOURCE_STATE_COPY_DEST, NULL, RESOURCE_TEXTURE2D, 1);
+
+		ID3D12Resource* pd3dResource = m_pTexture->GetTexture(0);
+		D3D12_RESOURCE_DESC d3dResourceDesc = pd3dResource->GetDesc();
+		m_pTexture->CreateTexture(pd3dDevice, pd3dCommandList, NULL, 0, RESOURCE_TEXTURE2D, d3dResourceDesc.Width, d3dResourceDesc.Height, 1, 1, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, DXGI_FORMAT_R8G8B8A8_UNORM, 2);
+
+		ID3D12Resource* RtvTexture = pTexture->GetTexture(5);	// RtvResource (ObjectTypeID - 5)
+		ID3D12Resource* SubTexture = pSubTexture->GetTexture(2);	// SubResource
+		ID3D12Resource* InputATexture = m_pTexture->GetTexture(0);
+		ID3D12Resource* InputBTexture = m_pTexture->GetTexture(1);
+
+		::SynchronizeResourceTransition(pd3dCommandList, RtvTexture, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_SOURCE);
+		pd3dCommandList->CopyResource(InputATexture, RtvTexture);
+		::SynchronizeResourceTransition(pd3dCommandList, RtvTexture, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+		::SynchronizeResourceTransition(pd3dCommandList, SubTexture, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
+		pd3dCommandList->CopyResource(InputBTexture, SubTexture);
+		::SynchronizeResourceTransition(pd3dCommandList, SubTexture, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+		//m_pTexture->CreateTexture(pd3dDevice, pd3dCommandList, NULL, 0, RESOURCE_TEXTURE2D, d3dTextureDesc.Width, d3dTextureDesc.Height, 1, d3dTextureDesc.MipLevels, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, d3dTextureDesc.Format, 2);
 	}
 	else if (pTexture) // Guassian Texture
 	{

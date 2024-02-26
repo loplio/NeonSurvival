@@ -26,7 +26,8 @@ cbuffer cbGameObjectInfo : register(b2)
 {
 	matrix gmtxGameObject : packoffset(c0);
 	MATERIAL gMaterial : packoffset(c4);
-	uint gnTexturesMask : packoffset(c8);
+	uint gnTexturesMask : packoffset(c8.x);
+	uint gnObjectTypeID : packoffset(c8.y);
 };
 
 cbuffer cbFrameworkInfo : register(b3)
@@ -137,7 +138,56 @@ float4 GetColorFromDepth(float fDepth)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Texture2D gtxtInputTextures[7] : register(t17); // BaseColor, World Normal, Texture, Emissive, Shading Model, Roughness/Metallic, Depth
+Texture2D gtxtInputTextures[7] : register(t17); // BaseColor, World Normal, Texture, Emissive, Shading Model, ObjectTypeID, Depth
+static float gfLaplacians[9] = { -1.0f, -1.0f, -1.0f, -1.0f, 8.0f, -1.0f, -1.0f, -1.0f, -1.0f };
+static int2 gnOffsets[9] = { { -1,-1 }, { 0,-1 }, { 1,-1 }, { -1,0 }, { 0,0 }, { 1,0 }, { -1,1 }, { 0,1 }, { 1,1 } };
+
+float4 LaplacianEdge(float4 position, float3 EdgeColor)
+{
+	float fObjectEdgeness = 0.0f, fNormalEdgeness = 0.0f, fDepthEdgeness = 0.0f;
+	float3 f3NormalEdgeness = float3(0.0f, 0.0f, 0.0f), f3DepthEdgeness = float3(0.0f, 0.0f, 0.0f);
+	if ((uint(position.x) >= 1) || (uint(position.y) >= 1) || (uint(position.x) <= gtxtInputTextures[0].Length.x - 2) || (uint(position.y) <= gtxtInputTextures[0].Length.y - 2))
+	{
+		float fObjectID = gtxtInputTextures[5][int2(position.xy)].r;
+		for (int input = 0; input < 9; input++)
+		{
+			if (fObjectID != gtxtInputTextures[5][int2(position.xy) + gnOffsets[input]].r) fObjectEdgeness = 1.0f;
+
+			//float3 f3Normal = gtxtInputTextures[1][int2(position.xy) + gnOffsets[input]].xyz * 2.0f - 1.0f;
+			//float3 f3Depth = gtxtInputTextures[6][int2(position.xy) + gnOffsets[input]].xyz * 2.0f - 1.0f;
+			//f3NormalEdgeness += gfLaplacians[input] * f3Normal;
+			//f3DepthEdgeness += gfLaplacians[input] * f3Depth;
+		}
+		//fNormalEdgeness = f3NormalEdgeness.r * 0.3f + f3NormalEdgeness.g * 0.59f + f3NormalEdgeness.b * 0.11f;
+		//fDepthEdgeness = f3DepthEdgeness.r * 0.3f + f3DepthEdgeness.g * 0.59f + f3DepthEdgeness.b * 0.11f;
+	}
+	//float3 cColor = gtxtInputTextures[0][int2(position.xy)].rgb;
+	float3 cColor = float3(0.0f, 0.0f, 0.0f);
+	/*
+		float fNdotV = 1.0f - dot(gtxtInputTextures[1][int2(position.xy)].xyz * 2.0f - 1.0f, gf3CameraDirection);
+		float fNormalThreshold = (saturate((fNdotV - 0.5f) / (1.0f - 0.5f)) * 7.0f) + 1.0f;
+		float fDepthThreshold = 150.0f * gtxtInputTextures[6][int2(position.xy)].r * fNormalThreshold;
+	*/
+	if (fObjectEdgeness == 1.0f)
+		cColor = EdgeColor;
+	//else
+	//{
+	//	cColor.g += fNormalEdgeness;
+	//	cColor.r += fDepthEdgeness;
+	//	//		cColor.g += (fNormalEdgeness > fNormalThreshold) ? 1.0f : 0.0f;
+	//	//		cColor.r += (fDepthEdgeness > fDepthThreshold) ? 1.0f : 0.0f;
+	//}
+
+	return(float4(cColor, 1.0f));
+}
+
+float4 AlphaBlend(float4 top, float4 bottom)
+{
+	float3 color = (top.rgb * top.a) + (bottom.rgb * (1 - top.a));
+	float alpha = top.a + bottom.a * (1 - top.a);
+
+	return(float4(color, alpha));
+}
 
 struct VS_SCREEN_RECT_TEXTURED_OUTPUT
 {
@@ -145,6 +195,54 @@ struct VS_SCREEN_RECT_TEXTURED_OUTPUT
 	float2 uv : TEXCOORD0;
 	float3 viewSpaceDir : TEXCOORD1;
 };
+
+float4 Outline(VS_SCREEN_RECT_TEXTURED_OUTPUT input)
+{
+	float fHalfScaleFloor = floor(1.0f * 0.5f);
+	float fHalfScaleCeil = ceil(1.0f * 0.5f);
+
+	float2 f2BottomLeftUV = input.uv - float2((1.0f / gtxtInputTextures[0].Length.x), (1.0f / gtxtInputTextures[0].Length.y)) * fHalfScaleFloor;
+	float2 f2TopRightUV = input.uv + float2((1.0f / gtxtInputTextures[0].Length.x), (1.0f / gtxtInputTextures[0].Length.y)) * fHalfScaleCeil;
+	float2 f2BottomRightUV = input.uv + float2((1.0f / gtxtInputTextures[0].Length.x) * fHalfScaleCeil, -(1.0f / gtxtInputTextures[0].Length.y * fHalfScaleFloor));
+	float2 f2TopLeftUV = input.uv + float2(-(1.0f / gtxtInputTextures[0].Length.x) * fHalfScaleFloor, (1.0f / gtxtInputTextures[0].Length.y) * fHalfScaleCeil);
+
+	float3 f3NormalV0 = gtxtInputTextures[5].Sample(gssWrap, f2BottomLeftUV).gba;
+	float3 f3NormalV1 = gtxtInputTextures[5].Sample(gssWrap, f2TopRightUV).gba;
+	float3 f3NormalV2 = gtxtInputTextures[5].Sample(gssWrap, f2BottomRightUV).gba;
+	float3 f3NormalV3 = gtxtInputTextures[5].Sample(gssWrap, f2TopLeftUV).gba;
+
+	float fDepth0 = gtxtInputTextures[6].Sample(gssWrap, f2BottomLeftUV).r;
+	float fDepth1 = gtxtInputTextures[6].Sample(gssWrap, f2TopRightUV).r;
+	float fDepth2 = gtxtInputTextures[6].Sample(gssWrap, f2BottomRightUV).r;
+	float fDepth3 = gtxtInputTextures[6].Sample(gssWrap, f2TopLeftUV).r;
+
+	float3 f3NormalV = f3NormalV0 * 2.0f - 1.0f;
+	float fNdotV = 1.0f - dot(f3NormalV, -input.viewSpaceDir);
+
+	float fNormalThreshold01 = saturate((fNdotV - 0.5f) / (1.0f - 0.5f));
+	float fNormalThreshold = (fNormalThreshold01 * 7.0f) + 1.0f;
+
+	float fDepthThreshold = 1.5f * fDepth0 * fNormalThreshold;
+
+	float fDepthDifference0 = fDepth1 - fDepth0;
+	float fDepthDifference1 = fDepth3 - fDepth2;
+	float fDdgeDepth = sqrt(pow(fDepthDifference0, 2) + pow(fDepthDifference1, 2)) * 100.0f;
+	fDdgeDepth = (fDdgeDepth > 1.5f) ? 1.0f : 0.0f;
+
+	float3 fNormalDifference0 = f3NormalV1 - f3NormalV0;
+	float3 fNormalDifference1 = f3NormalV3 - f3NormalV2;
+	float fEdgeNormal = sqrt(dot(fNormalDifference0, fNormalDifference0) + dot(fNormalDifference1, fNormalDifference1));
+	fEdgeNormal = (fEdgeNormal > 0.4f) ? 1.0f : 0.0f;
+
+	float fEdge = max(fDdgeDepth, fEdgeNormal);
+	float4 f4EdgeColor = float4(1.0f, 1.0f, 1.0f, 1.0f * fEdge);
+
+	//float4 f4Color = gtxtInputTextures[0].Sample(gssWrap, input.uv);
+
+	float4 f4Color = float4(0.0f, 0.0f, 0.0f, 1.0f);
+
+	return(AlphaBlend(f4EdgeColor, f4Color));
+}
 
 VS_SCREEN_RECT_TEXTURED_OUTPUT VSPostProcessing(uint nVertexID : SV_VertexID)
 {
@@ -189,6 +287,66 @@ float4 PSPostProcessing(VS_SCREEN_RECT_TEXTURED_OUTPUT input) : SV_Target
 		cColor = gtxtInputTextures[3].Sample(gssWrap, input.uv);
 		break;
 	}
+	case 79: //'O'
+	{
+		float3 red = float3(1.0f, 0.0f, 0.0f);
+		float3 green = float3(0.0f, 1.0f, 0.0f);
+		float3 blue = float3(0.0f, 0.0f, 1.0f);
+		float3 white = float3(1.0f, 1.0f, 1.0f);
+		float3 black = float3(0.1f, 0.1f, 0.1f);
+		float3 darkgray = float3(0.3f, 0.3f, 0.3f);
+		float3 purple = float3(0.5f, 0.0f, 1.0f);
+		cColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
+		float nObjectTypeID = gtxtInputTextures[5].Sample(gssWrap, input.uv).r;
+
+		if (0.0 < nObjectTypeID && nObjectTypeID <= 0.1)		// Monster Outline.
+		{
+			//cColor = Outline(input);
+			cColor = LaplacianEdge(input.position, white * 0.5);
+		}
+		else if (0.1 < nObjectTypeID && nObjectTypeID <= 0.2)		// Nexus Outline.
+		{
+			//cColor = Outline(input);
+			cColor = LaplacianEdge(input.position, blue * 0.5);
+		}
+		else if (0.2 < nObjectTypeID && nObjectTypeID <= 0.3)		// Base Outline.
+		{
+			//cColor = Outline(input);
+			cColor = LaplacianEdge(input.position, black);
+		}
+		else if (0.3 < nObjectTypeID && nObjectTypeID <= 0.4)		// Ground Outline.
+		{
+			//cColor = Outline(input);
+			cColor = LaplacianEdge(input.position, white);
+		}
+		else if (0.4 < nObjectTypeID && nObjectTypeID <= 0.5)		// Tree Outline.
+		{
+			//cColor = Outline(input);
+			cColor = LaplacianEdge(input.position, darkgray);
+		}
+		else if (0.5 < nObjectTypeID && nObjectTypeID <= 0.6)		// Wall Outline.
+		{
+			//cColor = Outline(input);
+			cColor = LaplacianEdge(input.position, darkgray);
+		}
+		else if (0.6 < nObjectTypeID && nObjectTypeID <= 0.7)		// Portal Outline.
+		{
+			//cColor = Outline(input);
+			cColor = LaplacianEdge(input.position, purple * 0.5);
+		}
+		else if (0.7 < nObjectTypeID && nObjectTypeID <= 0.8)		// Spawn Outline.
+		{
+			//cColor = Outline(input);
+			cColor = LaplacianEdge(input.position, purple * 0.8);
+		}
+		else if (0.8 < nObjectTypeID && nObjectTypeID <= 0.9)		// LevelUpTable Outline.
+		{
+			cColor = LaplacianEdge(input.position, white * 0.8);
+		}
+
+		//cColor = LaplacianEdge(input.position);
+		break;
+	}
 	case 76: //'L'
 	{
 		cColor = gtxtInputTextures[4].Sample(gssWrap, input.uv);
@@ -199,22 +357,66 @@ float4 PSPostProcessing(VS_SCREEN_RECT_TEXTURED_OUTPUT input) : SV_Target
 	//	cColor = gtxtInputTextures[5].Sample(gssWrap, input.uv);
 	//	break;
 	//}
-	case 82: //'R'
-	{
-		//cColor = gtxtInputTextures[6].Sample(gssWrap, input.uv);
-		//float fDepth = gtxtInputTextures[5].Load(uint3((uint)input.position.x, (uint)input.position.y, 0)).g;
-		//cColor = GetColorFromDepth(1.0f - fDepth);
-		cColor = GetColorFromDepth(1.0f - gtxtInputTextures[5].Sample(gssWrap, input.uv).r);
-		break;
-	}
-	case 77: //'M'
-	{
-		cColor = GetColorFromDepth(1.0f - gtxtInputTextures[5].Sample(gssWrap, input.uv).g);
-		break;
-	}
+	//case 82: //'R'
+	//{
+	//	cColor = GetColorFromDepth(1.0f - gtxtInputTextures[5].Sample(gssWrap, input.uv).g);
+	//	break;
+	//}
+	//case 77: //'M'
+	//{
+	//	cColor = GetColorFromDepth(1.0f - gtxtInputTextures[5].Sample(gssWrap, input.uv).b);
+	//	break;
+	//}
 	case 81: //'Q'
 	{
+		float3 red = float3(1.0f, 0.0f, 0.0f);
+		float3 green = float3(0.0f, 1.0f, 0.0f);
+		float3 blue = float3(0.0f, 0.0f, 1.0f);
+		float3 white = float3(1.0f, 1.0f, 1.0f);
+		float3 black = float3(0.1f, 0.1f, 0.1f);
+		float3 darkgray = float3(0.3f, 0.3f, 0.3f);
+		float3 purple = float3(0.5f, 0.0f, 1.0f);
+		float3 Edge = float3(0.0f, 0.0f, 0.0f);
+		float nObjectTypeID = gtxtInputTextures[5].Sample(gssWrap, input.uv).r;
+
+		if (0.0 < nObjectTypeID && nObjectTypeID <= 0.1)		// Monster Outline.
+		{
+			Edge = LaplacianEdge(input.position, white * 0.3 + red * 0.15);
+		}
+		else if (0.1 < nObjectTypeID && nObjectTypeID <= 0.2)		// Nexus Outline.
+		{
+			Edge = LaplacianEdge(input.position, blue * 0.5);
+		}
+		//else if (0.2 < nObjectTypeID && nObjectTypeID <= 0.3)		// Base Outline.
+		//{
+		//	Edge = LaplacianEdge(input.position, black);
+		//}
+		//else if (0.3 < nObjectTypeID && nObjectTypeID <= 0.4)		// Ground Outline.
+		//{
+		//	Edge = LaplacianEdge(input.position, white);
+		//}
+		else if (0.4 < nObjectTypeID && nObjectTypeID <= 0.5)		// Tree Outline.
+		{
+			Edge = LaplacianEdge(input.position, darkgray);
+		}
+		else if (0.5 < nObjectTypeID && nObjectTypeID <= 0.6)		// Wall Outline.
+		{
+			Edge = LaplacianEdge(input.position, darkgray);
+		}
+		//else if (0.6 < nObjectTypeID && nObjectTypeID <= 0.7)		// Portal Outline.
+		//{
+		//	Edge = LaplacianEdge(input.position, blue * 0.2);
+		//}
+		//else if (0.7 < nObjectTypeID && nObjectTypeID <= 0.8)		// Spawn Outline.
+		//{
+		//	Edge = LaplacianEdge(input.position, purple * 0.6);
+		//}
+		else if (0.8 < nObjectTypeID && nObjectTypeID <= 0.9)		// LevelUpTable Outline.
+		{
+			Edge = LaplacianEdge(input.position, white * 0.8);
+		}
 		cColor = gtxtInputTextures[0].Sample(gssWrap, input.uv) + gtxtInputTextures[3].Sample(gssWrap, input.uv);
+		cColor += float4(Edge, 0.0f);
 		break;
 	}
 	case 90: //'Z' 
@@ -343,9 +545,8 @@ struct PS_MULTIPLE_RENDER_TARGETS_OUTPUT
 	float4 f4Texture : SV_TARGET3;
 	float4 f4Emissive : SV_TARGET4;
 	float4 f4Illumination : SV_TARGET5;
-	//float4 f4Specular : SV_TARGET5;
-	float4 f4RoughMetal : SV_TARGET6;
-	//float2 f2Metallic : SV_TARGET7;
+	float4 f4ObjectTypeID : SV_TARGET6;
+	//float4 f4RoughMetal : SV_TARGET6;
 };
 
 //float4 PSStandard(VS_STANDARD_OUTPUT input) : SV_TARGET
@@ -439,11 +640,10 @@ PS_MULTIPLE_RENDER_TARGETS_OUTPUT PSStandard(VS_STANDARD_OUTPUT input) : SV_TARG
 	output.f4Texture = float4(albedo, 1.0f);
 	output.f4Emissive = float4(emission, 1.0f);
 	output.f4Illumination = All_Illumination;
-	//output.f4Specular = float4(specular, 1.0f);
-	output.f4RoughMetal = float4(roughness, metallic, 0.0f, 1.0f);
-	//output.f2Metallic = float2(metallic, metallic);
-	
-	//output.f4Scene = output.f4Emissive;
+
+	output.f4ObjectTypeID = float4(gnObjectTypeID / 10.0f, normalW);
+
+	//output.f4RoughMetal = float4(roughness, metallic, 0.0f, 1.0f);
 
 	return output;
 }
