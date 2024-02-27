@@ -186,6 +186,7 @@ public:
 	void SetGroundUpdatedContext(std::vector<CGroundObject*>* vGroundObjects) { m_vGroundObjects = vGroundObjects; }
 	void OnGroundUpdateCallback(float fTimeElapsed);
 
+	virtual ReafShaderType GetReafShaderType() { return CShader::ReafShaderType::GeneralMonsterObjects; }
 public:
 	std::vector<CGroundObject*>* m_vGroundObjects;
 	PACKET_MONSTERDATA* m_pMonsterData = SERVER::getInstance().GetMonsterData();

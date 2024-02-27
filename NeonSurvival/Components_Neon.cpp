@@ -370,8 +370,9 @@ void Player_Neon::UpgradeDmg()
 }
 void Player_Neon::UpgradeSpeed()
 {
-	printf("UpgradeSpeed\n");
+	MaxSpeed *= 1.1f;
 }
+
 void Player_Neon::RecoveryHP()
 {
 	HP += 30;
@@ -1680,6 +1681,20 @@ void Scene_Neon::Update(float fTimeElapsed)
 					((PistolBulletTexturedObjects*)m_ppShaders[i])->m_fCoolTime -= m_fElapsedTime;
 
 					m_pPlayer->SetFire(false);
+				}
+			}
+		}
+
+		//몬스터 업데이트
+		if (m_ppShaders[i]->GetReafShaderType() == CShader::ReafShaderType::GeneralMonsterObjects)
+		{
+			for (auto monster : (((GeneralMonsterObjects*)m_ppShaders[i])->m_ppObjects))
+			{
+				if (((MonsterObject*)monster)->State == MonsterObject::DIE)
+				{
+					((MonsterObject*)monster)->State = MonsterObject::IDLE;
+					float Exp = ((MonsterObject*)monster)->MAXHP * 0.001;
+					((Player_Neon*)m_pPlayer.get())->AddExp(Exp);
 				}
 			}
 		}

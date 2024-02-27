@@ -131,4 +131,5 @@ public:
 	bool bSelectedObject = false;
 	float fDistanceAtObject = 0.0f;
 	DWORD m_dwDirection = 0;
+	float MaxSpeed = 0.5f;
 };
