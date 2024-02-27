@@ -24,10 +24,10 @@ using namespace std;
 
 #define SERVERPORT	9000
 #define BUFSIZE		2048
-#define BUF2SIZE	4000
+#define BUF2SIZE	5500
 #define WM_SOCKET	(WM_USER+1)
 #define MAX_PLAYER	3
-#define MAX_MONSTER 3
+#define MAX_MONSTER 5
 
 // 소켓 정보 저장을 위한 구조체와 변수
 typedef struct socketinfo
@@ -144,7 +144,7 @@ PACKET_INGAME PlayersPostion[MAX_PLAYER];
 
 typedef struct {
 	PACKET_INGAME2 PlayersPostion2[MAX_PLAYER];
-	PACKET_MONSTERDATA MonsterData[30];
+	PACKET_MONSTERDATA MonsterData[MAX_MONSTER * 10];
 }PACKET_GAMEDATA;
 
 
@@ -154,7 +154,7 @@ int ArrConnect[3] = { -1,-1,-1 };
 HANDLE hMonsterThread;
 DWORD WINAPI MonsterThread(LPVOID arg);
 
-CGameObject Monsters[30];
+CGameObject Monsters[MAX_MONSTER * 10];
 XMFLOAT3 NexusPos = XMFLOAT3(3072, 255, 3072);
 XMFLOAT3 PotalPos[3] = { XMFLOAT3(3575, 255, 3065) ,XMFLOAT3(3056 , 255, 3685) ,XMFLOAT3(2297 , 255, 3043) };
 
@@ -234,7 +234,7 @@ int main(int argc, char** argv)
 		{
 			int randomPotalNum = rand() % 3;
 			Monsters[i * 10 + j].m_Id = i * 10 + j;
-			Monsters[i * 10 + j].m_State = CGameObject::NONE;
+			Monsters[i * 10 + j].m_State = 5;
 			Monsters[i * 10 + j].m_AnimPosition = 0.0f;
 			Monsters[i * 10 + j].m_HP = Monsters[j].MonsterHPs[j];
 			Monsters[i * 10 + j].m_MAXHP = Monsters[j].MonsterHPs[j];
@@ -434,6 +434,11 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			int monsterid = m_Packet.byte;
 			int dmg = m_Packet.hit;
 			Monsters[monsterid].m_HP -= dmg;
+			
+			if (Monsters[monsterid].m_HP <= 0)
+			{
+				Monsters[monsterid].m_PrevState = CGameObject::DIE;
+			}
 			break;
 		}
 		default:
@@ -616,9 +621,11 @@ void err_display(int errcode)
 }
 
 void SpawnMonster();
+void WaveSpawnMonster();
 void MonstersUpdate(double Elapsedtime);
 int dist(XMFLOAT3& v1, XMFLOAT3& v2);
 int SpawnCount = 0;
+int WaveLevel = 0; //일정 시간에 따른 난이도 상승
 
 //플레이어 위치 값 보기
 void PrintPlayerPosition()
@@ -644,6 +651,9 @@ DWORD WINAPI MonsterThread(LPVOID arg)
 	double SpwanCoolTime = 0.0f;
 	double SpawnTime = 5.0f;
 	
+	double WaveCoolTime = 0.0f;
+	double WaveTime = 30.0f;
+
 	while (true) {
 		auto start_time = std::chrono::high_resolution_clock::now();  // 현재 시간 기록
 		
@@ -660,6 +670,14 @@ DWORD WINAPI MonsterThread(LPVOID arg)
 				SpwanCoolTime = 0.0f;
 				SpawnMonster();
 			}
+
+			WaveCoolTime += elapsed_time.count();
+			//30초마다 추가 웨이브
+			if (WaveCoolTime >= WaveTime)
+			{
+				WaveCoolTime = 0.0f;
+				WaveLevel++;
+			}
 			//dt
 			MonstersUpdate(elapsed_time.count());
 
@@ -671,18 +689,23 @@ DWORD WINAPI MonsterThread(LPVOID arg)
 
 void SpawnMonster()
 {
-	if (SpawnCount > 29) return;
+	if (SpawnCount > MAX_MONSTER * 10) return;
 	
 	//printf("spwn : %d\n", SpawnCount++);
 	for (int i = 0; i < MAX_MONSTER * 10; ++i)
 	{
-		if (Monsters[i].m_State == CGameObject::NONE)
+		if (Monsters[i].m_State == CGameObject::NONE || Monsters[i].m_PrevState == CGameObject::DIE)
 		{
 			Monsters[i].m_PrevState = GameData.MonsterData[i].State;
 			Monsters[i].m_State = CGameObject::IDLE;
 			break;
 		}
 	}
+}
+
+void WaveSpawnMonster()
+{
+	//30초마다 몬스터 추가 출현
 }
 
 void MonstersUpdate(double Elapsedtime)
@@ -703,7 +726,11 @@ void MonstersUpdate(double Elapsedtime)
 				Monsters[i].m_PrevState = GameData.MonsterData[i].State;
 				Monsters[i].m_State = CGameObject::MOVE;
 				Monsters[i].SetPosition(PotalPos[Monsters[i].m_SpawnPotalNum]);
-				Monsters[i].m_Speed = 1.5f; //몬스터 종류에 따라서 스피드 값 변경
+				//시간 지남에 따라 점점 강해짐 (+이동속도, +HP)
+				float UpgradeWaveAbility = 1.0f + WaveLevel * 0.1f;
+				Monsters[i].m_Speed = Monsters[i].MonsterSpeed[i] * UpgradeWaveAbility; //몬스터 종류에 따라서 스피드 값 변경
+				Monsters[i].m_HP = Monsters[i].MonsterHPs[i] * UpgradeWaveAbility;
+				Monsters[i].m_MAXHP = Monsters[i].MonsterHPs[i] * UpgradeWaveAbility;
 			}
 			break;
 		}

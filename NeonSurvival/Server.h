@@ -16,10 +16,10 @@ using namespace DirectX;
 
 #define SERVERPORT	9000
 #define BUFSIZE		2048
-#define BUF2SIZE	4000
+#define BUF2SIZE	5500
 #define WM_SOCKET	(WM_USER+1)
 #define MAX_PLAYER	3
-#define MAX_MONSTER 3
+#define MAX_MONSTER 5
 
 enum MESSAGETYPE{
 	LOGIN = 100,
@@ -142,7 +142,7 @@ private:
 	PACKET_INGAME2 P_InGame2;
 	PACKET_INGAME2 PlayersPosition2[MAX_PLAYER];
 	
-	PACKET_MONSTERDATA MonsterData[30];
+	PACKET_MONSTERDATA MonsterData[MAX_MONSTER * 10];
 public:
 	static SERVER& getInstance() {
 		static SERVER s;
