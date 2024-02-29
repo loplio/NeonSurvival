@@ -106,6 +106,9 @@ public:
 		Pick_Frame,
 		Pick_Frame_g,
 		Pick_Frame_r,
+		Attack,
+		Speed,
+		RecoveryHP
 	};
 };
 

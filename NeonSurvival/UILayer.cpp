@@ -145,27 +145,12 @@ void UILayer::Render(UINT nFrame)
     m_pd3d11On12Device->ReleaseWrappedResources(ppResources, _countof(ppResources));
     m_pd3d11DeviceContext->Flush();
 }
+void UILayer::Render(UINT nFrame, CGameSource* pGameSource)
+{
+}
 
 void UILayer::BuildUI()
 {
-    ID2D1SolidColorBrush* pd2dBrush;
-    IDWriteTextFormat* pdwTextFormat; 
-	D2D1_RECT_F d2dRect;
-    WCHAR pstrOutputText[256];
-
-    wcscpy_s(pstrOutputText, 256, L"미사일 개수\n");
-	pd2dBrush = CreateBrush(D2D1::ColorF(D2D1::ColorF::BlanchedAlmond, 1.0f));
-	pdwTextFormat = CreateTextFormat((wchar_t*)L"Arial", m_fHeight / 20.0f);
-	d2dRect = D2D1::RectF(0.0f, m_fHeight - 90.0f, m_fWidth, m_fHeight);
-
-    UpdateTextOutputs(0, pstrOutputText, &d2dRect, pdwTextFormat, pd2dBrush);
-
-
-    pd2dBrush = CreateBrush(D2D1::ColorF(D2D1::ColorF::Beige, 1.0f));
-    pdwTextFormat = CreateTextFormat((wchar_t*)L"Arial", m_fHeight / 15.0f);
-    d2dRect = D2D1::RectF(0.0f, m_fHeight - 60.0f, m_fWidth, m_fHeight);
-
-    UpdateTextOutputs(1, NULL, &d2dRect, pdwTextFormat, pd2dBrush);
 }
 
 void UILayer::ReleaseResources()

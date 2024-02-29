@@ -632,6 +632,7 @@ void GeneralMonsterObjects::Collide(const CGameSource& GameSource, CBoundingBoxO
 	int n = 0;
 	for (CGameObject* monster : m_ppObjects)
 	{
+		if (((MonsterObject*)monster)->State == MonsterObject::DIE) continue;
 		// Prepare Collision
 		if (monster) monster->UpdateWorldTransformBoundingBox();
 		if (m_pMonsterData[n].State == ATTACK && ((MonsterObject*)monster)->IsAttackAnimPosition())

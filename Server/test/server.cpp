@@ -15,6 +15,11 @@
 #include <iostream>
 #include <thread>
 #include <vector>
+#include <set>
+#include <map>
+#include <queue>
+#include <cmath>
+#include <algorithm>
 
 #include "MyMath.h"
 #include "GameObject.h"
@@ -147,6 +152,7 @@ typedef struct {
 	PACKET_MONSTERDATA MonsterData[MAX_MONSTER * 10];
 }PACKET_GAMEDATA;
 
+TerrainInfo terrain(XMFLOAT3(512, 0, 512), XMFLOAT3(12.0f, 1.0f, 12.0f));
 
 PACKET_GAMEDATA GameData;
 int ConnectNum = 0;
@@ -154,6 +160,7 @@ int ArrConnect[3] = { -1,-1,-1 };
 HANDLE hMonsterThread;
 DWORD WINAPI MonsterThread(LPVOID arg);
 
+AStar astar;
 CGameObject Monsters[MAX_MONSTER * 10];
 XMFLOAT3 NexusPos = XMFLOAT3(3072, 255, 3072);
 XMFLOAT3 PotalPos[3] = { XMFLOAT3(3575, 255, 3065) ,XMFLOAT3(3056 , 255, 3685) ,XMFLOAT3(2297 , 255, 3043) };
@@ -246,6 +253,46 @@ int main(int argc, char** argv)
 		}
 	}
 
+	// 장애물 위치 설정.
+	Obstacle* obstacle = new Obstacle[5];
+	XMFLOAT3 BoundingCenter, BoundingExtent;
+
+	/// LowerWall
+	BoundingCenter = XMFLOAT3(-0.00411405414, 0.745403349, 0.00240635872);
+	BoundingExtent = XMFLOAT3(0.178011268, 0.744693696, 3.52246284);
+	obstacle[0].SetPosition(terrain.GetWidth(0.5f) - 81.0f, 0.0f, terrain.GetLength(0.5f) + 20.0f);
+	obstacle[0].SetScale(12.0f, 12.0f, 12.0f);
+	obstacle[0].Rotate(0.0f, 180.0f, 0.0f);
+	obstacle[0].SetCorner(BoundingExtent, BoundingCenter, 12.0f);
+
+	obstacle[1].SetPosition(terrain.GetWidth(0.5f) + 73.0f, 0.0f, terrain.GetLength(0.5f) + 30.0f);
+	obstacle[1].SetScale(12.0f, 12.0f, 12.0f);
+	obstacle[1].Rotate(0.0f, 180.0f, 0.0f);
+	obstacle[1].SetCorner(BoundingExtent, BoundingCenter, 12.0f);
+
+	/// UpperWall
+	BoundingCenter = XMFLOAT3(-0.00730583817, 0.733893871, -0.191149592);
+	BoundingExtent = XMFLOAT3(0.170963734, 0.749625683, 1.39590120);
+	obstacle[2].SetPosition(terrain.GetWidth(0.5f) + 73.0f, 0.0f, terrain.GetLength(0.5f) - 29.0f);
+	obstacle[2].SetScale(12.0f, 12.0f, 12.0f);
+	obstacle[2].SetCorner(BoundingExtent, BoundingCenter, 12.0f);
+
+	obstacle[3].SetPosition(terrain.GetWidth(0.5f) - 45.0f, 0.0f, terrain.GetLength(0.5f) + 104.0f);
+	obstacle[3].SetScale(12.0f, 12.0f, 12.0f);
+	obstacle[3].Rotate(0.0f, 90.0f, 0.0f);
+	obstacle[3].SetCorner(BoundingExtent, BoundingCenter, 12.0f);
+
+	obstacle[4].SetPosition(terrain.GetWidth(0.5f) + 30.0f, 0.0f, terrain.GetLength(0.5f) + 106.0f);
+	obstacle[4].SetScale(12.0f, 12.0f, 12.0f);
+	obstacle[4].Rotate(0.0f, -90.0f, 0.0f);
+	obstacle[4].SetCorner(BoundingExtent, BoundingCenter, 12.0f);
+	
+	astar.SetObstacle(obstacle, 5);
+
+	astar.path0 = astar.GetPath(PotalPos[0], NexusPos);
+	astar.path1 = astar.GetPath(PotalPos[1], NexusPos);
+	astar.path2 = astar.GetPath(PotalPos[2], NexusPos);
+
 	UpdateMonsterData();
 
 	hMonsterThread = CreateThread(NULL, 0, MonsterThread, NULL, 0, NULL);
@@ -263,7 +310,7 @@ int main(int argc, char** argv)
 		// message queue에 덧붙여진 메시지는 DispatchMessage()에 의해 WndProc()으로 전달된다.
 		DispatchMessage(&msg);
 	}
-
+	
 	// 윈속 종료
 	WSACleanup();
 	return msg.wParam;
@@ -437,7 +484,7 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			
 			if (Monsters[monsterid].m_HP <= 0)
 			{
-				Monsters[monsterid].m_PrevState = CGameObject::DIE;
+				Monsters[monsterid].m_State = CGameObject::DIE;
 			}
 			break;
 		}
@@ -731,6 +778,8 @@ void MonstersUpdate(double Elapsedtime)
 				Monsters[i].m_Speed = Monsters[i].MonsterSpeed[i] * UpgradeWaveAbility; //몬스터 종류에 따라서 스피드 값 변경
 				Monsters[i].m_HP = Monsters[i].MonsterHPs[i] * UpgradeWaveAbility;
 				Monsters[i].m_MAXHP = Monsters[i].MonsterHPs[i] * UpgradeWaveAbility;
+
+				Monsters[i].m_path = astar.GetStartPath(Monsters[i].m_SpawnPotalNum);
 			}
 			break;
 		}
@@ -738,7 +787,7 @@ void MonstersUpdate(double Elapsedtime)
 		{
 			XMFLOAT3 pos = Monsters[i].GetPosition();
 			// 적의 어그로를 초기화 및 어그로 최소 거리 설정
-			float closestDistance = 30.0f;
+			float closestDistance = 40.0f;
 			int closestPlayerId = -1;
 
 			// 모든 플레이어의 위치를 확인하여 가장 가까운 플레이어 탐색
@@ -765,7 +814,7 @@ void MonstersUpdate(double Elapsedtime)
 				Monsters[i].m_TargetPos = pPos;
 
 				// 어그로 범위에 있는 경우 공격
-				if (closestDistance <= 20.0f)
+				if (closestDistance <= 22.0f)
 				{
 					//Monsters[i].m_AnimPosition = 0.0f;
 					Monsters[i].m_TargetId = closestPlayerId;
@@ -776,14 +825,31 @@ void MonstersUpdate(double Elapsedtime)
 			}
 			else
 			{
+				// 경로 재설정.
+				if (Monsters[i].m_TargetType != CGameObject::Nexus)
+				{
+					Monsters[i].m_path = astar.GetPath(Monsters[i].GetPosition(), NexusPos);
+				}
+
 				// 어그로 대상이 없으면 넥서스를 향해 이동
 				Monsters[i].m_TargetType = CGameObject::Nexus;
-				Monsters[i].m_TargetPos = NexusPos;
-				if (dist(NexusPos, pos) <= 50.0f)
+
+				if (!Monsters[i].m_path.empty())
 				{
-					//Monsters[i].m_AnimPosition = 0.0f;
-					Monsters[i].m_PrevState = GameData.MonsterData[i].State;
-					Monsters[i].m_State = CGameObject::ATTACK;
+					Monsters[i].m_TargetPos = Monsters[i].m_path.front();
+					Monsters[i].m_TargetPos.y = NexusPos.y;
+
+					if (Monsters[i].m_path.size() == 1 && dist(NexusPos, pos) <= 50.0f)
+					{
+						Monsters[i].m_path.erase(Monsters[i].m_path.begin());
+						Monsters[i].m_AnimPosition = 0.0f;
+						Monsters[i].m_PrevState = GameData.MonsterData[i].State;
+						Monsters[i].m_State = CGameObject::ATTACK;
+					}
+					else if (dist(Monsters[i].m_TargetPos, pos) < 0.01f)
+					{
+						Monsters[i].m_path.erase(Monsters[i].m_path.begin());
+					}
 				}
 			}
 
@@ -798,7 +864,7 @@ void MonstersUpdate(double Elapsedtime)
 			if (Monsters[i].m_TargetType == CGameObject::Player)
 			{
 				XMFLOAT3 pPos = GameData.PlayersPostion2[Monsters[i].m_TargetId].position;
-				if (dist(pPos, pos) > 21.0f)
+				if (dist(pPos, pos) > 30.0f)
 				{
 					Monsters[i].m_AnimPosition = 0.0f;
 					Monsters[i].m_PrevState = GameData.MonsterData[i].State;
@@ -815,6 +881,17 @@ void MonstersUpdate(double Elapsedtime)
 	UpdateMonsterData();
 }
 
+bool IsNan(const XMFLOAT4X4& xmf4x4world)
+{
+	if (std::isnan(xmf4x4world._11) || std::isnan(xmf4x4world._12) || std::isnan(xmf4x4world._13)
+		|| std::isnan(xmf4x4world._21) || std::isnan(xmf4x4world._22) || std::isnan(xmf4x4world._23)
+		|| std::isnan(xmf4x4world._31) || std::isnan(xmf4x4world._32) || std::isnan(xmf4x4world._33)
+		|| std::isnan(xmf4x4world._41) || std::isnan(xmf4x4world._42) || std::isnan(xmf4x4world._43))
+		return true;
+
+	return false;
+}
+
 void UpdateMonsterData()
 {
 	for (int i = 0; i < MAX_MONSTER * 10; ++i)
@@ -822,13 +899,16 @@ void UpdateMonsterData()
 		GameData.MonsterData[i].id = Monsters[i].m_Id;
 		GameData.MonsterData[i].HP = Monsters[i].m_HP;
 		GameData.MonsterData[i].MAXHP = Monsters[i].m_MAXHP;
-		GameData.MonsterData[i].m_xmf4x4World = Monsters[i].m_xmf4x4World;
 		GameData.MonsterData[i].State = Monsters[i].m_State;
 		GameData.MonsterData[i].AnimPosition = Monsters[i].m_AnimPosition;
 		GameData.MonsterData[i].Pos = Monsters[i].GetPosition();
 		GameData.MonsterData[i].SpawnPotal = Monsters[i].m_SpawnPotalNum;
 		GameData.MonsterData[i].TargetID = Monsters[i].m_TargetId;
 		GameData.MonsterData[i].TargetType = Monsters[i].m_TargetType;
+		if (IsNan(Monsters[i].m_xmf4x4World) != true) 
+			GameData.MonsterData[i].m_xmf4x4World = Monsters[i].m_xmf4x4World;
+		else
+			GameData.MonsterData[i].m_xmf4x4World = Matrix4x4::Identity();
 	}
 }
 

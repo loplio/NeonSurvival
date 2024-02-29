@@ -1,6 +1,7 @@
 #pragma once
 
 class InterfaceFramework;
+class CGameSource;
 
 struct TextBlock
 {
@@ -17,6 +18,7 @@ public:
 
     void UpdateTextOutputs(UINT nIndex, WCHAR* pstrUIText, D2D1_RECT_F* pd2dLayoutRect, IDWriteTextFormat* pdwFormat, ID2D1SolidColorBrush* pd2dTextBrush);
     virtual void Render(UINT nFrame);
+    virtual void Render(UINT nFrame, CGameSource* pGameSource);
     virtual void BuildUI();
     void ReleaseResources();
 

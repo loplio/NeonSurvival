@@ -388,7 +388,7 @@ void Player_Neon::RecoveryHP()
 //-------------------------------------------------------------------------------
 Scene_Neon::Scene_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) : CScene(pd3dDevice, pd3dCommandList)
 {
-	CreateCbvSrvDescriptorHeaps(pd3dDevice, 10, 520, 10);
+	CreateCbvSrvDescriptorHeaps(pd3dDevice, 10, 600, 10);
 
 	// Terrain Build.
 	XMFLOAT3 xmf3Scale(12.0f, 1.0f, 12.0f);
@@ -512,9 +512,30 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 	m_UIShaders.back() = pUITexture;
 
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/Attack.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 100, 100, 0, FRAME_BUFFER_WIDTH * 0.2f, FRAME_BUFFER_HEIGHT * 0.35f, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/Speed.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 100, 100, 0, FRAME_BUFFER_WIDTH * 0.5f, FRAME_BUFFER_HEIGHT * 0.35f, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/RecoveryHP.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 100, 100, 0, FRAME_BUFFER_WIDTH * 0.8f, FRAME_BUFFER_HEIGHT * 0.35f, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+
 	((CTextureToScreenShader*)m_UIShaders[Pick_Frame])->SetIsRender(false);
 	((CTextureToScreenShader*)m_UIShaders[Pick_Frame_g])->SetIsRender(false);
 	((CTextureToScreenShader*)m_UIShaders[Pick_Frame_r])->SetIsRender(false);
+	((CTextureToScreenShader*)m_UIShaders[Attack])->SetIsRender(false);
+	((CTextureToScreenShader*)m_UIShaders[Speed])->SetIsRender(false);
+	((CTextureToScreenShader*)m_UIShaders[RecoveryHP])->SetIsRender(false);
 
 	/// background ///
 	//m_ppComputeShaders.push_back(new CComputeShader);
@@ -1608,6 +1629,9 @@ bool Scene_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM 
 			((CTextureToScreenShader*)m_UIShaders[Pick_Frame])->SetIsRender(false);
 			((CTextureToScreenShader*)m_UIShaders[Pick_Frame_g])->SetIsRender(false);
 			((CTextureToScreenShader*)m_UIShaders[Pick_Frame_r])->SetIsRender(false);
+			((CTextureToScreenShader*)m_UIShaders[Attack])->SetIsRender(false);
+			((CTextureToScreenShader*)m_UIShaders[Speed])->SetIsRender(false);
+			((CTextureToScreenShader*)m_UIShaders[RecoveryHP])->SetIsRender(false);
 			break;
 		}
 		case '4':
@@ -1709,6 +1733,9 @@ void Scene_Neon::Update(float fTimeElapsed)
 		((CTextureToScreenShader*)m_UIShaders[Pick_Frame])->SetIsRender(true);
 		((CTextureToScreenShader*)m_UIShaders[Pick_Frame_g])->SetIsRender(true);
 		((CTextureToScreenShader*)m_UIShaders[Pick_Frame_r])->SetIsRender(true);
+		((CTextureToScreenShader*)m_UIShaders[Attack])->SetIsRender(true);
+		((CTextureToScreenShader*)m_UIShaders[Speed])->SetIsRender(true);
+		((CTextureToScreenShader*)m_UIShaders[RecoveryHP])->SetIsRender(true);
 	}
 
 	for (int i = 0; i < m_UIShaders.size(); ++i)

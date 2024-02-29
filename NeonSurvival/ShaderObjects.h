@@ -46,7 +46,7 @@ public:
 
 		m_Player.CreateBoundingBoxObjectSet(pd3dDevice, pd3dCommandList, this);
 		//m_Player.CreateBoundingBoxMesh(pd3dDevice, pd3dCommandList, this);
-		m_Scene.CreateBoundingBox(pd3dDevice, pd3dCommandList, this);		// 종료 시 느려지는 현상.
+		m_Scene.CreateBoundingBox(pd3dDevice, pd3dCommandList, this);
 	}
 
 protected:
