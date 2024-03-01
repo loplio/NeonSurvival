@@ -1459,6 +1459,10 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.back()->SetIsExistBoundingBox(false);
 	if (pLevelUpTableModel) delete pLevelUpTableModel;
 
+	CLoadedModelInfo* pRevolverModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Revolver/Revolver.bin", NULL);
+	(*m_pPlayer).FindFrame("mixamorig:RightHandIndex1")->SetChild(pRevolverModel->m_pModelRootObject);
+	if (pRevolverModel) delete pRevolverModel;
+
 	// 다른 플레이어
 	for (int i = 0; i < MAX_PLAYER - 1; ++i)
 	{
