@@ -32,11 +32,15 @@ Player_Neon::Player_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd
 
 	const int nAnimation = 26;
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimation, pPlayerModel);
+	m_pSkinnedAnimationController->SetLayeredBlendBoneFrameCaches(pPlayerModel->m_pModelRootObject, "mixamorig:Spine");
+
 	for (int i = 0; i < nAnimation; ++i)
 	{
 		m_pSkinnedAnimationController->SetTrackAnimationSet(i, i);
 		m_pSkinnedAnimationController->SetTrackEnable(i, false);
 	}
+	m_pSkinnedAnimationController->m_SubAnimationTrack.m_nAnimationSet = m_pSkinnedAnimationController->IDLE;
+	m_pSkinnedAnimationController->m_SubAnimationTrack.SetEnable(false);
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
@@ -140,6 +144,11 @@ void Player_Neon::Update(float fTimeElapsed)
 	{
 		int nResultAnimBundle = -1;
 		m_pSkinnedAnimationController->SetAnimationBundle(m_nGunType);
+		if (m_nGunType != Pistol)
+		{
+			m_pSkinnedAnimationController->m_LayeredAngle = 0.0f;
+			m_pSkinnedAnimationController->SetOneOfTrackSubEnable(0, false);
+		}
 
 		float fLength = sqrtf(m_xmf3Velocity.x * m_xmf3Velocity.x + m_xmf3Velocity.z * m_xmf3Velocity.z);
 		if (::IsZero(fLength))
@@ -147,6 +156,12 @@ void Player_Neon::Update(float fTimeElapsed)
 			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->IDLE];
 			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
 			//m_pSkinnedAnimationController->SetTrackPosition(1, 0.0f);
+
+			if (m_nGunType == Pistol)
+			{
+				m_pSkinnedAnimationController->m_LayeredAngle = 0.0f;
+				m_pSkinnedAnimationController->SetOneOfTrackSubEnable(0, false);
+			}
 		}
 		else if (!IsDash && m_dwDirection == DIR_FORWARD)	// walking
 		{
@@ -167,36 +182,108 @@ void Player_Neon::Update(float fTimeElapsed)
 			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->LEFT_WALK];
 			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
 			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
+
+			if (m_nGunType == Pistol)
+			{
+				m_pSkinnedAnimationController->m_LayeredRotate = 0.7f;
+				m_pSkinnedAnimationController->m_LayeredMaxAngle = abs(m_pSkinnedAnimationController->m_LayeredRotate) * 2.9;
+				m_pSkinnedAnimationController->SetOneOfTrackSubEnable(m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->IDLE]);
+			}
 		}
 		else if (m_dwDirection == DIR_RIGHT)	// right walking
 		{
 			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->RIGHT_WALK];
 			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
 			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
+
+			if (nResultAnimBundle != m_pSkinnedAnimationController->m_nCurrentTrack)
+			{
+				m_pSkinnedAnimationController->m_LayeredAngle = 0.0f;
+				m_pSkinnedAnimationController->SetOneOfTrackSubEnable(0, false);
+			}
+
+			if (m_nGunType == Pistol)
+			{
+				m_pSkinnedAnimationController->m_LayeredRotate = -0.09;
+				m_pSkinnedAnimationController->m_LayeredMaxAngle = abs(m_pSkinnedAnimationController->m_LayeredRotate) * 2.9;
+				m_pSkinnedAnimationController->SetOneOfTrackSubEnable(m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->IDLE]);
+			}
 		}
 		else if (m_dwDirection & DIR_LEFT && m_dwDirection & DIR_BACKWARD)	// left backward
 		{
 			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->LEFT_BACKWARD];
 			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
 			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
+
+			if (nResultAnimBundle != m_pSkinnedAnimationController->m_nCurrentTrack)
+			{
+				m_pSkinnedAnimationController->m_LayeredAngle = 0.0f;
+				m_pSkinnedAnimationController->SetOneOfTrackSubEnable(0, false);
+			}
+
+			if (m_nGunType == Pistol)
+			{
+				m_pSkinnedAnimationController->m_LayeredRotate = 0.35f;
+				m_pSkinnedAnimationController->m_LayeredMaxAngle = abs(m_pSkinnedAnimationController->m_LayeredRotate) * 2.9;
+				m_pSkinnedAnimationController->SetOneOfTrackSubEnable(m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->IDLE]);
+			}
 		}
 		else if (m_dwDirection & DIR_RIGHT && m_dwDirection & DIR_BACKWARD)	// right backward
 		{
 			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->RIGHT_BACKWARD];
 			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
 			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
+
+			if (nResultAnimBundle != m_pSkinnedAnimationController->m_nCurrentTrack)
+			{
+				m_pSkinnedAnimationController->m_LayeredAngle = 0.0f;
+				m_pSkinnedAnimationController->SetOneOfTrackSubEnable(0, false);
+			}
+
+			if (m_nGunType == Pistol)
+			{
+				m_pSkinnedAnimationController->m_LayeredRotate = 0.24f;
+				m_pSkinnedAnimationController->m_LayeredMaxAngle = abs(m_pSkinnedAnimationController->m_LayeredRotate) * 2.9;
+				m_pSkinnedAnimationController->SetOneOfTrackSubEnable(m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->IDLE]);
+			}
 		}
 		else if (m_dwDirection & DIR_LEFT && m_dwDirection & DIR_FORWARD)	// left forward
 		{
 			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->LEFT_FORWARD];
 			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
 			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
+
+			if (nResultAnimBundle != m_pSkinnedAnimationController->m_nCurrentTrack)
+			{
+				m_pSkinnedAnimationController->m_LayeredAngle = 0.0f;
+				m_pSkinnedAnimationController->SetOneOfTrackSubEnable(0, false);
+			}
+
+			if (m_nGunType == Pistol)
+			{
+				m_pSkinnedAnimationController->m_LayeredRotate = 0.35f;
+				m_pSkinnedAnimationController->m_LayeredMaxAngle = abs(m_pSkinnedAnimationController->m_LayeredRotate) * 2.9;
+				m_pSkinnedAnimationController->SetOneOfTrackSubEnable(m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->IDLE]);
+			}
 		}
 		else if (m_dwDirection & DIR_RIGHT && m_dwDirection & DIR_FORWARD)	// right forward
 		{
 			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->RIGHT_FORWARD];
 			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
 			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
+
+			if (nResultAnimBundle != m_pSkinnedAnimationController->m_nCurrentTrack)
+			{
+				m_pSkinnedAnimationController->m_LayeredAngle = 0.0f;
+				m_pSkinnedAnimationController->SetOneOfTrackSubEnable(0, false);
+			}
+
+			if (m_nGunType == Pistol)
+			{
+				m_pSkinnedAnimationController->m_LayeredRotate = 0.24f;
+				m_pSkinnedAnimationController->m_LayeredMaxAngle = abs(m_pSkinnedAnimationController->m_LayeredRotate) * 2.9;
+				m_pSkinnedAnimationController->SetOneOfTrackSubEnable(m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->IDLE]);
+			}
 		}
 		else				// slow runing
 		{
