@@ -190,7 +190,7 @@ public:
 public:
 	std::vector<CGroundObject*>* m_vGroundObjects;
 	PACKET_MONSTERDATA* m_pMonsterData = SERVER::getInstance().GetMonsterData();
-	const int nMaxMonster = 30;
+	const int nMaxMonster = 50;
 
 	enum {
 		IDLE,

@@ -245,6 +245,7 @@ int main(int argc, char** argv)
 			Monsters[i * 10 + j].m_AnimPosition = 0.0f;
 			Monsters[i * 10 + j].m_HP = Monsters[j].MonsterHPs[j];
 			Monsters[i * 10 + j].m_MAXHP = Monsters[j].MonsterHPs[j];
+			Monsters[i * 10 + j].m_Speed = Monsters[j].MonsterSpeed[j];
 			Monsters[i * 10 + j].m_PrevState = NULL;
 			Monsters[i * 10 + j].m_TargetType = CGameObject::Nexus;
 			Monsters[i * 10 + j].m_Type = j;
@@ -672,7 +673,7 @@ void WaveSpawnMonster();
 void MonstersUpdate(double Elapsedtime);
 int dist(XMFLOAT3& v1, XMFLOAT3& v2);
 int SpawnCount = 0;
-int WaveLevel = 0; //일정 시간에 따른 난이도 상승
+int WaveLevel = 1; //일정 시간에 따른 난이도 상승
 
 //플레이어 위치 값 보기
 void PrintPlayerPosition()
@@ -724,6 +725,7 @@ DWORD WINAPI MonsterThread(LPVOID arg)
 			{
 				WaveCoolTime = 0.0f;
 				WaveLevel++;
+				printf("현재 웨이브 레벨 : %d\n", WaveLevel);
 			}
 			//dt
 			MonstersUpdate(elapsed_time.count());
@@ -733,19 +735,82 @@ DWORD WINAPI MonsterThread(LPVOID arg)
 	}
 	return 0;
 }
+bool CheckSpawnMonsterType(int waveLevel, int type)
+{
+	if (WaveLevel == 1)
+	{
+		// 기본 등장 몹 - Bee, Spider, Bat, KingCobra, Golem, 
+		if (type == CGameObject::Giant_Bee || type == CGameObject::Spider || type == CGameObject::Bat
+			|| type == CGameObject::KingCobra || type == CGameObject::Golem)
+		{
+			return true;
+		}
+	}
+	else if (WaveLevel == 2) // + TreasureChest
+	{
+		if (type == CGameObject::Giant_Bee || type == CGameObject::Spider || type == CGameObject::Bat
+			|| type == CGameObject::KingCobra || type == CGameObject::Golem || type == CGameObject::TreasureChest)
+		{
+			return true;
+		}
+	}
+	else if (WaveLevel == 3) // + Magama
+	{
+		if (type == CGameObject::Giant_Bee || type == CGameObject::Spider || type == CGameObject::Bat
+			|| type == CGameObject::KingCobra || type == CGameObject::Golem || type == CGameObject::TreasureChest
+			|| type == CGameObject::Magama)
+		{
+			return true;
+		}
+	}
+	else if (WaveLevel >= 4) // + Treant
+	{
+		if (type == CGameObject::Giant_Bee || type == CGameObject::Spider || type == CGameObject::Bat
+			|| type == CGameObject::KingCobra || type == CGameObject::Golem || type == CGameObject::TreasureChest
+			|| type == CGameObject::Magama || type == CGameObject::Treant)
+		{
+			return true;
+		}
+	}
+	return false;
+}
 
 void SpawnMonster()
 {
 	if (SpawnCount > MAX_MONSTER * 10) return;
 	
-	//printf("spwn : %d\n", SpawnCount++);
+	// printf("spwn : %d\n", SpawnCount++);
+	// enum { Dragon, Giant_Bee, Golem, KingCobra, TreasureChest, Spider, Bat, Magama, Treant, Wolf };
+	// 30초마다 wavelevel +1
+	// 기본 등장 몹 - Bee, Spider, Bat, KingCobra, Golem, 
+	// 30초마다 추가로 등장하는 몹 - TreasureChest, Magama , Treant
+	// 특수 몹 - Wolf
+	// 아마도 보스 - Dragon
+
 	for (int i = 0; i < MAX_MONSTER * 10; ++i)
 	{
+		if (CheckSpawnMonsterType(WaveLevel, Monsters[i].m_Type) == false) continue;
+
 		if (Monsters[i].m_State == CGameObject::NONE || Monsters[i].m_PrevState == CGameObject::DIE)
 		{
 			Monsters[i].m_PrevState = GameData.MonsterData[i].State;
 			Monsters[i].m_State = CGameObject::IDLE;
 			break;
+		}
+	}
+}
+
+void WaveSpawnMonster_Wolf_N(int n)
+{
+	for (int i = 0; i < n; ++i)
+	{
+		if (Monsters[i].m_Type == CGameObject::Wolf)
+		{
+			if (Monsters[i].m_State == CGameObject::NONE || Monsters[i].m_PrevState == CGameObject::DIE)
+			{
+				Monsters[i].m_PrevState = GameData.MonsterData[i].State;
+				Monsters[i].m_State = CGameObject::IDLE;
+			}
 		}
 	}
 }
@@ -759,6 +824,9 @@ void MonstersUpdate(double Elapsedtime)
 {	
 	for (int i = 0; i < MAX_MONSTER * 10; ++i)
 	{
+		// 스폰전이거나 죽은 몬스터는 계산 안함
+		if (Monsters[i].m_State == CGameObject::NONE || Monsters[i].m_PrevState == CGameObject::DIE) continue;
+
 		Monsters[i].m_AnimPosition += Elapsedtime;
 		if (Monsters[i].m_AnimPosition > 1.0f) Monsters[i].m_AnimPosition = 0.0f;
 
@@ -771,15 +839,11 @@ void MonstersUpdate(double Elapsedtime)
 			{
 				Monsters[i].m_SpawnToMoveDelay = 0.0f;
 				Monsters[i].m_PrevState = GameData.MonsterData[i].State;
-				Monsters[i].m_State = CGameObject::MOVE;
 				Monsters[i].SetPosition(PotalPos[Monsters[i].m_SpawnPotalNum]);
-				//시간 지남에 따라 점점 강해짐 (+이동속도, +HP)
-				float UpgradeWaveAbility = 1.0f + WaveLevel * 0.1f;
-				Monsters[i].m_Speed = Monsters[i].MonsterSpeed[i] * UpgradeWaveAbility; //몬스터 종류에 따라서 스피드 값 변경
-				Monsters[i].m_HP = Monsters[i].MonsterHPs[i] * UpgradeWaveAbility;
-				Monsters[i].m_MAXHP = Monsters[i].MonsterHPs[i] * UpgradeWaveAbility;
 
 				Monsters[i].m_path = astar.GetStartPath(Monsters[i].m_SpawnPotalNum);
+
+				Monsters[i].m_State = CGameObject::MOVE;
 			}
 			break;
 		}
