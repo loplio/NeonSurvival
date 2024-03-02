@@ -1562,6 +1562,12 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 			m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(j, j);
 			m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(j, false);
 		}
+
+		CLoadedModelInfo* pRevolverModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Revolver/Revolver.bin", NULL);
+		m_vOtherPlayer.back()->FindFrame("mixamorig:RightHandIndex1")->SetChild(pRevolverModel->m_pModelRootObject);
+		if (pRevolverModel) delete pRevolverModel;
+
+
 		if (pOtherModel) delete pOtherModel;
 	}
 
