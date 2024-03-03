@@ -1,6 +1,6 @@
 #include "SoundManager.h"
 #include "GameScene.h"
-
+#include <sstream>
 SoundManager::SoundManager()
 {
 
@@ -17,15 +17,25 @@ void SoundManager::PlayBg(std::string option,std::string path)
 	str += option;
 	str += path;
 	//str += " repeat";
+	//std::wstring wpath(path.begin(), path.end());
+
+	//wchar_t* volumeCommand = (wchar_t*)"setaudio MediaFile volume to 1";
+	//std::wstringstream volumeCommandStream;
+	//volumeCommandStream << L"setaudio \"" << wpath << L"\" volume to 1000";
+	//std::wstring volumeCommand = volumeCommandStream.str();
+
+	mciSendString(L"setaudio MediaFile volume to 1",0,0,0);
 
 	// string to tchar
-	int slength = (int)str.length() + 1;
+	int slength = static_cast<int>(str.length()) + 1;
 	int len = MultiByteToWideChar(CP_ACP, 0, str.c_str(), slength, 0, 0);
 	TCHAR* buf = new TCHAR[len];
 	MultiByteToWideChar(CP_ACP, 0, str.c_str(), slength, buf, len);
 	TCHAR* r(buf);
 
 	mciSendString(r, 0, 0, 0);
+
+	delete[] buf;
 }
 
 void SoundManager::PlayEf(std::string path)
@@ -48,5 +58,13 @@ void SoundManager::SoundUpdate(CGameSource* pGameSource)
 	if (pPlayer.GetFire())
 	{
 		PlayEf("Sound/Laser gun.wav");
+	}
+	if (pPlayer.GetDash())
+	{
+		PlayBg("play","Sound/slowstep.wav");
+	}
+	else 
+	{
+		PlayBg("stop", "Sound/slowstep.wav");
 	}
 }

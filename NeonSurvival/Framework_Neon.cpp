@@ -207,7 +207,7 @@ void CGameFramework_Neon::OnCreate(HINSTANCE hInstance, HWND hMainWnd)
 }
 void CGameFramework_Neon::EnterFrameAdvance()
 {
-	//m_pSoundManager->PlayBg("play ", "Sound/bg.wav");
+	//m_pSoundManager->PlayBg("play ", "Sound/slowstep.wav",100);
 }
 void CGameFramework_Neon::ExitFrameAdvance()
 {

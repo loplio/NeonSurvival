@@ -155,6 +155,7 @@ void Player_Neon::Update(float fTimeElapsed)
 			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
 			ServerfLength = fLength / m_fMaxVelocityXZ;
 			//printf("Walk\n");
+			//m_pPlayer->SetDash(true);
 		}
 		else if (m_dwDirection == DIR_BACKWARD)	// backward walking
 		{

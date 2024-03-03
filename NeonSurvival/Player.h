@@ -101,12 +101,14 @@ public:
 	XMFLOAT3 GetRayDirection() { return m_xmf3RayDirection; }
 	bool GetFire() const { return IsFire; }
 	bool GetReadyFire() const { return bReadyFire; }
+	bool GetDash() const { return IsDash; }
 
 	void SetYaw(float Yaw) { m_fYaw = Yaw; }
 	void SetPitch(float Pitch) { m_fPitch = Pitch; }
 	void SetRoll(float Roll) { m_fRoll = Roll; }
 	void SetFire(bool fire) { IsFire = fire; }
 	void SetReadyFire(bool fire) { bReadyFire = fire; }
+	void SetDash(bool dash) { IsDash = dash; }
 
 	CCamera* GetCamera() const { return(m_pCamera); }
 	void SetCamera(CCamera* pCamera) { m_pCamera = pCamera; }
