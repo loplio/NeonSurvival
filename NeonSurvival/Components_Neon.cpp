@@ -1558,8 +1558,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 		m_vOtherPlayer.push_back(new CPlayer());
 		m_vOtherPlayer.back()->SetChild(pOtherModel->m_pModelRootObject, true);
 		m_vOtherPlayer.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 26, pOtherModel);
-		//m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetLayeredBlendBoneFrameCaches(pOtherModel->m_pModelRootObject, "mixamorig:Spine");
-		// 블랜드 본 설정 시 다른 플레이어가 총 쏘는 순간 오류
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetLayeredBlendBoneFrameCaches(pOtherModel->m_pModelRootObject, "mixamorig:Spine");
 
 		for (int j = 0; j < 26; ++j)
 		{
@@ -1897,11 +1896,12 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 				//애니메이션
 				if (m_vOtherPlayer[i]->m_pSkinnedAnimationController)
 				{
-					//m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetAnimationBundle(1);
+					m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetAnimationBundle(1);
 
 					if (m_pOtherPlayerData2[OtherId].fLength == 0)
 					{
 						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetOneOfTrackEnable(m_pOtherPlayerData2[OtherId].InnResultAnimBundle);
+						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetOneOfTrackSubEnable(0, false);
 					}
 					else
 					{
