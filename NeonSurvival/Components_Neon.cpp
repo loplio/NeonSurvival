@@ -1558,6 +1558,9 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 		m_vOtherPlayer.push_back(new CPlayer());
 		m_vOtherPlayer.back()->SetChild(pOtherModel->m_pModelRootObject, true);
 		m_vOtherPlayer.back()->m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 26, pOtherModel);
+		//m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetLayeredBlendBoneFrameCaches(pOtherModel->m_pModelRootObject, "mixamorig:Spine");
+		// 블랜드 본 설정 시 다른 플레이어가 총 쏘는 순간 오류
+
 		for (int j = 0; j < 26; ++j)
 		{
 			m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(j, j);
@@ -1884,9 +1887,18 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 			{
 				m_vOtherPlayer[i]->Player_ID = OtherId;
 
+				//방향 및 이동 ###
+				m_vOtherPlayer[i]->SetPosition(m_pOtherPlayerData2[OtherId].position);
+				m_vOtherPlayer[i]->SetUpVector(m_pOtherPlayerData2[OtherId].UpVector);
+				m_vOtherPlayer[i]->SetRightVector(m_pOtherPlayerData2[OtherId].RightVector);
+				m_vOtherPlayer[i]->SetLookVector(m_pOtherPlayerData2[OtherId].LookVector);
+				m_vOtherPlayer[i]->SetVelocity(m_pOtherPlayerData2[OtherId].velocity);
+
 				//애니메이션
 				if (m_vOtherPlayer[i]->m_pSkinnedAnimationController)
 				{
+					//m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetAnimationBundle(1);
+
 					if (m_pOtherPlayerData2[OtherId].fLength == 0)
 					{
 						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetOneOfTrackEnable(m_pOtherPlayerData2[OtherId].InnResultAnimBundle);
@@ -1897,21 +1909,20 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetTrackSpeed(m_pOtherPlayerData2[OtherId].InnResultAnimBundle, m_pOtherPlayerData2[OtherId].fLength);
 					}
 
+					if (m_pOtherPlayerData2[OtherId].InnResultAnimBundle != m_vOtherPlayer[i]->m_pSkinnedAnimationController->m_nCurrentTrack)
+					{
+						m_vOtherPlayer[i]->m_pSkinnedAnimationController->m_LayeredAngle = 0.0f;
+						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetOneOfTrackSubEnable(0,false);
+					}
+					
 					if (m_pOtherPlayerData2[OtherId].GunType == 1) // Pistoll
 					{
 						m_vOtherPlayer[i]->m_pSkinnedAnimationController->m_LayeredAngle = m_pOtherPlayerData2[OtherId].LayeredAngle;
-						m_vOtherPlayer[i]->m_pSkinnedAnimationController->m_LayeredMaxAngle = m_pOtherPlayerData2[OtherId].LayeredMaxAngle;
 						m_vOtherPlayer[i]->m_pSkinnedAnimationController->m_LayeredRotate = m_pOtherPlayerData2[OtherId].LayeredRoate;
+						m_vOtherPlayer[i]->m_pSkinnedAnimationController->m_LayeredMaxAngle = m_pOtherPlayerData2[OtherId].LayeredMaxAngle;
 						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetOneOfTrackSubEnable(m_vOtherPlayer[i]->m_pSkinnedAnimationController->m_nAnimationBundle[m_vOtherPlayer[i]->m_pSkinnedAnimationController->IDLE]);
 					}
 				}
-
-				//방향 및 이동 ###
-				m_vOtherPlayer[i]->SetPosition(m_pOtherPlayerData2[OtherId].position);
-				m_vOtherPlayer[i]->SetUpVector(m_pOtherPlayerData2[OtherId].UpVector);
-				m_vOtherPlayer[i]->SetRightVector(m_pOtherPlayerData2[OtherId].RightVector);
-				m_vOtherPlayer[i]->SetLookVector(m_pOtherPlayerData2[OtherId].LookVector);
-				m_vOtherPlayer[i]->SetVelocity(m_pOtherPlayerData2[OtherId].velocity);
 				m_vOtherPlayer[i]->Animate(fTimeElapsed);
 				++i;
 
