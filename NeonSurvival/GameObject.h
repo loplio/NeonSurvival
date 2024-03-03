@@ -149,11 +149,16 @@ public:
 	~CAnimationController();
 
 public:
+	float							m_LayeredAngle = 0.0f;
+	float							m_LayeredMaxAngle = 1.0f;
+	float							m_LayeredRotate = 0.0f;
+
 	int								m_nCurrentTrack = 0;
 	float 							m_fTime = 0.0f;
 
 	int 							m_nAnimationTracks = 0;
 	CAnimationTrack*				m_pAnimationTracks = NULL;
+	CAnimationTrack				    m_SubAnimationTrack;
 
 	CAnimationSets*					m_pAnimationSets = NULL;
 
@@ -163,12 +168,16 @@ public:
 	ID3D12Resource**				m_ppd3dcbSkinningBoneTransforms = NULL; //[SkinnedMeshes]
 	XMFLOAT4X4**					m_ppcbxmf4x4MappedSkinningBoneTransforms = NULL; //[SkinnedMeshes]
 
+private:
+	CGameObject*					m_pAnimatedLayeredBlendBoneFrameCaches = NULL;
+
 public:
 	void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
 
 	void SetTrackAnimationSet(int nAnimationTrack, int nAnimationSet);
 
 	void SetOneOfTrackEnable(int nAnimationTrack);
+	void SetOneOfTrackSubEnable(int nAnimationTrack, bool bEnable = true);
 	void SetHandOverPosition(int nAnimationTrack, bool bEnable);
 	void SetTrackEnable(int nAnimationTrack, bool bEnable);
 	void SetTrackPosition(int nAnimationTrack, float fPosition);
@@ -181,6 +190,8 @@ public:
 	void SetAnimationCallbackHandler(int nAnimationSet, CAnimationCallbackHandler* pCallbackHandler);
 
 	void AdvanceTime(float fElapsedTime, CGameObject* pRootGameObject);
+
+	void SetLayeredBlendBoneFrameCaches(CGameObject* pRootModel, const char* pstrFrameName);
 
 	enum {
 		IDLE,
@@ -534,6 +545,7 @@ public:
 	CGameObject* GetTopParent();
 	CGameObject* GetParent() { return(m_pParent); }
 	CGameObject* FindFrame(const char* pstrFrameName);
+	bool FindParentObject(CGameObject* findObject);
 
 	CTexture* FindReplicatedTexture(_TCHAR* pstrTextureName);
 

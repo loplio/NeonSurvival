@@ -253,6 +253,20 @@ void CAnimationController::SetOneOfTrackEnable(int nAnimationTrack)
 		m_nCurrentTrack = nAnimationTrack;
 	}
 }
+void CAnimationController::SetOneOfTrackSubEnable(int nAnimationTrack, bool bEnable)
+{
+	if (bEnable)
+	{
+		m_SubAnimationTrack.SetAnimationSet(nAnimationTrack);
+		m_SubAnimationTrack.SetEnable(true);
+		m_SubAnimationTrack.SetHandOverPosition(true);
+	}
+	else
+	{
+		m_SubAnimationTrack.SetEnable(false);
+		m_SubAnimationTrack.SetHandOverPosition(false);
+	}
+}
 
 void CAnimationController::SetHandOverPosition(int nAnimationTrack, bool bEnable)
 {
@@ -304,6 +318,36 @@ void CAnimationController::AdvanceTime(float fTimeElapsed, CGameObject* pRootGam
 		for (int j = 0; j < m_pAnimationSets->m_nAnimatedBoneFrames; j++)
 		{
 			XMFLOAT4X4 xmf4x4Transform = Matrix4x4::Zero();
+			if (m_SubAnimationTrack.m_bEnable)
+			{
+				if (m_pAnimationSets->m_ppAnimatedBoneFrameCaches[j] == m_pAnimatedLayeredBlendBoneFrameCaches)
+				{
+					if (m_LayeredAngle < m_LayeredMaxAngle)
+					{
+						m_LayeredAngle += abs(m_LayeredRotate);
+						XMFLOAT4X4 result = Matrix4x4::Identity();
+						XMStoreFloat4x4(&result, XMMatrixRotationY(m_LayeredRotate));
+						m_pAnimationSets->m_ppAnimatedBoneFrameCaches[j]->m_xmf4x4Transform =
+							Matrix4x4::Multiply(result, m_pAnimationSets->m_ppAnimatedBoneFrameCaches[j]->m_xmf4x4Transform);
+						//std::cout << "LayeredAngle: " << m_LayeredAngle << std::endl;
+					}
+					continue;
+				}
+
+				if (m_pAnimationSets->m_ppAnimatedBoneFrameCaches[j]->FindParentObject(m_pAnimatedLayeredBlendBoneFrameCaches))
+				{
+					if (m_SubAnimationTrack.m_bEnable)
+					{
+						CAnimationSet* pAnimationSet = m_pAnimationSets->m_pAnimationSets[m_SubAnimationTrack.m_nAnimationSet];
+						XMFLOAT4X4 xmf4x4TrackTransform = pAnimationSet->GetSRT(j);
+
+						xmf4x4Transform = Matrix4x4::Add(xmf4x4Transform, Matrix4x4::Scale(xmf4x4TrackTransform, m_SubAnimationTrack.m_fWeight));
+						m_pAnimationSets->m_ppAnimatedBoneFrameCaches[j]->m_xmf4x4Transform = xmf4x4Transform;
+						continue;
+					}
+				}
+			}
+
 			for (int k = 0; k < m_nAnimationTracks; k++)
 			{
 				if (m_pAnimationTracks[k].m_bEnable)
@@ -323,6 +367,11 @@ void CAnimationController::AdvanceTime(float fTimeElapsed, CGameObject* pRootGam
 			if (m_pAnimationTracks[k].m_bEnable) m_pAnimationSets->m_pAnimationSets[m_pAnimationTracks[k].m_nAnimationSet]->HandleCallback();
 		}
 	}
+}
+
+void CAnimationController::SetLayeredBlendBoneFrameCaches(CGameObject* pRootModel, const char* pstrFrameName)
+{
+	m_pAnimatedLayeredBlendBoneFrameCaches = pRootModel->FindFrame(pstrFrameName);
 }
 
 void CAnimationController::SetAnimationBundle(UINT n)
@@ -1790,6 +1839,19 @@ CGameObject* CGameObject::FindFrame(const char* pstrFrameName)
 
 	return(NULL);
 }
+bool CGameObject::FindParentObject(CGameObject* findObject)
+{
+	bool bFind = false;
+	if (m_pParent)
+	{
+		bFind = (findObject == m_pParent) ? true : false;
+		
+		if(!bFind) bFind = m_pParent->FindParentObject(findObject);
+	}
+
+	return bFind;
+}
+
 CGameObject* CGameObject::GetTopParent()
 {
 	CGameObject* parent = this;

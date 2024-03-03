@@ -32,11 +32,15 @@ Player_Neon::Player_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd
 
 	const int nAnimation = 26;
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimation, pPlayerModel);
+	m_pSkinnedAnimationController->SetLayeredBlendBoneFrameCaches(pPlayerModel->m_pModelRootObject, "mixamorig:Spine");
+
 	for (int i = 0; i < nAnimation; ++i)
 	{
 		m_pSkinnedAnimationController->SetTrackAnimationSet(i, i);
 		m_pSkinnedAnimationController->SetTrackEnable(i, false);
 	}
+	m_pSkinnedAnimationController->m_SubAnimationTrack.m_nAnimationSet = m_pSkinnedAnimationController->IDLE;
+	m_pSkinnedAnimationController->m_SubAnimationTrack.SetEnable(false);
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
@@ -140,6 +144,11 @@ void Player_Neon::Update(float fTimeElapsed)
 	{
 		int nResultAnimBundle = -1;
 		m_pSkinnedAnimationController->SetAnimationBundle(m_nGunType);
+		if (m_nGunType != Pistol)
+		{
+			m_pSkinnedAnimationController->m_LayeredAngle = 0.0f;
+			m_pSkinnedAnimationController->SetOneOfTrackSubEnable(0, false);
+		}
 
 		float fLength = sqrtf(m_xmf3Velocity.x * m_xmf3Velocity.x + m_xmf3Velocity.z * m_xmf3Velocity.z);
 		if (::IsZero(fLength))
@@ -147,6 +156,12 @@ void Player_Neon::Update(float fTimeElapsed)
 			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->IDLE];
 			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
 			//m_pSkinnedAnimationController->SetTrackPosition(1, 0.0f);
+
+			if (m_nGunType == Pistol)
+			{
+				m_pSkinnedAnimationController->m_LayeredAngle = 0.0f;
+				m_pSkinnedAnimationController->SetOneOfTrackSubEnable(0, false);
+			}
 		}
 		else if (!IsDash && m_dwDirection == DIR_FORWARD)	// walking
 		{
@@ -168,36 +183,108 @@ void Player_Neon::Update(float fTimeElapsed)
 			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->LEFT_WALK];
 			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
 			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
+
+			if (m_nGunType == Pistol)
+			{
+				m_pSkinnedAnimationController->m_LayeredRotate = 0.7f;
+				m_pSkinnedAnimationController->m_LayeredMaxAngle = abs(m_pSkinnedAnimationController->m_LayeredRotate) * 2.9;
+				m_pSkinnedAnimationController->SetOneOfTrackSubEnable(m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->IDLE]);
+			}
 		}
 		else if (m_dwDirection == DIR_RIGHT)	// right walking
 		{
 			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->RIGHT_WALK];
 			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
 			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
+
+			if (nResultAnimBundle != m_pSkinnedAnimationController->m_nCurrentTrack)
+			{
+				m_pSkinnedAnimationController->m_LayeredAngle = 0.0f;
+				m_pSkinnedAnimationController->SetOneOfTrackSubEnable(0, false);
+			}
+
+			if (m_nGunType == Pistol)
+			{
+				m_pSkinnedAnimationController->m_LayeredRotate = -0.09;
+				m_pSkinnedAnimationController->m_LayeredMaxAngle = abs(m_pSkinnedAnimationController->m_LayeredRotate) * 2.9;
+				m_pSkinnedAnimationController->SetOneOfTrackSubEnable(m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->IDLE]);
+			}
 		}
 		else if (m_dwDirection & DIR_LEFT && m_dwDirection & DIR_BACKWARD)	// left backward
 		{
 			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->LEFT_BACKWARD];
 			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
 			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
+
+			if (nResultAnimBundle != m_pSkinnedAnimationController->m_nCurrentTrack)
+			{
+				m_pSkinnedAnimationController->m_LayeredAngle = 0.0f;
+				m_pSkinnedAnimationController->SetOneOfTrackSubEnable(0, false);
+			}
+
+			if (m_nGunType == Pistol)
+			{
+				m_pSkinnedAnimationController->m_LayeredRotate = 0.35f;
+				m_pSkinnedAnimationController->m_LayeredMaxAngle = abs(m_pSkinnedAnimationController->m_LayeredRotate) * 2.9;
+				m_pSkinnedAnimationController->SetOneOfTrackSubEnable(m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->IDLE]);
+			}
 		}
 		else if (m_dwDirection & DIR_RIGHT && m_dwDirection & DIR_BACKWARD)	// right backward
 		{
 			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->RIGHT_BACKWARD];
 			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
 			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
+
+			if (nResultAnimBundle != m_pSkinnedAnimationController->m_nCurrentTrack)
+			{
+				m_pSkinnedAnimationController->m_LayeredAngle = 0.0f;
+				m_pSkinnedAnimationController->SetOneOfTrackSubEnable(0, false);
+			}
+
+			if (m_nGunType == Pistol)
+			{
+				m_pSkinnedAnimationController->m_LayeredRotate = 0.24f;
+				m_pSkinnedAnimationController->m_LayeredMaxAngle = abs(m_pSkinnedAnimationController->m_LayeredRotate) * 2.9;
+				m_pSkinnedAnimationController->SetOneOfTrackSubEnable(m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->IDLE]);
+			}
 		}
 		else if (m_dwDirection & DIR_LEFT && m_dwDirection & DIR_FORWARD)	// left forward
 		{
 			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->LEFT_FORWARD];
 			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
 			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
+
+			if (nResultAnimBundle != m_pSkinnedAnimationController->m_nCurrentTrack)
+			{
+				m_pSkinnedAnimationController->m_LayeredAngle = 0.0f;
+				m_pSkinnedAnimationController->SetOneOfTrackSubEnable(0, false);
+			}
+
+			if (m_nGunType == Pistol)
+			{
+				m_pSkinnedAnimationController->m_LayeredRotate = 0.35f;
+				m_pSkinnedAnimationController->m_LayeredMaxAngle = abs(m_pSkinnedAnimationController->m_LayeredRotate) * 2.9;
+				m_pSkinnedAnimationController->SetOneOfTrackSubEnable(m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->IDLE]);
+			}
 		}
 		else if (m_dwDirection & DIR_RIGHT && m_dwDirection & DIR_FORWARD)	// right forward
 		{
 			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->RIGHT_FORWARD];
 			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
 			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
+
+			if (nResultAnimBundle != m_pSkinnedAnimationController->m_nCurrentTrack)
+			{
+				m_pSkinnedAnimationController->m_LayeredAngle = 0.0f;
+				m_pSkinnedAnimationController->SetOneOfTrackSubEnable(0, false);
+			}
+
+			if (m_nGunType == Pistol)
+			{
+				m_pSkinnedAnimationController->m_LayeredRotate = 0.24f;
+				m_pSkinnedAnimationController->m_LayeredMaxAngle = abs(m_pSkinnedAnimationController->m_LayeredRotate) * 2.9;
+				m_pSkinnedAnimationController->SetOneOfTrackSubEnable(m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->IDLE]);
+			}
 		}
 		else				// slow runing
 		{
@@ -371,8 +458,9 @@ void Player_Neon::UpgradeDmg()
 }
 void Player_Neon::UpgradeSpeed()
 {
-	printf("UpgradeSpeed\n");
+	MaxSpeed *= 1.1f;
 }
+
 void Player_Neon::RecoveryHP()
 {
 	HP += 30;
@@ -388,7 +476,7 @@ void Player_Neon::RecoveryHP()
 //-------------------------------------------------------------------------------
 Scene_Neon::Scene_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) : CScene(pd3dDevice, pd3dCommandList)
 {
-	CreateCbvSrvDescriptorHeaps(pd3dDevice, 10, 520, 10);
+	CreateCbvSrvDescriptorHeaps(pd3dDevice, 10, 600, 10);
 
 	// Terrain Build.
 	XMFLOAT3 xmf3Scale(12.0f, 1.0f, 12.0f);
@@ -512,9 +600,30 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 	m_UIShaders.back() = pUITexture;
 
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/Attack.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 100, 100, 0, FRAME_BUFFER_WIDTH * 0.2f, FRAME_BUFFER_HEIGHT * 0.35f, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/Speed.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 100, 100, 0, FRAME_BUFFER_WIDTH * 0.5f, FRAME_BUFFER_HEIGHT * 0.35f, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/RecoveryHP.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, 100, 100, 0, FRAME_BUFFER_WIDTH * 0.8f, FRAME_BUFFER_HEIGHT * 0.35f, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+
 	((CTextureToScreenShader*)m_UIShaders[Pick_Frame])->SetIsRender(false);
 	((CTextureToScreenShader*)m_UIShaders[Pick_Frame_g])->SetIsRender(false);
 	((CTextureToScreenShader*)m_UIShaders[Pick_Frame_r])->SetIsRender(false);
+	((CTextureToScreenShader*)m_UIShaders[Attack])->SetIsRender(false);
+	((CTextureToScreenShader*)m_UIShaders[Speed])->SetIsRender(false);
+	((CTextureToScreenShader*)m_UIShaders[RecoveryHP])->SetIsRender(false);
 
 	/// background ///
 	//m_ppComputeShaders.push_back(new CComputeShader);
@@ -1438,6 +1547,10 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.back()->SetIsExistBoundingBox(false);
 	if (pLevelUpTableModel) delete pLevelUpTableModel;
 
+	CLoadedModelInfo* pRevolverModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Revolver/Revolver.bin", NULL);
+	(*m_pPlayer).FindFrame("mixamorig:RightHandIndex1")->SetChild(pRevolverModel->m_pModelRootObject);
+	if (pRevolverModel) delete pRevolverModel;
+
 	// 다른 플레이어
 	for (int i = 0; i < MAX_PLAYER - 1; ++i)
 	{
@@ -1450,6 +1563,12 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 			m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(j, j);
 			m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(j, false);
 		}
+
+		CLoadedModelInfo* pRevolverModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Revolver/Revolver.bin", NULL);
+		m_vOtherPlayer.back()->FindFrame("mixamorig:RightHandIndex1")->SetChild(pRevolverModel->m_pModelRootObject);
+		if (pRevolverModel) delete pRevolverModel;
+
+
 		if (pOtherModel) delete pOtherModel;
 	}
 
@@ -1608,6 +1727,9 @@ bool Scene_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM 
 			((CTextureToScreenShader*)m_UIShaders[Pick_Frame])->SetIsRender(false);
 			((CTextureToScreenShader*)m_UIShaders[Pick_Frame_g])->SetIsRender(false);
 			((CTextureToScreenShader*)m_UIShaders[Pick_Frame_r])->SetIsRender(false);
+			((CTextureToScreenShader*)m_UIShaders[Attack])->SetIsRender(false);
+			((CTextureToScreenShader*)m_UIShaders[Speed])->SetIsRender(false);
+			((CTextureToScreenShader*)m_UIShaders[RecoveryHP])->SetIsRender(false);
 			break;
 		}
 		case '4':
@@ -1684,6 +1806,20 @@ void Scene_Neon::Update(float fTimeElapsed)
 				}
 			}
 		}
+
+		//몬스터 업데이트
+		if (m_ppShaders[i]->GetReafShaderType() == CShader::ReafShaderType::GeneralMonsterObjects)
+		{
+			for (auto monster : (((GeneralMonsterObjects*)m_ppShaders[i])->m_ppObjects))
+			{
+				if (((MonsterObject*)monster)->State == MonsterObject::DIE)
+				{
+					((MonsterObject*)monster)->State = MonsterObject::IDLE;
+					float Exp = ((MonsterObject*)monster)->MAXHP * 0.001;
+					((Player_Neon*)m_pPlayer.get())->AddExp(Exp);
+				}
+			}
+		}
 	}
 
 	int EXP = ((Player_Neon*)m_pPlayer.get())->GetExp();
@@ -1695,6 +1831,9 @@ void Scene_Neon::Update(float fTimeElapsed)
 		((CTextureToScreenShader*)m_UIShaders[Pick_Frame])->SetIsRender(true);
 		((CTextureToScreenShader*)m_UIShaders[Pick_Frame_g])->SetIsRender(true);
 		((CTextureToScreenShader*)m_UIShaders[Pick_Frame_r])->SetIsRender(true);
+		((CTextureToScreenShader*)m_UIShaders[Attack])->SetIsRender(true);
+		((CTextureToScreenShader*)m_UIShaders[Speed])->SetIsRender(true);
+		((CTextureToScreenShader*)m_UIShaders[RecoveryHP])->SetIsRender(true);
 	}
 
 	for (int i = 0; i < m_UIShaders.size(); ++i)

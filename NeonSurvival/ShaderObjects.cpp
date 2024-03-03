@@ -506,7 +506,8 @@ void GeneralMonsterObjects::CreateBoundingBox(ID3D12Device* pd3dDevice, ID3D12Gr
 }
 void GeneralMonsterObjects::BuildComponents(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CTexture* pTexture)
 {
-	CreateMonsters(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, 3);
+	//몬스터 수 결정 3 * 10 (n * 10)마리
+	CreateMonsters(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, 5);
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
@@ -631,6 +632,7 @@ void GeneralMonsterObjects::Collide(const CGameSource& GameSource, CBoundingBoxO
 	int n = 0;
 	for (CGameObject* monster : m_ppObjects)
 	{
+		if (((MonsterObject*)monster)->State == MonsterObject::DIE) continue;
 		// Prepare Collision
 		if (monster) monster->UpdateWorldTransformBoundingBox();
 		if (m_pMonsterData[n].State == ATTACK && ((MonsterObject*)monster)->IsAttackAnimPosition())

@@ -92,7 +92,7 @@ public:
 	float prevangle = 0;
 	XMFLOAT3 m_NexusModelPos;
 	XMFLOAT3 m_SpawnPotal_Pos[4];
-	MonsterMetalonObjects* pMetalonShader = new MonsterMetalonObjects(); //¸ó½ºÅÍ
+	MonsterMetalonObjects* pMetalonShader = new MonsterMetalonObjects();
 	PistolBulletTexturedObjects* pBullets = NULL;		//ÃÑ¾Ë
 	bool MonsterRotate[30] = { false, };
 
@@ -106,6 +106,9 @@ public:
 		Pick_Frame,
 		Pick_Frame_g,
 		Pick_Frame_r,
+		Attack,
+		Speed,
+		RecoveryHP
 	};
 };
 

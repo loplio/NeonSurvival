@@ -46,7 +46,7 @@ public:
 
 		m_Player.CreateBoundingBoxObjectSet(pd3dDevice, pd3dCommandList, this);
 		//m_Player.CreateBoundingBoxMesh(pd3dDevice, pd3dCommandList, this);
-		m_Scene.CreateBoundingBox(pd3dDevice, pd3dCommandList, this);		// 종료 시 느려지는 현상.
+		m_Scene.CreateBoundingBox(pd3dDevice, pd3dCommandList, this);
 	}
 
 protected:
@@ -186,10 +186,11 @@ public:
 	void SetGroundUpdatedContext(std::vector<CGroundObject*>* vGroundObjects) { m_vGroundObjects = vGroundObjects; }
 	void OnGroundUpdateCallback(float fTimeElapsed);
 
+	virtual ReafShaderType GetReafShaderType() { return CShader::ReafShaderType::GeneralMonsterObjects; }
 public:
 	std::vector<CGroundObject*>* m_vGroundObjects;
 	PACKET_MONSTERDATA* m_pMonsterData = SERVER::getInstance().GetMonsterData();
-	const int nMaxMonster = 30;
+	const int nMaxMonster = 50;
 
 	enum {
 		IDLE,

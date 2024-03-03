@@ -229,7 +229,7 @@ void CGameFramework_Neon::FrameAdvance()
 	m_pSoundManager->SoundUpdate(m_GameSource);
 
 	m_DisplayOutput->Render();
-	//m_pUILayer->Render(m_nSwapChainBufferIndex);
+	m_pUILayer->Render(m_nSwapChainBufferIndex, m_GameSource);
 
 	m_pdxgiSwapChain.Present(0, 0);
 
@@ -272,7 +272,7 @@ void CGameFramework_Neon::BuildObjects()
 void CGameFramework_Neon::BuildToolCreator()
 {
 	m_pSoundManager = new SoundManager();
-	m_pUILayer = new UILayerGame_Neon(m_Iframe, 1);
+	m_pUILayer = new UILayerGame_Neon(m_Iframe, 3);
 
 	m_KeyboardInput = new GameKeyInput_Neon(*this);
 	m_MouseInput = new GameMouseInput_Neon(m_KeyboardInput->GetKeyBuffer(), *this);
@@ -285,6 +285,14 @@ void CGameFramework_Neon::ReleaseObjects()
 
 void CGameFramework_Neon::UpdateUI() const
 {
+	wchar_t text[128] = L"공격력 10%";
+	m_pUILayer->UpdateTextOutputs(0, (_TCHAR*)text, NULL, NULL, NULL);
+
+	wchar_t text2[128] = L"스피드 10%";
+	m_pUILayer->UpdateTextOutputs(1, (_TCHAR*)text2, NULL, NULL, NULL);
+
+	wchar_t text3[128] = L"체력회복 30";
+	m_pUILayer->UpdateTextOutputs(2, (_TCHAR*)text3, NULL, NULL, NULL);
 }
 
 void CGameFramework_Neon::ProcessSelectedObject(DWORD dwDirection, float cxDelta, float cyDelta)

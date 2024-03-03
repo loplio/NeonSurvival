@@ -1,4 +1,5 @@
 #include "GameObject.h"
+#include <algorithm>
 
 CGameObject::CGameObject(int nMaterials)
 {
@@ -249,4 +250,105 @@ int CGameObject::PickObjectByRayIntersection(XMFLOAT3& xmf3PickPosition, XMFLOAT
 {
 	int nIntersected = 0;
 	return nIntersected;
+}
+
+///////////////////////////////////////////////////////
+void Obstacle::SetPosition(float x, float y, float z)
+{
+	m_xmf4x4World._41 = x;
+	m_xmf4x4World._42 = y;
+	m_xmf4x4World._43 = z;
+}
+
+void Obstacle::SetScale(float width, float height, float depth)
+{
+	XMMATRIX mtxScale = XMMatrixScaling(width, height, depth);
+	m_xmf4x4World = Matrix4x4::Multiply(mtxScale, m_xmf4x4World);
+}
+
+void Obstacle::Rotate(float fPitch, float fYaw, float fRoll)
+{
+	XMMATRIX mtxRotate = XMMatrixRotationRollPitchYaw(XMConvertToRadians(fPitch), XMConvertToRadians(fYaw), XMConvertToRadians(fRoll));
+	m_xmf4x4World = Matrix4x4::Multiply(mtxRotate, m_xmf4x4World);
+}
+
+bool Obstacle::IsIntersectingL(XMFLOAT3 start, XMFLOAT3 end) {
+	if (Vector3::Length(Vector3::Subtract(end, start)) < EPSILON) return true;
+
+	XMMATRIX worldTransform = XMLoadFloat4x4(&m_xmf4x4World);
+	
+	XMMATRIX invWorld = XMMatrixInverse(NULL, worldTransform);
+
+	// 선분을 OBB의 로컬 좌표로 변환
+	XMFLOAT3 localStart = Vector3::TransformCoord(start, invWorld);
+	XMFLOAT3 localEnd = Vector3::TransformCoord(end, invWorld);
+	localStart.y = 0.0f;
+	localEnd.y = 0.0f;
+
+	BoundingOrientedBox boundingBox = BoundingOrientedBox(/*m_xmf3Center*/XMFLOAT3(0.0f,0.0f,0.0f), m_xmf3Extents, XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
+
+	float dist = 0.0f;
+	XMFLOAT3 vLocalLine = Vector3::Normalize(Vector3::Subtract(localEnd, localStart));
+	if (boundingBox.Intersects(XMLoadFloat3(&localStart), XMLoadFloat3(&vLocalLine), dist))
+	{
+		float fLength = Vector3::Length(Vector3::Subtract(localEnd, localStart));
+		if (dist < fLength)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool Obstacle::IsIntersectingV(const XMFLOAT3 start, const XMFLOAT3 direction) {
+
+	XMMATRIX worldTransform = XMLoadFloat4x4(&m_xmf4x4World);
+	
+	// 월드 변환 행렬 추출
+	XMMATRIX inverseWorldTransform = XMMatrixInverse(NULL, worldTransform);
+
+	// 시작점을 OBB의 로컬 좌표로 변환
+	XMVECTOR localStart = XMVector3TransformCoord(XMVectorSet(start.x, 0.0f, start.z, 1.0f), inverseWorldTransform);
+
+	// 방향 벡터를 OBB의 로컬 좌표로 변환
+	XMVECTOR localDirection = XMVector3TransformNormal(XMVectorSet(direction.x, 0.0f, direction.z, 0.0f), inverseWorldTransform);
+
+	// OBB 축에 대한 투영 길이 계산
+	float tmin = (-m_xmf3Extents.x - XMVectorGetX(localStart)) / XMVectorGetX(localDirection);
+	float tmax = (m_xmf3Extents.x - XMVectorGetX(localStart)) / XMVectorGetX(localDirection);
+
+	if (tmin > tmax) {
+		std::swap(tmin, tmax);
+	}
+
+	float tzmin = (-m_xmf3Extents.z - XMVectorGetZ(localStart)) / XMVectorGetZ(localDirection);
+	float tzmax = (m_xmf3Extents.z - XMVectorGetZ(localStart)) / XMVectorGetZ(localDirection);
+
+	if (tzmin > tzmax) {
+		std::swap(tzmin, tzmax);
+	}
+
+	if ((tmin > tzmax) || (tzmin > tmax)) {
+		return false;
+	}
+
+	return true;
+}
+
+void Obstacle::SetCorner(XMFLOAT3& Extents, XMFLOAT3& Center, float scale)
+{
+	m_xmf3Extents = Extents;
+	m_xmf3Center = Center;
+
+	float interval = 1.0f / 2;	// 10PIXEL_PER 1M, 2.0 => 20CM
+	float Ratio = interval / scale;
+	float fx = Extents.x  + Ratio, fy = Extents.y, fz = Extents.z + Ratio;
+
+	diagonalLength = Vector3::Length(Extents);
+	
+	corner.LB = Vector3::TransformCoord(XMFLOAT3(-fx, 0.0, -fz), m_xmf4x4World);
+	corner.LT = Vector3::TransformCoord(XMFLOAT3(-fx, 0.0, +fz), m_xmf4x4World);
+	corner.RB = Vector3::TransformCoord(XMFLOAT3(+fx, 0.0, -fz), m_xmf4x4World);
+	corner.RT = Vector3::TransformCoord(XMFLOAT3(+fx, 0.0, +fz), m_xmf4x4World);
 }

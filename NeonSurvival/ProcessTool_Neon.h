@@ -117,6 +117,7 @@ public:
 	virtual ~UILayerLobby_Neon();
 
 	void Render(UINT nFrame) override;
+	void Render(UINT nFrame, CGameSource* pGameSource) override;
 	void BuildUI() override;
 };
 
@@ -126,5 +127,6 @@ public:
 	virtual ~UILayerGame_Neon();
 
 	void Render(UINT nFrame) override;
+	void Render(UINT nFrame, CGameSource* pGameSource) override;
 	void BuildUI() override;
 };

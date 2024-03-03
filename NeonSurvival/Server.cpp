@@ -54,7 +54,7 @@ void SERVER::init(HWND hWnd, char* IP)
         PlayersPosition2[i].id = -1;
     }
     
-    for (int i = 0; i < 30; ++i)
+    for (int i = 0; i < MAX_MONSTER * 10; ++i)
     {
         MonsterData[i].HP = 1;
     }

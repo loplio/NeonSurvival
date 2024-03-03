@@ -552,11 +552,17 @@ struct PS_MULTIPLE_RENDER_TARGETS_OUTPUT
 //float4 PSStandard(VS_STANDARD_OUTPUT input) : SV_TARGET
 PS_MULTIPLE_RENDER_TARGETS_OUTPUT PSStandard(VS_STANDARD_OUTPUT input) : SV_TARGET
 {
-	float4 cAlbedoColor = float4(1.0f, 1.0f, 1.0f, 1.0f);
-	float4 cSpecularColor = float4(0.5f, 0.5f, 0.5f, 1.0f);
+	float4 cAlbedoColor = gMaterial.m_cDiffuse;
+	float4 cSpecularColor = gMaterial.m_cSpecular;
 	float4 cNormalColor = float4(0.5f, 0.5f, 1.0f, 1.0f);
 	float4 cMetallicColor = float4(0.0f, 0.0f, 0.0f, 0.5f);
-	float4 cEmissionColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
+	float4 cEmissionColor = gMaterial.m_cEmissive;
+
+	//float4 cAlbedoColor = float4(1.0f, 1.0f, 1.0f, 1.0f);
+	//float4 cSpecularColor = float4(0.5f, 0.5f, 0.5f, 1.0f);
+	//float4 cNormalColor = float4(0.5f, 0.5f, 1.0f, 1.0f);
+	//float4 cMetallicColor = float4(0.0f, 0.0f, 0.0f, 0.5f);
+	//float4 cEmissionColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
 
 #ifdef _WITH_STANDARD_TEXTURE_MULTIPLE_DESCRIPTORS
 	if (gnTexturesMask & MATERIAL_ALBEDO_MAP) cAlbedoColor = gtxtAlbedoTexture.Sample(gssWrap, input.uv);

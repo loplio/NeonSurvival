@@ -62,39 +62,39 @@ void GameKeyInput_Neon::UpdatePlayer()
 		if (dwDirection == DIR_FORWARD)	// foward walk
 		{
 			if (!dwSpecialKey) {
-				m_Player.SetMaxVelocityXZ(PIXEL_KPH(18));
-				m_Player.Move(dwDirection, PIXEL_KPH(15) * m_GameTimer.GetTimeElapsed(), true);
+				m_Player.SetMaxVelocityXZ(PIXEL_KPH(18) * m_Player.MaxSpeed);
+				m_Player.Move(dwDirection, PIXEL_KPH(15) * m_Player.MaxSpeed * m_GameTimer.GetTimeElapsed(), true);
 			}
 			else {
-				m_Player.SetMaxVelocityXZ(PIXEL_KPH(40));
-				m_Player.Move(dwDirection, PIXEL_KPH(30) * m_GameTimer.GetTimeElapsed(), true);
+				m_Player.SetMaxVelocityXZ(PIXEL_KPH(40) * m_Player.MaxSpeed);
+				m_Player.Move(dwDirection, PIXEL_KPH(30) * m_Player.MaxSpeed * m_GameTimer.GetTimeElapsed(), true);
 				m_Player.IsDash = true;
 			}
 		}
 		else if (dwDirection == DIR_BACKWARD)	// backward walk
 		{
-			m_Player.SetMaxVelocityXZ(PIXEL_KPH(7));
-			m_Player.Move(dwDirection, PIXEL_KPH(7) * m_GameTimer.GetTimeElapsed(), true);
+			m_Player.SetMaxVelocityXZ(PIXEL_KPH(7) * m_Player.MaxSpeed);
+			m_Player.Move(dwDirection, PIXEL_KPH(7) * m_Player.MaxSpeed * m_GameTimer.GetTimeElapsed(), true);
 		}
 		else if (dwDirection == DIR_LEFT || dwDirection == DIR_RIGHT)	// left/right walk
 		{
-			m_Player.SetMaxVelocityXZ(PIXEL_KPH(10));
-			m_Player.Move(dwDirection, PIXEL_KPH(10) * m_GameTimer.GetTimeElapsed(), true);
+			m_Player.SetMaxVelocityXZ(PIXEL_KPH(10) * m_Player.MaxSpeed);
+			m_Player.Move(dwDirection, PIXEL_KPH(10) * m_Player.MaxSpeed * m_GameTimer.GetTimeElapsed(), true);
 		}
 		else if ((dwDirection & DIR_LEFT && dwDirection & DIR_BACKWARD) || (dwDirection & DIR_RIGHT && dwDirection & DIR_BACKWARD))	// left/right backward
 		{
-			m_Player.SetMaxVelocityXZ(PIXEL_KPH(10));
-			m_Player.Move(dwDirection, PIXEL_KPH(10) * m_GameTimer.GetTimeElapsed(), true);
+			m_Player.SetMaxVelocityXZ(PIXEL_KPH(10) * m_Player.MaxSpeed);
+			m_Player.Move(dwDirection, PIXEL_KPH(10) * m_Player.MaxSpeed * m_GameTimer.GetTimeElapsed(), true);
 		}
 		else if ((dwDirection & DIR_LEFT && dwDirection & DIR_FORWARD) || (dwDirection & DIR_RIGHT && dwDirection & DIR_FORWARD))	// left/right forward
 		{
 			if (!dwSpecialKey) {
-				m_Player.SetMaxVelocityXZ(PIXEL_KPH(15));
-				m_Player.Move(dwDirection, PIXEL_KPH(15) * m_GameTimer.GetTimeElapsed(), true);
+				m_Player.SetMaxVelocityXZ(PIXEL_KPH(15) * m_Player.MaxSpeed);
+				m_Player.Move(dwDirection, PIXEL_KPH(15) * m_Player.MaxSpeed * m_GameTimer.GetTimeElapsed(), true);
 			}
 			else {
-				m_Player.SetMaxVelocityXZ(PIXEL_KPH(30));
-				m_Player.Move(dwDirection, PIXEL_KPH(20) * m_GameTimer.GetTimeElapsed(), true);
+				m_Player.SetMaxVelocityXZ(PIXEL_KPH(30) * m_Player.MaxSpeed);
+				m_Player.Move(dwDirection, PIXEL_KPH(20) * m_Player.MaxSpeed * m_GameTimer.GetTimeElapsed(), true);
 				m_Player.IsDash = true;
 			}
 		}
@@ -383,7 +383,7 @@ void GameRenderDisplay_Neon::Render()
 	//if (time > 0.5f)
 	//{
 	//	time = 0.0f;
-	//	//std::cout << m_Player.GetPosition().x << ", " << m_Player.GetPosition().y << ", " << m_Player.GetPosition().z << std::endl;
+	//	std::cout << m_Player.GetPosition().x << ", " << m_Player.GetPosition().y << ", " << m_Player.GetPosition().z << std::endl;
 	//}
 	//time += m_Scene.m_fElapsedTime;
 	// Player Render
@@ -448,6 +448,10 @@ void UILayerLobby_Neon::Render(UINT nFrame)
 {
 	UILayer::Render(nFrame);
 }
+void UILayerLobby_Neon::Render(UINT nFrame, CGameSource* pGameSource)
+{
+	UILayer::Render(nFrame);
+}
 void UILayerLobby_Neon::BuildUI()
 {
 	ID2D1SolidColorBrush* pd2dBrush;
@@ -473,17 +477,31 @@ void UILayerGame_Neon::Render(UINT nFrame)
 {
 	UILayer::Render(nFrame);
 }
+void UILayerGame_Neon::Render(UINT nFrame, CGameSource* pGameSource)
+{
+	if (((CTextureToScreenShader*)pGameSource->GetRefScene().m_UIShaders[Scene_Neon::Pick_Frame])->GetIsRender())
+		UILayer::Render(nFrame);
+}
 void UILayerGame_Neon::BuildUI()
 {
-	ID2D1SolidColorBrush* pd2dBrush;
-	IDWriteTextFormat* pdwTextFormat;
-	D2D1_RECT_F d2dRect;
+	ID2D1SolidColorBrush* pd2dBrush, *pd2dBrush2, *pd2dBrush3;
+	IDWriteTextFormat* pdwTextFormat, *pdwTextFormat2, *pdwTextFormat3;
+	D2D1_RECT_F d2dRect, d2dRect2, d2dRect3;
 	WCHAR pstrOutputText[256];
 
 	wcscpy_s(pstrOutputText, 256, L" \n");
-	pd2dBrush = CreateBrush(D2D1::ColorF(D2D1::ColorF::BlanchedAlmond, 1.0f));
+	pd2dBrush = CreateBrush(D2D1::ColorF(D2D1::ColorF::Beige, 1.0f));
 	pdwTextFormat = CreateTextFormat((wchar_t*)L"Arial", m_fHeight / 20.0f);
-	d2dRect = D2D1::RectF(0.0f, 0.0f, m_fWidth, m_fHeight);
-
+	d2dRect = D2D1::RectF(-480.0, m_fHeight - 220.0f, m_fWidth, m_fHeight);
 	UpdateTextOutputs(0, pstrOutputText, &d2dRect, pdwTextFormat, pd2dBrush);
+
+	pd2dBrush2 = CreateBrush(D2D1::ColorF(D2D1::ColorF::Beige, 1.0f));
+	pdwTextFormat2 = CreateTextFormat((wchar_t*)L"Arial", m_fHeight / 20.0f);
+	d2dRect2 = D2D1::RectF(0.0f, m_fHeight - 220.0f, m_fWidth, m_fHeight);
+	UpdateTextOutputs(1, pstrOutputText, &d2dRect2, pdwTextFormat2, pd2dBrush2);
+
+	pd2dBrush3 = CreateBrush(D2D1::ColorF(D2D1::ColorF::Beige, 1.0f));
+	pdwTextFormat3 = CreateTextFormat((wchar_t*)L"Arial", m_fHeight / 20.0f);
+	d2dRect3 = D2D1::RectF(480.0f, m_fHeight - 220.0f, m_fWidth, m_fHeight);
+	UpdateTextOutputs(2, pstrOutputText, &d2dRect3, pdwTextFormat3, pd2dBrush3);
 }

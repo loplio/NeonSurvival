@@ -62,7 +62,8 @@ public:
 		TextureToScreenShader,
 		BrightAreaComputeShader,
 		Gaussian2DBlurComputeShader,
-		AddTextureComputeShader
+		AddTextureComputeShader,
+		GeneralMonsterObjects
 	};
 	virtual ReafShaderType GetReafShaderType() { return Shader; }
 
