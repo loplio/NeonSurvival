@@ -255,6 +255,9 @@ void SERVER::SendPlayerData(CPlayer& player,int GunType, float flength, int anib
     P_InGame2.xmf4x4Transform = player.m_xmf4x4Transform;
     P_InGame2.Fire = player.GetFire();
     P_InGame2.RayDirection = player.GetRayDirection();
+    P_InGame2.LayeredAngle = player.m_pSkinnedAnimationController->m_LayeredAngle;
+    P_InGame2.LayeredMaxAngle = player.m_pSkinnedAnimationController->m_LayeredMaxAngle;
+    P_InGame2.LayeredRoate = player.m_pSkinnedAnimationController->m_LayeredRotate;
     //P_InGame2.player = player;
 
     m_Packet.MessageType = MESSAGETYPE::INGAME;

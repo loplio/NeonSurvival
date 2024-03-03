@@ -1563,6 +1563,9 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 			m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(j, j);
 			m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(j, false);
 		}
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->m_SubAnimationTrack.m_nAnimationSet = m_vOtherPlayer.back()->m_pSkinnedAnimationController->IDLE;
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->m_SubAnimationTrack.SetEnable(false);
+
 
 		CLoadedModelInfo* pRevolverModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Revolver/Revolver.bin", NULL);
 		m_vOtherPlayer.back()->FindFrame("mixamorig:RightHandIndex1")->SetChild(pRevolverModel->m_pModelRootObject);
@@ -1893,7 +1896,12 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetOneOfTrackEnable(m_pOtherPlayerData2[OtherId].InnResultAnimBundle);
 						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetTrackSpeed(m_pOtherPlayerData2[OtherId].InnResultAnimBundle, m_pOtherPlayerData2[OtherId].fLength);
 					}
+
+					m_vOtherPlayer[i]->m_pSkinnedAnimationController->m_LayeredAngle = m_pOtherPlayerData2[OtherId].LayeredAngle;
+					m_vOtherPlayer[i]->m_pSkinnedAnimationController->m_LayeredMaxAngle = m_pOtherPlayerData2[OtherId].LayeredMaxAngle;
+					m_vOtherPlayer[i]->m_pSkinnedAnimationController->m_LayeredRotate = m_pOtherPlayerData2[OtherId].LayeredRoate;
 				}
+
 				//방향 및 이동 ###
 				m_vOtherPlayer[i]->SetPosition(m_pOtherPlayerData2[OtherId].position);
 				m_vOtherPlayer[i]->SetUpVector(m_pOtherPlayerData2[OtherId].UpVector);

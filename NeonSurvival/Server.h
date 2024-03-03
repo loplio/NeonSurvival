@@ -65,6 +65,9 @@ typedef struct {
 	bool		Fire;
 	XMFLOAT3	RayDirection;
 	int id;
+	float		LayeredAngle;
+	float		LayeredMaxAngle;
+	float		LayeredRoate;
 } PACKET_INGAME2;
 
 typedef struct {

@@ -99,6 +99,9 @@ typedef struct {
 	bool		Fire;
 	XMFLOAT3	RayDirection;
 	int			id;
+	float		LayeredAngle;
+	float		LayeredMaxAngle;
+	float		LayeredRoate;
 } PACKET_INGAME2;
 
 typedef struct {
@@ -414,6 +417,9 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			GameData.PlayersPostion2[pInGame.id].xmf4x4Transform = pInGame.xmf4x4Transform;
 			GameData.PlayersPostion2[pInGame.id].Fire = pInGame.Fire;
 			GameData.PlayersPostion2[pInGame.id].RayDirection = pInGame.RayDirection;
+			GameData.PlayersPostion2[pInGame.id].LayeredAngle = pInGame.LayeredAngle;
+			GameData.PlayersPostion2[pInGame.id].LayeredMaxAngle = pInGame.LayeredMaxAngle;
+			GameData.PlayersPostion2[pInGame.id].LayeredRoate = pInGame.LayeredRoate;
 
 			//retval = send(ptr->sock, (char*)&ptr->messageType, sizeof(ptr->messageType), 0);
 			//모든 플레이어 PACKET_INGAME정보를 모든 플레이어에게 전송
