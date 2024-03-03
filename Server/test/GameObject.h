@@ -263,6 +263,7 @@ public:
 	int							m_SpawnPotalNum;
 	int							m_Type;
 	bool						m_IsStop;
+	float						m_ResetPathTime;
 
 	CGameObject*				m_pParent = NULL;
 	CGameObject*				m_pChild = NULL;

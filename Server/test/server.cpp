@@ -251,13 +251,6 @@ int main(int argc, char** argv)
 			Monsters[i * 10 + j].m_Type = j;
 			Monsters[i * 10 + j].m_SpawnPotalNum = randomPotalNum;
 			Monsters[i * 10 + j].SetPosition(pos);
-
-			if (Monsters[i * 10 + j].m_TargetId == CGameObject::Wolf)
-			{
-				int targetid = j;
-				targetid %= 3;
-				Monsters[i * 10 + j].m_TargetId = 0;
-			}
 		}
 	}
 
@@ -832,6 +825,30 @@ void WaveSpawnMonster()
 	WaveSpawnMonster_Wolf_N(3);
 }
 
+void UpdateMonsterPath(int i, int targetType, int state, float radiusOfAction, XMFLOAT3& target)
+{
+	XMFLOAT3&& pos = Monsters[i].GetPosition();
+	Monsters[i].m_TargetType = targetType;
+
+	if (!Monsters[i].m_path.empty())
+	{
+		Monsters[i].m_TargetPos = Monsters[i].m_path.front();
+		Monsters[i].m_TargetPos.y = target.y;
+
+		if (Monsters[i].m_path.size() == 1 && dist(target, pos) <= radiusOfAction)
+		{
+			Monsters[i].m_path.erase(Monsters[i].m_path.begin());
+			Monsters[i].m_AnimPosition = 0.0f;
+			Monsters[i].m_PrevState = GameData.MonsterData[i].State;
+			Monsters[i].m_State = state;
+		}
+		else if (dist(Monsters[i].m_TargetPos, pos) < 0.01f)
+		{
+			Monsters[i].m_path.erase(Monsters[i].m_path.begin());
+		}
+	}
+}
+
 void MonstersUpdate(double Elapsedtime)
 {	
 	for (int i = 0; i < MAX_MONSTER * 10; ++i)
@@ -866,15 +883,34 @@ void MonstersUpdate(double Elapsedtime)
 			{
 				XMFLOAT3 pos = Monsters[i].GetPosition();
 				XMFLOAT3 pPos = GameData.PlayersPostion2[Monsters[i].m_TargetId].position;
-				Monsters[i].m_TargetPos = pPos;
 
-				float distance = dist(pPos, pos);
-				if (distance < 22.0f)
+				// 경로 재설정.
+				Monsters[i].m_ResetPathTime += Elapsedtime;
+				if (Monsters[i].m_ResetPathTime < 1.0f)
 				{
-					Monsters[i].m_TargetType = CGameObject::Player;
-					Monsters[i].m_PrevState = GameData.MonsterData[i].State;
-					Monsters[i].m_State = CGameObject::ATTACK;
+					float MaxDistance = FLT_MAX;
+					int playerID = -1;
+					// 모든 플레이어의 위치를 확인하여 가장 가까운 플레이어 탐색
+					for (int j = 0; j < MAX_PLAYER; ++j)
+					{
+						if (GameData.PlayersPostion2[j].id != -1)
+						{
+							XMFLOAT3 pPos = GameData.PlayersPostion2[j].position;
+							float distance = dist(pPos, pos);
+							if (distance < MaxDistance)
+							{
+								MaxDistance = distance;
+								playerID = j;
+							}
+						}
+					}
+
+					Monsters[i].m_TargetId = playerID;
+					Monsters[i].m_ResetPathTime = 0.0f;
+					Monsters[i].m_path = astar.GetPath(Monsters[i].GetPosition(), pPos);
 				}
+
+				UpdateMonsterPath(i, CGameObject::Player, CGameObject::ATTACK, 22.0f, pPos);
 
 				Monsters[i].MoveForward(METER_PER_PIXEL(Monsters[i].m_Speed) * Elapsedtime);
 				Monsters[i].SetLookAt(Monsters[i].m_TargetPos);
@@ -906,19 +942,18 @@ void MonstersUpdate(double Elapsedtime)
 				if (closestPlayerId != -1)
 				{
 					XMFLOAT3 pPos = GameData.PlayersPostion2[closestPlayerId].position;
-					Monsters[i].m_TargetType = CGameObject::Player;
-					Monsters[i].m_TargetId = closestPlayerId;
-					Monsters[i].m_TargetPos = pPos;
+					//Monsters[i].m_TargetType = CGameObject::Player;
+					//Monsters[i].m_TargetPos = pPos;
 
-					// 어그로 범위에 있는 경우 공격
-					if (closestDistance <= 22.0f)
+					Monsters[i].m_ResetPathTime += Elapsedtime;
+					if (Monsters[i].m_ResetPathTime < 1.0f)
 					{
-						//Monsters[i].m_AnimPosition = 0.0f;
-						Monsters[i].m_TargetId = closestPlayerId;
-						Monsters[i].m_TargetPos = pPos;
-						Monsters[i].m_PrevState = GameData.MonsterData[i].State;
-						Monsters[i].m_State = CGameObject::ATTACK;
+						Monsters[i].m_ResetPathTime = 0.0f;
+						Monsters[i].m_path = astar.GetPath(Monsters[i].GetPosition(), pPos);
 					}
+
+					Monsters[i].m_TargetId = closestPlayerId;
+					UpdateMonsterPath(i, CGameObject::Player, CGameObject::ATTACK, 22.0f, pPos);
 				}
 				else
 				{
@@ -928,26 +963,7 @@ void MonstersUpdate(double Elapsedtime)
 						Monsters[i].m_path = astar.GetPath(Monsters[i].GetPosition(), NexusPos);
 					}
 
-					// 어그로 대상이 없으면 넥서스를 향해 이동
-					Monsters[i].m_TargetType = CGameObject::Nexus;
-
-					if (!Monsters[i].m_path.empty())
-					{
-						Monsters[i].m_TargetPos = Monsters[i].m_path.front();
-						Monsters[i].m_TargetPos.y = NexusPos.y;
-
-						if (Monsters[i].m_path.size() == 1 && dist(NexusPos, pos) <= 50.0f)
-						{
-							Monsters[i].m_path.erase(Monsters[i].m_path.begin());
-							Monsters[i].m_AnimPosition = 0.0f;
-							Monsters[i].m_PrevState = GameData.MonsterData[i].State;
-							Monsters[i].m_State = CGameObject::ATTACK;
-						}
-						else if (dist(Monsters[i].m_TargetPos, pos) < 0.01f)
-						{
-							Monsters[i].m_path.erase(Monsters[i].m_path.begin());
-						}
-					}
+					UpdateMonsterPath(i, CGameObject::Nexus, CGameObject::ATTACK, 50.0f, NexusPos);
 				}
 
 				Monsters[i].MoveForward(METER_PER_PIXEL(Monsters[i].m_Speed) * Elapsedtime);
