@@ -50,6 +50,8 @@ public:
 	ID3D12RootSignature* GetGraphicsRootSignature();
 	ID3D12RootSignature* CreateRootSignature(ID3D12Device* pd3dDevice, D3D12_ROOT_SIGNATURE_FLAGS d3dRootSignatureFlags, UINT nRootParameters, D3D12_ROOT_PARAMETER* pd3dRootParameters, UINT nStaticSamplerDescs, D3D12_STATIC_SAMPLER_DESC* pd3dStaticSamplerDescs);
 
+	virtual void InitScene(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
+
 	// ShaderVariable.
 	virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
@@ -127,7 +129,6 @@ public:
 		float fFalloff, float fTheta, float fPhi, bool bEnable, int nType, float fRange, float padding);
 
 	int										m_nDrawOptions = DRAW_SCENE_STANDARD;
-
 
 	float									m_fElapsedTime = 0.0f;
 	float									m_fCurrentTime = 0.0f;

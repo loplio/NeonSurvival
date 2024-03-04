@@ -118,6 +118,8 @@ public:
 	BaseFramework(InterfaceFramework& Iframe);
 	virtual ~BaseFramework();
 
+	virtual void InitFramework() = 0;
+
 	virtual void OnCreate(HINSTANCE hInstance, HWND hMainWnd) = 0;
 	virtual void EnterFrameAdvance() = 0;
 	virtual void ExitFrameAdvance() = 0;
@@ -147,6 +149,8 @@ public:
 	virtual ~CLobbyFramework();
 
 private:
+	void InitFramework() override {};
+
 	void OnCreate(HINSTANCE hInstance, HWND hMainWnd) override {};
 	void EnterFrameAdvance() override {};
 	void FrameAdvance() override {};
@@ -174,6 +178,8 @@ public:
 	virtual ~CGameFramework();
 
 private:
+	void InitFramework() override {};
+
 	void OnCreate(HINSTANCE hInstance, HWND hMainWnd) override {};
 	void EnterFrameAdvance() override {};
 	void FrameAdvance() override {};

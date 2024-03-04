@@ -59,8 +59,8 @@ void GameKeyInput_Neon::UpdatePlayer()
 	}
 	
 	m_Player.m_dwDirection = dwDirection;
+	m_Player.IsDash = false;
 	if (dwDirection) {
-		m_Player.IsDash = false;
 
 		if (dwDirection == DIR_FORWARD)	// foward walk
 		{
@@ -489,29 +489,57 @@ void UILayerGame_Neon::Render(UINT nFrame)
 }
 void UILayerGame_Neon::Render(UINT nFrame, CGameSource* pGameSource)
 {
-	if (((CTextureToScreenShader*)pGameSource->GetRefScene().m_UIShaders[Scene_Neon::Pick_Frame])->GetIsRender())
-		UILayer::Render(nFrame);
+	//if (((CTextureToScreenShader*)pGameSource->GetRefScene().m_UIShaders[Scene_Neon::Pick_Frame])->GetIsRender())
+	//	UILayer::Render(nFrame);
+	std::vector<CShader*> pUIShader = pGameSource->GetRefScene().m_UIShaders;
+
+	ID3D11Resource* ppResources[] = { m_ppd3d11WrappedRenderTargets[nFrame] };
+
+	m_pd2dDeviceContext->SetTarget(m_ppd2dRenderTargets[nFrame]);
+	m_pd3d11On12Device->AcquireWrappedResources(ppResources, _countof(ppResources));
+
+	m_pd2dDeviceContext->BeginDraw();
+	for (UINT i = 0; i < m_nTextBlocks; i++)
+	{
+		if(((i == ATTACK || i == SPEED || i == HP) && ((CTextureToScreenShader*)pUIShader[Scene_Neon::Pick_Frame])->GetIsRender())
+			|| ((i == DEFEAT || i == DEFEAT2) && ((CTextureToScreenShader*)pUIShader[Scene_Neon::Defeat])->GetIsRender()))
+		m_pd2dDeviceContext->DrawText(m_pTextBlocks[i].m_pstrText, (UINT)wcslen(m_pTextBlocks[i].m_pstrText), m_pTextBlocks[i].m_pdwFormat, m_pTextBlocks[i].m_d2dLayoutRect, m_pTextBlocks[i].m_pd2dTextBrush);
+	}
+	m_pd2dDeviceContext->EndDraw();
+
+	m_pd3d11On12Device->ReleaseWrappedResources(ppResources, _countof(ppResources));
+	m_pd3d11DeviceContext->Flush();
 }
 void UILayerGame_Neon::BuildUI()
 {
-	ID2D1SolidColorBrush* pd2dBrush, *pd2dBrush2, *pd2dBrush3;
-	IDWriteTextFormat* pdwTextFormat, *pdwTextFormat2, *pdwTextFormat3;
-	D2D1_RECT_F d2dRect, d2dRect2, d2dRect3;
+	ID2D1SolidColorBrush* pd2dBrush, *pd2dBrush2, *pd2dBrush3, *pd2dBrush4, * pd2dBrush5;
+	IDWriteTextFormat* pdwTextFormat, *pdwTextFormat2, *pdwTextFormat3, *pdwTextFormat4, *pdwTextFormat5;
+	D2D1_RECT_F d2dRect, d2dRect2, d2dRect3, d2dRect4, d2dRect5;
 	WCHAR pstrOutputText[256];
 
 	wcscpy_s(pstrOutputText, 256, L" \n");
 	pd2dBrush = CreateBrush(D2D1::ColorF(D2D1::ColorF::Beige, 1.0f));
 	pdwTextFormat = CreateTextFormat((wchar_t*)L"Arial", m_fHeight / 20.0f);
 	d2dRect = D2D1::RectF(-480.0, m_fHeight - 220.0f, m_fWidth, m_fHeight);
-	UpdateTextOutputs(0, pstrOutputText, &d2dRect, pdwTextFormat, pd2dBrush);
+	UpdateTextOutputs(ATTACK, pstrOutputText, &d2dRect, pdwTextFormat, pd2dBrush);
 
 	pd2dBrush2 = CreateBrush(D2D1::ColorF(D2D1::ColorF::Beige, 1.0f));
 	pdwTextFormat2 = CreateTextFormat((wchar_t*)L"Arial", m_fHeight / 20.0f);
 	d2dRect2 = D2D1::RectF(0.0f, m_fHeight - 220.0f, m_fWidth, m_fHeight);
-	UpdateTextOutputs(1, pstrOutputText, &d2dRect2, pdwTextFormat2, pd2dBrush2);
+	UpdateTextOutputs(SPEED, pstrOutputText, &d2dRect2, pdwTextFormat2, pd2dBrush2);
 
 	pd2dBrush3 = CreateBrush(D2D1::ColorF(D2D1::ColorF::Beige, 1.0f));
 	pdwTextFormat3 = CreateTextFormat((wchar_t*)L"Arial", m_fHeight / 20.0f);
 	d2dRect3 = D2D1::RectF(480.0f, m_fHeight - 220.0f, m_fWidth, m_fHeight);
-	UpdateTextOutputs(2, pstrOutputText, &d2dRect3, pdwTextFormat3, pd2dBrush3);
+	UpdateTextOutputs(HP, pstrOutputText, &d2dRect3, pdwTextFormat3, pd2dBrush3);
+
+	pd2dBrush4 = CreateBrush(D2D1::ColorF(D2D1::ColorF::Beige /*DarkBlue*/, 1.0f));
+	pdwTextFormat4 = CreateTextFormat((wchar_t*)L"Arial", m_fHeight / 5.0f);
+	d2dRect4 = D2D1::RectF(0.0f, m_fHeight/4, m_fWidth, m_fHeight);
+	UpdateTextOutputs(DEFEAT, pstrOutputText, &d2dRect4, pdwTextFormat4, pd2dBrush4);
+
+	pd2dBrush5 = CreateBrush(D2D1::ColorF(D2D1::ColorF::Beige, 1.0f));
+	pdwTextFormat5 = CreateTextFormat((wchar_t*)L"Arial", m_fHeight / 15.0f);
+	d2dRect5 = D2D1::RectF(0.0f, 2 * m_fHeight / 3, m_fWidth, m_fHeight);
+	UpdateTextOutputs(DEFEAT2, pstrOutputText, &d2dRect5, pdwTextFormat5, pd2dBrush5);
 }

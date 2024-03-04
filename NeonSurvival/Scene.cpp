@@ -362,6 +362,10 @@ ID3D12RootSignature* CScene::CreateRootSignature(ID3D12Device* pd3dDevice, D3D12
 	return(pd3dRootSignature);
 }
 
+void CScene::InitScene(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+{
+}
+
 void CScene::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
 	UINT ncbLightsBytes = ((sizeof(LIGHTS) + 255) & ~255);

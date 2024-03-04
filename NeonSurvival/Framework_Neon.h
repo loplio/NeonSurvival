@@ -16,6 +16,8 @@ public:
 	bool bLodding = false;
 
 private:
+	void InitFramework() override;
+
 	void OnCreate(HINSTANCE hInstance, HWND hMainWnd) override;
 	void EnterFrameAdvance() override;
 	void ExitFrameAdvance() override;
@@ -41,6 +43,8 @@ public:
 	void UpdateUI() const;
 
 private:
+	void InitFramework() override;
+
 	void OnCreate(HINSTANCE hInstance, HWND hMainWnd) override;
 	void EnterFrameAdvance() override;
 	void ExitFrameAdvance() override;

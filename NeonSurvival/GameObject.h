@@ -443,6 +443,8 @@ public:
 	enum Mobility				{ Static, Moveable };
 	UINT						m_Mobility = Static;
 public:
+	virtual void InitObject(ID3D12GraphicsCommandList* pd3dCommandList);
+
 	// ShaderVariable.
 	virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);

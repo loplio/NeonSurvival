@@ -129,4 +129,12 @@ public:
 	void Render(UINT nFrame) override;
 	void Render(UINT nFrame, CGameSource* pGameSource) override;
 	void BuildUI() override;
+
+	enum UIType {
+		ATTACK,
+		SPEED,
+		HP,
+		DEFEAT,
+		DEFEAT2
+	};
 };

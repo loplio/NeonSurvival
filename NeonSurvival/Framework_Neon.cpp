@@ -12,6 +12,14 @@ CLobbyFramework_Neon::~CLobbyFramework_Neon()
 {
 }
 
+void CLobbyFramework_Neon::InitFramework()
+{
+	IPBuffer = "";
+	bLodding = false;
+	
+	m_pScene->InitScene(&m_pd3dDevice, &m_pd3dCommandList);
+}
+
 void CLobbyFramework_Neon::OnCreate(HINSTANCE hInstance, HWND hMainWnd)
 {
 	BuildObjects();
@@ -171,6 +179,9 @@ bool CLobbyFramework_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageI
 			{
 				retval = 1;
 				SERVER::getInstance().init(hWnd, (char*)IPBuffer.c_str());
+
+				InitFramework();
+
 				Sleep(1);
 			}
 			break;
@@ -198,6 +209,14 @@ CGameFramework_Neon::CGameFramework_Neon(InterfaceFramework& Iframe) : CGameFram
 }
 CGameFramework_Neon::~CGameFramework_Neon()
 {
+}
+
+void CGameFramework_Neon::InitFramework()
+{
+	Player_Neon* pPlayer = (Player_Neon*)m_pPlayer.get();
+	m_bReleaseCapture = false;
+	m_pScene->InitScene(&m_pd3dDevice, &m_pd3dCommandList);
+	pPlayer->InitObject(&m_pd3dCommandList, m_pScene->m_pTerrain);
 }
 
 void CGameFramework_Neon::OnCreate(HINSTANCE hInstance, HWND hMainWnd)
@@ -271,7 +290,7 @@ void CGameFramework_Neon::BuildObjects()
 void CGameFramework_Neon::BuildToolCreator()
 {
 	m_pSoundManager = new SoundManager();
-	m_pUILayer = new UILayerGame_Neon(m_Iframe, 3);
+	m_pUILayer = new UILayerGame_Neon(m_Iframe, 5);
 
 	m_KeyboardInput = new GameKeyInput_Neon(*this);
 	m_MouseInput = new GameMouseInput_Neon(m_KeyboardInput->GetKeyBuffer(), *this);
@@ -292,6 +311,12 @@ void CGameFramework_Neon::UpdateUI() const
 
 	wchar_t text3[128] = L"체력회복 30";
 	m_pUILayer->UpdateTextOutputs(2, (_TCHAR*)text3, NULL, NULL, NULL);
+
+	wchar_t text4[128] = L"패 배";
+	m_pUILayer->UpdateTextOutputs(3, (_TCHAR*)text4, NULL, NULL, NULL);	
+	
+	wchar_t text5[128] = L"아무 키나 누르세요...";
+	m_pUILayer->UpdateTextOutputs(4, (_TCHAR*)text5, NULL, NULL, NULL);
 }
 
 void CGameFramework_Neon::ProcessSelectedObject(DWORD dwDirection, float cxDelta, float cyDelta)
@@ -362,10 +387,11 @@ bool CGameFramework_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID
 		case 0x56:
 			if (m_pPlayer && !(*m_pPlayer).GetDead())
 			{
-				if(m_pCamera->GetMode() == FIRST_PERSON_CAMERA)
-					m_pCamera = m_pPlayer->ChangeCamera(THIRD_PERSON_CAMERA, m_GameTimer.GetTimeElapsed());
-				else if(m_pCamera->GetMode() == THIRD_PERSON_CAMERA)
-					m_pCamera = m_pPlayer->ChangeCamera(FIRST_PERSON_CAMERA, m_GameTimer.GetTimeElapsed());
+				CCamera* pCamera = m_pPlayer.get()->GetCamera();
+				if(pCamera->GetMode() == FIRST_PERSON_CAMERA)
+					pCamera = m_pPlayer->ChangeCamera(THIRD_PERSON_CAMERA, m_GameTimer.GetTimeElapsed());
+				else if(pCamera->GetMode() == THIRD_PERSON_CAMERA)
+					pCamera = m_pPlayer->ChangeCamera(FIRST_PERSON_CAMERA, m_GameTimer.GetTimeElapsed());
 			}
 			break;
 		case VK_ESCAPE:
@@ -406,6 +432,12 @@ bool CGameFramework_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID
 		break;
 	default:
 		break;
+	}
+
+	if (retval)
+	{
+		SERVER::getInstance().SendExit();
+		InitFramework();
 	}
 
 	return retval;

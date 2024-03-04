@@ -57,6 +57,43 @@ Player_Neon::~Player_Neon()
 	if (m_pSibling) m_pSibling->Release();
 }
 
+void Player_Neon::InitObject(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+}
+
+void Player_Neon::InitObject(ID3D12GraphicsCommandList* pd3dCommandList, void* pContext)
+{
+	HP = 100.0f;
+	MAXHP = 100.0f;
+	EXP = 0.0f;
+	Damge = 30.0f;
+	MaxSpeed = 0.5f;
+	m_nGunType = Empty;
+	bReadyFire = false;
+	IsFire = false;
+	IsDead = false;
+	IsDash = false;
+
+	// 위치 초기화
+	CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)pContext;
+	float fHeight = pTerrain->GetHeight(pTerrain->GetWidth() * 0.5f, pTerrain->GetLength() * 0.5f);
+	SetPosition(XMFLOAT3(pTerrain->GetWidth() * 0.5f, fHeight, pTerrain->GetLength() * 0.5f - METER_PER_PIXEL(19)));
+	SetOffset(XMFLOAT3(0.0f, METER_PER_PIXEL(1.5), 0.0f));	// fire offset.
+
+	SetPlayerUpdatedContext(pTerrain);
+	SetCameraUpdatedContext(pTerrain);
+
+	m_xmf3Right = XMFLOAT3(1.0f, 0.0f, 0.0f);
+	m_xmf3Up = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	m_xmf3Look = XMFLOAT3(0.0f, 0.0f, 1.0f);
+	m_fPitch = 0.0f;
+	m_fYaw = 0.0f;
+	m_fRoll = 0.0f;
+
+	// 카메라 초기화
+	m_pCamera = ChangeCamera(FIRST_PERSON_CAMERA, 0.0f);
+}
+
 void Player_Neon::Move(ULONG dwDirection, float fDistance, bool bUpdateVelocity)
 {
 	int count = 0;
@@ -540,6 +577,31 @@ Scene_Neon::~Scene_Neon()
 {
 }
 
+void Scene_Neon::InitScene(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	IsDefeat = false;
+	m_nDrawOptions = DRAW_SCENE_STANDARD;
+	m_fElapsedTime = 0.0f;
+	m_fCurrentTime = 0.0f;
+
+	// Nexus Init
+	if (m_vHierarchicalGameObjects[0]->GetReafObjectType() == CGameObject::Nexus)
+	{
+		NexusObject* pNexusObject = (NexusObject*)m_vHierarchicalGameObjects[0];
+		pNexusObject->HP = 1000.0f;
+		pNexusObject->MAXHP = 1000.0f;
+	}
+
+	// UIShader init
+	((CTextureToScreenShader*)m_UIShaders[Pick_Frame])->SetIsRender(false);
+	((CTextureToScreenShader*)m_UIShaders[Pick_Frame_g])->SetIsRender(false);
+	((CTextureToScreenShader*)m_UIShaders[Pick_Frame_r])->SetIsRender(false);
+	((CTextureToScreenShader*)m_UIShaders[Attack])->SetIsRender(false);
+	((CTextureToScreenShader*)m_UIShaders[Speed])->SetIsRender(false);
+	((CTextureToScreenShader*)m_UIShaders[RecoveryHP])->SetIsRender(false);
+	((CTextureToScreenShader*)m_UIShaders[Defeat])->SetIsRender(false);
+}
+
 void Scene_Neon::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
 	CScene::CreateShaderVariables(pd3dDevice, pd3dCommandList);
@@ -666,12 +728,19 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 	m_UIShaders.back() = pUITexture;
 
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/Popup1.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT, 0, FRAME_BUFFER_WIDTH * 0.5f, FRAME_BUFFER_HEIGHT * 0.5f, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+
 	((CTextureToScreenShader*)m_UIShaders[Pick_Frame])->SetIsRender(false);
 	((CTextureToScreenShader*)m_UIShaders[Pick_Frame_g])->SetIsRender(false);
 	((CTextureToScreenShader*)m_UIShaders[Pick_Frame_r])->SetIsRender(false);
 	((CTextureToScreenShader*)m_UIShaders[Attack])->SetIsRender(false);
 	((CTextureToScreenShader*)m_UIShaders[Speed])->SetIsRender(false);
 	((CTextureToScreenShader*)m_UIShaders[RecoveryHP])->SetIsRender(false);
+	((CTextureToScreenShader*)m_UIShaders[Defeat])->SetIsRender(false);
 
 	/// background ///
 	//m_ppComputeShaders.push_back(new CComputeShader);
@@ -1758,6 +1827,8 @@ bool Scene_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM 
 	switch (nMessageID)
 	{
 	case WM_KEYDOWN:
+		if (IsDefeat) return true;
+
 		switch (wParam)
 		{
 		case '1':
@@ -1805,6 +1876,24 @@ bool Scene_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM 
 		{
 			Player_Neon* pPlayer = ((Player_Neon*)m_pPlayer.get());
 			pPlayer->HP -= 50;
+			break;
+		}
+		case '7':
+		{
+			if (m_vHierarchicalGameObjects[0]->GetReafObjectType() == CGameObject::Nexus)
+			{
+				NexusObject* pNexusObject = (NexusObject*)m_vHierarchicalGameObjects[0];
+				pNexusObject->HP += 500;
+			}
+			break;
+		}
+		case '8':
+		{
+			if (m_vHierarchicalGameObjects[0]->GetReafObjectType() == CGameObject::Nexus)
+			{
+				NexusObject* pNexusObject = (NexusObject*)m_vHierarchicalGameObjects[0];
+				pNexusObject->HP -= 500;
+			}
 			break;
 		}
 		case 'C':
@@ -1923,6 +2012,26 @@ void Scene_Neon::Update(float fTimeElapsed)
 			float PlayerEXP = ((Player_Neon*)m_pPlayer.get())->GetExp();
 			((CTextureToScreenShader*)m_UIShaders[i])->SetGauge(PlayerEXP);
 			break;
+		}
+		case Defeat:
+		{
+			int nDead = 0;
+			if (m_pPlayer.get()->GetDead())
+			{
+				nDead++;
+				for (int i = 0; i < m_vOtherPlayer.size(); ++i)
+				{
+					if (m_vOtherPlayer[i]->GetDead() || m_vOtherPlayer[i]->Player_ID == -1)
+						nDead++;
+					else if (!m_vOtherPlayer[i]->GetDead())
+						break;
+				}
+			}
+			if (((NexusObject*)m_vHierarchicalGameObjects[0])->HP <= 0.0f || nDead >= MAX_PLAYER)
+			{
+				((CTextureToScreenShader*)m_UIShaders[i])->SetIsRender(true);
+				IsDefeat = true;
+			}
 		}
 		}
 	}
@@ -2376,6 +2485,14 @@ Crosshair::~Crosshair()
 //-------------------------------------------------------------------------------
 SceneLobby_Neon::SceneLobby_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) : CScene(pd3dDevice, pd3dCommandList)
 {
+}
+
+void SceneLobby_Neon::InitScene(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	bGameStart = false;
+	bSetting = false;
+	bGameQuit = false;
+	bLodding = false;
 }
 
 void SceneLobby_Neon::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)

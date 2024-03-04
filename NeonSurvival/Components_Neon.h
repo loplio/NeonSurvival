@@ -13,6 +13,9 @@ public:
 	Player_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext);
 	virtual ~Player_Neon();
 
+	virtual void InitObject(ID3D12GraphicsCommandList* pd3dCommandList);
+	virtual void InitObject(ID3D12GraphicsCommandList* pd3dCommandList, void* pContext);
+
 	void Move(ULONG nDirection, float fDistance, bool bVelocity = false) override;
 	void Update(float fTimeElapsed) override;
 
@@ -58,6 +61,8 @@ public:
 	Scene_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual ~Scene_Neon();
 
+	virtual void InitScene(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) override;
+
 	void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) override;
 	void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList) override;
 	void ReleaseShaderVariables() override;
@@ -96,6 +101,8 @@ public:
 	PistolBulletTexturedObjects* pBullets = NULL;		//ÃÑ¾Ë
 	bool MonsterRotate[30] = { false, };
 
+	bool IsDefeat = false;
+
 	enum UI_LIST {
 		EXP_LINE,
 		HP_R,
@@ -108,7 +115,8 @@ public:
 		Pick_Frame_r,
 		Attack,
 		Speed,
-		RecoveryHP
+		RecoveryHP,
+		Defeat
 	};
 };
 
@@ -214,6 +222,8 @@ class SceneLobby_Neon : public CScene {
 public:
 	SceneLobby_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual ~SceneLobby_Neon() {};
+
+	virtual void InitScene(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) override;
 
 	void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) override;
 	void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList) override;

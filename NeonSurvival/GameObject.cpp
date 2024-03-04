@@ -877,6 +877,9 @@ void CGameObject::ReleaseUploadBuffers()
 void CGameObject::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
 }
+void CGameObject::InitObject(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+}
 void CGameObject::ReleaseShaderVariables()
 {
 }
