@@ -103,6 +103,7 @@ typedef struct {
 	float		LayeredMaxAngle;
 	float		LayeredRoate;
 	float		NEXUSHP;
+	bool		IsDead;
 } PACKET_INGAME2;
 
 typedef struct {
@@ -422,6 +423,7 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			GameData.PlayersPostion2[pInGame.id].LayeredMaxAngle = pInGame.LayeredMaxAngle;
 			GameData.PlayersPostion2[pInGame.id].LayeredRoate = pInGame.LayeredRoate;
 			GameData.PlayersPostion2[pInGame.id].NEXUSHP = NexusHP;
+			GameData.PlayersPostion2[pInGame.id].IsDead = pInGame.IsDead;
 
 			//retval = send(ptr->sock, (char*)&ptr->messageType, sizeof(ptr->messageType), 0);
 			//모든 플레이어 PACKET_INGAME정보를 모든 플레이어에게 전송

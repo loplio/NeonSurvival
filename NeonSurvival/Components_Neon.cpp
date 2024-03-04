@@ -1613,6 +1613,9 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 			m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationSet(j, j);
 			m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackEnable(j, false);
 		}
+		//dead 애니메이션
+		m_vOtherPlayer.back()->m_pSkinnedAnimationController->SetTrackAnimationType(CAnimationController::DEAD, ANIMATION_TYPE_ONCE);
+
 		m_vOtherPlayer.back()->m_pSkinnedAnimationController->m_SubAnimationTrack.m_nAnimationSet = m_vOtherPlayer.back()->m_pSkinnedAnimationController->IDLE;
 		m_vOtherPlayer.back()->m_pSkinnedAnimationController->m_SubAnimationTrack.SetEnable(false);
 
@@ -1991,6 +1994,9 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetOneOfTrackSubEnable(m_vOtherPlayer[i]->m_pSkinnedAnimationController->m_nAnimationBundle[m_vOtherPlayer[i]->m_pSkinnedAnimationController->IDLE]);
 					}
 				}
+				//IsDead update
+				m_vOtherPlayer[i]->SetDead(m_pOtherPlayerData2[OtherId].IsDead);
+
 				m_vOtherPlayer[i]->Animate(fTimeElapsed);
 				++i;
 
