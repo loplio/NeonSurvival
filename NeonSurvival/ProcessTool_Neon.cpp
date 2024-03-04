@@ -384,7 +384,7 @@ void GameRenderDisplay_Neon::Render()
 	m_Scene.RunTimeBuildObjects(&m_pd3dDevice, &m_pd3dCommandList);
 
 	// Update
-	((CGameFramework_Neon*)&gBaseFramework)->UpdateUI();
+	((CGameFramework_Neon*)&gBaseFramework)->UpdateUI(m_Scene);
 
 	// Scene Render
 	m_Scene.OnPrepareRender(&m_pd3dCommandList, Camera);
@@ -504,6 +504,10 @@ void UILayerGame_Neon::Render(UINT nFrame, CGameSource* pGameSource)
 		if(((i == ATTACK || i == SPEED || i == HP) && ((CTextureToScreenShader*)pUIShader[Scene_Neon::Pick_Frame])->GetIsRender())
 			|| ((i == DEFEAT || i == DEFEAT2) && ((CTextureToScreenShader*)pUIShader[Scene_Neon::Defeat])->GetIsRender()))
 		m_pd2dDeviceContext->DrawText(m_pTextBlocks[i].m_pstrText, (UINT)wcslen(m_pTextBlocks[i].m_pstrText), m_pTextBlocks[i].m_pdwFormat, m_pTextBlocks[i].m_d2dLayoutRect, m_pTextBlocks[i].m_pd2dTextBrush);
+		else if ((i == PLAYER_ATTACK || i == PLAYER_SPEED))
+		{
+			m_pd2dDeviceContext->DrawText(m_pTextBlocks[i].m_pstrText, (UINT)wcslen(m_pTextBlocks[i].m_pstrText), m_pTextBlocks[i].m_pdwFormat, m_pTextBlocks[i].m_d2dLayoutRect, m_pTextBlocks[i].m_pd2dTextBrush);
+		}
 	}
 	m_pd2dDeviceContext->EndDraw();
 
@@ -512,9 +516,9 @@ void UILayerGame_Neon::Render(UINT nFrame, CGameSource* pGameSource)
 }
 void UILayerGame_Neon::BuildUI()
 {
-	ID2D1SolidColorBrush* pd2dBrush, *pd2dBrush2, *pd2dBrush3, *pd2dBrush4, * pd2dBrush5;
-	IDWriteTextFormat* pdwTextFormat, *pdwTextFormat2, *pdwTextFormat3, *pdwTextFormat4, *pdwTextFormat5;
-	D2D1_RECT_F d2dRect, d2dRect2, d2dRect3, d2dRect4, d2dRect5;
+	ID2D1SolidColorBrush* pd2dBrush, *pd2dBrush2, *pd2dBrush3, *pd2dBrush4, * pd2dBrush5, * pd2dBrush6, * pd2dBrush7;
+	IDWriteTextFormat* pdwTextFormat, *pdwTextFormat2, *pdwTextFormat3, *pdwTextFormat4, *pdwTextFormat5, * pdwTextFormat6, * pdwTextFormat7;
+	D2D1_RECT_F d2dRect, d2dRect2, d2dRect3, d2dRect4, d2dRect5, d2dRect6, d2dRect7;
 	WCHAR pstrOutputText[256];
 
 	wcscpy_s(pstrOutputText, 256, L" \n");
@@ -542,4 +546,14 @@ void UILayerGame_Neon::BuildUI()
 	pdwTextFormat5 = CreateTextFormat((wchar_t*)L"Arial", m_fHeight / 15.0f);
 	d2dRect5 = D2D1::RectF(0.0f, 2 * m_fHeight / 3, m_fWidth, m_fHeight);
 	UpdateTextOutputs(DEFEAT2, pstrOutputText, &d2dRect5, pdwTextFormat5, pd2dBrush5);
+
+	pd2dBrush6 = CreateBrush(D2D1::ColorF(D2D1::ColorF::Beige, 1.0f));
+	pdwTextFormat6 = CreateTextFormat((wchar_t*)L"Arial", m_fHeight / 30.0f);
+	d2dRect6 = D2D1::RectF(95,48,135,88);
+	UpdateTextOutputs(PLAYER_ATTACK,pstrOutputText, &d2dRect6, pdwTextFormat6, pd2dBrush6);
+
+	pd2dBrush7 = CreateBrush(D2D1::ColorF(D2D1::ColorF::Beige, 1.0f));
+	pdwTextFormat7 = CreateTextFormat((wchar_t*)L"Arial", m_fHeight / 30.0f);
+	d2dRect7 = D2D1::RectF(185,48,225,88);
+	UpdateTextOutputs(PLAYER_SPEED, pstrOutputText, &d2dRect7, pdwTextFormat7, pd2dBrush7);
 }

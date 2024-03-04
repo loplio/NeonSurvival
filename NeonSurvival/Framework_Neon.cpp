@@ -290,7 +290,7 @@ void CGameFramework_Neon::BuildObjects()
 void CGameFramework_Neon::BuildToolCreator()
 {
 	m_pSoundManager = new SoundManager();
-	m_pUILayer = new UILayerGame_Neon(m_Iframe, 5);
+	m_pUILayer = new UILayerGame_Neon(m_Iframe, 7);
 
 	m_KeyboardInput = new GameKeyInput_Neon(*this);
 	m_MouseInput = new GameMouseInput_Neon(m_KeyboardInput->GetKeyBuffer(), *this);
@@ -301,7 +301,7 @@ void CGameFramework_Neon::ReleaseObjects()
 {
 }
 
-void CGameFramework_Neon::UpdateUI() const
+void CGameFramework_Neon::UpdateUI(CScene& scene) const
 {
 	wchar_t text[128] = L"공격력 10%";
 	m_pUILayer->UpdateTextOutputs(0, (_TCHAR*)text, NULL, NULL, NULL);
@@ -317,6 +317,17 @@ void CGameFramework_Neon::UpdateUI() const
 	
 	wchar_t text5[128] = L"아무 키나 누르세요...";
 	m_pUILayer->UpdateTextOutputs(4, (_TCHAR*)text5, NULL, NULL, NULL);
+
+	float Player_Attack = ((Player_Neon*)scene.m_pPlayer.get())->GetDmg();
+	float Player_Speed = scene.m_pPlayer.get()->MaxSpeed;
+
+	wchar_t text6[128];
+	swprintf(text6, 128, L"%d", (int)Player_Attack);
+	m_pUILayer->UpdateTextOutputs(5, (_TCHAR*)text6, NULL, NULL, NULL);
+
+	wchar_t text7[128];
+	swprintf(text7, 128, L"%d", (int)(Player_Speed * 10.0f));
+	m_pUILayer->UpdateTextOutputs(6, (_TCHAR*)text7, NULL, NULL, NULL);
 }
 
 void CGameFramework_Neon::ProcessSelectedObject(DWORD dwDirection, float cxDelta, float cyDelta)

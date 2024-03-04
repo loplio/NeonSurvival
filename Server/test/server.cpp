@@ -712,7 +712,7 @@ DWORD WINAPI MonsterThread(LPVOID arg)
 	double SpawnTime = 3.0f;
 	
 	double WaveCoolTime = 0.0f;
-	double WaveTime = 25.0f;
+	double WaveTime = 15.0f;
 
 	while (true) {
 		auto start_time = std::chrono::high_resolution_clock::now();  // 현재 시간 기록
@@ -732,7 +732,7 @@ DWORD WINAPI MonsterThread(LPVOID arg)
 			}
 
 			WaveCoolTime += elapsed_time.count();
-			//30초마다 추가 웨이브
+			//25초마다 추가 웨이브
 			if (WaveCoolTime >= WaveTime)
 			{
 				WaveCoolTime = 0.0f;
@@ -759,7 +759,7 @@ bool CheckSpawnMonsterType(int waveLevel, int type)
 			return true;
 		}
 	}
-	else if (WaveLevel == 4) // + TreasureChest
+	else if (WaveLevel == 3) // + TreasureChest
 	{
 		if (type == CGameObject::Giant_Bee || type == CGameObject::Spider || type == CGameObject::Bat
 			|| type == CGameObject::KingCobra || type == CGameObject::Golem || type == CGameObject::TreasureChest)
@@ -767,7 +767,7 @@ bool CheckSpawnMonsterType(int waveLevel, int type)
 			return true;
 		}
 	}
-	else if (WaveLevel == 7) // + Magama
+	else if (WaveLevel == 5) // + Magama
 	{
 		if (type == CGameObject::Giant_Bee || type == CGameObject::Spider || type == CGameObject::Bat
 			|| type == CGameObject::KingCobra || type == CGameObject::Golem || type == CGameObject::TreasureChest
@@ -776,7 +776,7 @@ bool CheckSpawnMonsterType(int waveLevel, int type)
 			return true;
 		}
 	}
-	else if (WaveLevel >= 10) // + Treant
+	else if (WaveLevel >= 7) // + Treant
 	{
 		if (type == CGameObject::Giant_Bee || type == CGameObject::Spider || type == CGameObject::Bat
 			|| type == CGameObject::KingCobra || type == CGameObject::Golem || type == CGameObject::TreasureChest

@@ -40,7 +40,7 @@ public:
 	CGameFramework_Neon(InterfaceFramework& Iframe);
 	virtual ~CGameFramework_Neon();
 
-	void UpdateUI() const;
+	void UpdateUI(CScene& scene) const;
 
 private:
 	void InitFramework() override;

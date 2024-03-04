@@ -135,6 +135,8 @@ public:
 		SPEED,
 		HP,
 		DEFEAT,
-		DEFEAT2
+		DEFEAT2,
+		PLAYER_ATTACK,
+		PLAYER_SPEED
 	};
 };
