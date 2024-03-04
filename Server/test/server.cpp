@@ -490,9 +490,10 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			int dmg = m_Packet.hit;
 			Monsters[monsterid].m_HP -= dmg;
 			
-			if (Monsters[monsterid].m_HP <= 0)
+			if (Monsters[monsterid].m_HP <= 0 && Monsters[monsterid].m_State != CGameObject::DIE)
 			{
 				Monsters[monsterid].m_State = CGameObject::DIE;
+				Monsters[monsterid].m_AnimPosition = 0.0f;
 			}
 			break;
 		}

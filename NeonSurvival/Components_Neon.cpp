@@ -39,6 +39,11 @@ Player_Neon::Player_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd
 		m_pSkinnedAnimationController->SetTrackAnimationSet(i, i);
 		m_pSkinnedAnimationController->SetTrackEnable(i, false);
 	}
+
+	// Dead 애니메이션은 한번만 동작.
+	m_pSkinnedAnimationController->SetTrackAnimationType(CAnimationController::DEAD, ANIMATION_TYPE_ONCE);
+
+	// 블렌딩 애니메이션할 서브 애니메이션 Set.
 	m_pSkinnedAnimationController->m_SubAnimationTrack.m_nAnimationSet = m_pSkinnedAnimationController->IDLE;
 	m_pSkinnedAnimationController->m_SubAnimationTrack.SetEnable(false);
 
@@ -87,57 +92,67 @@ void Player_Neon::Move(ULONG dwDirection, float fDistance, bool bUpdateVelocity)
 }
 void Player_Neon::Update(float fTimeElapsed)
 {
-	// Variables init
-	bSelectedObject = false;
-
-	// Gravity operation
-	m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, Vector3::ScalarProduct(m_xmf3Gravity, fTimeElapsed, false));
-
-	// Limit xz-speed
-	float fLength = sqrtf(m_xmf3Velocity.x * m_xmf3Velocity.x + m_xmf3Velocity.z * m_xmf3Velocity.z);
-	if (fLength < 0.1) m_xmf3Velocity.x = 0.0f, m_xmf3Velocity.z = 0.0f;
-	//std::cout << "Length: " << fLength  << ", km/h: " << PIXEL_TO_KPH(fLength) << std::endl;
-	//std::cout << "PlayerPos: " << m_xmf3Position.x << ", " << m_xmf3Position.y << ", " << m_xmf3Position.z << std::endl;
-	float fMaxVelocityXZ = m_fMaxVelocityXZ * fTimeElapsed;
-	if (fLength > m_fMaxVelocityXZ)
+	if(IsDead && HP > 0.0f)
+		IsDead = false;
+	if (!IsDead)
 	{
-		m_xmf3Velocity.x *= (m_fMaxVelocityXZ / fLength);
-		m_xmf3Velocity.z *= (m_fMaxVelocityXZ / fLength);
+		if (HP <= 0.0f)
+		{
+			IsDead = true;
+			ChangeCamera(THIRD_PERSON_CAMERA, fTimeElapsed);
+		}
+
+		// Variables init
+		bSelectedObject = false;
+
+		// Gravity operation
+		m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, Vector3::ScalarProduct(m_xmf3Gravity, fTimeElapsed, false));
+
+		// Limit xz-speed
+		float fLength = sqrtf(m_xmf3Velocity.x * m_xmf3Velocity.x + m_xmf3Velocity.z * m_xmf3Velocity.z);
+		if (fLength < 0.1) m_xmf3Velocity.x = 0.0f, m_xmf3Velocity.z = 0.0f;
+		//std::cout << "Length: " << fLength  << ", km/h: " << PIXEL_TO_KPH(fLength) << std::endl;
+		//std::cout << "PlayerPos: " << m_xmf3Position.x << ", " << m_xmf3Position.y << ", " << m_xmf3Position.z << std::endl;
+		float fMaxVelocityXZ = m_fMaxVelocityXZ * fTimeElapsed;
+		if (fLength > m_fMaxVelocityXZ)
+		{
+			m_xmf3Velocity.x *= (m_fMaxVelocityXZ / fLength);
+			m_xmf3Velocity.z *= (m_fMaxVelocityXZ / fLength);
+		}
+
+		// Limit y-speed
+		//float fMaxVelocityY = m_fMaxVelocityY * fTimeElapsed;
+		//fLength = sqrtf(m_xmf3Velocity.y * m_xmf3Velocity.y);
+		//if (fLength > m_fMaxVelocityY) m_xmf3Velocity.y *= (m_fMaxVelocityY / fLength);
+
+		// Distance traveled in elapsed time
+		XMFLOAT3 timeElapsedDistance = Vector3::ScalarProduct(m_xmf3Velocity, fTimeElapsed, false);
+		m_xmf3Displacement = timeElapsedDistance;
+
+		//std::cout << "B : " << m_xmf3Position.x << ", " << m_xmf3Position.y << ", " << m_xmf3Position.z << std::endl;
+		//std::cout << "Displacement : " << m_xmf3Displacement.x << ", " << m_xmf3Displacement.y << ", " << m_xmf3Displacement.z << std::endl;
+		CPlayer::Move(timeElapsedDistance, false);
+		//std::cout << "A : " << m_xmf3Position.x << ", " << m_xmf3Position.y << ", " << m_xmf3Position.z << std::endl;
+
+		// Keep out of the ground and align the player and the camera.
+		if (!m_vGroundObjects->empty()) OnGroundUpdateCallback(fTimeElapsed);
+		if (m_pPlayerUpdatedContext) OnPlayerUpdateCallback(fTimeElapsed);
+		DWORD nCameraMode = m_pCamera->GetMode();
+		if (nCameraMode == FIRST_PERSON_CAMERA || nCameraMode == THIRD_PERSON_CAMERA || nCameraMode == SHOULDER_HOLD_CAMERA) m_pCamera->Update(m_xmf3Position, fTimeElapsed);
+		if (m_pCameraUpdatedContext) OnCameraUpdateCallback(fTimeElapsed);
+		if (nCameraMode == THIRD_PERSON_CAMERA) m_pCamera->SetLookAt(m_xmf3Position);
+
+		// Reset ViewMatrix
+		m_pCamera->RegenerateViewMatrix();
+
+		// Decelerated velocity operation
+		XMFLOAT3 fDeceleration = XMFLOAT3(m_fFriction * fTimeElapsed, 0.0f, m_fFriction * fTimeElapsed);
+		if (fDeceleration.x > fabs(m_xmf3Velocity.x)) fDeceleration.x = m_xmf3Velocity.x;
+		if (fDeceleration.y > fabs(m_xmf3Velocity.y)) fDeceleration.y = m_xmf3Velocity.y;
+		if (fDeceleration.z > fabs(m_xmf3Velocity.z)) fDeceleration.z = m_xmf3Velocity.z;
+		fDeceleration.x *= -m_xmf3Velocity.x; fDeceleration.y *= -m_xmf3Velocity.y; fDeceleration.z *= -m_xmf3Velocity.z;
+		m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, fDeceleration);
 	}
-
-	// Limit y-speed
-	//float fMaxVelocityY = m_fMaxVelocityY * fTimeElapsed;
-	//fLength = sqrtf(m_xmf3Velocity.y * m_xmf3Velocity.y);
-	//if (fLength > m_fMaxVelocityY) m_xmf3Velocity.y *= (m_fMaxVelocityY / fLength);
-
-	// Distance traveled in elapsed time
-	XMFLOAT3 timeElapsedDistance = Vector3::ScalarProduct(m_xmf3Velocity, fTimeElapsed, false);
-	m_xmf3Displacement = timeElapsedDistance;
-
-	//std::cout << "B : " << m_xmf3Position.x << ", " << m_xmf3Position.y << ", " << m_xmf3Position.z << std::endl;
-	//std::cout << "Displacement : " << m_xmf3Displacement.x << ", " << m_xmf3Displacement.y << ", " << m_xmf3Displacement.z << std::endl;
-	CPlayer::Move(timeElapsedDistance, false);
-	//std::cout << "A : " << m_xmf3Position.x << ", " << m_xmf3Position.y << ", " << m_xmf3Position.z << std::endl;
-
-	// Keep out of the ground and align the player and the camera.
-	if (!m_vGroundObjects->empty()) OnGroundUpdateCallback(fTimeElapsed);
-	if (m_pPlayerUpdatedContext) OnPlayerUpdateCallback(fTimeElapsed);
-	DWORD nCameraMode = m_pCamera->GetMode();
-	if (nCameraMode == FIRST_PERSON_CAMERA || nCameraMode == THIRD_PERSON_CAMERA || nCameraMode == SHOULDER_HOLD_CAMERA) m_pCamera->Update(m_xmf3Position, fTimeElapsed);
-	if (m_pCameraUpdatedContext) OnCameraUpdateCallback(fTimeElapsed);
-	if (nCameraMode == THIRD_PERSON_CAMERA) m_pCamera->SetLookAt(m_xmf3Position);
-
-	// Reset ViewMatrix
-	m_pCamera->RegenerateViewMatrix();
-
-	// Decelerated velocity operation
-	XMFLOAT3 fDeceleration = XMFLOAT3(m_fFriction * fTimeElapsed, 0.0f, m_fFriction * fTimeElapsed);
-	if (fDeceleration.x > fabs(m_xmf3Velocity.x)) fDeceleration.x = m_xmf3Velocity.x;
-	if (fDeceleration.y > fabs(m_xmf3Velocity.y)) fDeceleration.y = m_xmf3Velocity.y;
-	if (fDeceleration.z > fabs(m_xmf3Velocity.z)) fDeceleration.z = m_xmf3Velocity.z;
-	fDeceleration.x *= -m_xmf3Velocity.x; fDeceleration.y *= -m_xmf3Velocity.y; fDeceleration.z *= -m_xmf3Velocity.z;
-	m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, fDeceleration);
-
 	int ServerInnResultAnimBundle = -1;
 	float ServerfLength = 0;
 	if (m_pSkinnedAnimationController)
@@ -151,11 +166,22 @@ void Player_Neon::Update(float fTimeElapsed)
 		}
 
 		float fLength = sqrtf(m_xmf3Velocity.x * m_xmf3Velocity.x + m_xmf3Velocity.z * m_xmf3Velocity.z);
-		if (::IsZero(fLength))
+		if (IsDead)
+		{
+			nResultAnimBundle = CAnimationController::DEAD;
+			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
+			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, 1.0f);
+		}
+		else if (::IsZero(fLength))
 		{
 			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->IDLE];
 			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
 			//m_pSkinnedAnimationController->SetTrackPosition(1, 0.0f);
+			if (nResultAnimBundle != m_pSkinnedAnimationController->m_nCurrentTrack)
+			{
+				m_pSkinnedAnimationController->m_LayeredAngle = 0.0f;
+				m_pSkinnedAnimationController->SetOneOfTrackSubEnable(0, false);
+			}
 
 			if (m_nGunType == Pistol)
 			{
@@ -171,18 +197,35 @@ void Player_Neon::Update(float fTimeElapsed)
 			ServerfLength = fLength / m_fMaxVelocityXZ;
 			//printf("Walk\n");
 			//m_pPlayer->SetDash(true);
+			if (nResultAnimBundle != m_pSkinnedAnimationController->m_nCurrentTrack)
+			{
+				m_pSkinnedAnimationController->m_LayeredAngle = 0.0f;
+				m_pSkinnedAnimationController->SetOneOfTrackSubEnable(0, false);
+			}
 		}
 		else if (m_dwDirection == DIR_BACKWARD)	// backward walking
 		{
 			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->BACKWARD_WALK];
 			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
 			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
+
+			if (nResultAnimBundle != m_pSkinnedAnimationController->m_nCurrentTrack)
+			{
+				m_pSkinnedAnimationController->m_LayeredAngle = 0.0f;
+				m_pSkinnedAnimationController->SetOneOfTrackSubEnable(0, false);
+			}
 		}
 		else if (m_dwDirection == DIR_LEFT)	// left walking
 		{
 			nResultAnimBundle = m_pSkinnedAnimationController->m_nAnimationBundle[m_pSkinnedAnimationController->LEFT_WALK];
 			m_pSkinnedAnimationController->SetOneOfTrackEnable(nResultAnimBundle);
 			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
+
+			if (nResultAnimBundle != m_pSkinnedAnimationController->m_nCurrentTrack)
+			{
+				m_pSkinnedAnimationController->m_LayeredAngle = 0.0f;
+				m_pSkinnedAnimationController->SetOneOfTrackSubEnable(0, false);
+			}
 
 			if (m_nGunType == Pistol)
 			{
@@ -293,6 +336,11 @@ void Player_Neon::Update(float fTimeElapsed)
 			m_pSkinnedAnimationController->SetTrackSpeed(nResultAnimBundle, fLength / m_fMaxVelocityXZ);
 			ServerfLength = fLength / m_fMaxVelocityXZ;
 			//printf("run\n");
+			if (nResultAnimBundle != m_pSkinnedAnimationController->m_nCurrentTrack)
+			{
+				m_pSkinnedAnimationController->m_LayeredAngle = 0.0f;
+				m_pSkinnedAnimationController->SetOneOfTrackSubEnable(0, false);
+			}
 		}
 		if (ServerfLength != 0)
 		{
@@ -1740,6 +1788,19 @@ bool Scene_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM 
 		case '4':
 		{
 			((Player_Neon*)m_pPlayer.get())->AddExp(0.6f);
+			break;
+		}
+		case '5':
+		{
+			Player_Neon* pPlayer = ((Player_Neon*)m_pPlayer.get());
+			pPlayer->HP += 50;
+			if (pPlayer->HP > 0.0f) pPlayer->SetDead(false);
+			break;
+		}
+		case '6':
+		{
+			Player_Neon* pPlayer = ((Player_Neon*)m_pPlayer.get());
+			pPlayer->HP -= 50;
 			break;
 		}
 		case 'C':

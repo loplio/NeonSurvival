@@ -57,6 +57,8 @@ void CAnimationSet::SetPosition(float fElapsedPosition)
 		break;
 	}
 	case ANIMATION_TYPE_ONCE:
+		m_fPosition += fElapsedPosition;
+		if (m_fPosition >= m_fLength) m_fPosition = m_fLength;
 		break;
 	case ANIMATION_TYPE_PINGPONG:
 		break;
@@ -243,7 +245,7 @@ void CAnimationController::SetOneOfTrackEnable(int nAnimationTrack)
 			m_pAnimationTracks[m_nCurrentTrack].SetHandOverPosition(false);
 		}
 
-		if(m_nCurrentTrack != 0) // Exception Idle Animation.
+		if(m_nCurrentTrack != 0 && nAnimationTrack == m_nCurrentTrack) // Exception Idle Animation.
 			SetTrackPosition(nAnimationTrack, m_pAnimationTracks[m_nCurrentTrack].m_fPosition);
 		else
 			SetTrackPosition(nAnimationTrack, 0);
@@ -287,6 +289,11 @@ void CAnimationController::SetTrackSpeed(int nAnimationTrack, float fSpeed)
 void CAnimationController::SetTrackWeight(int nAnimationTrack, float fWeight)
 {
 	if (m_pAnimationTracks) m_pAnimationTracks[nAnimationTrack].SetWeight(fWeight);
+}
+
+void CAnimationController::SetTrackAnimationType(int nAnimationTrack, int Type)
+{
+	m_pAnimationSets->m_pAnimationSets[m_pAnimationTracks[nAnimationTrack].m_nAnimationSet]->m_nType = Type;
 }
 
 void CAnimationController::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)

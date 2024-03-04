@@ -184,6 +184,7 @@ public:
 	float GetTrackPosition() const { return m_pAnimationTracks[m_nCurrentTrack].m_fPosition; }
 	void SetTrackSpeed(int nAnimationTrack, float fSpeed);
 	void SetTrackWeight(int nAnimationTrack, float fWeight);
+	void SetTrackAnimationType(int nAnimationTrack, int Type);
 
 	void SetCallbackKeys(int nAnimationSet, int nCallbackKeys);
 	void SetCallbackKey(int nAnimationSet, int nKeyIndex, float fTime, void* pData);
@@ -204,7 +205,8 @@ public:
 		LEFT_FORWARD,
 		RIGHT_FORWARD,
 		LEFT_WALK,
-		RIGHT_WALK
+		RIGHT_WALK,
+		DEAD = 13
 	};
 	int m_nAnimationBundle[11]{ -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
 	void SetAnimationBundle(UINT n);

@@ -17,11 +17,14 @@ GameKeyInput_Neon::~GameKeyInput_Neon()
 
 void GameKeyInput_Neon::DataProcessing()
 {
-	SetKeyBuffer();
+	if (!m_Player.GetDead())
+	{
+		SetKeyBuffer();
 
-	UpdateKeyboardState();
+		UpdateKeyboardState();
 
-	UpdatePlayer();
+		UpdatePlayer();
+	}
 }
 
 void GameKeyInput_Neon::UpdateKeyboardState()
@@ -139,9 +142,12 @@ GameMouseInput_Neon::~GameMouseInput_Neon()
 
 void GameMouseInput_Neon::DataProcessing()
 {
-	UpdateDelta();
+	if (!m_Player.GetDead())
+	{
+		UpdateDelta();
 
-	UpdatePlayer();
+		UpdatePlayer();
+	}
 }
 
 void GameMouseInput_Neon::UpdateDelta()
@@ -209,7 +215,8 @@ void GameCompute_Neon::Animate() const
 	m_Scene.AnimateObjects(m_GameTimer.GetTimeElapsed());
 
 	// Player Animate
-	m_Player.Animate(m_GameTimer.GetTimeElapsed(), NULL);
+	if(!m_Player.GetDead() || m_Player.m_pSkinnedAnimationController->m_nCurrentTrack == CAnimationController::DEAD)
+		m_Player.Animate(m_GameTimer.GetTimeElapsed(), NULL);
 }
 
 void GameCompute_Neon::RayTrace() const
@@ -334,19 +341,22 @@ void GameCompute_Neon::Collide() const
 		m_Scene.m_ppShaders[i]->Collide(m_GameSource, m_BoundingObjects);
 	}
 
-	// Prepare Collide
-	m_Player.UpdateWorldTransformBoundingBox();
-
-	// Collide
-	if (m_Player.Collide(m_GameSource, m_BoundingObjects))
+	if (!m_Player.GetDead())
 	{
-		// Apply Sliding.
-		//std::cout << "Apply before Pos: " << m_Player.GetPosition().x << ", " << m_Player.GetPosition().y << ", " << m_Player.GetPosition().z << std::endl;
-		m_Player.SetOnlyPlayerPosition(*m_Player.GetDisplacement());
-		m_Player.SetViewMatrix();
-		//std::cout << "Apply after Pos: " << m_Player.GetPosition().x << ", " << m_Player.GetPosition().y << ", " << m_Player.GetPosition().z << std::endl;
-		//*m_Player.GetDisplacement() = displacement;/* Vector3::ScalarProduct(displacement, 0.1, false);*/
-		//std::cout << "PlayerPosition: " << m_Player.GetPosition().x << ", " << m_Player.GetPosition().y << ", " << m_Player.GetPosition().z << std::endl;
+		// Prepare Collide
+		m_Player.UpdateWorldTransformBoundingBox();
+
+		// Collide
+		if (m_Player.Collide(m_GameSource, m_BoundingObjects))
+		{
+			// Apply Sliding.
+			//std::cout << "Apply before Pos: " << m_Player.GetPosition().x << ", " << m_Player.GetPosition().y << ", " << m_Player.GetPosition().z << std::endl;
+			m_Player.SetOnlyPlayerPosition(*m_Player.GetDisplacement());
+			m_Player.SetViewMatrix();
+			//std::cout << "Apply after Pos: " << m_Player.GetPosition().x << ", " << m_Player.GetPosition().y << ", " << m_Player.GetPosition().z << std::endl;
+			//*m_Player.GetDisplacement() = displacement;/* Vector3::ScalarProduct(displacement, 0.1, false);*/
+			//std::cout << "PlayerPosition: " << m_Player.GetPosition().x << ", " << m_Player.GetPosition().y << ", " << m_Player.GetPosition().z << std::endl;
+		}
 	}
 }
 
