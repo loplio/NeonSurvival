@@ -1923,6 +1923,13 @@ void Scene_Neon::Update(float fTimeElapsed)
 		}
 	}
 
+	for (auto Nexus : m_vHierarchicalGameObjects)
+	{
+		if (Nexus->GetReafObjectType() == CGameObject::Nexus)
+		{
+			((NexusObject*)Nexus)->SetHP(m_pOtherPlayerData2[0].NEXUSHP);
+		}
+	}
 	CScene::Update(fTimeElapsed);
 }
 void Scene_Neon::AnimateObjects(float fTimeElapsed)

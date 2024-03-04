@@ -647,7 +647,8 @@ void GeneralMonsterObjects::Collide(const CGameSource& GameSource, CBoundingBoxO
 				{
 					if (BoundingObjects[i]->GetTopParent()->GetReafObjectType() == CGameObject::Nexus)
 					{
-						((NexusObject*)BoundingObjects[i]->GetTopParent())->HP -= ((MonsterObject*)monster)->Damage;
+						//³Ø¼­½º °ø°Ý
+						//((NexusObject*)BoundingObjects[i]->GetTopParent())->HP -= ((MonsterObject*)monster)->Damage;
 					}
 				}
 			}

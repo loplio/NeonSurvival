@@ -102,6 +102,7 @@ typedef struct {
 	float		LayeredAngle;
 	float		LayeredMaxAngle;
 	float		LayeredRoate;
+	float		NEXUSHP;
 } PACKET_INGAME2;
 
 typedef struct {
@@ -243,7 +244,6 @@ int main(int argc, char** argv)
 	{
 		for (int j = 0; j < 10; ++j)
 		{
-			int randomPotalNum = rand() % 3;
 			Monsters[i * 10 + j].m_Id = i * 10 + j;
 			Monsters[i * 10 + j].m_State = 5;
 			Monsters[i * 10 + j].m_AnimPosition = 0.0f;
@@ -253,7 +253,7 @@ int main(int argc, char** argv)
 			Monsters[i * 10 + j].m_PrevState = NULL;
 			Monsters[i * 10 + j].m_TargetType = CGameObject::Nexus;
 			Monsters[i * 10 + j].m_Type = j;
-			Monsters[i * 10 + j].m_SpawnPotalNum = randomPotalNum;
+			Monsters[i * 10 + j].m_SpawnPotalNum = j % 3;
 			Monsters[i * 10 + j].SetPosition(pos);
 		}
 	}
@@ -421,6 +421,7 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			GameData.PlayersPostion2[pInGame.id].LayeredAngle = pInGame.LayeredAngle;
 			GameData.PlayersPostion2[pInGame.id].LayeredMaxAngle = pInGame.LayeredMaxAngle;
 			GameData.PlayersPostion2[pInGame.id].LayeredRoate = pInGame.LayeredRoate;
+			GameData.PlayersPostion2[pInGame.id].NEXUSHP = NexusHP;
 
 			//retval = send(ptr->sock, (char*)&ptr->messageType, sizeof(ptr->messageType), 0);
 			//모든 플레이어 PACKET_INGAME정보를 모든 플레이어에게 전송
@@ -1018,9 +1019,12 @@ void MonstersUpdate(double Elapsedtime)
 			else if (Monsters[i].m_TargetType == CGameObject::Nexus)
 			{
 				Monsters[i].m_AttackCoolTime += Elapsedtime;
-				if (Monsters[i].m_AttackCoolTime >= 0.7f) // 공격 주기
+				if (Monsters[i].m_AttackCoolTime >= 0.9f) // 공격 주기
 				{
 					//넥서스 체력 감소
+					Monsters[i].m_AttackCoolTime = 0.0f;
+					NexusHP -= 10.0f;
+					printf("%f\n", NexusHP);
 				}
 			}
 			break;

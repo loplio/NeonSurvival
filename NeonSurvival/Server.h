@@ -68,6 +68,7 @@ typedef struct {
 	float		LayeredAngle;
 	float		LayeredMaxAngle;
 	float		LayeredRoate;
+	float		NEXUSHP;
 } PACKET_INGAME2;
 
 typedef struct {
