@@ -266,6 +266,7 @@ public:
 	bool						m_IsStop;
 	float						m_ResetPathTime;
 
+	float						m_AttackCoolTime;
 	CGameObject*				m_pParent = NULL;
 	CGameObject*				m_pChild = NULL;
 	CGameObject*				m_pSibling = NULL;

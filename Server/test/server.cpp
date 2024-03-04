@@ -163,6 +163,7 @@ int ArrConnect[3] = { -1,-1,-1 };
 HANDLE hMonsterThread;
 DWORD WINAPI MonsterThread(LPVOID arg);
 
+float NexusHP = 1000.0f;
 AStar astar;
 CGameObject Monsters[MAX_MONSTER * 10];
 XMFLOAT3 NexusPos = XMFLOAT3(3072, 255, 3072);
@@ -1011,6 +1012,14 @@ void MonstersUpdate(double Elapsedtime)
 					Monsters[i].m_PrevState = GameData.MonsterData[i].State;
 					Monsters[i].m_State = CGameObject::MOVE;
 					Monsters[i].m_TargetType = CGameObject::Nexus;
+				}
+			}
+			else if (Monsters[i].m_TargetType == CGameObject::Nexus)
+			{
+				Monsters[i].m_AttackCoolTime += Elapsedtime;
+				if (Monsters[i].m_AttackCoolTime >= 0.7f) // 공격 주기
+				{
+					//넥서스 체력 감소
 				}
 			}
 			break;
