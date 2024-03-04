@@ -40,8 +40,8 @@ public:
 	void SetTypeDefine(UINT nType) override { m_nGunType = nType; };
 	
 	void AddExp(float exp);
-	void SetExp(float exp) {EXP = exp; }
-	float GetExp() { return EXP; }
+	void SetExp(float exp) { EXP = exp; }
+	float GetExp() const { return EXP; }
 
 	float GetDmg() { return Damge; }
 

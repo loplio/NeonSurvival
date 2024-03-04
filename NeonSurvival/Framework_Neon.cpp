@@ -220,7 +220,6 @@ void CGameFramework_Neon::FrameAdvance()
 	m_KeyboardInput->DataProcessing();
 	m_MouseInput->DataProcessing();
 
-
 	m_ProcessCompute->RayTrace();
 	m_ProcessCompute->Update();
 	m_ProcessCompute->Animate();
@@ -320,7 +319,7 @@ bool CGameFramework_Neon::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, W
 	case WM_LBUTTONDOWN:
 		break;
 	case WM_RBUTTONDOWN:
-		if (m_pPlayer && m_pCamera->GetMode() != SHOULDER_HOLD_CAMERA)
+		if (m_pPlayer && m_pCamera->GetMode() != SHOULDER_HOLD_CAMERA && !(*m_pPlayer).GetDead())
 		{
 			m_pCamera = m_pPlayer->ChangeCamera((SHOULDER_HOLD_CAMERA), m_GameTimer.GetTimeElapsed());
 			m_pPlayer->SetTypeDefine(1);	// 1. GunType - Pistol, 2. GunType - Rifle.
@@ -331,7 +330,7 @@ bool CGameFramework_Neon::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, W
 	case WM_LBUTTONUP:
 		break;
 	case WM_RBUTTONUP:
-		if (m_pPlayer)
+		if (m_pPlayer && !(*m_pPlayer).GetDead())
 		{
 			m_pCamera = m_pPlayer->ChangeCamera((m_pCamera->GetPrevMode()), m_GameTimer.GetTimeElapsed());
 			m_pPlayer->SetTypeDefine(0);	// Empty.
@@ -361,7 +360,7 @@ bool CGameFramework_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID
 	case WM_KEYUP:
 		switch (wParam) {
 		case 0x56:
-			if (m_pPlayer) 
+			if (m_pPlayer && !(*m_pPlayer).GetDead())
 			{
 				if(m_pCamera->GetMode() == FIRST_PERSON_CAMERA)
 					m_pCamera = m_pPlayer->ChangeCamera(THIRD_PERSON_CAMERA, m_GameTimer.GetTimeElapsed());
