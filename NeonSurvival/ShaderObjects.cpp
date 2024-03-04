@@ -612,9 +612,12 @@ void GeneralMonsterObjects::Update(float fTimeElapsed)
 		XMFLOAT3 up = XMFLOAT3(world._21, world._22, world._23);
 		XMFLOAT3 look = XMFLOAT3(world._31, world._32, world._33);
 		int hp = m_pMonsterData[count].HP;
+
 		((MonsterObject*)monster)->HP = hp;
 		((MonsterObject*)monster)->id = m_pMonsterData[count].id;
 		
+		((MonsterObject*)monster)->State = m_pMonsterData[count].State;
+
 		if (world._11 < EPSILON && world._22 < EPSILON && world._33 < EPSILON)
 			monster->SetPosition(pos);
 		else
@@ -704,15 +707,32 @@ void GeneralMonsterObjects::EventRemove()
 	int n = 0;
 	for (auto monster : m_ppObjects)
 	{
-		if (((MonsterObject*)(monster))->HP <= 0.0f)
+		//if (((MonsterObject*)(monster))->HP <= 0.0f)
+		//{
+		//	if (((MonsterObject*)(monster))->bDieAnim == false)
+		//	{
+		//		((MonsterObject*)(monster))->bDieAnim = true;
+		//		((MonsterObject*)(monster))->State = MonsterObject::DIE;
+		//		((MonsterObject*)monster)->InitAnimPosition(m_pMonsterData[n].State);
+		//	}
+		//	else if(((MonsterObject*)(monster))->bActivate)
+		//	{
+		//		((MonsterObject*)monster)->IsEndAnimPosition();
+		//	}
+		//	else
+		//	{
+		//		monster->SetPosition(0.0f, 0.0f, 0.0f);
+		//	}
+		//}
+		if (((MonsterObject*)(monster))->State == MonsterObject::DIE)
 		{
 			if (((MonsterObject*)(monster))->bDieAnim == false)
 			{
 				((MonsterObject*)(monster))->bDieAnim = true;
-				((MonsterObject*)(monster))->State = MonsterObject::DIE;
-				((MonsterObject*)monster)->InitAnimPosition(m_pMonsterData[n].State);
+				((MonsterObject*)(monster))->PrevState = MonsterObject::DIE;
+				((MonsterObject*)monster)->InitAnimPosition(MonsterObject::DIE);
 			}
-			else if(((MonsterObject*)(monster))->bActivate)
+			else if (((MonsterObject*)(monster))->bActivate)
 			{
 				((MonsterObject*)monster)->IsEndAnimPosition();
 			}
@@ -720,6 +740,11 @@ void GeneralMonsterObjects::EventRemove()
 			{
 				monster->SetPosition(0.0f, 0.0f, 0.0f);
 			}
+		}
+		else
+		{
+			((MonsterObject*)(monster))->bDieAnim = false;
+			((MonsterObject*)(monster))->bActivate = true;
 		}
 		n++;
 	}

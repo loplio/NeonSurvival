@@ -1817,9 +1817,9 @@ void Scene_Neon::Update(float fTimeElapsed)
 		{
 			for (auto monster : (((GeneralMonsterObjects*)m_ppShaders[i])->m_ppObjects))
 			{
-				if (((MonsterObject*)monster)->State == MonsterObject::DIE)
+				if (((MonsterObject*)monster)->PrevState == MonsterObject::DIE)
 				{
-					((MonsterObject*)monster)->State = MonsterObject::IDLE;
+					((MonsterObject*)monster)->PrevState = MonsterObject::IDLE;
 					float Exp = ((MonsterObject*)monster)->MAXHP * 0.001;
 					((Player_Neon*)m_pPlayer.get())->AddExp(Exp);
 				}

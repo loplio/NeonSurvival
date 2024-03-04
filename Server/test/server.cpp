@@ -484,7 +484,7 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		case MESSAGETYPE::HIT:
 		{
-			printf("Pid = %d,Mid = %d,dmg = %d\n",ptr->id, m_Packet.byte, m_Packet.hit);
+			//printf("Pid = %d,Mid = %d,dmg = %d\n",ptr->id, m_Packet.byte, m_Packet.hit);
 			int monsterid = m_Packet.byte;
 			int dmg = m_Packet.hit;
 			Monsters[monsterid].m_HP -= dmg;
@@ -797,13 +797,15 @@ void SpawnMonster()
 
 	for (int i = 0; i < MAX_MONSTER * 10; ++i)
 	{
-		if (CheckSpawnMonsterType(WaveLevel, Monsters[i].m_Type) == false) continue;
-
-		if (Monsters[i].m_State == CGameObject::NONE || Monsters[i].m_PrevState == CGameObject::DIE)
+		if (CheckSpawnMonsterType(WaveLevel, Monsters[i].m_Type))
 		{
-			Monsters[i].m_PrevState = GameData.MonsterData[i].State;
-			Monsters[i].m_State = CGameObject::IDLE;
-			break;
+			if (Monsters[i].m_State == CGameObject::NONE)
+			{
+				Monsters[i].m_PrevState = GameData.MonsterData[i].State;
+				Monsters[i].m_State = CGameObject::IDLE;
+				Monsters[i].SetPosition(PotalPos[Monsters[i].m_SpawnPotalNum]);
+				break;
+			}
 		}
 	}
 }
@@ -811,15 +813,23 @@ void SpawnMonster()
 void WaveSpawnMonster_Wolf_N(int n)
 {
 	int wolfCount = 1;
-	for (int i = 0; i < MAX_MONSTER * 10 || wolfCount == n; ++i)
+	for (int i = 0; i < MAX_MONSTER * 10; ++i)
 	{
-		if (Monsters[i].m_Type == CGameObject::Wolf)
+		if (wolfCount <= 3)
 		{
-			if (Monsters[i].m_State == CGameObject::NONE || Monsters[i].m_PrevState == CGameObject::DIE)
+			if (Monsters[i].m_Type == CGameObject::Wolf)
 			{
-				Monsters[i].m_PrevState = GameData.MonsterData[i].State;
-				Monsters[i].m_State = CGameObject::IDLE;
-				wolfCount++;
+				if (Monsters[i].m_State != CGameObject::NONE)
+				{
+					wolfCount++;
+				}
+
+				if (Monsters[i].m_State == CGameObject::NONE)
+				{
+					Monsters[i].m_PrevState = GameData.MonsterData[i].State;
+					Monsters[i].m_State = CGameObject::IDLE;
+					wolfCount++;
+				}
 			}
 		}
 	}
@@ -859,14 +869,26 @@ void MonstersUpdate(double Elapsedtime)
 {	
 	for (int i = 0; i < MAX_MONSTER * 10; ++i)
 	{
-		// 스폰전이거나 죽은 몬스터는 계산 안함
-		if (Monsters[i].m_State == CGameObject::NONE || Monsters[i].m_PrevState == CGameObject::DIE) continue;
-
 		Monsters[i].m_AnimPosition += Elapsedtime;
 		if (Monsters[i].m_AnimPosition > 1.0f) Monsters[i].m_AnimPosition = 0.0f;
 
 		switch (Monsters[i].m_State)
 		{
+		case CGameObject::DIE:
+		{
+			Monsters[i].m_SpawnCoolTime += Elapsedtime;
+			if (Monsters[i].m_SpawnCoolTime >= 0.7)
+			{
+				Monsters[i].m_SpawnCoolTime = 0.0;
+				Monsters[i].m_State = CGameObject::NONE;
+				Monsters[i].m_HP = Monsters[i].m_MAXHP;
+				Monsters[i].m_AnimPosition = 0.0f;
+				Monsters[i].m_Speed = Monsters[i].MonsterSpeed[i];
+				Monsters[i].m_TargetType = CGameObject::Nexus;
+				Monsters[i].SetPosition(0.0f,5000.0f,0.0f);
+			}
+			break;
+		}
 		case CGameObject::IDLE: //스폰
 		{
 			Monsters[i].m_SpawnToMoveDelay += Elapsedtime;
@@ -884,7 +906,6 @@ void MonstersUpdate(double Elapsedtime)
 		}
 		case CGameObject::MOVE:
 		{
-
 			if (Monsters[i].m_Type == CGameObject::Wolf)
 			{
 				XMFLOAT3 pos = Monsters[i].GetPosition();

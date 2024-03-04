@@ -257,6 +257,7 @@ public:
 	int							m_PrevState;
 	float						m_Speed;
 	double						m_SpawnToMoveDelay;
+	double						m_SpawnCoolTime;
 	XMFLOAT3					m_TargetPos;
 	int							m_TargetId;
 	int							m_TargetType;

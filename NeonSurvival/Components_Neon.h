@@ -196,6 +196,9 @@ public:
 	float MAXHP = 1000.0f;
 
 	CGameObject* m_pHPObject = NULL;
+
+	void SetHP(float hp) { HP = hp; }
+	float GetHP() { return HP; }
 };
 
 class Crosshair : public CGameObject {
