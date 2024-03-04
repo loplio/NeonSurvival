@@ -709,10 +709,10 @@ DWORD WINAPI MonsterThread(LPVOID arg)
 	auto prev_time = std::chrono::high_resolution_clock::now();
 	
 	double SpwanCoolTime = 0.0f;
-	double SpawnTime = 5.0f;
+	double SpawnTime = 3.0f;
 	
 	double WaveCoolTime = 0.0f;
-	double WaveTime = 30.0f;
+	double WaveTime = 25.0f;
 
 	while (true) {
 		auto start_time = std::chrono::high_resolution_clock::now();  // 현재 시간 기록
@@ -759,7 +759,7 @@ bool CheckSpawnMonsterType(int waveLevel, int type)
 			return true;
 		}
 	}
-	else if (WaveLevel == 3) // + TreasureChest
+	else if (WaveLevel == 4) // + TreasureChest
 	{
 		if (type == CGameObject::Giant_Bee || type == CGameObject::Spider || type == CGameObject::Bat
 			|| type == CGameObject::KingCobra || type == CGameObject::Golem || type == CGameObject::TreasureChest)
@@ -767,7 +767,7 @@ bool CheckSpawnMonsterType(int waveLevel, int type)
 			return true;
 		}
 	}
-	else if (WaveLevel == 5) // + Magama
+	else if (WaveLevel == 7) // + Magama
 	{
 		if (type == CGameObject::Giant_Bee || type == CGameObject::Spider || type == CGameObject::Bat
 			|| type == CGameObject::KingCobra || type == CGameObject::Golem || type == CGameObject::TreasureChest
@@ -776,7 +776,7 @@ bool CheckSpawnMonsterType(int waveLevel, int type)
 			return true;
 		}
 	}
-	else if (WaveLevel >= 7) // + Treant
+	else if (WaveLevel >= 10) // + Treant
 	{
 		if (type == CGameObject::Giant_Bee || type == CGameObject::Spider || type == CGameObject::Bat
 			|| type == CGameObject::KingCobra || type == CGameObject::Golem || type == CGameObject::TreasureChest
@@ -882,7 +882,7 @@ void MonstersUpdate(double Elapsedtime)
 		case CGameObject::DIE:
 		{
 			Monsters[i].m_SpawnCoolTime += Elapsedtime;
-			if (Monsters[i].m_SpawnCoolTime >= 0.7)
+			if (Monsters[i].m_SpawnCoolTime >= 0.6)
 			{
 				Monsters[i].m_SpawnCoolTime = 0.0;
 				Monsters[i].m_State = CGameObject::NONE;
@@ -902,6 +902,9 @@ void MonstersUpdate(double Elapsedtime)
 				Monsters[i].m_SpawnToMoveDelay = 0.0f;
 				Monsters[i].m_PrevState = GameData.MonsterData[i].State;
 				Monsters[i].SetPosition(PotalPos[Monsters[i].m_SpawnPotalNum]);
+				float temp = 1.0f + WaveLevel * 0.05f;
+				Monsters[i].m_MAXHP = Monsters[i].m_MAXHP * temp;
+				Monsters[i].m_HP = Monsters[i].m_MAXHP;
 
 				Monsters[i].m_path = astar.GetStartPath(Monsters[i].m_SpawnPotalNum);
 
@@ -1025,7 +1028,7 @@ void MonstersUpdate(double Elapsedtime)
 				{
 					//넥서스 체력 감소
 					Monsters[i].m_AttackCoolTime = 0.0f;
-					NexusHP -= 10.0f;
+					NexusHP -= 7.0f;
 					printf("%f\n", NexusHP);
 				}
 			}

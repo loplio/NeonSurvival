@@ -782,6 +782,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.back()->SetOneBoundingBox(true, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.15f, 0.8f, 0.15f));
 	//m_vHierarchicalGameObjects.back()->SetIsExistBoundingBox(false);
 	m_NexusModelPos = m_vHierarchicalGameObjects.back()->GetPosition();
+	m_pOtherPlayerData2[0].NEXUSHP = 1000;
 	if (pNexusModel) delete pNexusModel;
 
 	CLoadedModelInfo* pBaseModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, (char*)"Model/Mana/Base.bin", NULL);
@@ -1930,9 +1931,10 @@ void Scene_Neon::Update(float fTimeElapsed)
 	{
 		if (Nexus->GetReafObjectType() == CGameObject::Nexus)
 		{
-			((NexusObject*)Nexus)->SetHP(m_pOtherPlayerData2[0].NEXUSHP);
+			((NexusObject*)Nexus)->SetHP(m_pOtherPlayerData2[0].NEXUSHP);		
 		}
 	}
+	
 	CScene::Update(fTimeElapsed);
 }
 void Scene_Neon::AnimateObjects(float fTimeElapsed)

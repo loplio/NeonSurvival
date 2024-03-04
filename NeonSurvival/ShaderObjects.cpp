@@ -611,8 +611,9 @@ void GeneralMonsterObjects::Update(float fTimeElapsed)
 		XMFLOAT3 right = XMFLOAT3(world._11, world._12, world._13);
 		XMFLOAT3 up = XMFLOAT3(world._21, world._22, world._23);
 		XMFLOAT3 look = XMFLOAT3(world._31, world._32, world._33);
-		int hp = m_pMonsterData[count].HP;
+		float hp = m_pMonsterData[count].HP;
 
+		((MonsterObject*)monster)->MAXHP = m_pMonsterData[count].MAXHP;
 		((MonsterObject*)monster)->HP = hp;
 		((MonsterObject*)monster)->id = m_pMonsterData[count].id;
 		
