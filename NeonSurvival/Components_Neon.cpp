@@ -1849,10 +1849,11 @@ bool Scene_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM 
 	switch (nMessageID)
 	{
 	case WM_KEYDOWN:
-		if (IsDefeat) return true;
-
 		switch (wParam)
 		{
+		case VK_SPACE:
+			if (IsDefeat) return true;
+			break;
 		case '1':
 		case '2':
 		case '3':
