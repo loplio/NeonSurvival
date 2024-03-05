@@ -258,6 +258,15 @@ int main(int argc, char** argv)
 			Monsters[i * 10 + j].SetPosition(pos);
 		}
 	}
+	// 0 10 20
+	Monsters[0].m_SpawnPotalNum = 0;
+	Monsters[10].m_SpawnPotalNum = 1;
+	Monsters[20].m_SpawnPotalNum = 2;
+
+	//9 19 29
+	Monsters[9].m_SpawnPotalNum = 0;
+	Monsters[19].m_SpawnPotalNum = 1;
+	Monsters[29].m_SpawnPotalNum = 2;
 
 	// 장애물 위치 설정.
 	Obstacle* obstacle = new Obstacle[5];
@@ -682,10 +691,10 @@ void err_display(int errcode)
 void SpawnMonster();
 void WaveSpawnMonster();
 void MonstersUpdate(double Elapsedtime);
-void WaveSpawnMonster_Wolf_N(int n);
+void WaveSpawnMonster_TYPE_N(int Type,int n);
 int dist(XMFLOAT3& v1, XMFLOAT3& v2);
 int SpawnCount = 0;
-int WaveLevel = 1; //일정 시간에 따른 난이도 상승
+int WaveLevel = 8; //일정 시간에 따른 난이도 상승
 
 //플레이어 위치 값 보기
 void PrintPlayerPosition()
@@ -720,11 +729,12 @@ DWORD WINAPI MonsterThread(LPVOID arg)
 		// 프레임 간의 시간 간격 계산
 		auto elapsed_time = std::chrono::duration_cast<std::chrono::duration<double>>(start_time - prev_time);
 		prev_time = start_time;
-		SpwanCoolTime += elapsed_time.count();
 		std::this_thread::sleep_for(frame_rate - elapsed_time);
 
 		if (GameStart)
 		{
+			SpwanCoolTime += elapsed_time.count();
+			
 			if (SpwanCoolTime >= SpawnTime)
 			{
 				SpwanCoolTime = 0.0f;
@@ -815,25 +825,25 @@ void SpawnMonster()
 	}
 }
 
-void WaveSpawnMonster_Wolf_N(int n)
+void WaveSpawnMonster_TYPE_N(int Type,int n)
 {
-	int wolfCount = 1;
+	int Count = 1;
 	for (int i = 0; i < MAX_MONSTER * 10; ++i)
 	{
-		if (wolfCount <= 3)
+		if (Count <= 3)
 		{
-			if (Monsters[i].m_Type == CGameObject::Wolf)
+			if (Monsters[i].m_Type == Type)
 			{
 				if (Monsters[i].m_State != CGameObject::NONE)
 				{
-					wolfCount++;
+					Count++;
 				}
 
 				if (Monsters[i].m_State == CGameObject::NONE)
 				{
 					Monsters[i].m_PrevState = GameData.MonsterData[i].State;
 					Monsters[i].m_State = CGameObject::IDLE;
-					wolfCount++;
+					Count++;
 				}
 			}
 		}
@@ -843,7 +853,15 @@ void WaveSpawnMonster_Wolf_N(int n)
 void WaveSpawnMonster()
 {
 	//30초마다 몬스터 추가 출현
-	WaveSpawnMonster_Wolf_N(3);
+	if (WaveLevel == 3 || WaveLevel == 7)
+	{
+		WaveSpawnMonster_TYPE_N(CGameObject::Wolf,3);
+	}
+	else if (WaveLevel == 10)
+	{
+		//웨이브 레벨 10때 드래곤 출현
+		WaveSpawnMonster_TYPE_N(CGameObject::Dragon, 3);
+	}
 }
 
 void UpdateMonsterPath(int i, int targetType, int state, float radiusOfAction, XMFLOAT3& target)
@@ -1029,7 +1047,7 @@ void MonstersUpdate(double Elapsedtime)
 					//넥서스 체력 감소
 					Monsters[i].m_AttackCoolTime = 0.0f;
 					NexusHP -= 7.0f;
-					printf("%f\n", NexusHP);
+					//printf("%f\n", NexusHP);
 				}
 			}
 			break;
