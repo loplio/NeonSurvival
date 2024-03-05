@@ -1042,12 +1042,11 @@ void MonstersUpdate(double Elapsedtime)
 					Monsters[i].m_State = CGameObject::MOVE;
 					Monsters[i].m_TargetType = CGameObject::Nexus;
 				}
-				else if (GameData.PlayersPostion2[Monsters[i].m_TargetId].IsDead)
+				if (GameData.PlayersPostion2[Monsters[i].m_TargetId].IsDead)
 				{
 					Monsters[i].m_AnimPosition = 0.0f;
 					Monsters[i].m_PrevState = GameData.MonsterData[i].State;
 					Monsters[i].m_State = CGameObject::MOVE;
-					Monsters[i].m_TargetType = CGameObject::Nexus;
 				}
 			}
 			else if (Monsters[i].m_TargetType == CGameObject::Nexus)
