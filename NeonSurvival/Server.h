@@ -70,6 +70,8 @@ typedef struct {
 	float		LayeredRoate;
 	float		NEXUSHP;
 	bool		IsDead;
+	bool        bEnable;
+	int         nAnimationSet;
 } PACKET_INGAME2;
 
 typedef struct {

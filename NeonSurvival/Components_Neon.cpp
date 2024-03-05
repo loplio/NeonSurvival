@@ -2112,7 +2112,8 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 					if (m_pOtherPlayerData2[OtherId].fLength == 0)
 					{
 						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetOneOfTrackEnable(m_pOtherPlayerData2[OtherId].InnResultAnimBundle);
-						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetOneOfTrackSubEnable(0, false);
+						//m_vOtherPlayer[i]->m_pSkinnedAnimationController->m_LayeredAngle = 0.0f;
+						//m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetOneOfTrackSubEnable(0, false);
 					}
 					else
 					{
@@ -2120,19 +2121,20 @@ void Scene_Neon::AnimateObjects(float fTimeElapsed)
 						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetTrackSpeed(m_pOtherPlayerData2[OtherId].InnResultAnimBundle, m_pOtherPlayerData2[OtherId].fLength);
 					}
 
-					if (m_pOtherPlayerData2[OtherId].InnResultAnimBundle != m_vOtherPlayer[i]->m_pSkinnedAnimationController->m_nCurrentTrack)
+					/*if (m_pOtherPlayerData2[OtherId].InnResultAnimBundle == m_pOtherPlayerData2[OtherId].AnicurrentTrack)
 					{
 						m_vOtherPlayer[i]->m_pSkinnedAnimationController->m_LayeredAngle = 0.0f;
-						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetOneOfTrackSubEnable(0,false);
+						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetOneOfTrackSubEnable(0, false);
 					}
-					
-					if (m_pOtherPlayerData2[OtherId].GunType == 1) // Pistoll
+					else
 					{
 						m_vOtherPlayer[i]->m_pSkinnedAnimationController->m_LayeredAngle = m_pOtherPlayerData2[OtherId].LayeredAngle;
 						m_vOtherPlayer[i]->m_pSkinnedAnimationController->m_LayeredRotate = m_pOtherPlayerData2[OtherId].LayeredRoate;
 						m_vOtherPlayer[i]->m_pSkinnedAnimationController->m_LayeredMaxAngle = m_pOtherPlayerData2[OtherId].LayeredMaxAngle;
 						m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetOneOfTrackSubEnable(m_vOtherPlayer[i]->m_pSkinnedAnimationController->m_nAnimationBundle[m_vOtherPlayer[i]->m_pSkinnedAnimationController->IDLE]);
-					}
+					}*/
+
+					m_vOtherPlayer[i]->m_pSkinnedAnimationController->SetOneOfTrackSubEnable(m_pOtherPlayerData2[OtherId].nAnimationSet, m_pOtherPlayerData2[OtherId].bEnable);
 				}
 				//IsDead update
 				m_vOtherPlayer[i]->SetDead(m_pOtherPlayerData2[OtherId].IsDead);

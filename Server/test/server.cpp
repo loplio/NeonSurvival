@@ -104,6 +104,8 @@ typedef struct {
 	float		LayeredRoate;
 	float		NEXUSHP;
 	bool		IsDead;
+	bool        bEnable;
+	int         nAnimationSet;
 } PACKET_INGAME2;
 
 typedef struct {
@@ -172,7 +174,7 @@ XMFLOAT3 NexusPos = XMFLOAT3(3072, 255, 3072);
 XMFLOAT3 PotalPos[3] = { XMFLOAT3(3575, 255, 3065) ,XMFLOAT3(3056 , 255, 3685) ,XMFLOAT3(2297 , 255, 3043) };
 
 void UpdateConnectNum();
-bool GameStart = false;
+bool GameStart = true;
 void UpdateMonsterData();
 
 int main(int argc, char** argv)
@@ -433,6 +435,8 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			GameData.PlayersPostion2[pInGame.id].LayeredRoate = pInGame.LayeredRoate;
 			GameData.PlayersPostion2[pInGame.id].NEXUSHP = NexusHP;
 			GameData.PlayersPostion2[pInGame.id].IsDead = pInGame.IsDead;
+			GameData.PlayersPostion2[pInGame.id].bEnable = pInGame.bEnable;
+			GameData.PlayersPostion2[pInGame.id].nAnimationSet = pInGame.nAnimationSet;
 
 			//retval = send(ptr->sock, (char*)&ptr->messageType, sizeof(ptr->messageType), 0);
 			//모든 플레이어 PACKET_INGAME정보를 모든 플레이어에게 전송
@@ -946,7 +950,7 @@ void MonstersUpdate(double Elapsedtime)
 					// 모든 플레이어의 위치를 확인하여 가장 가까운 플레이어 탐색
 					for (int j = 0; j < MAX_PLAYER; ++j)
 					{
-						if (GameData.PlayersPostion2[j].id != -1)
+						if (GameData.PlayersPostion2[j].id != -1 && GameData.PlayersPostion2[j].IsDead == false)
 						{
 							XMFLOAT3 pPos = GameData.PlayersPostion2[j].position;
 							float distance = dist(pPos, pos);
@@ -979,7 +983,7 @@ void MonstersUpdate(double Elapsedtime)
 				// 모든 플레이어의 위치를 확인하여 가장 가까운 플레이어 탐색
 				for (int j = 0; j < MAX_PLAYER; ++j)
 				{
-					if (GameData.PlayersPostion2[j].id != -1)
+					if (GameData.PlayersPostion2[j].id != -1 && GameData.PlayersPostion2[j].IsDead == false)
 					{
 						XMFLOAT3 pPos = GameData.PlayersPostion2[j].position;
 						float distance = dist(pPos, pos);
@@ -1032,6 +1036,13 @@ void MonstersUpdate(double Elapsedtime)
 			{
 				XMFLOAT3 pPos = GameData.PlayersPostion2[Monsters[i].m_TargetId].position;
 				if (dist(pPos, pos) > 30.0f)
+				{
+					Monsters[i].m_AnimPosition = 0.0f;
+					Monsters[i].m_PrevState = GameData.MonsterData[i].State;
+					Monsters[i].m_State = CGameObject::MOVE;
+					Monsters[i].m_TargetType = CGameObject::Nexus;
+				}
+				else if (GameData.PlayersPostion2[Monsters[i].m_TargetId].IsDead)
 				{
 					Monsters[i].m_AnimPosition = 0.0f;
 					Monsters[i].m_PrevState = GameData.MonsterData[i].State;
