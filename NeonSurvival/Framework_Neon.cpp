@@ -303,7 +303,7 @@ void CGameFramework_Neon::ReleaseObjects()
 
 void CGameFramework_Neon::UpdateUI(CScene& scene) const
 {
-	wchar_t text[128] = L"공격력 10%";
+	wchar_t text[128] = L"공격력 +20";
 	m_pUILayer->UpdateTextOutputs(0, (_TCHAR*)text, NULL, NULL, NULL);
 
 	wchar_t text2[128] = L"스피드 10%";
@@ -326,7 +326,7 @@ void CGameFramework_Neon::UpdateUI(CScene& scene) const
 	m_pUILayer->UpdateTextOutputs(5, (_TCHAR*)text6, NULL, NULL, NULL);
 
 	wchar_t text7[128];
-	swprintf(text7, 128, L"%d", (int)(Player_Speed * 10.0f));
+	swprintf(text7, 128, L"%.2f", Player_Speed);
 	m_pUILayer->UpdateTextOutputs(6, (_TCHAR*)text7, NULL, NULL, NULL);
 
 	wchar_t text8[128] = L"승 리";
