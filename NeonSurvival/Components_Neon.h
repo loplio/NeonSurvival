@@ -116,7 +116,10 @@ public:
 		Attack,
 		Speed,
 		RecoveryHP,
-		Defeat
+		Defeat,
+		PLAYER_WIN,
+		UI_ATTACK,
+		UI_SPEED
 	};
 };
 

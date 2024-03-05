@@ -508,6 +508,10 @@ void UILayerGame_Neon::Render(UINT nFrame, CGameSource* pGameSource)
 		{
 			m_pd2dDeviceContext->DrawText(m_pTextBlocks[i].m_pstrText, (UINT)wcslen(m_pTextBlocks[i].m_pstrText), m_pTextBlocks[i].m_pdwFormat, m_pTextBlocks[i].m_d2dLayoutRect, m_pTextBlocks[i].m_pd2dTextBrush);
 		}
+		else if ((i == PLAYER_WIN && ((CTextureToScreenShader*)pUIShader[Scene_Neon::PLAYER_WIN])->GetIsRender()))
+		{
+			m_pd2dDeviceContext->DrawText(m_pTextBlocks[i].m_pstrText, (UINT)wcslen(m_pTextBlocks[i].m_pstrText), m_pTextBlocks[i].m_pdwFormat, m_pTextBlocks[i].m_d2dLayoutRect, m_pTextBlocks[i].m_pd2dTextBrush);
+		}
 	}
 	m_pd2dDeviceContext->EndDraw();
 
@@ -516,9 +520,9 @@ void UILayerGame_Neon::Render(UINT nFrame, CGameSource* pGameSource)
 }
 void UILayerGame_Neon::BuildUI()
 {
-	ID2D1SolidColorBrush* pd2dBrush, *pd2dBrush2, *pd2dBrush3, *pd2dBrush4, * pd2dBrush5, * pd2dBrush6, * pd2dBrush7;
-	IDWriteTextFormat* pdwTextFormat, *pdwTextFormat2, *pdwTextFormat3, *pdwTextFormat4, *pdwTextFormat5, * pdwTextFormat6, * pdwTextFormat7;
-	D2D1_RECT_F d2dRect, d2dRect2, d2dRect3, d2dRect4, d2dRect5, d2dRect6, d2dRect7;
+	ID2D1SolidColorBrush* pd2dBrush, *pd2dBrush2, *pd2dBrush3, *pd2dBrush4, * pd2dBrush5, * pd2dBrush6, * pd2dBrush7,* pd2dBrush8;
+	IDWriteTextFormat* pdwTextFormat, *pdwTextFormat2, *pdwTextFormat3, *pdwTextFormat4, *pdwTextFormat5, * pdwTextFormat6, * pdwTextFormat7, * pdwTextFormat8;
+	D2D1_RECT_F d2dRect, d2dRect2, d2dRect3, d2dRect4, d2dRect5, d2dRect6, d2dRect7, d2dRect8;
 	WCHAR pstrOutputText[256];
 
 	wcscpy_s(pstrOutputText, 256, L" \n");
@@ -556,4 +560,10 @@ void UILayerGame_Neon::BuildUI()
 	pdwTextFormat7 = CreateTextFormat((wchar_t*)L"Arial", m_fHeight / 30.0f);
 	d2dRect7 = D2D1::RectF(185,48,225,88);
 	UpdateTextOutputs(PLAYER_SPEED, pstrOutputText, &d2dRect7, pdwTextFormat7, pd2dBrush7);
+
+	pd2dBrush8 = CreateBrush(D2D1::ColorF(D2D1::ColorF::Beige, 1.0f));
+	pdwTextFormat8 = CreateTextFormat((wchar_t*)L"Arial", m_fHeight / 10.0f);
+	d2dRect8 = D2D1::RectF(250,250,550,550);
+	UpdateTextOutputs(PLAYER_WIN, pstrOutputText, &d2dRect8, pdwTextFormat8, pd2dBrush8);
+
 }

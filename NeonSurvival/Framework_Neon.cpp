@@ -290,7 +290,7 @@ void CGameFramework_Neon::BuildObjects()
 void CGameFramework_Neon::BuildToolCreator()
 {
 	m_pSoundManager = new SoundManager();
-	m_pUILayer = new UILayerGame_Neon(m_Iframe, 7);
+	m_pUILayer = new UILayerGame_Neon(m_Iframe, 8);
 
 	m_KeyboardInput = new GameKeyInput_Neon(*this);
 	m_MouseInput = new GameMouseInput_Neon(m_KeyboardInput->GetKeyBuffer(), *this);
@@ -328,6 +328,9 @@ void CGameFramework_Neon::UpdateUI(CScene& scene) const
 	wchar_t text7[128];
 	swprintf(text7, 128, L"%d", (int)(Player_Speed * 10.0f));
 	m_pUILayer->UpdateTextOutputs(6, (_TCHAR*)text7, NULL, NULL, NULL);
+
+	wchar_t text8[128] = L"½Â ¸®";
+	m_pUILayer->UpdateTextOutputs(7, (_TCHAR*)text8, NULL, NULL, NULL);
 }
 
 void CGameFramework_Neon::ProcessSelectedObject(DWORD dwDirection, float cxDelta, float cyDelta)

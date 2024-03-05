@@ -734,6 +734,12 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 	m_UIShaders.back() = pUITexture;
 
+	m_UIShaders.push_back(new CShader);
+	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/Pick_frame_g.dds");
+	pUITexture->CreateRectTexture(pd3dDevice, pd3dCommandList, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT, 0, FRAME_BUFFER_WIDTH * 0.5f, FRAME_BUFFER_HEIGHT * 0.5f, 0);
+	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_UIShaders.back() = pUITexture;
+
 	//HP bar 및 플레이어 스탯 UI
 	m_UIShaders.push_back(new CShader);
 	pUITexture = new CTextureToScreenShader((wchar_t*)L"UI/Attack.dds");
@@ -747,6 +753,8 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	pUITexture->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 	m_UIShaders.back() = pUITexture;
 
+	((CTextureToScreenShader*)m_UIShaders[MAP_FRAME])->SetIsRender(false);
+	((CTextureToScreenShader*)m_UIShaders[Mini_Map])->SetIsRender(false);
 	((CTextureToScreenShader*)m_UIShaders[Pick_Frame])->SetIsRender(false);
 	((CTextureToScreenShader*)m_UIShaders[Pick_Frame_g])->SetIsRender(false);
 	((CTextureToScreenShader*)m_UIShaders[Pick_Frame_r])->SetIsRender(false);
@@ -754,6 +762,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	((CTextureToScreenShader*)m_UIShaders[Speed])->SetIsRender(false);
 	((CTextureToScreenShader*)m_UIShaders[RecoveryHP])->SetIsRender(false);
 	((CTextureToScreenShader*)m_UIShaders[Defeat])->SetIsRender(false);
+	((CTextureToScreenShader*)m_UIShaders[PLAYER_WIN])->SetIsRender(false);
 
 	/// background ///
 	//m_ppComputeShaders.push_back(new CComputeShader);
@@ -1907,6 +1916,13 @@ bool Scene_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM 
 				NexusObject* pNexusObject = (NexusObject*)m_vHierarchicalGameObjects[0];
 				pNexusObject->HP -= 500;
 			}
+			break;
+		}
+		case '9':
+		{
+			bool temp = ((CTextureToScreenShader*)m_UIShaders[PLAYER_WIN])->GetIsRender();
+			temp = !temp;
+			((CTextureToScreenShader*)m_UIShaders[PLAYER_WIN])->SetIsRender(temp);
 			break;
 		}
 		case 'C':
