@@ -312,10 +312,10 @@ void CGameFramework_Neon::UpdateUI(CScene& scene) const
 	wchar_t text3[128] = L"체력회복 30";
 	m_pUILayer->UpdateTextOutputs(2, (_TCHAR*)text3, NULL, NULL, NULL);
 
-	wchar_t text4[128] = L"패 배";
+	wchar_t text4[128] = L"Defeat";
 	m_pUILayer->UpdateTextOutputs(3, (_TCHAR*)text4, NULL, NULL, NULL);	
 	
-	wchar_t text5[128] = L"아무 키나 누르세요...";
+	wchar_t text5[128] = L"Press the SpaceBar key";
 	m_pUILayer->UpdateTextOutputs(4, (_TCHAR*)text5, NULL, NULL, NULL);
 
 	float Player_Attack = ((Player_Neon*)scene.m_pPlayer.get())->GetDmg();
@@ -329,7 +329,7 @@ void CGameFramework_Neon::UpdateUI(CScene& scene) const
 	swprintf(text7, 128, L"%.2f", Player_Speed);
 	m_pUILayer->UpdateTextOutputs(6, (_TCHAR*)text7, NULL, NULL, NULL);
 
-	wchar_t text8[128] = L"승 리";
+	wchar_t text8[128] = L"Victory";
 	m_pUILayer->UpdateTextOutputs(7, (_TCHAR*)text8, NULL, NULL, NULL);
 }
 
