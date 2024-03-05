@@ -172,7 +172,7 @@ XMFLOAT3 NexusPos = XMFLOAT3(3072, 255, 3072);
 XMFLOAT3 PotalPos[3] = { XMFLOAT3(3575, 255, 3065) ,XMFLOAT3(3056 , 255, 3685) ,XMFLOAT3(2297 , 255, 3043) };
 
 void UpdateConnectNum();
-bool GameStart = true;
+bool GameStart = false;
 void UpdateMonsterData();
 
 int main(int argc, char** argv)
@@ -694,7 +694,7 @@ void MonstersUpdate(double Elapsedtime);
 void WaveSpawnMonster_TYPE_N(int Type,int n);
 int dist(XMFLOAT3& v1, XMFLOAT3& v2);
 int SpawnCount = 0;
-int WaveLevel = 8; //일정 시간에 따른 난이도 상승
+int WaveLevel = 1; //일정 시간에 따른 난이도 상승
 
 //플레이어 위치 값 보기
 void PrintPlayerPosition()
