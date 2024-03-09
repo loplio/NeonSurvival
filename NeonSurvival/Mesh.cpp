@@ -1458,13 +1458,13 @@ void CSkinnedMesh::OnPreRender(ID3D12GraphicsCommandList* pd3dCommandList, void*
 //-------------------------------------------------------------------------------
 /*	CParticleMesh : public CMesh											   */
 //-------------------------------------------------------------------------------
-CParticleMesh::CParticleMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, XMFLOAT3 xmf3Position, XMFLOAT3 xmf3Velocity, float fLifetime, XMFLOAT3 xmf3Acceleration, XMFLOAT3 xmf3Color, XMFLOAT2 xmf2Size, UINT nMaxParticles) : CMesh(pd3dDevice, pd3dCommandList)
+CParticleMesh::CParticleMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, XMFLOAT3 xmf3Position, XMFLOAT3 xmf3Velocity, float fLifetime, XMFLOAT3 xmf3Acceleration, XMFLOAT3 xmf3Color, XMFLOAT2 xmf2Size, UINT nMaxParticles, UINT nParticleType) : CMesh(pd3dDevice, pd3dCommandList)
 {
-	CreateVertexBuffer(pd3dDevice, pd3dCommandList, xmf3Position, xmf3Velocity, fLifetime, xmf3Acceleration, xmf3Color, xmf2Size);
+	CreateVertexBuffer(pd3dDevice, pd3dCommandList, xmf3Position, xmf3Velocity, fLifetime, xmf3Acceleration, xmf3Color, xmf2Size, nParticleType);
 	CreateStreamOutputBuffer(pd3dDevice, pd3dCommandList, nMaxParticles);
 }
 
-void CParticleMesh::CreateVertexBuffer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, XMFLOAT3 xmf3Position, XMFLOAT3 xmf3Velocity, float fLifetime, XMFLOAT3 xmf3Acceleration, XMFLOAT3 xmf3Color, XMFLOAT2 xmf2Size)
+void CParticleMesh::CreateVertexBuffer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, XMFLOAT3 xmf3Position, XMFLOAT3 xmf3Velocity, float fLifetime, XMFLOAT3 xmf3Acceleration, XMFLOAT3 xmf3Color, XMFLOAT2 xmf2Size, UINT nParticleType)
 {
 	m_nVertices = 1;
 	m_nStride = sizeof(CParticleVertex);
@@ -1475,7 +1475,7 @@ void CParticleMesh::CreateVertexBuffer(ID3D12Device* pd3dDevice, ID3D12GraphicsC
 	pVertices[0].m_xmf3Position = xmf3Position;
 	pVertices[0].m_xmf3Velocity = xmf3Velocity;
 	pVertices[0].m_fLifetime = fLifetime;
-	pVertices[0].m_nType = PARTICLE_TYPE_EMITTER;
+	pVertices[0].m_nType = nParticleType;
 
 	m_pd3dVertexBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList, pVertices, m_nStride * m_nVertices, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pd3dVertexUploadBuffer);
 
@@ -1621,7 +1621,7 @@ void CParticleMesh::Render(ID3D12GraphicsCommandList* pd3dCommandList, int nPipe
 	{
 		pd3dCommandList->SOSetTargets(0, 1, NULL);
 
-		CParticleMesh::Render(pd3dCommandList, 1); //Render m_pd3dDrawBuffer 
+		CParticleMesh::Render(pd3dCommandList); //Render m_pd3dDrawBuffer 
 	}
 }
 
@@ -1663,6 +1663,15 @@ void CParticleMesh::OnPostRender(int nPipelineState)
 #endif
 		if ((m_nVertices == 0) || (m_nVertices >= MAX_PARTICLES)) m_bStart = true;
 	}
+}
+
+
+CNeonParticleMesh::CNeonParticleMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, XMFLOAT3 xmf3Position, XMFLOAT3 xmf3Velocity, float fLifetime, XMFLOAT3 xmf3Acceleration, XMFLOAT3 xmf3Color, XMFLOAT2 xmf2Size, UINT nMaxParticles)
+	: CParticleMesh(pd3dDevice, pd3dCommandList, xmf3Position, xmf3Velocity, fLifetime, xmf3Acceleration, xmf3Color, xmf2Size, nMaxParticles, PARTICLE_TYPE_STAR)
+{
+}
+CNeonParticleMesh::~CNeonParticleMesh()
+{
 }
 
 //-------------------------------------------------------------------------------

@@ -996,11 +996,16 @@ Buffer<float4> gRandomSphereBuffer : register(t3);
 #define PARTICLE_TYPE_FLARE01		2
 #define PARTICLE_TYPE_FLARE02		3
 #define PARTICLE_TYPE_FLARE03		4
+#define PARTICLE_TYPE_STAR			5
+#define PARTICLE_TYPE_SINGLE_STAR	6
+#define PARTICLE_TYPE_FLARE04		7
 
 #define SHELL_PARTICLE_LIFETIME		3.0f
 #define FLARE01_PARTICLE_LIFETIME	2.5f
 #define FLARE02_PARTICLE_LIFETIME	1.5f
 #define FLARE03_PARTICLE_LIFETIME	2.0f
+#define STAR_PARTICLE_LIFETIME		2.0f
+#define FLARE04_PARTICLE_LIFETIME	0.5f
 
 struct VS_PARTICLE_INPUT
 {
@@ -1173,6 +1178,74 @@ void GenerateEmberParticles(VS_PARTICLE_INPUT input, inout PointStream<VS_PARTIC
 	}
 }
 
+void SingleShootingStar(VS_PARTICLE_INPUT input, inout PointStream<VS_PARTICLE_INPUT> output)
+{
+	if (input.lifetime <= 0.0f)
+	{
+		VS_PARTICLE_INPUT particle = input;
+
+		particle.type = PARTICLE_TYPE_FLARE04;
+		particle.position = input.position + (input.velocity * gfElapsedTime);
+		particle.lifetime = FLARE04_PARTICLE_LIFETIME;
+		for (int i = 0; i < 6; i++)
+		{
+			float4 f4Random = RandomDirectionOnSphere(input.type + i);
+			particle.velocity = input.velocity + (f4Random.xyz * 40.0f);
+			particle.velocity.y = particle.velocity + (f4Random.y - 1.0f) / 2.0f * 30.0f;
+
+			output.Append(particle);
+		}
+	}
+	else
+	{
+		//input.position += input.velocity * gfElapsedTime;
+		input.position.x += input.velocity.x * sin(gfElapsedTime) * gfElapsedTime * 5.0f;
+		input.position.y += input.velocity.y * gfElapsedTime;
+		input.position.z += input.velocity.z * cos(gfElapsedTime) * gfElapsedTime * 5.0f;
+		input.velocity += gf3Gravity * gfElapsedTime;
+		input.lifetime -= gfElapsedTime;
+
+		output.Append(input);
+	}
+}
+
+void ShootingStarParticles(VS_PARTICLE_INPUT input, inout PointStream<VS_PARTICLE_INPUT> output)
+{
+	if (input.lifetime <= 0.0f)
+	{
+		input.lifetime = 10.0f;
+	}
+	else
+	{
+		float CreateProbability = (RandomDirection(0).w + 1.0f) / 2.0f * 10.f;
+		float range = 0.7f;
+
+		if (CreateProbability - range < input.lifetime && input.lifetime < CreateProbability + range)
+		{
+			VS_PARTICLE_INPUT particle = input;
+			particle.type = PARTICLE_TYPE_SINGLE_STAR;
+			for (int i = 0; i < 18; i++)
+			{
+				float4 f4Random = RandomDirection(input.type + i);
+				float4 f4Random2 = RandomDirection(input.type + i + 10);
+				particle.position = input.position;
+				particle.position.x = particle.position.x + f4Random.y * 2000.0f;
+				particle.position.z = particle.position.z + f4Random.w * 2000.0f;
+				particle.velocity = input.velocity;
+				particle.velocity.x = (f4Random2.x - 0.5f) / 1.5f * 100.0f;
+				particle.velocity.y = particle.velocity.y + (f4Random2.y + 1.0f) * 50.0f;
+				particle.velocity.z = (f4Random2.z - 0.5f) / 1.5f * 100.0f;
+				particle.lifetime = STAR_PARTICLE_LIFETIME + (f4Random.w * 1.5f);
+
+				output.Append(particle);
+			}
+		}
+
+		input.lifetime -= gfElapsedTime;
+	}
+	output.Append(input);
+}
+
 [maxvertexcount(128)]
 void GSParticleStreamOutput(point VS_PARTICLE_INPUT input[1], inout PointStream<VS_PARTICLE_INPUT> output)
 {
@@ -1182,6 +1255,9 @@ void GSParticleStreamOutput(point VS_PARTICLE_INPUT input[1], inout PointStream<
 	else if (particle.type == PARTICLE_TYPE_SHELL) ShellParticles(particle, output);
 	else if ((particle.type == PARTICLE_TYPE_FLARE01) || (particle.type == PARTICLE_TYPE_FLARE03)) OutputEmberParticles(particle, output);
 	else if (particle.type == PARTICLE_TYPE_FLARE02) GenerateEmberParticles(particle, output);
+	else if (particle.type == PARTICLE_TYPE_FLARE04) OutputEmberParticles(particle, output);
+	else if (particle.type == PARTICLE_TYPE_STAR) ShootingStarParticles(particle, output);
+	else if (particle.type == PARTICLE_TYPE_SINGLE_STAR) SingleShootingStar(particle, output);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1238,6 +1314,9 @@ VS_PARTICLE_DRAW_OUTPUT VSParticleDraw(VS_PARTICLE_INPUT input)
 	else if (input.type == PARTICLE_TYPE_FLARE01) { output.color = float4(1.0f, 1.0f, 0.1f, 1.0f); output.color *= (input.lifetime / FLARE01_PARTICLE_LIFETIME); }
 	else if (input.type == PARTICLE_TYPE_FLARE02) output.color = float4(1.0f, 0.1f, 1.0f, 1.0f);
 	else if (input.type == PARTICLE_TYPE_FLARE03) { output.color = float4(1.0f, 0.1f, 1.0f, 1.0f); output.color *= (input.lifetime / FLARE03_PARTICLE_LIFETIME); }
+	else if (input.type == PARTICLE_TYPE_FLARE04) { output.color = float4(1.0f, 1.0f, 0.0f, 1.0f); output.color *= (input.lifetime / FLARE04_PARTICLE_LIFETIME); output.size = 0.8f; }
+	else if (input.type == PARTICLE_TYPE_STAR) { output.color = float4(1.0f, 1.0f, 0.0f, 1.0f); output.color *= (input.lifetime / STAR_PARTICLE_LIFETIME); output.size = 5.0f; }
+	else if (input.type == PARTICLE_TYPE_SINGLE_STAR) { output.color = float4(1.0f, 1.0f, 0.0f, 1.0f); output.color *= (input.lifetime / STAR_PARTICLE_LIFETIME); output.size = 2.4f; }
 
 	return(output);
 }
@@ -1263,12 +1342,33 @@ void GSParticleDraw(point VS_PARTICLE_DRAW_OUTPUT input[1], inout TriangleStream
 	outputStream.RestartStrip();
 }
 
-float4 PSParticleDraw(GS_PARTICLE_DRAW_OUTPUT input) : SV_TARGET
+struct PS_PARTICLE_OUTPUT
 {
+	float4 f4Scene : SV_TARGET0; //Swap Chain Back Buffer
+
+	float4 f4Color : SV_TARGET1;
+	float4 f4Normal : SV_TARGET2;
+	float4 f4Texture : SV_TARGET3;
+	float4 f4Emissive : SV_TARGET4;
+	//float4 f4Illumination : SV_TARGET5;
+	//float4 f4ObjectTypeID : SV_TARGET6;
+	//float4 f4RoughMetal : SV_TARGET6;
+};
+
+PS_PARTICLE_OUTPUT PSParticleDraw(GS_PARTICLE_DRAW_OUTPUT input) : SV_TARGET
+{
+	PS_PARTICLE_OUTPUT output;
+
 	float4 cColor = gtxtParticleTexture.Sample(gssWrap, input.uv);
 	cColor *= input.color;
 
-	return GlowEffect(input.uv, cColor);
+	output.f4Scene = float4(0.0f, 0.0f, 0.0f, 0.0f);
+	output.f4Normal = float4(0.0f, 0.0f, 0.0f, 0.0f);
+	output.f4Texture = float4(0.0f, 0.0f, 0.0f, 0.0f);
+	output.f4Emissive = GlowEffect(input.uv, cColor);
+
+	return output;
+	//return GlowEffect(input.uv, cColor);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -167,7 +167,7 @@ void Player_Neon::Update(float fTimeElapsed)
 		m_xmf3Displacement = timeElapsedDistance;
 
 		//std::cout << "B : " << m_xmf3Position.x << ", " << m_xmf3Position.y << ", " << m_xmf3Position.z << std::endl;
-		//std::cout << "Displacement : " << m_xmf3Displacement.x << ", " << m_xmf3Displacement.y << ", " << m_xmf3Displacement.z << std::endl;
+		//std::cout << "Update's Displacement : " << m_xmf3Displacement.x << ", " << m_xmf3Displacement.y << ", " << m_xmf3Displacement.z << std::endl;
 		CPlayer::Move(timeElapsedDistance, false);
 		//std::cout << "A : " << m_xmf3Position.x << ", " << m_xmf3Position.y << ", " << m_xmf3Position.z << std::endl;
 
@@ -810,11 +810,11 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	pBrightAreaComputeShader->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
 	m_ppComputeShaders.back() = pBrightAreaComputeShader;
 
-	//m_ppComputeShaders.push_back(new CComputeShader);
-	//CGaussian2DBlurComputeShader* pParticleBlurComputeShader1 = new CGaussian2DBlurComputeShader((wchar_t*)L"Image/Particle/RoundSoftParticle.dds");
-	//pParticleBlurComputeShader1->SetSourceResource(pBrightAreaComputeShader->m_pTexture->GetTexture(1));
-	//pParticleBlurComputeShader1->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
-	//m_ppComputeShaders.back() = pParticleBlurComputeShader1;
+	m_ppComputeShaders.push_back(new CComputeShader);
+	CGaussian2DBlurComputeShader* pParticleBlurComputeShader1 = new CGaussian2DBlurComputeShader((wchar_t*)L"Image/Particle/RoundSoftParticle.dds");
+	pParticleBlurComputeShader1->SetSourceResource(pBrightAreaComputeShader->m_pTexture->GetTexture(1));
+	pParticleBlurComputeShader1->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
+	m_ppComputeShaders.back() = pParticleBlurComputeShader1;
 
 	/// Bullet1 ///
 	m_ppComputeShaders.push_back(new CComputeShader);
@@ -845,8 +845,20 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	m_vHierarchicalGameObjects.reserve(5);
 	m_vGroundObjects.reserve(5);
 
+	//m_vParticleObjects.push_back(new CParticleObject_Neon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pParticleBlurComputeShader1->m_pTexture, XMFLOAT3(3100.0f, 290.0f, 3100.0f), XMFLOAT3(0.0f, PIXEL_KPH(60), 0.0f), 0.0f, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 0.0f, 0.0f), XMFLOAT2(8.0f, 8.0f), MAX_PARTICLES));
 	// ParticleObjects.
-	//m_vParticleObjects.push_back(new CParticleObject_Neon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pParticleBlurComputeShader1->m_pTexture, XMFLOAT3(3100.0f, 290.0f, 3100.0f), XMFLOAT3(0.0f, PIXEL_KPH(60), 0.0f), 0.0f, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 0.0f, 0.0f), XMFLOAT2(8.0f, 8.0f), 30));
+	XMFLOAT3 particlePosition = XMFLOAT3(m_pTerrain->GetWidth() * 0.5f, 290.0f, m_pTerrain->GetLength() * 0.5f);
+	XMFLOAT3 particleDirection = XMFLOAT3(0.0f, PIXEL_KPH(100), 0.0f);
+	float particleLife = 2.0f; UINT particleNum = MAX_PARTICLES;
+	//m_vParticleObjects.push_back(new CParticleObject_Neon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pParticleBlurComputeShader1->m_pTexture, 
+	//	particlePosition, particleDirection, particleLife, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 0.0f, 0.0f), XMFLOAT2(1.0f, 1.0f), particleNum));
+
+	// --- NeonParticle ---
+	particlePosition = XMFLOAT3(m_pTerrain->GetWidth() * 0.5f, 1000.0f, m_pTerrain->GetLength() * 0.5f);
+	particleDirection = XMFLOAT3(0.0f, PIXEL_KPH(-110), 0.0f);
+	particleLife = 10.0f; particleNum = MAX_PARTICLES;
+	m_vParticleObjects.push_back(new CNeonParticle_Neon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pParticleBlurComputeShader1->m_pTexture,
+		particlePosition, particleDirection, particleLife, particleNum));
 
 	// GameObjects.
 	m_vGameObjects.push_back(new Crosshair(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, 0.0035f, 0.02f, 0.03f, 0.003f, true));
@@ -2331,7 +2343,7 @@ void CMonsterDragon::ReleaseUploadBuffers()
 CParticleObject_Neon::CParticleObject_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CTexture* pTexture, XMFLOAT3 xmf3Position, XMFLOAT3 xmf3Velocity, float fLifetime, XMFLOAT3 xmf3Acceleration, XMFLOAT3 xmf3Color, XMFLOAT2 xmf2Size, UINT nMaxParticles)
 	: CParticleObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, xmf3Position, xmf3Velocity, fLifetime, xmf3Acceleration, xmf3Color, xmf2Size, nMaxParticles)
 {
-	CParticleMesh* pMesh = new CParticleMesh(pd3dDevice, pd3dCommandList, xmf3Position, xmf3Velocity, fLifetime, xmf3Acceleration, xmf3Color, xmf2Size, nMaxParticles);
+	CParticleMesh* pMesh = new CParticleMesh(pd3dDevice, pd3dCommandList, xmf3Position, xmf3Velocity, fLifetime, xmf3Acceleration, xmf3Color, xmf2Size, nMaxParticles, 1);
 	SetMesh(pMesh);
 
 	CMaterial* pMaterial = new CMaterial();
@@ -2383,6 +2395,55 @@ CParticleObject_Neon::CParticleObject_Neon(ID3D12Device* pd3dDevice, ID3D12Graph
 CParticleObject_Neon::~CParticleObject_Neon()
 {
 }
+
+CNeonParticle_Neon::CNeonParticle_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CTexture* pTexture, XMFLOAT3 xmf3Position, XMFLOAT3 xmf3Velocity, float fLifetime, UINT nMaxParticles, XMFLOAT3 xmf3Acceleration, XMFLOAT3 xmf3Color, XMFLOAT2 xmf2Size)
+	: CParticleObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, xmf3Position, xmf3Velocity, fLifetime, xmf3Acceleration, xmf3Color, xmf2Size, nMaxParticles)
+{
+	CNeonParticleMesh* pMesh = new CNeonParticleMesh(pd3dDevice, pd3dCommandList, xmf3Position, xmf3Velocity, fLifetime, xmf3Acceleration, xmf3Color, xmf2Size, nMaxParticles);
+	SetMesh(pMesh);
+
+	CMaterial* pMaterial = new CMaterial();
+	if (pTexture)
+	{
+		pMaterial->SetTexture(pTexture);
+		pTexture->AddRef();
+
+		CScene::CreateSRVUAVs(pd3dDevice, pMaterial->m_ppTextures[0], ROOT_PARAMETER_PARTICLE_TEXTURE, true, true, true, 0, 1);
+		CScene::CreateSRVUAVs(pd3dDevice, pMaterial->m_ppTextures[0], ROOT_PARAMETER_OUTPUT, true, true, true, 2, 1, 1);
+	}
+	else
+	{
+		CTexture* pParticleTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0, 1);
+		pParticleTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, (wchar_t*)L"Image/Particle/RoundSoftParticle.dds", 0);
+
+		pMaterial->SetTexture(pParticleTexture);
+
+		CScene::CreateSRVUAVs(pd3dDevice, pParticleTexture, ROOT_PARAMETER_PARTICLE_TEXTURE, true);
+	}
+	srand((unsigned)time(NULL));
+
+	XMFLOAT4* pxmf4RandomValues = new XMFLOAT4[1024];
+	for (int i = 0; i < 1024; i++) { pxmf4RandomValues[i].x = float((rand() % 10000) - 5000) / 5000.0f; pxmf4RandomValues[i].y = float((rand() % 10000) - 5000) / 5000.0f; pxmf4RandomValues[i].z = float((rand() % 10000) - 5000) / 5000.0f; pxmf4RandomValues[i].w = float((rand() % 10000) - 5000) / 5000.0f; }
+
+	m_pRandowmValueTexture = new CTexture(1, RESOURCE_BUFFER, 0, 1);
+	m_pRandowmValueTexture->CreateBuffer(pd3dDevice, pd3dCommandList, pxmf4RandomValues, 1024, sizeof(XMFLOAT4), DXGI_FORMAT_R32G32B32A32_FLOAT, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_GENERIC_READ, 0);
+
+	m_pRandowmValueOnSphereTexture = new CTexture(1, RESOURCE_TEXTURE1D, 0, 1);
+	m_pRandowmValueOnSphereTexture->CreateBuffer(pd3dDevice, pd3dCommandList, pxmf4RandomValues, 256, sizeof(XMFLOAT4), DXGI_FORMAT_R32G32B32A32_FLOAT, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_GENERIC_READ, 0);
+
+	CParticleShader* pShader = new CParticleShader();
+	pShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
+
+	CScene::CreateSRVUAVs(pd3dDevice, m_pRandowmValueTexture, ROOT_PARAMETER_RANDOM_TEXTURE, true);
+	CScene::CreateSRVUAVs(pd3dDevice, m_pRandowmValueOnSphereTexture, ROOT_PARAMETER_RANDOM_ON_SPHERE_TEXTURE, true);
+
+	pMaterial->SetShader(pShader);
+	SetMaterial(0, pMaterial);
+}
+CNeonParticle_Neon::~CNeonParticle_Neon()
+{
+}
+
 //-------------------------------------------------------------------------------
 CPistolBulletObject::CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection, int type, bool ismine, float fDistanceAtObject, float dmg)
 {

@@ -384,7 +384,7 @@ void CScene::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
 
 	m_pcbMappedFrameworkInfo->m_fCurrentTime = m_fCurrentTime;
 	m_pcbMappedFrameworkInfo->m_fElapsedTime = m_fElapsedTime;
-	m_pcbMappedFrameworkInfo->m_fSecondsPerFirework = 0.4f;
+	m_pcbMappedFrameworkInfo->m_fSecondsPerFirework = 0.4f + 3.0f;
 	m_pcbMappedFrameworkInfo->m_nFlareParticlesToEmit = 100;
 	m_pcbMappedFrameworkInfo->m_xmf3Gravity = XMFLOAT3(0.0f, PIXEL_KPH(-9.8), 0.0f);
 	m_pcbMappedFrameworkInfo->m_nMaxFlareType2Particles = 15 * 1.5f;
@@ -718,10 +718,6 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 	{
 		m_vGroundObjects[i]->Render(pd3dCommandList, pCamera);
 	}
-	for (int i = 0; i < m_vGameObjects.size(); i++)
-	{
-		m_vGameObjects[i]->Render(pd3dCommandList, pCamera);
-	}
 	for (int i = 0; i < m_ppShaders.size(); ++i)
 	{
 		m_ppShaders[i]->Render(pd3dCommandList, pCamera);
@@ -729,6 +725,10 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 	for (int i = 0; i < m_vParticleObjects.size(); i++)
 	{
 		m_vParticleObjects[i]->Render(pd3dCommandList, pCamera);
+	}
+	for (int i = 0; i < m_vGameObjects.size(); i++)
+	{
+		m_vGameObjects[i]->Render(pd3dCommandList, pCamera);
 	}
 
 	for (int i = 0; i < m_vOtherPlayer.size(); ++i)

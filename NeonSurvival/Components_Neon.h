@@ -170,6 +170,13 @@ public:
 	virtual ~CParticleObject_Neon();
 };
 
+class CNeonParticle_Neon : public CParticleObject {
+public:
+	CNeonParticle_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CTexture* pTexture, XMFLOAT3 xmf3Position, XMFLOAT3 xmf3Velocity, float fLifetime, UINT nMaxParticles, XMFLOAT3 xmf3Acceleration = XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3 xmf3Color = XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT2 xmf2Size = XMFLOAT2(0.0f, 0.0f));
+	virtual ~CNeonParticle_Neon();
+};
+
+
 class CPistolBulletObject : public DynamicObject {
 public:
 	CPistolBulletObject(CMaterial* pMaterial, XMFLOAT3& startLocation, XMFLOAT3& rayDirection,int type,bool ismine, float fDistanceAtObject, float dmg);

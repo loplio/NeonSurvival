@@ -27,11 +27,11 @@ void CLobbyFramework_Neon::OnCreate(HINSTANCE hInstance, HWND hMainWnd)
 }
 void CLobbyFramework_Neon::EnterFrameAdvance()
 {
-	//m_pSoundManager->PlayBg("play ", "Sound/bg.wav");
+	m_pSoundManager->PlayBg("play ", "Sound/bg.wav");
 }
 void CLobbyFramework_Neon::ExitFrameAdvance()
 {
-	//m_pSoundManager->PlayBg("stop ", "Sound/bg.wav");
+	m_pSoundManager->PlayBg("stop ", "Sound/bg.wav");
 }
 void CLobbyFramework_Neon::FrameAdvance()
 {

@@ -409,6 +409,7 @@ public:
 #define PARTICLE_TYPE_FLARE01		2
 #define PARTICLE_TYPE_FLARE02		3
 #define PARTICLE_TYPE_FLARE03		4
+#define PARTICLE_TYPE_STAR			5
 
 #define MAX_PARTICLES				300000
 
@@ -417,7 +418,7 @@ public:
 class CParticleMesh : public CMesh
 {
 public:
-	CParticleMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, XMFLOAT3 xmf3Position, XMFLOAT3 xmf3Velocity, float fLifetime, XMFLOAT3 xmf3Acceleration, XMFLOAT3 xmf3Color, XMFLOAT2 xmf2Size, UINT nMaxParticles);
+	CParticleMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, XMFLOAT3 xmf3Position, XMFLOAT3 xmf3Velocity, float fLifetime, XMFLOAT3 xmf3Acceleration, XMFLOAT3 xmf3Color, XMFLOAT2 xmf2Size, UINT nMaxParticles, UINT nParticleType = PARTICLE_TYPE_EMITTER);
 	virtual ~CParticleMesh();
 	virtual void ReleaseUploadBuffers();
 
@@ -450,7 +451,7 @@ public:
 	D3D12_VERTEX_BUFFER_VIEW			m_d3dVertexBufferView;
 	D3D12_INDEX_BUFFER_VIEW				m_d3dIndexBufferView;
 
-	virtual void CreateVertexBuffer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, XMFLOAT3 xmf3Position, XMFLOAT3 xmf3Velocity, float fLifetime, XMFLOAT3 xmf3Acceleration, XMFLOAT3 xmf3Color, XMFLOAT2 xmf2Size);
+	virtual void CreateVertexBuffer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, XMFLOAT3 xmf3Position, XMFLOAT3 xmf3Velocity, float fLifetime, XMFLOAT3 xmf3Acceleration, XMFLOAT3 xmf3Color, XMFLOAT2 xmf2Size, UINT nParticleType);
 	virtual void CreateStreamOutputBuffer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, UINT nMaxParticles);
 
 	void PreRender(ID3D12GraphicsCommandList* pd3dCommandList, int nPipelineState) override;
@@ -459,6 +460,13 @@ public:
 	void PostRender(ID3D12GraphicsCommandList* pd3dCommandList, int nPipelineState) override;
 
 	void OnPostRender(int nPipelineState) override;
+};
+
+class CNeonParticleMesh : public CParticleMesh
+{
+public:
+	CNeonParticleMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, XMFLOAT3 xmf3Position, XMFLOAT3 xmf3Velocity, float fLifetime, XMFLOAT3 xmf3Acceleration, XMFLOAT3 xmf3Color, XMFLOAT2 xmf2Size, UINT nMaxParticles);
+	virtual ~CNeonParticleMesh();
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
