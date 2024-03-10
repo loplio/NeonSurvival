@@ -544,6 +544,8 @@ public:
 
 	virtual void Dispatch(ID3D12GraphicsCommandList* pd3dCommandList, int nPipelineState = 0);
 
+	void SetBlurLevel(UINT* pLevel) { m_nBlurLevel = pLevel; }
+
 	void SetSourceResource(ID3D12Resource* pSourceResource) { m_pSourceResource = pSourceResource; }
 
 	D3D12_CPU_DESCRIPTOR_HANDLE m_d3dSrvCPUDescriptorStartHandle;
@@ -558,6 +560,8 @@ public:
 	CTexture* m_pTexture = NULL;
 	wchar_t* pszFileName = NULL;
 	ID3D12Resource* m_pSourceResource = NULL;
+
+	UINT* m_nBlurLevel = NULL;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

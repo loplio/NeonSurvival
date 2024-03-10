@@ -2035,7 +2035,20 @@ void CGaussian2DBlurComputeShader::Dispatch(ID3D12GraphicsCommandList* pd3dComma
 	if (m_ppd3dPipelineStates[nPipelineState]) pd3dCommandList->SetPipelineState(m_ppd3dPipelineStates[nPipelineState]);
 	UpdateShaderVariables(pd3dCommandList);
 
-	for (int i = 0; i < 40; i++)
+	if (m_nBlurLevel)
+	{
+		for (int i = 0; i < *m_nBlurLevel; i++)
+		{
+			pd3dCommandList->Dispatch(m_cxThreadGroups, m_cyThreadGroups, m_czThreadGroups);
+
+			pd3dSource = m_pTexture->GetTexture(2);
+			::SynchronizeResourceTransition(pd3dCommandList, pd3dSource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
+			pd3dDestination = m_pTexture->GetTexture(1);
+			pd3dCommandList->CopyResource(pd3dDestination, pd3dSource);
+			::SynchronizeResourceTransition(pd3dCommandList, pd3dSource, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+		}
+	}
+	else
 	{
 		pd3dCommandList->Dispatch(m_cxThreadGroups, m_cyThreadGroups, m_czThreadGroups);
 

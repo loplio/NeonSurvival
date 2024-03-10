@@ -104,6 +104,8 @@ public:
 	bool IsDefeat = false;
 	bool GameClearShow = false;
 
+	UINT* m_nBlurLevel;
+
 	enum UI_LIST {
 		EXP_LINE,
 		HP_R,

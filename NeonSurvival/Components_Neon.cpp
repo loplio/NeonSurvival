@@ -572,9 +572,12 @@ Scene_Neon::Scene_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 		(wchar_t*)L"GameTexture/neon_tile4_1.dds", 
 		512, 512, xmf3Scale, xmf4Color);
 	m_pTerrain->SetIsExistBoundingBox(false);
+
+	m_nBlurLevel = new UINT(10);
 }
 Scene_Neon::~Scene_Neon()
 {
+	if (m_nBlurLevel) delete m_nBlurLevel;
 }
 
 void Scene_Neon::InitScene(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
@@ -789,6 +792,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 
 	m_ppRtvComputeShaders.push_back(new CComputeShader);
 	CGaussian2DBlurComputeShader* pBlurComputeShader = new CGaussian2DBlurComputeShader((wchar_t*)L"Image/Light3.dds");
+	pBlurComputeShader->SetBlurLevel(m_nBlurLevel);
 	pBlurComputeShader->SetSourceResource(pBrightAreaComputeShader->m_pTexture->GetTexture(1));
 	pBlurComputeShader->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
 	m_ppRtvComputeShaders.back() = pBlurComputeShader;
@@ -812,6 +816,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 
 	m_ppComputeShaders.push_back(new CComputeShader);
 	CGaussian2DBlurComputeShader* pParticleBlurComputeShader1 = new CGaussian2DBlurComputeShader((wchar_t*)L"Image/Particle/RoundSoftParticle.dds");
+	pParticleBlurComputeShader1->SetBlurLevel(m_nBlurLevel);
 	pParticleBlurComputeShader1->SetSourceResource(pBrightAreaComputeShader->m_pTexture->GetTexture(1));
 	pParticleBlurComputeShader1->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
 	m_ppComputeShaders.back() = pParticleBlurComputeShader1;
@@ -819,6 +824,7 @@ void Scene_Neon::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLis
 	/// Bullet1 ///
 	m_ppComputeShaders.push_back(new CComputeShader);
 	CGaussian2DBlurComputeShader* pBulletBlurComputeShader1 = new CGaussian2DBlurComputeShader((wchar_t*)L"Image/Particle/RoundSoftParticle.dds");
+	pBulletBlurComputeShader1->SetBlurLevel(m_nBlurLevel);
 	pBulletBlurComputeShader1->SetSourceResource(pBrightAreaComputeShader->m_pTexture->GetTexture(1));
 	pBulletBlurComputeShader1->CreateComputePipelineState(pd3dDevice, pd3dCommandList, m_pd3dComputeRootSignature);
 	m_ppComputeShaders.back() = pBulletBlurComputeShader1;
@@ -1865,6 +1871,12 @@ bool Scene_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM 
 		{
 		case VK_SPACE:
 			if (IsDefeat) return true;
+			break;
+		case VK_ADD:
+			if (m_nBlurLevel) (*m_nBlurLevel) += 2;
+			break;
+		case VK_SUBTRACT:
+			if (m_nBlurLevel && *m_nBlurLevel > 2) (*m_nBlurLevel) -= 2;
 			break;
 		case '1':
 		case '2':

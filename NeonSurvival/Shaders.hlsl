@@ -1460,6 +1460,15 @@ static float gfGaussianBlurMask2D[5][5] = {
 	{ 4.0f / 273.0f, 16.0f / 273.0f, 26.0f / 273.0f, 16.0f / 273.0f, 4.0f / 273.0f },
 	{ 1.0f / 273.0f, 4.0f / 273.0f, 7.0f / 273.0f, 4.0f / 273.0f, 1.0f / 273.0f }
 };
+//static float gfGaussianBlurMask2D[7][7] = {
+//	{ 1.0f / 1003.0f, 4.0f / 1003.0f, 7.0f / 1003.0f, 10.0f / 1003.0f, 7.0f / 1003.0f, 4.0f / 1003.0f, 1.0f / 1003.0f },
+//	{ 4.0f / 1003.0f, 16.0f / 1003.0f, 26.0f / 1003.0f, 33.0f / 1003.0f, 26.0f / 1003.0f, 16.0f / 1003.0f, 4.0f / 1003.0f },
+//	{ 7.0f / 1003.0f, 26.0f / 1003.0f, 41.0f / 1003.0f, 50.0f / 1003.0f, 41.0f / 1003.0f, 26.0f / 1003.0f, 7.0f / 1003.0f },
+//	{ 10.0f / 1003.0f, 33.0f / 1003.0f, 50.0f / 1003.0f, 61.0f / 1003.0f, 50.0f / 1003.0f, 33.0f / 1003.0f, 10.0f / 1003.0f },
+//	{ 7.0f / 1003.0f, 26.0f / 1003.0f, 41.0f / 1003.0f, 50.0f / 1003.0f, 41.0f / 1003.0f, 26.0f / 1003.0f, 7.0f / 1003.0f },
+//	{ 4.0f / 1003.0f, 16.0f / 1003.0f, 26.0f / 1003.0f, 33.0f / 1003.0f, 26.0f / 1003.0f, 16.0f / 1003.0f, 4.0f / 1003.0f },
+//	{ 1.0f / 1003.0f, 4.0f / 1003.0f, 7.0f / 1003.0f, 10.0f / 1003.0f, 7.0f / 1003.0f, 4.0f / 1003.0f, 1.0f / 1003.0f }
+//};
 
 [numthreads(32, 32, 1)]
 void CSGaussian2DBlur(int3 n3GroupThreadID : SV_GroupThreadID, int3 n3DispatchThreadID : SV_DispatchThreadID)
@@ -1478,6 +1487,13 @@ void CSGaussian2DBlur(int3 n3GroupThreadID : SV_GroupThreadID, int3 n3DispatchTh
 				f4Color += gfGaussianBlurMask2D[i + 2][j + 2] * gtxtInputA[n3DispatchThreadID.xy + int2(i, j)];
 			}
 		}
+		//for (int i = -3; i <= 3; i++)
+		//{
+		//	for (int j = -3; j <= 3; j++)
+		//	{
+		//		f4Color += gfGaussianBlurMask2D[i + 3][j + 3] * gtxtInputA[n3DispatchThreadID.xy + int2(i, j)];
+		//	}
+		//}
 
 		gtxtRWOutput[n3DispatchThreadID.xy] = f4Color;
 	}
