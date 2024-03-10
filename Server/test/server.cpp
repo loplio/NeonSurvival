@@ -519,7 +519,7 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				if (Monsters[monsterid].m_Type == CGameObject::Dragon)
 				{
 					DragonKill++;
-					if (DragonKill >= 3) // 드래곤 3마리 다 잡으면 게임 종료
+					if (DragonKill >= 3 && GameClear == false) // 드래곤 3마리 다 잡으면 게임 종료
 					{
 						GameClear = true;
 					}
