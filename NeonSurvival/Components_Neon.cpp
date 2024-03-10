@@ -1951,6 +1951,12 @@ bool Scene_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM 
 
 			break;
 		}
+		case 'R':
+		{
+			if (m_bPostProcessing) m_bPostProcessing = false;
+			else m_bPostProcessing = true;
+			break;
+		}
 		case 'C':
 			if (m_pBoundingObjects && !m_pBoundingObjects->m_bCollisionBoxWireFrame) m_pBoundingObjects->m_bCollisionBoxWireFrame = true;
 			else if (m_pBoundingObjects && m_pBoundingObjects->m_bCollisionBoxWireFrame) m_pBoundingObjects->m_bCollisionBoxWireFrame = false;
@@ -1960,8 +1966,6 @@ bool Scene_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM 
 		case 'T': //84
 		case 'E': //69
 		case 'L': //76
-		//case 'R':
-		//case 'M':
 		case 'Z': //90
 		case 'O':
 		case 'Q':

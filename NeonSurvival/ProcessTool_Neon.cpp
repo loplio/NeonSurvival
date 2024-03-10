@@ -397,9 +397,12 @@ void GameRenderDisplay_Neon::Render()
 	m_Scene.DrawUI(&m_pd3dCommandList, Camera);
 
 	// PostProcessing
-	m_Scene.CopyRenderScene(&m_pd3dDevice, &m_pd3dCommandList, m_InterfaceFramework.GetRenderTargetBuffers()[m_InterfaceFramework.GetSwapChainBufferIndex()]);
-	m_Scene.OnPreparePostProcessing(&m_pd3dDevice, &m_pd3dCommandList);
-	m_Scene.m_pPostProcessingShader->Render(&m_pd3dCommandList, Camera, &m_Scene.m_nDrawOptions);
+	if (m_Scene.m_bPostProcessing)
+	{
+		m_Scene.CopyRenderScene(&m_pd3dDevice, &m_pd3dCommandList, m_InterfaceFramework.GetRenderTargetBuffers()[m_InterfaceFramework.GetSwapChainBufferIndex()]);
+		m_Scene.OnPreparePostProcessing(&m_pd3dDevice, &m_pd3dCommandList);
+		m_Scene.m_pPostProcessingShader->Render(&m_pd3dCommandList, Camera, &m_Scene.m_nDrawOptions);
+	}
 
 	// BoundingBox Render
 	m_BoundingBox.Render(&m_pd3dCommandList, Camera);

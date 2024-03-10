@@ -128,6 +128,7 @@ public:
 		XMFLOAT3 xmf3Position, XMFLOAT3 xmf3Direction, XMFLOAT3 xmf3Attenuation,
 		float fFalloff, float fTheta, float fPhi, bool bEnable, int nType, float fRange, float padding);
 
+	bool									m_bPostProcessing = true;
 	int										m_nDrawOptions = DRAW_SCENE_STANDARD;
 
 	float									m_fElapsedTime = 0.0f;
