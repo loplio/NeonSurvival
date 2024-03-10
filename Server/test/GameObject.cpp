@@ -289,6 +289,11 @@ bool Obstacle::IsIntersectingL(XMFLOAT3 start, XMFLOAT3 end) {
 
 	float dist = 0.0f;
 	XMFLOAT3 vLocalLine = Vector3::Normalize(Vector3::Subtract(localEnd, localStart));
+
+	if (Vector3::Length(localStart) < EPSILON || Vector3::Length(vLocalLine) < EPSILON)
+	{
+		return false;
+	}
 	if (boundingBox.Intersects(XMLoadFloat3(&localStart), XMLoadFloat3(&vLocalLine), dist))
 	{
 		float fLength = Vector3::Length(Vector3::Subtract(localEnd, localStart));
