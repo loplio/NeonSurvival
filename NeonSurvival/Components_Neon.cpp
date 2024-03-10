@@ -573,7 +573,7 @@ Scene_Neon::Scene_Neon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 		512, 512, xmf3Scale, xmf4Color);
 	m_pTerrain->SetIsExistBoundingBox(false);
 
-	m_nBlurLevel = new UINT(10);
+	m_nBlurLevel = new UINT(1);
 }
 Scene_Neon::~Scene_Neon()
 {
@@ -2054,7 +2054,7 @@ void Scene_Neon::Update(float fTimeElapsed)
 		float tempExp = EXP - 1.0f;
 		((Player_Neon*)m_pPlayer.get())->SetExp(tempExp);
 
-		if (!GameClearShow)
+		if (!GameClearShow || !IsDefeat)
 		{
 			((CTextureToScreenShader*)m_UIShaders[Pick_Frame])->SetIsRender(true);
 			((CTextureToScreenShader*)m_UIShaders[Pick_Frame_g])->SetIsRender(true);
@@ -2096,8 +2096,6 @@ void Scene_Neon::Update(float fTimeElapsed)
 		}
 		case Defeat:
 		{
-			if (GameClearShow) break;
-
 			int nDead = 0;
 			if (m_pPlayer.get()->GetDead())
 			{
