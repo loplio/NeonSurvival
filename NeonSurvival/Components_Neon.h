@@ -102,6 +102,7 @@ public:
 	bool MonsterRotate[30] = { false, };
 
 	bool IsDefeat = false;
+	bool GameClearShow = false;
 
 	enum UI_LIST {
 		EXP_LINE,

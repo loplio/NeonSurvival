@@ -72,6 +72,7 @@ typedef struct {
 	bool		IsDead;
 	bool        bEnable;
 	int         nAnimationSet;
+	bool		GameClear;
 } PACKET_INGAME2;
 
 typedef struct {

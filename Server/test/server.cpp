@@ -106,6 +106,7 @@ typedef struct {
 	bool		IsDead;
 	bool        bEnable;
 	int         nAnimationSet;
+	bool		GameClear;
 } PACKET_INGAME2;
 
 typedef struct {
@@ -176,6 +177,8 @@ XMFLOAT3 PotalPos[3] = { XMFLOAT3(3575, 255, 3065) ,XMFLOAT3(3056 , 255, 3685) ,
 void UpdateConnectNum();
 bool GameStart = true;
 void UpdateMonsterData();
+int	 DragonKill = 0;
+bool GameClear = false;
 
 int main(int argc, char** argv)
 {
@@ -240,6 +243,7 @@ int main(int argc, char** argv)
 	for (int i = 0; i < MAX_PLAYER; ++i)
 	{
 		GameData.PlayersPostion2[i].id = -1;
+		GameData.PlayersPostion2[i].GameClear = false;
 	}
 	
 	XMFLOAT3 pos = XMFLOAT3(0.f, 5000.f, 0.f);
@@ -437,6 +441,7 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			GameData.PlayersPostion2[pInGame.id].IsDead = pInGame.IsDead;
 			GameData.PlayersPostion2[pInGame.id].bEnable = pInGame.bEnable;
 			GameData.PlayersPostion2[pInGame.id].nAnimationSet = pInGame.nAnimationSet;
+			GameData.PlayersPostion2[pInGame.id].GameClear = GameClear;
 
 			//retval = send(ptr->sock, (char*)&ptr->messageType, sizeof(ptr->messageType), 0);
 			//모든 플레이어 PACKET_INGAME정보를 모든 플레이어에게 전송
@@ -510,6 +515,15 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
 				Monsters[monsterid].m_State = CGameObject::DIE;
 				Monsters[monsterid].m_AnimPosition = 0.0f;
+
+				if (Monsters[monsterid].m_Type == CGameObject::Dragon)
+				{
+					DragonKill++;
+					if (DragonKill >= 3) // 드래곤 3마리 다 잡으면 게임 종료
+					{
+						GameClear = true;
+					}
+				}
 			}
 			break;
 		}
@@ -722,7 +736,7 @@ DWORD WINAPI MonsterThread(LPVOID arg)
 	auto prev_time = std::chrono::high_resolution_clock::now();
 	
 	double SpwanCoolTime = 0.0f;
-	double SpawnTime = 3.0f;
+	double SpawnTime = 1.5f;
 	
 	double WaveCoolTime = 0.0f;
 	double WaveTime = 15.0f;
@@ -924,7 +938,7 @@ void MonstersUpdate(double Elapsedtime)
 				Monsters[i].m_SpawnToMoveDelay = 0.0f;
 				Monsters[i].m_PrevState = GameData.MonsterData[i].State;
 				Monsters[i].SetPosition(PotalPos[Monsters[i].m_SpawnPotalNum]);
-				float temp = 1.0f + WaveLevel * 0.05f;
+				float temp = 1.0f + WaveLevel * 0.005f;
 				Monsters[i].m_MAXHP = Monsters[i].m_MAXHP * temp;
 				Monsters[i].m_HP = Monsters[i].m_MAXHP;
 

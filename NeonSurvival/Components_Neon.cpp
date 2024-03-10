@@ -2055,6 +2055,17 @@ void Scene_Neon::Update(float fTimeElapsed)
 			((CTextureToScreenShader*)m_UIShaders[i])->SetGauge(PlayerEXP);
 			break;
 		}
+		case PLAYER_WIN:
+		{
+			//°ÔÀÓ ½Â¸®(µå·¡°ï 3¸¶¸® Àâ±â)
+			if (m_pOtherPlayerData2[0].GameClear && GameClearShow == false)
+			{
+				GameClearShow = true;
+				//½Â¸®
+				((CTextureToScreenShader*)m_UIShaders[PLAYER_WIN])->SetIsRender(true);
+			}
+			break;
+		}
 		case Defeat:
 		{
 			int nDead = 0;
@@ -2086,6 +2097,8 @@ void Scene_Neon::Update(float fTimeElapsed)
 		}
 	}
 	
+	
+
 	CScene::Update(fTimeElapsed);
 }
 void Scene_Neon::AnimateObjects(float fTimeElapsed)
