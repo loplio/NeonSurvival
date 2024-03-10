@@ -499,13 +499,13 @@ void UILayerGame_Neon::Render(UINT nFrame, CGameSource* pGameSource)
 	for (UINT i = 0; i < m_nTextBlocks; i++)
 	{
 		if(((i == ATTACK || i == SPEED || i == HP) && ((CTextureToScreenShader*)pUIShader[Scene_Neon::Pick_Frame])->GetIsRender())
-			|| ((i == DEFEAT || i == DEFEAT2) && ((CTextureToScreenShader*)pUIShader[Scene_Neon::Defeat])->GetIsRender()))
+			|| ((i == DEFEAT || i == PRESS_SPACE) && ((CTextureToScreenShader*)pUIShader[Scene_Neon::Defeat])->GetIsRender()))
 		m_pd2dDeviceContext->DrawText(m_pTextBlocks[i].m_pstrText, (UINT)wcslen(m_pTextBlocks[i].m_pstrText), m_pTextBlocks[i].m_pdwFormat, m_pTextBlocks[i].m_d2dLayoutRect, m_pTextBlocks[i].m_pd2dTextBrush);
 		else if ((i == PLAYER_ATTACK || i == PLAYER_SPEED))
 		{
 			m_pd2dDeviceContext->DrawText(m_pTextBlocks[i].m_pstrText, (UINT)wcslen(m_pTextBlocks[i].m_pstrText), m_pTextBlocks[i].m_pdwFormat, m_pTextBlocks[i].m_d2dLayoutRect, m_pTextBlocks[i].m_pd2dTextBrush);
 		}
-		else if ((i == PLAYER_WIN && ((CTextureToScreenShader*)pUIShader[Scene_Neon::PLAYER_WIN])->GetIsRender()))
+		else if (((i == PLAYER_WIN || i == PRESS_SPACE) && ((CTextureToScreenShader*)pUIShader[Scene_Neon::PLAYER_WIN])->GetIsRender()))
 		{
 			m_pd2dDeviceContext->DrawText(m_pTextBlocks[i].m_pstrText, (UINT)wcslen(m_pTextBlocks[i].m_pstrText), m_pTextBlocks[i].m_pdwFormat, m_pTextBlocks[i].m_d2dLayoutRect, m_pTextBlocks[i].m_pd2dTextBrush);
 		}
@@ -546,7 +546,7 @@ void UILayerGame_Neon::BuildUI()
 	pd2dBrush5 = CreateBrush(D2D1::ColorF(D2D1::ColorF::Beige, 1.0f));
 	pdwTextFormat5 = CreateTextFormat((wchar_t*)L"Arial", m_fHeight / 15.0f);
 	d2dRect5 = D2D1::RectF(0.0f, 2 * m_fHeight / 3, m_fWidth, m_fHeight);
-	UpdateTextOutputs(DEFEAT2, pstrOutputText, &d2dRect5, pdwTextFormat5, pd2dBrush5);
+	UpdateTextOutputs(PRESS_SPACE, pstrOutputText, &d2dRect5, pdwTextFormat5, pd2dBrush5);
 
 	pd2dBrush6 = CreateBrush(D2D1::ColorF(D2D1::ColorF::Beige, 1.0f));
 	pdwTextFormat6 = CreateTextFormat((wchar_t*)L"Arial", m_fHeight / 30.0f);
@@ -559,8 +559,8 @@ void UILayerGame_Neon::BuildUI()
 	UpdateTextOutputs(PLAYER_SPEED, pstrOutputText, &d2dRect7, pdwTextFormat7, pd2dBrush7);
 
 	pd2dBrush8 = CreateBrush(D2D1::ColorF(D2D1::ColorF::Beige, 1.0f));
-	pdwTextFormat8 = CreateTextFormat((wchar_t*)L"Arial", m_fHeight / 10.0f);
-	d2dRect8 = D2D1::RectF(250,250,550,550);
+	pdwTextFormat8 = CreateTextFormat((wchar_t*)L"Arial", m_fHeight / 5.0f);
+	d2dRect8 = D2D1::RectF(0.0f, m_fHeight / 4, m_fWidth, m_fHeight);
 	UpdateTextOutputs(PLAYER_WIN, pstrOutputText, &d2dRect8, pdwTextFormat8, pd2dBrush8);
 
 }

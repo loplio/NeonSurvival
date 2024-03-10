@@ -890,7 +890,7 @@ void UpdateMonsterPath(int i, int targetType, int state, float radiusOfAction, X
 	if (!Monsters[i].m_path.empty())
 	{
 		Monsters[i].m_TargetPos = Monsters[i].m_path.front();
-		Monsters[i].m_TargetPos.y = target.y;
+		Monsters[i].m_TargetPos.y = 255.0f;
 
 		if (Monsters[i].m_path.size() == 1 && dist(target, pos) <= radiusOfAction)
 		{

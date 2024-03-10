@@ -1870,7 +1870,7 @@ bool Scene_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM 
 		switch (wParam)
 		{
 		case VK_SPACE:
-			if (IsDefeat) return true;
+			if (IsDefeat || GameClearShow) return true;
 			break;
 		case VK_ADD:
 			if (m_nBlurLevel) (*m_nBlurLevel) += 2;
@@ -1948,6 +1948,14 @@ bool Scene_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM 
 			bool temp = ((CTextureToScreenShader*)m_UIShaders[PLAYER_WIN])->GetIsRender();
 			temp = !temp;
 			((CTextureToScreenShader*)m_UIShaders[PLAYER_WIN])->SetIsRender(temp);
+
+			break;
+		}
+		case '0':
+		{
+			bool temp = ((CTextureToScreenShader*)m_UIShaders[Defeat])->GetIsRender();
+			temp = !temp;
+			((CTextureToScreenShader*)m_UIShaders[Defeat])->SetIsRender(temp);
 
 			break;
 		}
@@ -2041,17 +2049,20 @@ void Scene_Neon::Update(float fTimeElapsed)
 	}
 
 	int EXP = ((Player_Neon*)m_pPlayer.get())->GetExp();
-	if ( EXP >= 1.0f)
+	if (EXP >= 1.0f)
 	{
 		float tempExp = EXP - 1.0f;
 		((Player_Neon*)m_pPlayer.get())->SetExp(tempExp);
 
-		((CTextureToScreenShader*)m_UIShaders[Pick_Frame])->SetIsRender(true);
-		((CTextureToScreenShader*)m_UIShaders[Pick_Frame_g])->SetIsRender(true);
-		((CTextureToScreenShader*)m_UIShaders[Pick_Frame_r])->SetIsRender(true);
-		((CTextureToScreenShader*)m_UIShaders[Attack])->SetIsRender(true);
-		((CTextureToScreenShader*)m_UIShaders[Speed])->SetIsRender(true);
-		((CTextureToScreenShader*)m_UIShaders[RecoveryHP])->SetIsRender(true);
+		if (!GameClearShow)
+		{
+			((CTextureToScreenShader*)m_UIShaders[Pick_Frame])->SetIsRender(true);
+			((CTextureToScreenShader*)m_UIShaders[Pick_Frame_g])->SetIsRender(true);
+			((CTextureToScreenShader*)m_UIShaders[Pick_Frame_r])->SetIsRender(true);
+			((CTextureToScreenShader*)m_UIShaders[Attack])->SetIsRender(true);
+			((CTextureToScreenShader*)m_UIShaders[Speed])->SetIsRender(true);
+			((CTextureToScreenShader*)m_UIShaders[RecoveryHP])->SetIsRender(true);
+		}
 	}
 
 	for (int i = 0; i < m_UIShaders.size(); ++i)
@@ -2085,6 +2096,8 @@ void Scene_Neon::Update(float fTimeElapsed)
 		}
 		case Defeat:
 		{
+			if (GameClearShow) break;
+
 			int nDead = 0;
 			if (m_pPlayer.get()->GetDead())
 			{
@@ -2102,6 +2115,7 @@ void Scene_Neon::Update(float fTimeElapsed)
 				((CTextureToScreenShader*)m_UIShaders[i])->SetIsRender(true);
 				IsDefeat = true;
 			}
+			break;
 		}
 		}
 	}
