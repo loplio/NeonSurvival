@@ -279,7 +279,7 @@ public:
 	enum                        {Nexus,Player};
 	enum						{ Dragon, Giant_Bee, Golem, KingCobra, TreasureChest, Spider, Bat, Magama, Treant, Wolf};
 	int MonsterHPs[10] =		{   1000,	    150,   500,	      400,		     250,    300, 100,    400,    500,	300};
-	float MonsterSpeed[10] =    {   1.0f,      2.0f,  1.2f,      1.5f,          1.4f,   2.2f, 1.5f,  0.7f,   1.0f, 3.5f};
+	float MonsterSpeed[10] =    {   1.0f,      3.6f,  2.4f,      3.0f,          3.2f,   4.5f, 3.0f,  1.8f,   2.8f, 3.2f};
 	enum Mobility				{ Static, Moveable };
 
 public:
