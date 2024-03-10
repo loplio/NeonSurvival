@@ -172,7 +172,7 @@ float NexusHP = 1000.0f;
 AStar astar;
 CGameObject Monsters[MAX_MONSTER * 10];
 XMFLOAT3 NexusPos = XMFLOAT3(3072, 255, 3072);
-XMFLOAT3 PotalPos[3] = { XMFLOAT3(3575, 255, 3065) ,XMFLOAT3(3056 , 255, 3685) ,XMFLOAT3(2297 , 255, 3043) };
+XMFLOAT3 PotalPos[3] = { XMFLOAT3(3575, 255, 3065) ,XMFLOAT3(3056 , 255, 3685) ,XMFLOAT3(2297 , 255, 3043)};
 
 void UpdateConnectNum();
 bool GameStart = true;

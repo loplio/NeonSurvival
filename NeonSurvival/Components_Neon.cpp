@@ -1936,6 +1936,7 @@ bool Scene_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM 
 			bool temp = ((CTextureToScreenShader*)m_UIShaders[PLAYER_WIN])->GetIsRender();
 			temp = !temp;
 			((CTextureToScreenShader*)m_UIShaders[PLAYER_WIN])->SetIsRender(temp);
+
 			break;
 		}
 		case 'C':
