@@ -956,7 +956,7 @@ bool CGameObject::Collide(FXMVECTOR Origin, FXMVECTOR Direction, float& Dist)
 		{
 			if (Dist < METER_PER_PIXEL(1))
 			{
-				std::cout << "hit!!!!" << std::endl;
+				//std::cout << "hit!!!!" << std::endl;
 				return true;
 			}
 		}
