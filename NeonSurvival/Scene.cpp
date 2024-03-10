@@ -691,9 +691,12 @@ void CScene::OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera
 	if (m_pd3dComputeRootSignature) pd3dCommandList->SetComputeRootSignature(m_pd3dComputeRootSignature);
 	if (m_pd3dCbvSrvUavDescriptorHeap) pd3dCommandList->SetDescriptorHeaps(1, &m_pd3dCbvSrvUavDescriptorHeap);
 
-	for (int i = 0; i < m_ppComputeShaders.size(); ++i)
+	if (m_bPostProcessing)
 	{
-		m_ppComputeShaders[i]->Dispatch(pd3dCommandList);
+		for (int i = 0; i < m_ppComputeShaders.size(); ++i)
+		{
+			m_ppComputeShaders[i]->Dispatch(pd3dCommandList);
+		}
 	}
 	if (pCamera)
 	{
