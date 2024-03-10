@@ -213,8 +213,8 @@ public:
 
 	ReafObjectType GetReafObjectType() override { return Nexus; }
 
-	float HP = 1000.0f;
-	float MAXHP = 1000.0f;
+	float HP = 2500.0f;
+	float MAXHP = 2500.0f;
 
 	CGameObject* m_pHPObject = NULL;
 
