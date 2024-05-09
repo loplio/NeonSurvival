@@ -1905,6 +1905,7 @@ bool Scene_Neon::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM 
 			((CTextureToScreenShader*)m_UIShaders[Attack])->SetIsRender(false);
 			((CTextureToScreenShader*)m_UIShaders[Speed])->SetIsRender(false);
 			((CTextureToScreenShader*)m_UIShaders[RecoveryHP])->SetIsRender(false);
+			m_pPlayer->SetLUP(false);
 			break;
 		}
 		case '4':
@@ -2051,9 +2052,10 @@ void Scene_Neon::Update(float fTimeElapsed)
 	int EXP = ((Player_Neon*)m_pPlayer.get())->GetExp();
 	if (EXP >= 1.0f)
 	{
+		
 		float tempExp = EXP - 1.0f;
 		((Player_Neon*)m_pPlayer.get())->SetExp(tempExp);
-
+		
 		if (!GameClearShow || !IsDefeat)
 		{
 			((CTextureToScreenShader*)m_UIShaders[Pick_Frame])->SetIsRender(true);
@@ -2062,7 +2064,9 @@ void Scene_Neon::Update(float fTimeElapsed)
 			((CTextureToScreenShader*)m_UIShaders[Attack])->SetIsRender(true);
 			((CTextureToScreenShader*)m_UIShaders[Speed])->SetIsRender(true);
 			((CTextureToScreenShader*)m_UIShaders[RecoveryHP])->SetIsRender(true);
+			m_pPlayer->SetLUP(true);
 		}
+	
 	}
 
 	for (int i = 0; i < m_UIShaders.size(); ++i)

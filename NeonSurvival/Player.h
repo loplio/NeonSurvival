@@ -104,6 +104,7 @@ public:
 	bool GetFire() const { return IsFire; }
 	bool GetReadyFire() const { return bReadyFire; }
 	bool GetDash() const { return IsDash; }
+	bool GetLUP() const { return IsLUP; }
 
 	void SetYaw(float Yaw) { m_fYaw = Yaw; }
 	void SetPitch(float Pitch) { m_fPitch = Pitch; }
@@ -112,6 +113,7 @@ public:
 	void SetFire(bool fire) { IsFire = fire; }
 	void SetReadyFire(bool fire) { bReadyFire = fire; }
 	void SetDash(bool dash) { IsDash = dash; }
+	void SetLUP(bool lup) { IsLUP = lup; }
 
 	CCamera* GetCamera() const { return(m_pCamera); }
 	void SetCamera(CCamera* pCamera) { m_pCamera = pCamera; }
@@ -133,6 +135,7 @@ public:
 	int Player_ID = -1;
 	const float fPitchThickness = 0.2f;
 	bool IsDash = false;
+	bool IsLUP = false;
 	bool bSelectedObject = false;
 	float fDistanceAtObject = 0.0f;
 	DWORD m_dwDirection = 0;

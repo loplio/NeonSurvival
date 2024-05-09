@@ -9,6 +9,7 @@ public:
 	~SoundManager();
 
 public:
+	void SetSystemVolume(WORD volume);
 	// 배경음을 출력하는 메서드
 	void PlayBg(std::string option, std::string path);
 
