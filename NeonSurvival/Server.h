@@ -16,10 +16,11 @@ using namespace DirectX;
 
 #define SERVERPORT	9000
 #define BUFSIZE		2048
-#define BUF2SIZE	5500
+#define BUF2SIZE	28000
 #define WM_SOCKET	(WM_USER+1)
 #define MAX_PLAYER	3
 #define MAX_MONSTER 5
+#define MAX_PATH 32
 
 enum MESSAGETYPE{
 	LOGIN = 100,
@@ -99,6 +100,8 @@ typedef struct {
 	int			SpawnPotal;
 	int			TargetID;
 	int			TargetType;
+	int			PathNum;
+	XMFLOAT3	Path[MAX_PATH];
 }PACKET_MONSTERDATA;
 
 typedef struct {

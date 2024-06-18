@@ -803,6 +803,32 @@ float4 PSWireFrame(VS_WIREFRAME_OUTPUT input) : SV_TARGET
 	return cColor;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//// PathLine
+struct VS_PATHLINE_INPUT
+{
+	float3 position : POSITION;
+};
+
+struct VS_PATHLINE_OUTPUT
+{
+	float4 position : SV_POSITION;
+};
+
+VS_WIREFRAME_OUTPUT VSPathFrame(VS_PATHLINE_INPUT input)
+{
+	VS_PATHLINE_OUTPUT output;
+	output.position = mul(mul(float4(input.position, 1.0f), gmtxView), gmtxProjection);
+
+	return output;
+}
+
+float4 PSPathFrame(VS_PATHLINE_OUTPUT input) : SV_TARGET
+{
+	float4 cColor = float4(1.0f, 1.0f, 1.0f, 1.0f);
+
+	return cColor;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //// Crosshair
 struct VS_POSITION_INPUT
 {

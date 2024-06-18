@@ -154,6 +154,7 @@ public:
 	//CInstancingShader*					m_pShaders = NULL;
 
 	// Objects.
+	CPathObject*							m_pPath = NULL;
 	CSkyBox*								m_pSkyBox = NULL;
 	CPostProcessingShader*					m_pPostProcessingShader = NULL;
 	CHeightMapTerrain*						m_pTerrain = NULL;

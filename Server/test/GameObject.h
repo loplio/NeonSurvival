@@ -7,6 +7,8 @@
 #include <cmath>
 #include <algorithm>
 
+#include <iostream>
+
 class Corner {
 public:
 	XMFLOAT3 LT;
@@ -32,9 +34,12 @@ public:
 	void Rotate(float fPitch = 10.0f, float fYaw = 10.0f, float fRoll = 10.0f);
 	bool IsIntersectingL(XMFLOAT3 start, XMFLOAT3 end);
 	bool IsIntersectingV(const XMFLOAT3 start, const XMFLOAT3 direction);
+	bool IsContains(XMFLOAT3 position);
 	void SetCorner(XMFLOAT3& Extents, XMFLOAT3& Center, float scale);
 
 	Corner& GetCorner() { return corner; }
+
+	bool bObjectCollide = false;
 };
 
 class TerrainInfo {
@@ -58,6 +63,11 @@ public:
 
 class Node {
 public:
+	enum {
+		LB, LT, RB, RT
+	};
+	int ObstacleIndex;
+	int CornerType;
 	XMFLOAT3 pos;
 	double f, g, h;
 	std::shared_ptr<Node> parent;  // Use shared_ptr for ownership
@@ -90,13 +100,15 @@ public:
 	AStar(Obstacle* obstacle, int n) :obstacle{ obstacle }, nObstacle{ n } {}
 	~AStar() { if (obstacle) delete obstacle; }
 
+	enum ObjectType { Nexus, Player };
+
 	void SetObstacle(Obstacle* other, int n) {
 		if (obstacle) delete obstacle;
 		nObstacle = n;
 		obstacle = other;
 	}
 
-	std::vector<std::shared_ptr<Node>> findPath(std::shared_ptr<Node> start, std::shared_ptr<Node> goal)
+	std::vector<std::shared_ptr<Node>> findPath(std::shared_ptr<Node> start, std::shared_ptr<Node> goal, ObjectType type)
 	{
 		std::priority_queue<std::shared_ptr<Node>, std::vector<std::shared_ptr<Node>>, Compare> open;
 		std::vector<std::shared_ptr<Node>> closed;
@@ -155,8 +167,17 @@ public:
 			for (int j = 0; j < nObstacle; ++j)
 			{
 				if (obstacle[j].IsIntersectingL(position, goal->pos))
+				{
+					if (obstacle[j].bObjectCollide && type == Player)
+					{
+						return std::vector<std::shared_ptr<Node>>();
+					}
+
 					bEnd = false;
+					break;
+				}
 			}
+
 			if (bEnd) neighbors.push_back(std::make_shared<Node>(goal->pos));
 
 
@@ -180,14 +201,14 @@ public:
 		}
 
 		// No path found
-		return std::vector<std::shared_ptr<Node>>();
-	}
+	return std::vector<std::shared_ptr<Node>>();
+}
 
-	std::vector<XMFLOAT3> GetPath(XMFLOAT3& s, XMFLOAT3& g)
+	std::vector<XMFLOAT3> GetPath(XMFLOAT3& s, XMFLOAT3& g, ObjectType type)
 	{
 		std::shared_ptr<Node> start = std::make_shared<Node>(s);
 		std::shared_ptr<Node> goal = std::make_shared<Node>(g);
-		std::vector<std::shared_ptr<Node>> pathNode = findPath(start, goal);
+		std::vector<std::shared_ptr<Node>> pathNode = findPath(start, goal, type);
 		std::vector<XMFLOAT3> path;
 
 		for (int i = 1; i < pathNode.size(); ++i)
@@ -195,11 +216,11 @@ public:
 
 		return path;
 	}
-	std::vector<XMFLOAT3> GetPath(XMFLOAT3&& s, XMFLOAT3& g)
+	std::vector<XMFLOAT3> GetPath(XMFLOAT3&& s, XMFLOAT3& g, ObjectType type)
 	{
 		std::shared_ptr<Node> start = std::make_shared<Node>(s);
 		std::shared_ptr<Node> goal = std::make_shared<Node>(g);
-		std::vector<std::shared_ptr<Node>> pathNode = findPath(start, goal);
+		std::vector<std::shared_ptr<Node>> pathNode = findPath(start, goal, type);
 		std::vector<XMFLOAT3> path;
 
 		for (int i = 1; i < pathNode.size(); ++i)

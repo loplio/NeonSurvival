@@ -607,6 +607,7 @@ void GeneralMonsterObjects::Update(float fTimeElapsed)
 	for (auto monster : m_ppObjects)
 	{
 		XMFLOAT4X4 world = m_pMonsterData[count].m_xmf4x4World;
+
 		XMFLOAT3 pos = (((MonsterObject*)(monster))->bDieAnim) ? ((MonsterObject*)(monster))->GetPosition() : m_pMonsterData[count].Pos;
 		XMFLOAT3 right = XMFLOAT3(world._11, world._12, world._13);
 		XMFLOAT3 up = XMFLOAT3(world._21, world._22, world._23);

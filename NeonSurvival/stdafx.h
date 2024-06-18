@@ -64,7 +64,7 @@ using Microsoft::WRL::ComPtr;
 #include <iostream>
 
 #ifdef _DEBUG
-//#pragma comment(linker,"/entry:wWinMainCRTStartup /subsystem:console")
+#pragma comment(linker,"/entry:wWinMainCRTStartup /subsystem:console")
 #endif
 
 #define ANIMATION_TYPE_ONCE				0

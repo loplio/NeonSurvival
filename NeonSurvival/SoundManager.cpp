@@ -62,7 +62,8 @@ void SoundManager::PlayEf(std::string path)
 	TCHAR* r(buf);
 
 	// 효과음 파일 재생
-	PlaySound(r, 0, SND_ASYNC||SND_NOSTOP);
+	sndPlaySound(r, SND_ASYNC);
+	//PlaySound(r, 0, SND_ASYNC||SND_NOSTOP);
 }
 
 void SoundManager::SoundUpdate(CGameSource* pGameSource)
@@ -74,15 +75,15 @@ void SoundManager::SoundUpdate(CGameSource* pGameSource)
 		//SetSystemVolume(100000);
 		PlayEf("Sound/Laser gun.wav");
 	}
-	if (pPlayer.GetDash())
-	{
-		//PlayBg("play","Sound/faststep.wav");
-		PlayEf("Sound/faststep.wav");
-	}
-	if (pPlayer.GetLUP())
-	{
-		PlayEf("Sound/level up.wav");
-	}
+	//if (pPlayer.GetDash())
+	//{
+	//	//PlayBg("play","Sound/faststep.wav");
+	//	//PlayEf("Sound/faststep.wav");
+	//}
+	//if (pPlayer.GetLUP())
+	//{
+	//	PlayEf("Sound/level up2.wav");
+	//}
 	
 	//else PlayBg("stop", "Sound/faststep.wav");
 

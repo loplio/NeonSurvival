@@ -300,6 +300,11 @@ bool Obstacle::IsIntersectingL(XMFLOAT3 start, XMFLOAT3 end) {
 	{
 		return false;
 	}
+	if (boundingBox.Contains(XMLoadFloat3(&localEnd)))
+	{
+		bObjectCollide = true;
+		return true;
+	}
 	if (boundingBox.Intersects(XMLoadFloat3(&localStart), XMLoadFloat3(&vLocalLine), dist))
 	{
 		float fLength = Vector3::Length(Vector3::Subtract(localEnd, localStart));
@@ -345,6 +350,26 @@ bool Obstacle::IsIntersectingV(const XMFLOAT3 start, const XMFLOAT3 direction) {
 	}
 
 	return true;
+}
+
+bool Obstacle::IsContains(XMFLOAT3 position)
+{
+	XMMATRIX worldTransform = XMLoadFloat4x4(&m_xmf4x4World);
+
+	XMMATRIX invWorld = XMMatrixInverse(NULL, worldTransform);
+
+	//// 선분을 OBB의 로컬 좌표로 변환
+	XMFLOAT3 localPosition = Vector3::TransformCoord(position, invWorld);
+	localPosition.y = 0.0f;
+
+	BoundingOrientedBox boundingBox = BoundingOrientedBox(/*m_xmf3Center*/XMFLOAT3(0.0f, 0.0f, 0.0f), m_xmf3Extents, XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
+
+	if (boundingBox.Contains(XMLoadFloat3(&position)))
+	{
+		return true;
+	}
+
+	return false;
 }
 
 void Obstacle::SetCorner(XMFLOAT3& Extents, XMFLOAT3& Center, float scale)

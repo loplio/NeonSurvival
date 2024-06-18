@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "GameObject.h"
 #include "Mesh.h"
+#include "Server.h"
+#include "Components_Neon.h"
 
 CMesh::CMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
@@ -448,6 +450,82 @@ CBoundingBoxMesh::CBoundingBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 }
 CBoundingBoxMesh::~CBoundingBoxMesh()
 {
+}
+
+//-------------------------------------------------------------------------------
+/*	CPathMesh : public CMesh											   */
+//-------------------------------------------------------------------------------
+CPathMesh::CPathMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) : CMesh(pd3dDevice, pd3dCommandList)
+{
+	// default setting.
+	m_nVertices = 512;
+	m_d3dPrimitiveTopology = D3D10_PRIMITIVE_TOPOLOGY_LINELIST;
+
+	// Position setting.
+	m_pxmf3Positions = new XMFLOAT3[m_nVertices];
+	for (int i = 0; i < m_nVertices; ++i)
+		m_pxmf3Positions[i] = XMFLOAT3(0.0f, 0.0f, 0.0f);
+
+	// PositionBuffer setting.
+	m_pd3dPositionBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList, m_pxmf3Positions, sizeof(XMFLOAT3) * m_nVertices, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pd3dPositionUploadBuffer);
+	m_d3dPositionBufferView.BufferLocation = m_pd3dPositionBuffer->GetGPUVirtualAddress();
+	m_d3dPositionBufferView.StrideInBytes = sizeof(XMFLOAT3);
+	m_d3dPositionBufferView.SizeInBytes = sizeof(XMFLOAT3) * m_nVertices;
+}
+CPathMesh::~CPathMesh()
+{
+}
+
+void CPathMesh::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	PACKET_MONSTERDATA* pMonsterData = SERVER::getInstance().GetMonsterData();
+	int PathIDX = 0;
+	int AllPathNum = 0;
+	
+	for (int i = 0; i < m_nVertices; ++i)
+	{
+		m_pxmf3Positions[i] = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	}
+
+	if (DrawPathType == NONE);
+	else if (DrawPathType == PLAYER)
+	{
+		for (int i = 0; i < MAX_MONSTER * 10; ++i)
+		{
+			if (pMonsterData[i].TargetType == PLAYER)
+			{
+				AllPathNum += pMonsterData[i].PathNum;
+				for (int j = 0; j < pMonsterData[i].PathNum; ++j)
+				{
+					m_pxmf3Positions[PathIDX] = pMonsterData[i].Path[j];
+					PathIDX++;
+				}
+			}
+		}
+	}
+	else if (DrawPathType == NEXUS)
+	{
+		for (int i = 0; i < MAX_MONSTER * 10; ++i)
+		{
+			if (pMonsterData[i].TargetType == NEXUS)
+			{
+				AllPathNum += pMonsterData[i].PathNum;
+				for (int j = 0; j < pMonsterData[i].PathNum; ++j)
+				{
+					m_pxmf3Positions[PathIDX] = pMonsterData[i].Path[j];
+					PathIDX++;
+				}
+			}
+		}
+	}
+
+	//std::cout << "PathIdx: " << PathIDX << ", AllPathNum: " << AllPathNum << std::endl;
+
+	D3D12_RANGE d3dReadRange = { 0,0 };
+	UINT8* pBufferDataBegin = NULL;
+	m_pd3dPositionBuffer->Map(0, &d3dReadRange, (void**)&pBufferDataBegin);
+	memcpy(pBufferDataBegin, m_pxmf3Positions, m_nVertices * sizeof(XMFLOAT3));
+	m_pd3dPositionBuffer->Unmap(0, NULL);
 }
 
 //-------------------------------------------------------------------------------

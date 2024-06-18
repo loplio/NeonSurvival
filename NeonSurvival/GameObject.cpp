@@ -327,19 +327,19 @@ void CAnimationController::AdvanceTime(float fTimeElapsed, CGameObject* pRootGam
 			XMFLOAT4X4 xmf4x4Transform = Matrix4x4::Zero();
 			if (m_SubAnimationTrack.m_bEnable)
 			{
-				if (m_pAnimationSets->m_ppAnimatedBoneFrameCaches[j] == m_pAnimatedLayeredBlendBoneFrameCaches)
-				{
-					if (m_LayeredAngle < m_LayeredMaxAngle)
-					{
-						m_LayeredAngle += abs(m_LayeredRotate);
-						XMFLOAT4X4 result = Matrix4x4::Identity();
-						XMStoreFloat4x4(&result, XMMatrixRotationY(m_LayeredRotate));
-						m_pAnimationSets->m_ppAnimatedBoneFrameCaches[j]->m_xmf4x4Transform =
-							Matrix4x4::Multiply(result, m_pAnimationSets->m_ppAnimatedBoneFrameCaches[j]->m_xmf4x4Transform);
-						//std::cout << "LayeredAngle: " << m_LayeredAngle << std::endl;
-					}
-					continue;
-				}
+				//if (m_pAnimationSets->m_ppAnimatedBoneFrameCaches[j] == m_pAnimatedLayeredBlendBoneFrameCaches)
+				//{
+				//	if (m_LayeredAngle < m_LayeredMaxAngle)
+				//	{
+				//		m_LayeredAngle += abs(m_LayeredRotate);
+				//		XMFLOAT4X4 result = Matrix4x4::Identity();
+				//		XMStoreFloat4x4(&result, XMMatrixRotationY(m_LayeredRotate));
+				//		m_pAnimationSets->m_ppAnimatedBoneFrameCaches[j]->m_xmf4x4Transform =
+				//			Matrix4x4::Multiply(result, m_pAnimationSets->m_ppAnimatedBoneFrameCaches[j]->m_xmf4x4Transform);
+				//		//std::cout << "LayeredAngle: " << m_LayeredAngle << std::endl;
+				//	}
+				//	continue;
+				//}
 
 				if (m_pAnimationSets->m_ppAnimatedBoneFrameCaches[j]->FindParentObject(m_pAnimatedLayeredBlendBoneFrameCaches))
 				{
@@ -768,6 +768,7 @@ CGameObject::CGameObject(int nMaterials)
 	m_IsBoundingCylinder = false;
 	m_IsExistBoundingBox = true;
 	m_IsCrosshair = false;
+	m_IsLine = false;
 	m_NotUseTransform = false;
 	m_OnlyOneBoundingBox = false;
 	m_Mass = 0;
@@ -797,7 +798,8 @@ CGameObject::CGameObject(const CGameObject& pGameObject)
 	m_nBoundingCylinderRadius = pGameObject.m_nBoundingCylinderRadius;
 	m_IsBoundingCylinder = pGameObject.m_IsBoundingCylinder;
 	m_IsExistBoundingBox = pGameObject.m_IsExistBoundingBox;
-	m_IsCrosshair = pGameObject.m_IsExistBoundingBox;
+	m_IsCrosshair = pGameObject.m_IsCrosshair;
+	m_IsLine = pGameObject.m_IsLine;
 	m_NotUseTransform = pGameObject.m_NotUseTransform;
 	m_OnlyOneBoundingBox = pGameObject.m_OnlyOneBoundingBox;
 
@@ -1019,7 +1021,7 @@ void CGameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pC
 {
 	if (m_pSkinnedAnimationController) m_pSkinnedAnimationController->UpdateShaderVariables(pd3dCommandList);
 
-	if (m_pMesh && (IsVisible(pCamera) || IsCrosshair()))
+	if (m_pMesh && (IsVisible(pCamera) || IsCrosshair() || IsLine()))
 	{
 		UpdateShaderVariable(pd3dCommandList, &m_xmf4x4World);
 
@@ -1259,6 +1261,11 @@ bool CGameObject::IsCollide(BoundingOrientedBox& box)
 bool CGameObject::IsCrosshair()
 {
 	return m_IsCrosshair;
+}
+
+bool CGameObject::IsLine()
+{
+	return m_IsLine;
 }
 
 void CGameObject::SetOneBoundingBox(bool b, XMFLOAT3 Center, XMFLOAT3 Extent)
@@ -2519,6 +2526,23 @@ CBoundingBox::~CBoundingBox()
 {
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+CPathObject::CPathObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature) : CGameObject()
+{
+	CPathMesh* pPathMesh = new CPathMesh(pd3dDevice, pd3dCommandList);
+	
+	SetMesh(pPathMesh);
+
+	CPathShader* pPathShader = new CPathShader();
+	pPathShader->CreateGraphicsPipelineState(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
+	SetShader(pPathShader);
+
+	m_IsLine = TRUE;
+}
+CPathObject::~CPathObject()
+{
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 CSkyBox::CSkyBox(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, wchar_t* pszFileName) : CGameObject()

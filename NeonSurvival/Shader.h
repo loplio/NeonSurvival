@@ -153,6 +153,19 @@ public:
 };
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
+class CPathShader : public CShader {
+public:
+	CPathShader();
+	virtual ~CPathShader();
+
+	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
+	virtual D3D12_SHADER_BYTECODE CreateVertexShader();
+	virtual D3D12_SHADER_BYTECODE CreatePixelShader();
+
+	virtual void CreateGraphicsPipelineState(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature);
+};
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
 struct PS_CB_DRAW_OPTIONS
 {
 	XMINT4							m_xmn4DrawOptions;

@@ -403,6 +403,7 @@ public:
 	bool IsVisible(CCamera* pCamera = NULL);
 	bool IsCollide(BoundingOrientedBox& box);
 	bool IsCrosshair();
+	bool IsLine();
 	void SetUseTransform(bool b) { m_NotUseTransform = !b; }
 	bool bNotUseTransform() const { return m_NotUseTransform; }
 	void SetOneBoundingBox(bool b, XMFLOAT3 Center = XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3 Extent = XMFLOAT3(0.0f, 0.0f, 0.0f));
@@ -417,6 +418,7 @@ protected:
 	bool						m_IsBoundingCylinder;
 	bool						m_IsExistBoundingBox;
 	bool						m_IsCrosshair;
+	bool						m_IsLine;
 	bool						m_NotUseTransform;
 	bool						m_OnlyOneBoundingBox;
 
@@ -656,6 +658,12 @@ class CBoundingBox : public CGameObject {
 public:
 	CBoundingBox(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature);
 	virtual ~CBoundingBox();
+};
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class CPathObject : public CGameObject {
+public:
+	CPathObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature);
+	virtual ~CPathObject();
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CSkyBox : public CGameObject

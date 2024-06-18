@@ -498,6 +498,7 @@ void CScene::ReleaseUploadBuffers()
 {
 	if (m_pTerrain) m_pTerrain->ReleaseUploadBuffers();
 	if (m_pSkyBox) m_pSkyBox->ReleaseUploadBuffers();
+	if (m_pPath) m_pPath->ReleaseUploadBuffers();
 	if (m_pPostProcessingShader) m_pPostProcessingShader->ReleaseUploadBuffers();
 
 	for (int i = 0; i < m_ppShaders.size(); ++i) m_ppShaders[i]->ReleaseUploadBuffers();
@@ -576,6 +577,7 @@ void CScene::ReleaseObjects()
 
 	if (m_pTerrain) delete m_pTerrain;
 	if (m_pSkyBox) delete m_pSkyBox;
+	if (m_pPath) delete m_pPath;
 	if (m_pPostProcessingShader) delete m_pPostProcessingShader;
 	if (m_pLights) delete m_pLights;
 }
@@ -711,6 +713,7 @@ void CScene::OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, CCamera
 void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
 	if (m_pSkyBox) m_pSkyBox->Render(pd3dCommandList, pCamera);
+	if (m_pPath) m_pPath->Render(pd3dCommandList, pCamera);
 	if (m_pTerrain) m_pTerrain->Render(pd3dCommandList, pCamera);
 
 	for (int i = 0; i < m_vHierarchicalGameObjects.size(); i++)

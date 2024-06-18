@@ -29,10 +29,11 @@ using namespace std;
 
 #define SERVERPORT	9000
 #define BUFSIZE		2048
-#define BUF2SIZE	5500
+#define BUF2SIZE	28000
 #define WM_SOCKET	(WM_USER+1)
 #define MAX_PLAYER	3
 #define MAX_MONSTER 5
+#define MAX_PATH	32
 
 // 소켓 정보 저장을 위한 구조체와 변수
 typedef struct socketinfo
@@ -133,6 +134,8 @@ typedef struct {
 	int			SpawnPotal;
 	int			TargetID;
 	int			TargetType;
+	int			PathNum;
+	XMFLOAT3	Path[MAX_PATH];
 }PACKET_MONSTERDATA;
 
 typedef struct {
@@ -168,14 +171,14 @@ int ArrConnect[3] = { -1,-1,-1 };
 HANDLE hMonsterThread;
 DWORD WINAPI MonsterThread(LPVOID arg);
 
-float NexusHP = 2500.0f;
+float NexusHP = 250000.0f;
 AStar astar;
 CGameObject Monsters[MAX_MONSTER * 10];
-XMFLOAT3 NexusPos = XMFLOAT3(3072, 255, 3072);
+XMFLOAT3 NexusPos = XMFLOAT3(3072, 275, 3072);
 XMFLOAT3 PotalPos[3] = { XMFLOAT3(3575, 255, 3065) ,XMFLOAT3(3056 , 255, 3685) ,XMFLOAT3(2297 , 255, 3043)};
 
 void UpdateConnectNum();
-bool GameStart = false;
+bool GameStart = true;
 void UpdateMonsterData();
 int	 DragonKill = 0;
 bool GameClear = false;
@@ -275,44 +278,106 @@ int main(int argc, char** argv)
 	Monsters[29].m_SpawnPotalNum = 2;
 
 	// 장애물 위치 설정.
-	Obstacle* obstacle = new Obstacle[5];
+	Obstacle* obstacle = new Obstacle[12];
 	XMFLOAT3 BoundingCenter, BoundingExtent;
 
 	/// LowerWall
 	BoundingCenter = XMFLOAT3(-0.00411405414, 0.745403349, 0.00240635872);
 	BoundingExtent = XMFLOAT3(0.178011268, 0.744693696, 3.52246284);
-	obstacle[0].SetPosition(terrain.GetWidth(0.5f) - 81.0f, 0.0f, terrain.GetLength(0.5f) + 20.0f);
+	obstacle[0].SetPosition(terrain.GetWidth(0.5f) - 81.0f, 265.0f, terrain.GetLength(0.5f) + 20.0f);
 	obstacle[0].SetScale(12.0f, 12.0f, 12.0f);
 	obstacle[0].Rotate(0.0f, 180.0f, 0.0f);
 	obstacle[0].SetCorner(BoundingExtent, BoundingCenter, 12.0f);
 
-	obstacle[1].SetPosition(terrain.GetWidth(0.5f) + 73.0f, 0.0f, terrain.GetLength(0.5f) + 30.0f);
+	obstacle[1].SetPosition(terrain.GetWidth(0.5f) + 73.0f, 265.0f, terrain.GetLength(0.5f) + 30.0f);
 	obstacle[1].SetScale(12.0f, 12.0f, 12.0f);
 	obstacle[1].Rotate(0.0f, 180.0f, 0.0f);
 	obstacle[1].SetCorner(BoundingExtent, BoundingCenter, 12.0f);
 
+	obstacle[5].SetPosition(terrain.GetWidth(0.5f) - 200.0f, 265.0f, terrain.GetLength(0.5f) + 70.0f);
+	obstacle[5].SetScale(15.0f, 15.0f, 15.0f);
+	obstacle[5].SetCorner(BoundingExtent, BoundingCenter, 15.0f);
+
+	obstacle[6].SetPosition(terrain.GetWidth(0.5f) - 200.0f, 265.0f, terrain.GetLength(0.5f) - 70.0f);
+	obstacle[6].SetScale(15.0f, 15.0f, 15.0f);
+	obstacle[6].SetCorner(BoundingExtent, BoundingCenter, 15.0f);
+
+	obstacle[7].SetPosition(terrain.GetWidth(0.5f) + 200.0f, 265.0f, terrain.GetLength(0.5f) + 70.0f);
+	obstacle[7].SetScale(15.0f, 15.0f, 15.0f);
+	obstacle[7].SetCorner(BoundingExtent, BoundingCenter, 15.0f);
+
+	obstacle[8].SetPosition(terrain.GetWidth(0.5f) + 200.0f, 265.0f, terrain.GetLength(0.5f) - 70.0f);
+	obstacle[8].SetScale(15.0f, 15.0f, 15.0f);
+	obstacle[8].SetCorner(BoundingExtent, BoundingCenter, 15.0f);
+
+	obstacle[9].SetPosition(terrain.GetWidth(0.5f), 265.0f, terrain.GetLength(0.5f) + 250.0f);
+	obstacle[9].SetScale(15.0f, 15.0f, 15.0f);
+	obstacle[9].Rotate(0.0f, 90.0f, 0.0f);
+	obstacle[9].SetCorner(BoundingExtent, BoundingCenter, 15.0f);
+
+
+	obstacle[10].SetPosition(terrain.GetWidth(0.5f) + 400.0f, 265.0f, terrain.GetLength(0.5f));
+	obstacle[10].SetScale(18.0f, 18.0f, 18.0f);
+	obstacle[10].SetCorner(BoundingExtent, BoundingCenter, 18.0f);
+
+	obstacle[11].SetPosition(terrain.GetWidth(0.5f) - 400.0f, 265.0f, terrain.GetLength(0.5f));
+	obstacle[11].SetScale(18.0f, 18.0f, 18.0f);
+	obstacle[11].SetCorner(BoundingExtent, BoundingCenter, 18.0f);
+	
 	/// UpperWall
 	BoundingCenter = XMFLOAT3(-0.00730583817, 0.733893871, -0.191149592);
 	BoundingExtent = XMFLOAT3(0.170963734, 0.749625683, 1.39590120);
-	obstacle[2].SetPosition(terrain.GetWidth(0.5f) + 73.0f, 0.0f, terrain.GetLength(0.5f) - 29.0f);
+	obstacle[2].SetPosition(terrain.GetWidth(0.5f) + 73.0f, 265.0f, terrain.GetLength(0.5f) - 29.0f);
 	obstacle[2].SetScale(12.0f, 12.0f, 12.0f);
 	obstacle[2].SetCorner(BoundingExtent, BoundingCenter, 12.0f);
 
-	obstacle[3].SetPosition(terrain.GetWidth(0.5f) - 45.0f, 0.0f, terrain.GetLength(0.5f) + 104.0f);
+	obstacle[3].SetPosition(terrain.GetWidth(0.5f) - 45.0f, 265.0f, terrain.GetLength(0.5f) + 104.0f);
 	obstacle[3].SetScale(12.0f, 12.0f, 12.0f);
 	obstacle[3].Rotate(0.0f, 90.0f, 0.0f);
 	obstacle[3].SetCorner(BoundingExtent, BoundingCenter, 12.0f);
 
-	obstacle[4].SetPosition(terrain.GetWidth(0.5f) + 30.0f, 0.0f, terrain.GetLength(0.5f) + 106.0f);
+	obstacle[4].SetPosition(terrain.GetWidth(0.5f) + 30.0f, 265.0f, terrain.GetLength(0.5f) + 106.0f);
 	obstacle[4].SetScale(12.0f, 12.0f, 12.0f);
 	obstacle[4].Rotate(0.0f, -90.0f, 0.0f);
 	obstacle[4].SetCorner(BoundingExtent, BoundingCenter, 12.0f);
-	
-	astar.SetObstacle(obstacle, 5);
 
-	astar.path0 = astar.GetPath(PotalPos[0], NexusPos);
-	astar.path1 = astar.GetPath(PotalPos[1], NexusPos);
-	astar.path2 = astar.GetPath(PotalPos[2], NexusPos);
+	
+
+	// Concrete
+	//BoundingCenter = XMFLOAT3(0.0, 0.687332988, 0.0);
+	//BoundingExtent = XMFLOAT3(9.80152607, 0.972427011, 0.532213986);
+	//obstacle[5].SetPosition(terrain.GetWidth(0.5f) - 200.0f, 265.0f, terrain.GetLength(0.5f) + 70.0f);
+	//obstacle[5].SetScale(6.0f, 6.0f, 6.0f);
+	//obstacle[5].Rotate(0.0f, 90.0f, 0.0f);
+	//obstacle[5].SetCorner(BoundingExtent, BoundingCenter, 12.0f);
+
+	//obstacle[6].SetPosition(terrain.GetWidth(0.5f) - 200.0f, 265.0f, terrain.GetLength(0.5f) - 70.0f);
+	//obstacle[6].SetScale(6.0f, 6.0f, 6.0f);
+	//obstacle[6].Rotate(0.0f, 90.0f, 0.0f);
+	//obstacle[6].SetCorner(BoundingExtent, BoundingCenter, 12.0f);
+
+	//obstacle[7].SetPosition(terrain.GetWidth(0.5f) + 200.0f, 265.0f, terrain.GetLength(0.5f) + 70.0f);
+	//obstacle[7].SetScale(6.0f, 6.0f, 6.0f);
+	//obstacle[7].Rotate(0.0f, 90.0f, 0.0f);
+	//obstacle[7].SetCorner(BoundingExtent, BoundingCenter, 12.0f);
+
+	//obstacle[8].SetPosition(terrain.GetWidth(0.5f) + 200.0f, 265.0f, terrain.GetLength(0.5f) - 70.0f);
+	//obstacle[8].SetScale(6.0f, 6.0f, 6.0f);
+	//obstacle[8].Rotate(0.0f, 90.0f, 0.0f);
+	//obstacle[8].SetCorner(BoundingExtent, BoundingCenter, 12.0f);
+
+	//obstacle[9].SetPosition(terrain.GetWidth(0.5f), 265.0f, terrain.GetLength(0.5f) + 250.0f);
+	//obstacle[9].SetScale(6.0f, 6.0f, 6.0f);
+	//obstacle[9].SetCorner(BoundingExtent, BoundingCenter, 12.0f);
+
+	// Concrete
+
+
+	astar.SetObstacle(obstacle, 12);
+
+	astar.path0 = astar.GetPath(PotalPos[0], NexusPos, AStar::Nexus);
+	astar.path1 = astar.GetPath(PotalPos[1], NexusPos, AStar::Nexus);
+	astar.path2 = astar.GetPath(PotalPos[2], NexusPos, AStar::Nexus);
 
 	UpdateMonsterData();
 
@@ -954,10 +1019,11 @@ void MonstersUpdate(double Elapsedtime)
 			{
 				XMFLOAT3 pos = Monsters[i].GetPosition();
 				XMFLOAT3 pPos = GameData.PlayersPostion2[Monsters[i].m_TargetId].position;
+				static bool bAttackNexus = false;
 
 				// 경로 재설정.
 				Monsters[i].m_ResetPathTime += Elapsedtime;
-				if (Monsters[i].m_ResetPathTime < 1.0f)
+				if (Monsters[i].m_ResetPathTime > 0.5f)
 				{
 					float MaxDistance = FLT_MAX;
 					int playerID = -1;
@@ -978,10 +1044,36 @@ void MonstersUpdate(double Elapsedtime)
 
 					Monsters[i].m_TargetId = playerID;
 					Monsters[i].m_ResetPathTime = 0.0f;
-					Monsters[i].m_path = astar.GetPath(Monsters[i].GetPosition(), pPos);
+					if (playerID != -1)
+					{
+						//std::cout << " Wolf GetPath Start! " << i;
+						//std::cout << std::endl;
+						Monsters[i].m_path = astar.GetPath(Monsters[i].GetPosition(), pPos, AStar::Player);
+						//std::cout << " Wolf GetPath End! ";
+						//std::cout << std::endl << std::endl << std::endl << std::endl;
+
+						bAttackNexus = false;
+					}
+					else 
+					{
+						// 경로 재설정.
+						if (Monsters[i].m_TargetType != CGameObject::Nexus)
+						{
+							//std::cout << " Wolf To Nexus GetPath Start! " << i;
+							//std::cout << std::endl;
+							Monsters[i].m_path = astar.GetPath(Monsters[i].GetPosition(), NexusPos, AStar::Nexus);
+							//std::cout << " Wolf To Nexus GetPath End! ";
+							//std::cout << std::endl << std::endl;
+						}
+
+						bAttackNexus = true;
+					}
 				}
 
-				UpdateMonsterPath(i, CGameObject::Player, CGameObject::ATTACK, 22.0f, pPos);
+				if(!bAttackNexus)
+					UpdateMonsterPath(i, CGameObject::Player, CGameObject::ATTACK, 22.0f, pPos);
+				else
+					UpdateMonsterPath(i, CGameObject::Nexus, CGameObject::ATTACK, 50.0f, NexusPos);
 
 				Monsters[i].MoveForward(METER_PER_PIXEL(Monsters[i].m_Speed) * Elapsedtime);
 				Monsters[i].SetLookAt(Monsters[i].m_TargetPos);
@@ -1017,10 +1109,14 @@ void MonstersUpdate(double Elapsedtime)
 					//Monsters[i].m_TargetPos = pPos;
 
 					Monsters[i].m_ResetPathTime += Elapsedtime;
-					if (Monsters[i].m_ResetPathTime < 1.0f)
+					if (Monsters[i].m_ResetPathTime > 0.5f)
 					{
 						Monsters[i].m_ResetPathTime = 0.0f;
-						Monsters[i].m_path = astar.GetPath(Monsters[i].GetPosition(), pPos);
+						//std::cout << " Monster To Player GetPath Start! " << i;
+						//std::cout << std::endl;
+						Monsters[i].m_path = astar.GetPath(Monsters[i].GetPosition(), pPos, AStar::Player);
+						//std::cout << " Monster To Player GetPath End! ";
+						//std::cout << std::endl << std::endl;
 					}
 
 					Monsters[i].m_TargetId = closestPlayerId;
@@ -1031,7 +1127,11 @@ void MonstersUpdate(double Elapsedtime)
 					// 경로 재설정.
 					if (Monsters[i].m_TargetType != CGameObject::Nexus)
 					{
-						Monsters[i].m_path = astar.GetPath(Monsters[i].GetPosition(), NexusPos);
+						//std::cout << " Monster To Nexus GetPath Start! " << i;
+						//std::cout << std::endl;
+						Monsters[i].m_path = astar.GetPath(Monsters[i].GetPosition(), NexusPos, AStar::Nexus);
+						//std::cout << " Monster To Nexus GetPath End! ";
+						//std::cout << std::endl << std::endl;
 					}
 
 					UpdateMonsterPath(i, CGameObject::Nexus, CGameObject::ATTACK, 50.0f, NexusPos);
@@ -1096,6 +1196,7 @@ bool IsNan(const XMFLOAT4X4& xmf4x4world)
 
 void UpdateMonsterData()
 {
+
 	for (int i = 0; i < MAX_MONSTER * 10; ++i)
 	{
 		GameData.MonsterData[i].id = Monsters[i].m_Id;
@@ -1107,6 +1208,30 @@ void UpdateMonsterData()
 		GameData.MonsterData[i].SpawnPotal = Monsters[i].m_SpawnPotalNum;
 		GameData.MonsterData[i].TargetID = Monsters[i].m_TargetId;
 		GameData.MonsterData[i].TargetType = Monsters[i].m_TargetType;
+		
+		int pathIDX = 0;
+		if (!Monsters[i].m_path.empty())
+		{
+			for (int j = 0; j < Monsters[i].m_path.size(); ++j)
+			{
+				if (j < MAX_PATH / 2)
+				{
+					if (j < 1)
+					{
+						
+						GameData.MonsterData[i].Path[pathIDX++] = Monsters[i].GetPosition();
+						GameData.MonsterData[i].Path[pathIDX++] = Monsters[i].m_path[j];
+					}
+					else
+					{
+						GameData.MonsterData[i].Path[pathIDX++] = Monsters[i].m_path[j - 1];
+						GameData.MonsterData[i].Path[pathIDX++] = Monsters[i].m_path[j];
+					}
+				}
+			}
+		}
+		GameData.MonsterData[i].PathNum = pathIDX;
+
 		if (IsNan(Monsters[i].m_xmf4x4World) != true) 
 			GameData.MonsterData[i].m_xmf4x4World = Monsters[i].m_xmf4x4World;
 		else
